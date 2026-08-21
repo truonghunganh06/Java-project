@@ -67,7 +67,8 @@ class ExtendedBusinessRequirementTest {
         singleSupervisorTopic.setAcademicYear("2026-2027");
         singleSupervisorTopic.setSemester(1);
 
-        Topic savedSingle = lecturerService.createTopic(supervisor, period.getId(), major.getId(), null, singleSupervisorTopic);
+        Topic savedSingle = lecturerService.createTopic(supervisor, period.getId(), major.getId(), null,
+                singleSupervisorTopic);
         assertNotNull(savedSingle.getId());
         assertEquals(supervisor.getId(), savedSingle.getSupervisor().getId());
         assertNull(savedSingle.getCoSupervisor());
@@ -80,7 +81,8 @@ class ExtendedBusinessRequirementTest {
         twoSupervisorTopic.setAcademicYear("2026-2027");
         twoSupervisorTopic.setSemester(1);
 
-        Topic savedTwo = lecturerService.createTopic(supervisor, period.getId(), major.getId(), coSupervisor.getId(), twoSupervisorTopic);
+        Topic savedTwo = lecturerService.createTopic(supervisor, period.getId(), major.getId(), coSupervisor.getId(),
+                twoSupervisorTopic);
         assertNotNull(savedTwo.getId());
         assertEquals(supervisor.getId(), savedTwo.getSupervisor().getId());
         assertNotNull(savedTwo.getCoSupervisor());
@@ -104,8 +106,7 @@ class ExtendedBusinessRequirementTest {
                 OffsetDateTime.now().plusDays(30),
                 OffsetDateTime.now().plusDays(45),
                 OffsetDateTime.now().plusDays(60),
-                OffsetDateTime.now().plusDays(70)
-        );
+                OffsetDateTime.now().plusDays(70));
 
         assertFalse(closedPeriod.isStudentRegistrationOpen(), "Đợt kiểm thử phải ở ngoài thời gian đăng ký sinh viên");
 
@@ -179,14 +180,14 @@ class ExtendedBusinessRequirementTest {
                 "Sinh viên cần theo dõi lịch bảo vệ và thông tin phê duyệt đề tài.",
                 "PERIOD",
                 true,
-                "/attachments/announcement.pdf"
-        );
+                "/attachments/announcement.pdf");
 
         assertNotNull(announcement.getId());
         assertEquals(author.getId(), announcement.getAuthor().getId());
         assertEquals(period.getId(), announcement.getPeriod().getId());
 
-        List<Announcement> departmentAnnouncements = announcementService.getAnnouncementsByDepartment(department.getId());
+        List<Announcement> departmentAnnouncements = announcementService
+                .getAnnouncementsByDepartment(department.getId());
         assertTrue(departmentAnnouncements.stream().anyMatch(item -> item.getId().equals(announcement.getId())),
                 "Thông báo vừa tạo phải xuất hiện trong danh sách của khoa");
 
@@ -207,7 +208,8 @@ class ExtendedBusinessRequirementTest {
 
     private Major getOrCreateMajor(Department department) {
         return majorRepository.findAll().stream()
-                .filter(major -> major.getDepartment() != null && major.getDepartment().getId().equals(department.getId()))
+                .filter(major -> major.getDepartment() != null
+                        && major.getDepartment().getId().equals(department.getId()))
                 .findFirst()
                 .orElseGet(() -> {
                     Major major = new Major();
@@ -231,8 +233,7 @@ class ExtendedBusinessRequirementTest {
                 now.minusDays(2),
                 now.plusDays(20),
                 now.plusDays(50),
-                now.plusDays(70)
-        );
+                now.plusDays(70));
     }
 
     private Lecturer createLecturer(String prefix) {
