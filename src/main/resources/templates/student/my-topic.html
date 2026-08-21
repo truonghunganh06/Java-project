@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đề tài của tôi - TopicHub</title>
+    <title>Đề Tài Đã Chọn - TopicHub</title>
     
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Bootstrap 5.3 & FontAwesome 6 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -29,7 +26,7 @@
         body {
             background-color: var(--bg-body);
             color: var(--text-main);
-            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
             min-height: 100vh;
         }
 
@@ -89,246 +86,104 @@
             background-color: var(--primary-hover);
             color: #ffffff;
         }
-
-        .btn-saas-secondary {
-            background-color: #ffffff;
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 0.875rem;
-            border-radius: 8px;
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--border-color);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.15s ease;
-        }
-
-        .btn-saas-secondary:hover {
-            background-color: #f8fafc;
-            color: var(--text-main);
-            border-color: #cbd5e1;
-        }
-
-        .badge-saas {
-            font-size: 0.75rem;
-            font-weight: 500;
-            padding: 0.25rem 0.625rem;
-            border-radius: 9999px;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .badge-approved { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-        .badge-pending { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
-        .badge-rejected { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
-        .badge-role { background-color: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
-
-        .topic-code {
-            font-family: 'SFMono-Regular', Consolas, monospace;
-            font-size: 0.8125rem;
-            font-weight: 600;
-            color: #0f172a;
-            background: #f1f5f9;
-            padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .user-avatar-circle {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background-color: #f1f5f9;
-            color: #334155;
-            font-weight: 600;
-            font-size: 0.875rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #cbd5e1;
-        }
     </style>
 </head>
 <body>
 
-<!-- Navigation Bar -->
-<nav class="navbar-saas">
-    <div class="container-xl d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center gap-4">
-            <a class="d-flex align-items-center text-decoration-none gap-2" href="/student/dashboard">
-                <div style="width: 34px; height: 34px; background: #0f172a; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fa-solid fa-graduation-cap"></i>
+    <nav class="navbar navbar-expand-lg navbar-saas">
+        <div class="container-fluid max-width-container">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark me-4" th:href="@{/student/dashboard}">
+                <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-2" style="width: 32px; height: 32px;">
+                    <i class="fa-solid fa-user-graduate"></i>
                 </div>
-                <span class="fw-bold text-dark fs-6" style="letter-spacing: -0.02em;">TopicHub</span>
+                <span>TopicHub <span class="badge bg-light text-secondary border fw-normal fs-6">Sinh viên</span></span>
             </a>
+            <div class="collapse navbar-collapse">
+                <div class="navbar-nav me-auto gap-1">
+                    <a class="nav-link-saas" th:href="@{/student/dashboard}">Tổng quan</a>
+                    <a class="nav-link-saas" th:href="@{/student/group}">Nhóm của tôi</a>
+                    <a class="nav-link-saas" th:href="@{/student/topics}">Danh mục đề tài</a>
+                    <a class="nav-link-saas active" th:href="@{/student/my-topic}">Đề tài đã chọn</a>
+                    <a class="nav-link-saas" th:href="@{/student/submissions}">Nộp báo cáo</a>
+                    <a class="nav-link-saas" th:href="@{/student/results}">Kết quả & Điểm</a>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-secondary small fw-medium" th:text="${user.fullName}">Sinh viên</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-outline-secondary rounded-pill">Đăng xuất</a>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-            <!-- Sub Nav Links -->
-            <div class="d-none d-md-flex align-items-center gap-1">
-                <a href="/student/dashboard" class="nav-link-saas">
-                    <i class="fa-solid fa-chart-pie me-1 text-muted"></i>Tổng quan
-                </a>
-                <a href="/student/topics" class="nav-link-saas">
-                    <i class="fa-solid fa-compass me-1 text-muted"></i>Danh mục đề tài
-                </a>
-                <a href="/student/my-topic" class="nav-link-saas active">
-                    <i class="fa-solid fa-book-bookmark me-1 text-muted"></i>Đề tài của tôi
-                </a>
-                <a href="/student/submissions" class="nav-link-saas">
-                    <i class="fa-solid fa-file-arrow-up me-1 text-muted"></i>Báo cáo tiến độ
-                </a>
+    <main class="container py-4">
+
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="mb-4">
+            <h1 class="h4 fw-bold text-dark mb-1">Chi Tiết Đề Tài Của Nhóm</h1>
+            <p class="text-muted small mb-0">Xem thông tin đề tài nghiên cứu, giảng viên hướng dẫn và các mốc tiến độ.</p>
+        </div>
+
+        <div th:if="${group == null || group.topic == null}">
+            <div class="saas-card text-center py-5 text-muted">
+                <i class="fa-regular fa-folder-open fs-2 mb-2 d-block text-secondary"></i>
+                Nhóm của bạn chưa đăng ký đề tài nào.
+                <div class="mt-3">
+                    <a th:href="@{/student/topics}" class="btn btn-sm btn-dark">Đến danh mục đề tài</a>
+                </div>
             </div>
         </div>
 
-        <div class="d-flex align-items-center gap-3">
-            <div class="d-none d-sm-flex align-items-center gap-2 pe-3 border-end">
-                <div class="user-avatar-circle" th:text="${user != null and user.fullName != null and !user.fullName.isEmpty() ? user.fullName.substring(0, 1) : 'S'}">S</div>
-                <div class="text-start">
-                    <div class="fw-semibold text-dark small" style="line-height: 1.2;" th:text="${user != null ? user.fullName : 'Sinh viên'}">Sinh viên</div>
-                    <span class="badge-saas badge-role" th:text="${student != null ? 'MSSV: ' + student.studentCode : 'Sinh viên'}">MSSV: 20210012</span>
+        <div th:if="${group != null && group.topic != null}" class="row g-4">
+            <div class="col-lg-8">
+                <div class="saas-card p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-light text-dark border" th:text="${group.topic.code}">DT-01</span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1" th:text="${group.status}">ĐÃ ĐĂNG KÝ</span>
+                    </div>
+                    <h2 class="h5 fw-bold text-dark mb-3" th:text="${group.topic.title}">Tên đề tài</h2>
+                    
+                    <h6 class="small fw-bold text-dark text-uppercase mb-2">Mục tiêu & Nội dung:</h6>
+                    <p class="small text-secondary mb-4" style="line-height: 1.7;" th:text="${group.topic.description}">Mô tả đề tài...</p>
+
+                    <h6 class="small fw-bold text-dark text-uppercase mb-2">Yêu cầu chuyên môn:</h6>
+                    <p class="small text-secondary mb-0" th:text="${group.topic.requirements != null ? group.topic.requirements : 'Theo hướng dẫn của GV'}"></p>
                 </div>
             </div>
 
-            <a th:href="@{/logout}" class="btn-saas-secondary btn-sm">
-                <i class="fa-solid fa-arrow-right-from-bracket text-muted"></i>
-                <span class="d-none d-sm-inline">Đăng xuất</span>
-            </a>
-        </div>
-    </div>
-</nav>
-
-<main class="container-xl py-4">
-
-    <!-- Flash Messages -->
-    <div th:if="${successMessage}" class="alert alert-success d-flex align-items-center py-2 px-3 mb-4 rounded-3 border" role="alert">
-        <i class="fa-solid fa-circle-check text-success me-2"></i>
-        <span th:text="${successMessage}">Thao tác thành công!</span>
-    </div>
-    <div th:if="${errorMessage}" class="alert alert-danger d-flex align-items-center py-2 px-3 mb-4 rounded-3 border" role="alert">
-        <i class="fa-solid fa-circle-exclamation text-danger me-2"></i>
-        <span th:text="${errorMessage}">Đã xảy ra lỗi!</span>
-    </div>
-
-    <!-- Page Header -->
-    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
-        <div>
-            <h1 class="fs-4 fw-bold text-dark mb-1">Đề tài nghiên cứu của tôi</h1>
-            <p class="text-secondary small mb-0">Theo dõi trạng thái xét duyệt của Giảng viên hướng dẫn và thông tin chi tiết đề tài.</p>
-        </div>
-        <div th:if="${myReg != null and myReg.status == 'APPROVED'}">
-            <a href="/student/submissions" class="btn-saas-primary">
-                <i class="fa-solid fa-file-arrow-up"></i> Nộp báo cáo tiến độ
-            </a>
-        </div>
-    </div>
-
-    <!-- Case: No Registration -->
-    <div th:if="${myReg == null}" class="saas-card text-center py-5">
-        <i class="fa-solid fa-book-open-reader fs-1 text-secondary mb-3 d-block"></i>
-        <h5 class="fw-bold text-dark mb-2">Bạn chưa đăng ký đề tài nào</h5>
-        <p class="text-secondary small mb-4">Vui lòng xem danh mục đề tài đang mở và gửi yêu cầu đăng ký tới Giảng viên hướng dẫn.</p>
-        <a href="/student/topics" class="btn-saas-primary">
-            <i class="fa-solid fa-compass"></i> Xem danh mục đề tài
-        </a>
-    </div>
-
-    <!-- Case: Has Registration -->
-    <div th:if="${myReg != null and myReg.topic != null}" class="row g-4">
-        
-        <!-- Left: Topic Details -->
-        <div class="col-lg-8">
-            <div class="saas-card p-4 mb-4">
-                
-                <div class="d-flex align-items-center gap-2 mb-3">
-                    <span class="topic-code" th:text="${myReg.topic.code}">DT-2026-001</span>
-                    <span class="badge-saas badge-role" th:text="${myReg.topic.major != null ? myReg.topic.major.name : 'CNTT'}">Kỹ thuật phần mềm</span>
-                    <span class="badge-saas badge-role" th:text="${myReg.topic.academicYear} + ' - HK' + ${myReg.topic.semester}">2026-2027 - HK1</span>
+            <div class="col-lg-4">
+                <div class="saas-card p-4 mb-4">
+                    <h6 class="small fw-bold text-dark text-uppercase mb-3">Giảng viên hướng dẫn</h6>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-circle" style="width: 44px; height: 44px;">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                        </div>
+                        <div>
+                            <div class="fw-semibold text-dark" th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.academicTitle + ' ' + group.topic.supervisor.user.fullName : 'Chưa có'}"></div>
+                            <small class="text-muted" th:text="'Mã GV: ' + (${group.topic.supervisor != null ? group.topic.supervisor.lecturerCode : ''})"></small>
+                        </div>
+                    </div>
+                    <div th:if="${group.topic.coSupervisor != null}" class="pt-2 border-top">
+                        <small class="text-muted d-block mb-1">GVHD phụ (Đồng hướng dẫn):</small>
+                        <strong class="text-dark small" th:text="${group.topic.coSupervisor.academicTitle + ' ' + group.topic.coSupervisor.user.fullName}"></strong>
+                    </div>
                 </div>
 
-                <h3 class="fs-4 fw-bold text-dark mb-3" th:text="${myReg.topic.title}">Tên đề tài nghiên cứu</h3>
-
-                <div class="mb-4">
-                    <h6 class="fw-bold text-dark small text-uppercase" style="letter-spacing: 0.05em;">Mục tiêu & Nội dung nghiên cứu</h6>
-                    <p class="text-secondary small" style="line-height: 1.7;" th:text="${myReg.topic.description}">Mô tả chi tiết nội dung...</p>
-                </div>
-
-                <div th:if="${myReg.topic.requirements != null and !myReg.topic.requirements.isEmpty()}" class="p-3 bg-light rounded-3 border mb-4">
-                    <h6 class="fw-bold text-dark small mb-2"><i class="fa-solid fa-list-check text-primary me-1"></i> Yêu cầu kỹ năng công nghệ:</h6>
-                    <p class="text-secondary small mb-0" th:text="${myReg.topic.requirements}">Yêu cầu...</p>
-                </div>
-
-                <div class="border-top pt-3 text-muted small d-flex justify-content-between">
-                    <span>Thời gian gửi đăng ký: <strong class="text-dark" th:text="${#temporals.format(myReg.registeredAt, 'dd/MM/yyyy HH:mm')}">15/08/2026 10:00</strong></span>
-                    <span th:if="${myReg.approvedAt != null}">Thời gian duyệt: <strong class="text-dark" th:text="${#temporals.format(myReg.approvedAt, 'dd/MM/yyyy HH:mm')}">16/08/2026 14:00</strong></span>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- Right: Status Card & Supervisor Contact -->
-        <div class="col-lg-4">
-            
-            <!-- Registration Status Card -->
-            <div class="saas-card p-4 mb-4">
-                <h6 class="fw-bold mb-3 text-dark">Trạng thái đăng ký</h6>
-                
-                <div th:if="${myReg.status == 'APPROVED'}" class="p-3 rounded-3 bg-success-subtle text-success border border-success-subtle mb-3 text-center">
-                    <i class="fa-solid fa-circle-check fs-2 mb-2 d-block"></i>
-                    <div class="fw-bold fs-6">Đã được tiếp nhận</div>
-                    <small class="text-secondary d-block mt-1">Giảng viên đã đồng ý hướng dẫn bạn thực hiện đề tài này.</small>
-                </div>
-
-                <div th:if="${myReg.status == 'PENDING'}" class="p-3 rounded-3 bg-warning-subtle text-warning-emphasis border border-warning-subtle mb-3 text-center">
-                    <i class="fa-solid fa-clock fs-2 mb-2 d-block text-warning"></i>
-                    <div class="fw-bold fs-6">Đang chờ Giảng viên duyệt</div>
-                    <small class="text-secondary d-block mt-1">Yêu cầu đăng ký đã gửi. Giảng viên sẽ xem xét GPA và duyệt theo chỉ tiêu.</small>
-                </div>
-
-                <div th:if="${myReg.status == 'REJECTED'}" class="p-3 rounded-3 bg-danger-subtle text-danger border border-danger-subtle mb-3 text-center">
-                    <i class="fa-solid fa-circle-xmark fs-2 mb-2 d-block"></i>
-                    <div class="fw-bold fs-6">Đã bị từ chối</div>
-                    <small class="text-secondary d-block mt-1">Chỉ tiêu đã đầy hoặc không phù hợp yêu cầu. Bạn có thể chọn đăng ký đề tài khác.</small>
-                    <div class="mt-3">
-                        <a href="/student/topics" class="btn btn-sm btn-outline-danger">Chọn đề tài khác</a>
+                <div class="saas-card p-4">
+                    <h6 class="small fw-bold text-dark text-uppercase mb-3">Thao tác nhanh</h6>
+                    <div class="d-grid gap-2">
+                        <a th:href="@{/student/submissions}" class="btn btn-sm btn-dark"><i class="fa-solid fa-file-arrow-up me-1"></i> Đến trang nộp báo cáo</a>
+                        <a th:href="@{/student/results}" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-star me-1"></i> Xem kết quả & Điểm</a>
                     </div>
                 </div>
             </div>
-
-            <!-- Supervisor Info Card -->
-            <div class="saas-card p-4">
-                <h6 class="fw-bold mb-3 text-dark">Giảng viên hướng dẫn</h6>
-                
-                <div class="d-flex align-items-center gap-3 mb-3 p-3 rounded-3 bg-light">
-                    <div class="user-avatar-circle" style="width: 44px; height: 44px; font-size: 1.125rem;">GV</div>
-                    <div class="overflow-hidden">
-                        <div class="fw-bold text-dark text-truncate" th:text="${myReg.topic.supervisor != null and myReg.topic.supervisor.user != null ? myReg.topic.supervisor.user.fullName : 'TS. Giảng viên'}">TS. Nguyễn Văn Hướng Dẫn</div>
-                        <small class="text-muted d-block text-truncate" th:text="${myReg.topic.supervisor != null and myReg.topic.supervisor.user != null ? myReg.topic.supervisor.user.email : ''}">huongdan@topicmanagement.edu.vn</small>
-                    </div>
-                </div>
-
-                <div class="small">
-                    <div class="d-flex justify-content-between py-2 border-bottom">
-                        <span class="text-muted">Học hàm / Học vị</span>
-                        <span class="fw-semibold text-dark" th:text="${myReg.topic.supervisor != null ? myReg.topic.supervisor.academicTitle + ' - ' + myReg.topic.supervisor.degree : 'TS'}">TS - Tiến sĩ</span>
-                    </div>
-                    <div class="d-flex justify-content-between py-2 border-bottom">
-                        <span class="text-muted">Mã giảng viên</span>
-                        <span class="fw-semibold text-dark" th:text="${myReg.topic.supervisor != null ? myReg.topic.supervisor.lecturerCode : 'GV001'}">GV001</span>
-                    </div>
-                    <div class="d-flex justify-content-between py-2">
-                        <span class="text-muted">Bộ môn</span>
-                        <span class="badge-saas badge-role">Kỹ thuật phần mềm</span>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
-    </div>
+    </main>
 
-</main>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

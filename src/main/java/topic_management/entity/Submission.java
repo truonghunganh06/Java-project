@@ -6,6 +6,7 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "submissions")
 public class Submission {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -15,7 +16,15 @@ public class Submission {
     private Topic topic;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "group_id")
+    private StudentGroup group;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "submitted_by_student_id")
+    private Student submittedByStudent; // Chỉ Leader mới được nộp
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "student_id")
     private Student student;
 
     @Column(nullable = false, length = 200)
@@ -54,6 +63,22 @@ public class Submission {
 
     public void setTopic(Topic topic) {
         this.topic = topic;
+    }
+
+    public StudentGroup getGroup() {
+        return group;
+    }
+
+    public void setGroup(StudentGroup group) {
+        this.group = group;
+    }
+
+    public Student getSubmittedByStudent() {
+        return submittedByStudent;
+    }
+
+    public void setSubmittedByStudent(Student submittedByStudent) {
+        this.submittedByStudent = submittedByStudent;
     }
 
     public Student getStudent() {

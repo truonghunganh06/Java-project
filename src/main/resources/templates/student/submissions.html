@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nộp Báo cáo Tiến độ - TopicHub</title>
+    <title>Nộp Báo Cáo Tiến Độ - TopicHub</title>
     
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Bootstrap 5.3 & FontAwesome 6 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -29,7 +26,7 @@
         body {
             background-color: var(--bg-body);
             color: var(--text-main);
-            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
             min-height: 100vh;
         }
 
@@ -76,7 +73,7 @@
             font-weight: 500;
             font-size: 0.875rem;
             border-radius: 8px;
-            padding: 0.6rem 1.25rem;
+            padding: 0.5rem 1.25rem;
             border: 1px solid var(--primary-accent);
             text-decoration: none;
             display: inline-flex;
@@ -90,287 +87,178 @@
             color: #ffffff;
         }
 
-        .btn-saas-secondary {
-            background-color: #ffffff;
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 0.875rem;
-            border-radius: 8px;
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--border-color);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.15s ease;
-        }
-
-        .btn-saas-secondary:hover {
-            background-color: #f8fafc;
-            color: var(--text-main);
-            border-color: #cbd5e1;
-        }
-
-        .form-label {
-            font-size: 0.8125rem;
-            font-weight: 600;
-            color: #334155;
-            margin-bottom: 0.375rem;
-        }
-
-        .form-control, .form-select {
-            font-size: 0.875rem;
-            border-color: #cbd5e1;
-            border-radius: 8px;
-            padding: 0.6rem 0.75rem;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: #64748b;
-            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
-        }
-
-        .badge-saas {
-            font-size: 0.75rem;
-            font-weight: 500;
-            padding: 0.25rem 0.625rem;
-            border-radius: 9999px;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .badge-approved { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-        .badge-pending { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
-        .badge-rejected { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
-        .badge-role { background-color: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
-
-        .table-saas { margin-bottom: 0; width: 100%; }
-        .table-saas thead th {
-            background-color: #f8fafc;
-            color: #475569;
+        .table-saas th {
             font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            padding: 0.875rem 1rem;
+            color: var(--text-muted);
+            background-color: #f8fafc;
             border-bottom: 1px solid var(--border-color);
-            white-space: nowrap;
+            padding: 0.875rem 1.25rem;
         }
-        .table-saas tbody td {
-            padding: 1rem;
-            vertical-align: middle;
+
+        .table-saas td {
             font-size: 0.875rem;
             color: var(--text-secondary);
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .table-saas tbody tr:hover { background-color: #f8fafc; }
-
-        .topic-code {
-            font-family: 'SFMono-Regular', Consolas, monospace;
-            font-size: 0.8125rem;
-            font-weight: 600;
-            color: #0f172a;
-            background: #f1f5f9;
-            padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .user-avatar-circle {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background-color: #f1f5f9;
-            color: #334155;
-            font-weight: 600;
-            font-size: 0.875rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #cbd5e1;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.25rem;
+            vertical-align: middle;
         }
     </style>
 </head>
 <body>
 
-<!-- Navigation Bar -->
-<nav class="navbar-saas">
-    <div class="container-xl d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center gap-4">
-            <a class="d-flex align-items-center text-decoration-none gap-2" href="/student/dashboard">
-                <div style="width: 34px; height: 34px; background: #0f172a; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fa-solid fa-graduation-cap"></i>
+    <nav class="navbar navbar-expand-lg navbar-saas">
+        <div class="container-fluid max-width-container">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark me-4" th:href="@{/student/dashboard}">
+                <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-2" style="width: 32px; height: 32px;">
+                    <i class="fa-solid fa-user-graduate"></i>
                 </div>
-                <span class="fw-bold text-dark fs-6" style="letter-spacing: -0.02em;">TopicHub</span>
+                <span>TopicHub <span class="badge bg-light text-secondary border fw-normal fs-6">Sinh viên</span></span>
             </a>
-
-            <!-- Sub Nav Links -->
-            <div class="d-none d-md-flex align-items-center gap-1">
-                <a href="/student/dashboard" class="nav-link-saas">
-                    <i class="fa-solid fa-chart-pie me-1 text-muted"></i>Tổng quan
-                </a>
-                <a href="/student/topics" class="nav-link-saas">
-                    <i class="fa-solid fa-compass me-1 text-muted"></i>Danh mục đề tài
-                </a>
-                <a href="/student/my-topic" class="nav-link-saas">
-                    <i class="fa-solid fa-book-bookmark me-1 text-muted"></i>Đề tài của tôi
-                </a>
-                <a href="/student/submissions" class="nav-link-saas active">
-                    <i class="fa-solid fa-file-arrow-up me-1 text-muted"></i>Báo cáo tiến độ
-                </a>
-            </div>
-        </div>
-
-        <div class="d-flex align-items-center gap-3">
-            <div class="d-none d-sm-flex align-items-center gap-2 pe-3 border-end">
-                <div class="user-avatar-circle" th:text="${user != null and user.fullName != null and !user.fullName.isEmpty() ? user.fullName.substring(0, 1) : 'S'}">S</div>
-                <div class="text-start">
-                    <div class="fw-semibold text-dark small" style="line-height: 1.2;" th:text="${user != null ? user.fullName : 'Sinh viên'}">Sinh viên</div>
-                    <span class="badge-saas badge-role" th:text="${student != null ? 'MSSV: ' + student.studentCode : 'Sinh viên'}">MSSV: 20210012</span>
+            <div class="collapse navbar-collapse">
+                <div class="navbar-nav me-auto gap-1">
+                    <a class="nav-link-saas" th:href="@{/student/dashboard}">Tổng quan</a>
+                    <a class="nav-link-saas" th:href="@{/student/group}">Nhóm của tôi</a>
+                    <a class="nav-link-saas" th:href="@{/student/topics}">Danh mục đề tài</a>
+                    <a class="nav-link-saas" th:href="@{/student/my-topic}">Đề tài đã chọn</a>
+                    <a class="nav-link-saas active" th:href="@{/student/submissions}">Nộp báo cáo</a>
+                    <a class="nav-link-saas" th:href="@{/student/results}">Kết quả & Điểm</a>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-secondary small fw-medium" th:text="${user.fullName}">Sinh viên</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-outline-secondary rounded-pill">Đăng xuất</a>
                 </div>
             </div>
-
-            <a th:href="@{/logout}" class="btn-saas-secondary btn-sm">
-                <i class="fa-solid fa-arrow-right-from-bracket text-muted"></i>
-                <span class="d-none d-sm-inline">Đăng xuất</span>
-            </a>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<main class="container-xl py-4">
+    <main class="container py-4">
 
-    <!-- Flash Messages -->
-    <div th:if="${successMessage}" class="alert alert-success d-flex align-items-center py-2 px-3 mb-4 rounded-3 border" role="alert">
-        <i class="fa-solid fa-circle-check text-success me-2"></i>
-        <span th:text="${successMessage}">Thao tác thành công!</span>
-    </div>
-    <div th:if="${errorMessage}" class="alert alert-danger d-flex align-items-center py-2 px-3 mb-4 rounded-3 border" role="alert">
-        <i class="fa-solid fa-circle-exclamation text-danger me-2"></i>
-        <span th:text="${errorMessage}">Đã xảy ra lỗi!</span>
-    </div>
-
-    <!-- Page Header -->
-    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
-        <div>
-            <h1 class="fs-4 fw-bold text-dark mb-1">Nộp Báo cáo Tiến độ & Xem đánh giá</h1>
-            <p class="text-secondary small mb-0">Tải lên các tệp báo cáo định kỳ theo yêu cầu của Giảng viên hướng dẫn.</p>
+        <!-- Flash messages -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-    </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-3 mb-4" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
 
-    <!-- Case 1: Student not approved for topic -->
-    <div th:if="${myReg == null or myReg.status != 'APPROVED'}" class="saas-card p-4 text-center mb-4">
-        <i class="fa-solid fa-triangle-exclamation fs-1 text-warning mb-2 d-block"></i>
-        <h6 class="fw-bold text-dark mb-1">Chưa thể nộp báo cáo</h6>
-        <p class="text-secondary small mb-3">Bạn cần có đề tài ở trạng thái <code>ĐÃ PHÊ DUYỆT (APPROVED)</code> bởi Giảng viên hướng dẫn trước khi nộp bài báo cáo.</p>
-        <a href="/student/topics" class="btn-saas-primary btn-sm">Xem danh mục đề tài</a>
-    </div>
+        <div class="mb-4">
+            <h1 class="h4 fw-bold text-dark mb-1">Báo Cáo Tiến Độ & Khóa Luận</h1>
+            <p class="text-muted small mb-0">Theo dõi tiến độ thực hiện đề tài. <strong class="text-dark">Lưu ý quan trọng: CHỈ NHÓM TRƯỞNG MỚI ĐƯỢC PHÉP NỘP BÁO CÁO.</strong></p>
+        </div>
 
-    <!-- Case 2: Student is approved -> Show Upload Form and History Table -->
-    <div th:if="${myReg != null and myReg.status == 'APPROVED'}">
-        
-        <!-- Form upload card -->
-        <div class="saas-card p-4 mb-4">
-            <h6 class="fw-bold mb-3 text-dark d-flex align-items-center gap-2">
-                <i class="fa-solid fa-cloud-arrow-up text-primary"></i> Tải lên báo cáo tiến độ mới
-            </h6>
-
-            <form th:action="@{/student/submissions/upload}" method="post" enctype="multipart/form-data">
-                
-                <div class="row g-3 mb-3">
-                    <div class="col-md-7">
-                        <label class="form-label">Tiêu đề bài nộp <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="form-control" placeholder="VD: Báo cáo tiến độ Tuần 6 - Thiết kế kiến trúc CSDL" required>
+        <div class="row g-4">
+            <!-- Left: Upload Form or Lock Warning -->
+            <div class="col-lg-5">
+                <!-- If student is Leader -->
+                <div th:if="${group != null && group.isLeader(student)}" class="saas-card p-4">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="badge bg-warning text-dark"><i class="fa-solid fa-crown me-1"></i> Quyền Trưởng nhóm</span>
+                        <h2 class="h6 fw-bold text-dark mb-0">Nộp Báo Cáo Mới</h2>
                     </div>
 
-                    <div class="col-md-5">
-                        <label class="form-label">Đợt nộp báo cáo <span class="text-danger">*</span></label>
-                        <select name="round" class="form-select" required>
-                            <option value="1">Đợt 1 - Báo cáo Đề cương & Bối cảnh</option>
-                            <option value="2">Đợt 2 - Báo cáo Thiết kế & Hiện thực hóa</option>
-                            <option value="3">Đợt 3 - Báo cáo Thử nghiệm & Đánh giá</option>
-                            <option value="4">Đợt 4 - Báo cáo Tổng kết cuối kỳ</option>
-                        </select>
+                    <form th:action="@{/student/submissions/upload}" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Đề tài của nhóm</label>
+                            <input type="text" class="form-control form-control-sm bg-light" th:value="${group.topic != null ? group.topic.title : 'Chưa đăng ký đề tài'}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Đợt / Vòng nộp báo cáo *</label>
+                            <select name="round" class="form-select form-select-sm" required>
+                                <option value="1">Báo cáo tiến độ Lần 1 (Đề cương chi tiết)</option>
+                                <option value="2">Báo cáo tiến độ Lần 2 (Tiến độ 50%)</option>
+                                <option value="3">Báo cáo tiến độ Lần 3 (Tiến độ 80%)</option>
+                                <option value="4">Báo cáo toàn văn Khóa luận (Bản bảo vệ cuối kỳ)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Tiêu đề bài nộp *</label>
+                            <input type="text" name="title" class="form-control form-control-sm" placeholder="Ví dụ: Báo cáo hoàn thiện Module AI và Database" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold">Tập tin đính kèm (PDF, DOCX, ZIP tối đa 25MB) *</label>
+                            <input type="file" name="file" class="form-control form-control-sm">
+                        </div>
+                        <button type="submit" class="btn-saas-primary w-100 justify-content-center" th:disabled="${group.topic == null}">
+                            <i class="fa-solid fa-cloud-arrow-up me-1"></i> Gửi bài nộp báo cáo
+                        </button>
+                    </form>
+                </div>
+
+                <!-- If student is NOT Leader -->
+                <div th:if="${group != null && !group.isLeader(student)}" class="saas-card p-4 text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-light text-secondary border rounded-circle mb-3" style="width: 48px; height: 48px;">
+                        <i class="fa-solid fa-lock fs-5"></i>
+                    </div>
+                    <h2 class="h6 fw-bold text-dark mb-2">Quyền Nộp Bài Bị Giới Hạn</h2>
+                    <p class="small text-muted mb-0">
+                        Theo quy định của Khoa, chỉ <strong>Nhóm trưởng (<span th:text="${group.leader != null && group.leader.user != null ? group.leader.user.fullName : 'Leader'}"></span>)</strong> mới có quyền tải lên file bài nộp tiến độ cho cả nhóm.<br><br>
+                        Bạn có thể xem lịch sử các file bài nộp và phản hồi từ Giảng viên hướng dẫn ở bảng bên cạnh.
+                    </p>
+                </div>
+
+                <!-- If NO Group -->
+                <div th:if="${group == null}" class="saas-card p-4 text-center text-muted">
+                    <p class="small mb-3">Bạn chưa tham gia nhóm nào.</p>
+                    <a th:href="@{/student/group}" class="btn btn-sm btn-dark">Tạo hoặc tham gia nhóm</a>
+                </div>
+            </div>
+
+            <!-- Right: Submissions History Table -->
+            <div class="col-lg-7">
+                <div class="saas-card p-4">
+                    <h2 class="h6 fw-bold text-dark mb-3"><i class="fa-solid fa-clock-rotate-left me-1"></i> Lịch sử nộp bài của nhóm (<span th:text="${submissions.size()}"></span>)</h2>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr class="small text-muted">
+                                    <th>Vòng / Tiêu đề</th>
+                                    <th>Người nộp</th>
+                                    <th>Thời gian</th>
+                                    <th>Điểm & Nhận xét</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${submissions == null || #lists.isEmpty(submissions)}">
+                                    <td colspan="4" class="text-center py-4 text-muted small">
+                                        Nhóm chưa có bài nộp nào.
+                                    </td>
+                                </tr>
+                                <tr th:each="s : ${submissions}">
+                                    <td>
+                                        <span class="badge bg-secondary-subtle text-secondary mb-1" th:text="'Vòng ' + ${s.submissionRound}"></span>
+                                        <div class="fw-semibold text-dark small" th:text="${s.title}">Tiêu đề bài nộp</div>
+                                        <small class="text-primary"><i class="fa-solid fa-file-pdf me-1"></i>Tệp đính kèm</small>
+                                    </td>
+                                    <td>
+                                        <small class="text-dark fw-medium d-block" th:text="${s.submittedByStudent != null && s.submittedByStudent.user != null ? s.submittedByStudent.user.fullName : 'Leader'}"></small>
+                                        <span class="badge bg-warning text-dark" style="font-size: 8px;">Nhóm trưởng</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted" th:text="${#temporals.format(s.submittedAt, 'dd/MM/yyyy HH:mm')}"></small>
+                                    </td>
+                                    <td>
+                                        <div th:if="${s.grade != null}">
+                                            <span class="badge bg-success" th:text="${s.grade} + ' / 10'"></span>
+                                            <small class="d-block text-muted mt-1" th:text="${s.feedback}"></small>
+                                        </div>
+                                        <span th:unless="${s.grade != null}" class="badge bg-light text-muted border small">Chờ nhận xét</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-
-                <div class="mb-4">
-                    <label class="form-label">Tệp đính kèm (PDF, DOCX, ZIP tối đa 25MB)</label>
-                    <input type="file" name="file" class="form-control">
-                    <small class="text-muted" style="font-size: 0.75rem;">Khuyến khích xuất file định dạng PDF để Giảng viên dễ xem trước trực tiếp.</small>
-                </div>
-
-                <div class="d-flex justify-content-end">
-                    <button type="submit" class="btn-saas-primary">
-                        <i class="fa-solid fa-paper-plane"></i> Gửi bài nộp báo cáo
-                    </button>
-                </div>
-
-            </form>
-        </div>
-
-        <!-- History Table -->
-        <div class="saas-card">
-            <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
-                <div>
-                    <h6 class="fw-bold mb-0 text-dark">Lịch sử bài nộp & Nhận xét của Giảng viên</h6>
-                    <small class="text-muted">Tổng cộng: <strong th:text="${submissions != null ? submissions.size() : 0}">1</strong> bài nộp</small>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-saas">
-                    <thead>
-                        <tr>
-                            <th>Tiêu đề & Đợt</th>
-                            <th>Tệp đã nộp</th>
-                            <th>Thời gian gửi</th>
-                            <th>Điểm số</th>
-                            <th>Nhận xét của Giảng viên</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="s : ${submissions}">
-                            <td>
-                                <div class="fw-bold text-dark mb-1" th:text="${s.title}">Báo cáo tiến độ Tuần 4</div>
-                                <span class="badge bg-light text-secondary border" th:text="'Đợt ' + ${s.submissionRound}">Đợt 1</span>
-                            </td>
-                            <td>
-                                <a href="#" class="btn btn-sm btn-outline-primary py-1 px-2 text-decoration-none small">
-                                    <i class="fa-solid fa-file-pdf me-1"></i> Tải về tệp
-                                </a>
-                            </td>
-                            <td>
-                                <span class="text-dark small" th:text="${#temporals.format(s.submittedAt, 'dd/MM/yyyy HH:mm')}">18/08/2026 14:30</span>
-                            </td>
-                            <td>
-                                <span th:if="${s.grade != null}" class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fw-bold fs-6" th:text="${s.grade} + ' / 10'">8.5 / 10</span>
-                                <span th:if="${s.grade == null}" class="badge-saas badge-pending">Chờ chấm điểm</span>
-                            </td>
-                            <td>
-                                <div th:if="${s.feedback != null}" class="small text-secondary" style="max-width: 320px; line-height: 1.5;" th:text="${s.feedback}">
-                                    Báo cáo trình bày rõ ràng, kiến trúc phân tầng logic.
-                                </div>
-                                <div th:if="${s.feedback == null}" class="text-muted small fst-italic">
-                                    Giảng viên chưa gửi nhận xét.
-                                </div>
-                            </td>
-                        </tr>
-                        <tr th:if="${submissions == null or submissions.isEmpty()}">
-                            <td colspan="5" class="text-center py-5 text-muted">
-                                <i class="fa-regular fa-folder-open fs-2 mb-2 d-block text-secondary"></i>
-                                Bạn chưa nộp bài báo cáo tiến độ nào.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
         </div>
 
-    </div>
+    </main>
 
-</main>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

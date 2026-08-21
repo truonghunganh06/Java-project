@@ -14,21 +14,30 @@ public class StudentService {
 
     private final StudentRepository studentRepository;
     private final TopicRepository topicRepository;
-    private final TopicRegistrationRepository registrationRepository;
+    private final StudentGroupRepository groupRepository;
+    private final GroupMemberRepository groupMemberRepository;
     private final SubmissionRepository submissionRepository;
     private final MajorRepository majorRepository;
+    private final RegistrationPeriodRepository periodRepository;
+    private final EvaluationRepository evaluationRepository;
 
     public StudentService(
             StudentRepository studentRepository,
             TopicRepository topicRepository,
-            TopicRegistrationRepository registrationRepository,
+            StudentGroupRepository groupRepository,
+            GroupMemberRepository groupMemberRepository,
             SubmissionRepository submissionRepository,
-            MajorRepository majorRepository) {
+            MajorRepository majorRepository,
+            RegistrationPeriodRepository periodRepository,
+            EvaluationRepository evaluationRepository) {
         this.studentRepository = studentRepository;
         this.topicRepository = topicRepository;
-        this.registrationRepository = registrationRepository;
+        this.groupRepository = groupRepository;
+        this.groupMemberRepository = groupMemberRepository;
         this.submissionRepository = submissionRepository;
         this.majorRepository = majorRepository;
+        this.periodRepository = periodRepository;
+        this.evaluationRepository = evaluationRepository;
     }
 
     @Transactional
@@ -39,7 +48,6 @@ public class StudentService {
             return opt.get();
         }
 
-        // Tạo bản ghi Student mới trong DB nếu chưa có
         Student newStudent = new Student();
         newStudent.setUser(user);
         newStudent.setStudentCode(user.getUsername() != null ? user.getUsername() : "SV" + user.getId());
@@ -52,16 +60,148 @@ public class StudentService {
             newStudent.setMajor(majors.get(0));
         }
 
-        Student saved = studentRepository.save(newStudent);
-        System.out.println("[DB-STUDENT] getStudentByUser: Đã tạo bản ghi Sinh viên mới trong DB (ID=" + saved.getId() + ", Mã=" + saved.getStudentCode() + ") cho User '" + user.getUsername() + "'");
+        return studentRepository.save(newStudent);
+    }
+
+    public Student getStudentByCode(String studentCode) {
+        if (studentCode == null || studentCode.trim().isEmpty()) return null;
+        return studentRepository.findByStudentCode(studentCode.trim()).orElse(null);
+    }
+
+    // ==================== GROUP MANAGEMENT (MAX 3 SV) ====================
+
+    public StudentGroup getMyActiveGroup(Student student, Long periodId) {
+        if (student == null) return null;
+        List<StudentGroup> list = groupRepository.findByStudentIdAndPeriodId(student.getId(), periodId);
+        if (!list.isEmpty()) {
+            return list.get(0);
+        }
+        // If periodId is null, get latest group
+        List<StudentGroup> allMyGroups = groupRepository.findByStudentId(student.getId());
+        if (!allMyGroups.isEmpty()) {
+            return allMyGroups.get(allMyGroups.size() - 1);
+        }
+        return null;
+    }
+
+    @Transactional
+    public StudentGroup createGroup(Student leader, Long periodId, String groupName) {
+        RegistrationPeriod period = periodId != null ? periodRepository.findById(periodId).orElse(null) : null;
+        if (period == null) {
+            List<RegistrationPeriod> activePeriods = periodRepository.findByIsActiveTrueOrderByIdDesc();
+            if (!activePeriods.isEmpty()) period = activePeriods.get(0);
+        }
+
+        // Check if student already in a group in this period
+        if (period != null) {
+            List<StudentGroup> existing = groupRepository.findByStudentIdAndPeriodId(leader.getId(), period.getId());
+            if (!existing.isEmpty()) {
+                throw new IllegalStateException("Bạn đã tham gia một nhóm trong đợt này rồi (" + existing.get(0).getGroupName() + ").");
+            }
+        }
+
+        StudentGroup group = new StudentGroup();
+        group.setPeriod(period);
+        group.setLeader(leader);
+        group.setGroupName((groupName != null && !groupName.trim().isEmpty()) ? groupName.trim() : "Nhóm của " + leader.getUser().getFullName());
+        group.setGroupCode("GRP-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase());
+        group.setStatus("DRAFT");
+        group.setCreatedAt(OffsetDateTime.now());
+
+        StudentGroup saved = groupRepository.save(group);
+
+        // Add leader as first member
+        GroupMember gm = new GroupMember();
+        gm.setGroup(saved);
+        gm.setStudent(leader);
+        gm.setRoleInGroup("LEADER");
+        gm.setJoinedAt(OffsetDateTime.now());
+        groupMemberRepository.save(gm);
+
+        System.out.println("[DB-STUDENT] Đã tạo nhóm mới: '" + saved.getGroupName() + "' (Mã: " + saved.getGroupCode() + ") bởi Leader " + leader.getStudentCode());
         return saved;
     }
 
-    public List<Topic> getAvailableTopics(Long majorId, String keyword) {
-        List<Topic> list = topicRepository.findByStatus("APPROVED");
-        System.out.println("[DB-STUDENT] getAvailableTopics: Lấy " + list.size() + " đề tài APPROVED từ Database");
+    @Transactional
+    public String inviteMemberByCode(StudentGroup group, String studentCode) {
+        if (group == null) return "Không tìm thấy nhóm.";
+        List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
+        if (currentMembers.size() >= 3) {
+            return "Nhóm đã đạt số lượng tối đa 3 thành viên!";
+        }
 
+        Student invitee = getStudentByCode(studentCode);
+        if (invitee == null) {
+            return "Không tìm thấy sinh viên có mã: " + studentCode;
+        }
+
+        Long periodId = group.getPeriod() != null ? group.getPeriod().getId() : null;
+        List<StudentGroup> existing = groupRepository.findByStudentIdAndPeriodId(invitee.getId(), periodId);
+        if (!existing.isEmpty()) {
+            return "Sinh viên " + invitee.getUser().getFullName() + " (" + studentCode + ") đã tham gia một nhóm khác trong đợt này!";
+        }
+
+        GroupMember gm = new GroupMember();
+        gm.setGroup(group);
+        gm.setStudent(invitee);
+        gm.setRoleInGroup("MEMBER");
+        gm.setJoinedAt(OffsetDateTime.now());
+        groupMemberRepository.save(gm);
+
+        System.out.println("[DB-STUDENT] Đã thêm thành viên " + invitee.getStudentCode() + " vào nhóm " + group.getGroupCode());
+        return null; // success
+    }
+
+    @Transactional
+    public String joinGroupByCode(Student student, String groupCode) {
+        if (student == null) return "Vui lòng đăng nhập.";
+        if (groupCode == null || groupCode.trim().isEmpty()) return "Vui lòng nhập mã nhóm.";
+
+        Optional<StudentGroup> opt = groupRepository.findByGroupCode(groupCode.trim().toUpperCase());
+        if (opt.isEmpty()) {
+            return "Mã nhóm không tồn tại!";
+        }
+
+        StudentGroup group = opt.get();
+        List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
+        if (currentMembers.size() >= 3) {
+            return "Nhóm " + group.getGroupName() + " đã đủ 3 thành viên!";
+        }
+
+        Long periodId = group.getPeriod() != null ? group.getPeriod().getId() : null;
+        List<StudentGroup> existing = groupRepository.findByStudentIdAndPeriodId(student.getId(), periodId);
+        if (!existing.isEmpty()) {
+            return "Bạn đã thuộc một nhóm khác trong đợt này rồi!";
+        }
+
+        GroupMember gm = new GroupMember();
+        gm.setGroup(group);
+        gm.setStudent(student);
+        gm.setRoleInGroup("MEMBER");
+        gm.setJoinedAt(OffsetDateTime.now());
+        groupMemberRepository.save(gm);
+
+        System.out.println("[DB-STUDENT] Sinh viên " + student.getStudentCode() + " đã gia nhập nhóm " + group.getGroupCode());
+        return null; // success
+    }
+
+    @Transactional
+    public boolean removeMember(StudentGroup group, Long memberStudentId) {
+        if (group == null || memberStudentId == null) return false;
+        // Cannot remove leader
+        if (group.getLeader() != null && group.getLeader().getId().equals(memberStudentId)) {
+            return false;
+        }
+        groupMemberRepository.deleteByGroupIdAndStudentId(group.getId(), memberStudentId);
+        return true;
+    }
+
+    // ==================== TOPIC REGISTRATION ====================
+
+    public List<Topic> getAvailableTopics(Long periodId, Long majorId, String keyword) {
+        List<Topic> list = topicRepository.findByStatus("APPROVED");
         return list.stream()
+                .filter(t -> periodId == null || (t.getPeriod() != null && periodId.equals(t.getPeriod().getId())))
                 .filter(t -> majorId == null || (t.getMajor() != null && majorId.equals(t.getMajor().getId())))
                 .filter(t -> keyword == null || keyword.trim().isEmpty() ||
                         (t.getTitle() != null && t.getTitle().toLowerCase().contains(keyword.toLowerCase())) ||
@@ -71,72 +211,77 @@ public class StudentService {
 
     public Topic getTopicById(Long id) {
         if (id == null) return null;
-        Optional<Topic> opt = topicRepository.findById(id);
-        System.out.println("[DB-STUDENT] getTopicById(" + id + "): " + (opt.isPresent() ? "Tìm thấy đề tài: " + opt.get().getTitle() : "Không tìm thấy"));
-        return opt.orElse(null);
-    }
-
-    public int getRegisteredCountForTopic(Long topicId) {
-        if (topicId == null) return 0;
-        List<TopicRegistration> list = registrationRepository.findByTopicId(topicId);
-        int count = (int) list.stream().filter(r -> !"REJECTED".equalsIgnoreCase(r.getStatus())).count();
-        System.out.println("[DB-STUDENT] getRegisteredCountForTopic(" + topicId + "): " + count + " sinh viên đã đăng ký hợp lệ");
-        return count;
-    }
-
-    public TopicRegistration getMyRegistration(Student student) {
-        if (student == null || student.getId() == null) return null;
-        List<TopicRegistration> list = registrationRepository.findByStudentId(student.getId());
-        System.out.println("[DB-STUDENT] getMyRegistration: Lấy " + list.size() + " bản ghi đăng ký của SV ID=" + student.getId());
-        if (!list.isEmpty()) {
-            return list.get(list.size() - 1);
-        }
-        return null;
+        return topicRepository.findById(id).orElse(null);
     }
 
     @Transactional
-    public String registerTopic(Student student, Long topicId) {
-        TopicRegistration existing = getMyRegistration(student);
-        if (existing != null && ("APPROVED".equalsIgnoreCase(existing.getStatus()) || "PENDING".equalsIgnoreCase(existing.getStatus()))) {
-            return "Bạn đã có đề tài đang đăng ký (" + (existing.getTopic() != null ? existing.getTopic().getTitle() : "") + "). Không thể đăng ký thêm đề tài khác.";
+    public String registerTopicForGroup(Student student, StudentGroup group, Long topicId) {
+        if (group == null) {
+            return "Bạn cần tạo hoặc gia nhập một nhóm trước khi đăng ký đề tài.";
+        }
+
+        // Leader check
+        if (!group.isLeader(student)) {
+            return "Chỉ Nhóm trưởng mới có quyền chọn và đăng ký đề tài cho nhóm!";
+        }
+
+        if (group.getTopic() != null) {
+            return "Nhóm đã đăng ký đề tài: '" + group.getTopic().getTitle() + "'.";
         }
 
         Topic topic = getTopicById(topicId);
-        if (topic == null) {
-            return "Đề tài không tồn tại.";
+        if (topic == null || !"APPROVED".equalsIgnoreCase(topic.getStatus())) {
+            return "Đề tài không tồn tại hoặc chưa được duyệt!";
         }
 
-        int currentCount = getRegisteredCountForTopic(topicId);
-        if (topic.getMaxStudents() != null && currentCount >= topic.getMaxStudents()) {
-            return "Đề tài đã đủ số lượng sinh viên đăng ký (" + currentCount + "/" + topic.getMaxStudents() + ").";
+        // Check if registration period is open
+        if (topic.getPeriod() != null && !topic.getPeriod().isStudentRegistrationOpen()) {
+            return "Đợt đăng ký đề tài này hiện không trong thời gian mở đăng ký cho sinh viên!";
         }
 
-        TopicRegistration newReg = new TopicRegistration();
-        newReg.setTopic(topic);
-        newReg.setStudent(student);
-        newReg.setStatus("PENDING");
-        newReg.setRegisteredAt(OffsetDateTime.now());
+        // Check capacity
+        List<StudentGroup> existingGroupsOnTopic = groupRepository.findByTopicId(topicId);
+        if (existingGroupsOnTopic.size() >= 1) { // 1 group per topic standard
+            return "Đề tài này đã được một nhóm khác đăng ký!";
+        }
 
-        registrationRepository.save(newReg);
-        System.out.println("[DB-STUDENT] registerTopic: ĐÃ LƯU ĐĂNG KÝ ĐỀ TÀI VÀO DB! (SV: " + student.getStudentCode() + ", Đề tài: " + topic.getTitle() + ")");
+        group.setTopic(topic);
+        group.setStatus("REGISTERED");
+        groupRepository.save(group);
+
+        System.out.println("[DB-STUDENT] Nhóm '" + group.getGroupName() + "' đã đăng ký đề tài '" + topic.getTitle() + "'");
         return null; // success
     }
 
-    public List<Submission> getMySubmissions(Student student) {
-        if (student == null || student.getId() == null) return Collections.emptyList();
-        List<Submission> list = submissionRepository.findByStudentId(student.getId());
-        System.out.println("[DB-STUDENT] getMySubmissions: Lấy " + list.size() + " bài nộp báo cáo từ DB của SV ID=" + student.getId());
+    // ==================== SUBMISSIONS (LEADER ONLY) ====================
+
+    public List<Submission> getGroupSubmissions(StudentGroup group) {
+        if (group == null) return Collections.emptyList();
+        List<Submission> list = submissionRepository.findByGroupId(group.getId());
         return list.stream()
                 .sorted(Comparator.comparing(Submission::getSubmittedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    public Submission submitReport(Student student, Long topicId, String title, Integer round, String fileName, Long fileSize) {
-        Topic topic = getTopicById(topicId);
+    public String submitGroupReport(Student student, StudentGroup group, String title, Integer round, String fileName, Long fileSize) {
+        if (group == null) {
+            return "Bạn chưa thuộc nhóm nào!";
+        }
+
+        // BẮT BUỘC: CHỈ NHÓM TRƯỞNG MỚI ĐƯỢC NỘP BÁO CÁO ĐỀ TÀI
+        if (!group.isLeader(student)) {
+            return "QUYỀN HẠN BỊ TỪ CHỐI: Chỉ Nhóm trưởng mới có quyền nộp bài báo cáo đề tài!";
+        }
+
+        if (group.getTopic() == null) {
+            return "Nhóm của bạn chưa đăng ký đề tài nào!";
+        }
 
         Submission sub = new Submission();
-        sub.setTopic(topic);
+        sub.setTopic(group.getTopic());
+        sub.setGroup(group);
+        sub.setSubmittedByStudent(student);
         sub.setStudent(student);
         sub.setTitle(title);
         sub.setSubmissionRound(round != null ? round : 1);
@@ -144,14 +289,23 @@ public class StudentService {
         sub.setFileSize(fileSize != null ? fileSize : 1048576L);
         sub.setSubmittedAt(OffsetDateTime.now());
 
-        Submission saved = submissionRepository.save(sub);
-        System.out.println("[DB-STUDENT] submitReport: ĐÃ LƯU BÀI NỘP BÁO CÁO VÀO DB! (Tiêu đề: '" + title + "', Vòng: " + round + ")");
-        return saved;
+        submissionRepository.save(sub);
+        System.out.println("[DB-STUDENT] Leader " + student.getStudentCode() + " đã nộp báo cáo cho nhóm " + group.getGroupName());
+        return null; // success
+    }
+
+    // ==================== RESULTS & EVALUATIONS ====================
+
+    public List<Evaluation> getGroupEvaluations(StudentGroup group) {
+        if (group == null || group.getTopic() == null) return Collections.emptyList();
+        return evaluationRepository.findByTopicId(group.getTopic().getId());
+    }
+
+    public List<RegistrationPeriod> getAllActivePeriods() {
+        return periodRepository.findByIsActiveTrueOrderByIdDesc();
     }
 
     public List<Major> getAllMajors() {
-        List<Major> list = majorRepository.findAll();
-        System.out.println("[DB-STUDENT] getAllMajors: Lấy " + list.size() + " chuyên ngành từ DB");
-        return list;
+        return majorRepository.findAll();
     }
 }

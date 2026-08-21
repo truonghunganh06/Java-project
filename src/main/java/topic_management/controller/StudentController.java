@@ -7,20 +7,22 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import topic_management.entity.*;
-import topic_management.service.StudentService;
+import topic_management.service.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Controller
 @RequestMapping("/student")
 public class StudentController {
 
     private final StudentService studentService;
+    private final AnnouncementService announcementService;
 
-    public StudentController(StudentService studentService) {
+    public StudentController(
+            StudentService studentService,
+            AnnouncementService announcementService) {
         this.studentService = studentService;
+        this.announcementService = announcementService;
     }
 
     private AppUser getAuthenticatedUser(HttpSession session) {
@@ -30,116 +32,224 @@ public class StudentController {
     @GetMapping("/dashboard")
     public String showDashboard(HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
 
         Student student = studentService.getStudentByUser(user);
-        TopicRegistration myReg = studentService.getMyRegistration(student);
-        List<Submission> submissions = studentService.getMySubmissions(student);
-        List<Topic> availableTopics = studentService.getAvailableTopics(null, null);
+        StudentGroup group = studentService.getMyActiveGroup(student, null);
+        List<Announcement> announcements = announcementService.getAllAnnouncements();
+        List<RegistrationPeriod> activePeriods = studentService.getAllActivePeriods();
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
-        model.addAttribute("myReg", myReg);
-        model.addAttribute("submissions", submissions);
-        model.addAttribute("availableTopicsCount", availableTopics.size());
-        model.addAttribute("submissionsCount", submissions.size());
+        model.addAttribute("group", group);
+        model.addAttribute("announcements", announcements.stream().limit(5).toList());
+        model.addAttribute("activePeriods", activePeriods);
 
         return "student/dashboard";
     }
 
+    // ==================== GROUP MANAGEMENT ====================
+
+    @GetMapping("/group")
+    public String showGroupPage(
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            HttpSession session,
+            Model model) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Student student = studentService.getStudentByUser(user);
+        StudentGroup group = studentService.getMyActiveGroup(student, periodId);
+        List<RegistrationPeriod> activePeriods = studentService.getAllActivePeriods();
+
+        model.addAttribute("user", user);
+        model.addAttribute("student", student);
+        model.addAttribute("group", group);
+        model.addAttribute("activePeriods", activePeriods);
+        model.addAttribute("selectedPeriodId", periodId);
+
+        return "student/group";
+    }
+
+    @PostMapping("/group/create")
+    public String createGroup(
+            @RequestParam("groupName") String groupName,
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Student student = studentService.getStudentByUser(user);
+        try {
+            StudentGroup g = studentService.createGroup(student, periodId, groupName);
+            redirectAttributes.addFlashAttribute("successMessage", "Tạo nhóm '" + g.getGroupName() + "' thành công! Mã nhóm: " + g.getGroupCode());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/student/group";
+    }
+
+    @PostMapping("/group/invite")
+    public String inviteMember(
+            @RequestParam("studentCode") String studentCode,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Student student = studentService.getStudentByUser(user);
+        StudentGroup group = studentService.getMyActiveGroup(student, null);
+
+        if (group == null || !group.isLeader(student)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Chỉ Nhóm trưởng mới có quyền mời thành viên!");
+            return "redirect:/student/group";
+        }
+
+        String err = studentService.inviteMemberByCode(group, studentCode);
+        if (err != null) {
+            redirectAttributes.addFlashAttribute("errorMessage", err);
+        } else {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã thêm sinh viên " + studentCode + " vào nhóm thành công!");
+        }
+
+        return "redirect:/student/group";
+    }
+
+    @PostMapping("/group/join")
+    public String joinGroup(
+            @RequestParam("groupCode") String groupCode,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Student student = studentService.getStudentByUser(user);
+        String err = studentService.joinGroupByCode(student, groupCode);
+
+        if (err != null) {
+            redirectAttributes.addFlashAttribute("errorMessage", err);
+        } else {
+            redirectAttributes.addFlashAttribute("successMessage", "Gia nhập nhóm thành công!");
+        }
+
+        return "redirect:/student/group";
+    }
+
+    @PostMapping("/group/remove-member")
+    public String removeMember(
+            @RequestParam("studentId") Long studentId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Student student = studentService.getStudentByUser(user);
+        StudentGroup group = studentService.getMyActiveGroup(student, null);
+
+        if (group == null || !group.isLeader(student)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Chỉ Nhóm trưởng mới có quyền xóa thành viên!");
+            return "redirect:/student/group";
+        }
+
+        studentService.removeMember(group, studentId);
+        redirectAttributes.addFlashAttribute("successMessage", "Đã xóa thành viên khỏi nhóm.");
+        return "redirect:/student/group";
+    }
+
+    // ==================== TOPICS & REGISTRATION ====================
+
     @GetMapping("/topics")
     public String listTopics(
+            @RequestParam(value = "periodId", required = false) Long periodId,
             @RequestParam(value = "majorId", required = false) Long majorId,
             @RequestParam(value = "keyword", required = false) String keyword,
             HttpSession session,
             Model model) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
 
         Student student = studentService.getStudentByUser(user);
-        TopicRegistration myReg = studentService.getMyRegistration(student);
-        List<Topic> topics = studentService.getAvailableTopics(majorId, keyword);
+        StudentGroup group = studentService.getMyActiveGroup(student, periodId);
+        List<Topic> topics = studentService.getAvailableTopics(periodId, majorId, keyword);
         List<Major> majors = studentService.getAllMajors();
-
-        // Build map of current registered count per topic
-        Map<Long, Integer> registeredCounts = new HashMap<>();
-        for (Topic t : topics) {
-            registeredCounts.put(t.getId(), studentService.getRegisteredCountForTopic(t.getId()));
-        }
+        List<RegistrationPeriod> periods = studentService.getAllActivePeriods();
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
+        model.addAttribute("group", group);
         model.addAttribute("topics", topics);
         model.addAttribute("majors", majors);
+        model.addAttribute("periods", periods);
+        model.addAttribute("selectedPeriodId", periodId);
         model.addAttribute("selectedMajorId", majorId);
         model.addAttribute("keyword", keyword);
-        model.addAttribute("myReg", myReg);
-        model.addAttribute("registeredCounts", registeredCounts);
 
         return "student/topics";
     }
 
     @PostMapping("/topics/{id}/register")
-    public String handleRegisterTopic(
+    public String registerTopic(
             @PathVariable("id") Long topicId,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
 
         Student student = studentService.getStudentByUser(user);
-        String error = studentService.registerTopic(student, topicId);
+        StudentGroup group = studentService.getMyActiveGroup(student, null);
 
-        if (error != null) {
-            redirectAttributes.addFlashAttribute("errorMessage", error);
+        String err = studentService.registerTopicForGroup(student, group, topicId);
+        if (err != null) {
+            redirectAttributes.addFlashAttribute("errorMessage", err);
             return "redirect:/student/topics";
         }
 
-        redirectAttributes.addFlashAttribute("successMessage", "Gửi yêu cầu đăng ký đề tài thành công! Vui lòng chờ Giảng viên hướng dẫn duyệt.");
+        redirectAttributes.addFlashAttribute("successMessage", "Đăng ký đề tài cho nhóm thành công! Vui lòng chờ Giảng viên hướng dẫn duyệt.");
         return "redirect:/student/my-topic";
     }
+
+    // ==================== MY TOPIC ====================
 
     @GetMapping("/my-topic")
     public String showMyTopic(HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
 
         Student student = studentService.getStudentByUser(user);
-        TopicRegistration myReg = studentService.getMyRegistration(student);
-        List<Submission> submissions = studentService.getMySubmissions(student);
+        StudentGroup group = studentService.getMyActiveGroup(student, null);
+        List<Submission> submissions = studentService.getGroupSubmissions(group);
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
-        model.addAttribute("myReg", myReg);
+        model.addAttribute("group", group);
         model.addAttribute("submissions", submissions);
 
         return "student/my-topic";
     }
 
+    // ==================== SUBMISSIONS (LEADER ONLY) ====================
+
     @GetMapping("/submissions")
     public String listSubmissions(HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
 
         Student student = studentService.getStudentByUser(user);
-        TopicRegistration myReg = studentService.getMyRegistration(student);
-        List<Submission> submissions = studentService.getMySubmissions(student);
+        StudentGroup group = studentService.getMyActiveGroup(student, null);
+        List<Submission> submissions = studentService.getGroupSubmissions(group);
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
-        model.addAttribute("myReg", myReg);
+        model.addAttribute("group", group);
         model.addAttribute("submissions", submissions);
 
         return "student/submissions";
@@ -154,24 +264,40 @@ public class StudentController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
 
         Student student = studentService.getStudentByUser(user);
-        TopicRegistration myReg = studentService.getMyRegistration(student);
-
-        if (myReg == null || !"APPROVED".equalsIgnoreCase(myReg.getStatus())) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Bạn cần được Giảng viên phê duyệt đề tài trước khi nộp báo cáo tiến độ.");
-            return "redirect:/student/submissions";
-        }
+        StudentGroup group = studentService.getMyActiveGroup(student, null);
 
         String fileName = (file != null && !file.isEmpty()) ? file.getOriginalFilename() : "BaoCao_TienDo_Dot" + round + ".pdf";
         Long fileSize = (file != null && !file.isEmpty()) ? file.getSize() : 2048576L;
 
-        studentService.submitReport(student, myReg.getTopic().getId(), title, round, fileName, fileSize);
+        String err = studentService.submitGroupReport(student, group, title, round, fileName, fileSize);
+        if (err != null) {
+            redirectAttributes.addFlashAttribute("errorMessage", err);
+            return "redirect:/student/submissions";
+        }
 
-        redirectAttributes.addFlashAttribute("successMessage", "Nộp báo cáo tiến độ thành công! Giảng viên sẽ sớm nhận xét và chấm điểm.");
+        redirectAttributes.addFlashAttribute("successMessage", "Nhóm trưởng đã nộp báo cáo tiến độ thành công!");
         return "redirect:/student/submissions";
+    }
+
+    // ==================== RESULTS ====================
+
+    @GetMapping("/results")
+    public String showResults(HttpSession session, Model model) {
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Student student = studentService.getStudentByUser(user);
+        StudentGroup group = studentService.getMyActiveGroup(student, null);
+        List<Evaluation> evaluations = studentService.getGroupEvaluations(group);
+
+        model.addAttribute("user", user);
+        model.addAttribute("student", student);
+        model.addAttribute("group", group);
+        model.addAttribute("evaluations", evaluations);
+
+        return "student/results";
     }
 }

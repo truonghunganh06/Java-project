@@ -6,7 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import topic_management.entity.*;
-import topic_management.service.LecturerService;
+import topic_management.service.*;
 
 import java.util.List;
 
@@ -15,9 +15,16 @@ import java.util.List;
 public class LecturerController {
 
     private final LecturerService lecturerService;
+    private final CouncilService councilService;
+    private final AnnouncementService announcementService;
 
-    public LecturerController(LecturerService lecturerService) {
+    public LecturerController(
+            LecturerService lecturerService,
+            CouncilService councilService,
+            AnnouncementService announcementService) {
         this.lecturerService = lecturerService;
+        this.councilService = councilService;
+        this.announcementService = announcementService;
     }
 
     private AppUser getAuthenticatedUser(HttpSession session) {
@@ -27,39 +34,42 @@ public class LecturerController {
     @GetMapping("/dashboard")
     public String showDashboard(HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         List<Topic> topics = lecturerService.getTopicsByLecturer(lecturer);
-        List<TopicRegistration> registrations = lecturerService.getRegistrationsByLecturer(lecturer);
+        List<Topic> reviewerTopics = lecturerService.getReviewerTopics(lecturer);
+        List<Council> councils = lecturerService.getCouncilsForLecturer(lecturer);
+        List<StudentGroup> groups = lecturerService.getGroupsForLecturerTopics(lecturer);
         List<Submission> submissions = lecturerService.getSubmissionsByLecturer(lecturer);
+        List<Announcement> announcements = announcementService.getAllAnnouncements();
 
         long approvedCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus())).count();
         long pendingCount = topics.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
-        long pendingRegCount = registrations.stream().filter(r -> "PENDING".equalsIgnoreCase(r.getStatus())).count();
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("topics", topics);
-        model.addAttribute("registrations", registrations);
+        model.addAttribute("reviewerTopics", reviewerTopics);
+        model.addAttribute("councils", councils);
+        model.addAttribute("groups", groups);
         model.addAttribute("submissions", submissions);
+        model.addAttribute("announcements", announcements.stream().limit(5).toList());
         model.addAttribute("totalTopics", topics.size());
         model.addAttribute("approvedTopics", approvedCount);
         model.addAttribute("pendingTopics", pendingCount);
-        model.addAttribute("pendingRegistrations", pendingRegCount);
-        model.addAttribute("totalSubmissions", submissions.size());
+        model.addAttribute("reviewerCount", reviewerTopics.size());
+        model.addAttribute("councilCount", councils.size());
 
         return "lecturer/dashboard";
     }
 
+    // ==================== TOPICS ====================
+
     @GetMapping("/topics")
     public String listTopics(HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         List<Topic> topics = lecturerService.getTopicsByLecturer(lecturer);
@@ -76,15 +86,19 @@ public class LecturerController {
     @GetMapping("/topics/create")
     public String showCreateTopicForm(HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
+        List<RegistrationPeriod> openPeriods = lecturerService.getOpenProposalPeriods();
+        List<Lecturer> coSupervisors = lecturerService.getOtherLecturers(lecturer.getId());
+        List<Major> majors = lecturerService.getAllMajors();
+
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("topic", new Topic());
-        model.addAttribute("majors", lecturerService.getAllMajors());
+        model.addAttribute("openPeriods", openPeriods);
+        model.addAttribute("coSupervisors", coSupervisors);
+        model.addAttribute("majors", majors);
 
         return "lecturer/create-topic";
     }
@@ -93,64 +107,144 @@ public class LecturerController {
     public String handleCreateTopic(
             @ModelAttribute Topic topic,
             @RequestParam("majorId") Long majorId,
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            @RequestParam(value = "coSupervisorId", required = false) Long coSupervisorId,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
-        lecturerService.createTopic(lecturer, topic, majorId);
+        lecturerService.createTopic(lecturer, periodId, majorId, coSupervisorId, topic);
 
-        redirectAttributes.addFlashAttribute("successMessage", "Đề xuất đề tài '" + topic.getTitle() + "' thành công và đang chờ xét duyệt!");
+        redirectAttributes.addFlashAttribute("successMessage", "Đề xuất đề tài '" + topic.getTitle() + "' thành công và đang chờ Trưởng khoa xét duyệt!");
         return "redirect:/lecturer/topics";
     }
 
+    // ==================== GROUPS & APPROVAL ====================
+
     @GetMapping("/registrations")
-    public String listRegistrations(HttpSession session, Model model) {
+    public String listGroups(HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
-        List<TopicRegistration> registrations = lecturerService.getRegistrationsByLecturer(lecturer);
+        List<StudentGroup> groups = lecturerService.getGroupsForLecturerTopics(lecturer);
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
-        model.addAttribute("registrations", registrations);
+        model.addAttribute("groups", groups);
 
         return "lecturer/registrations";
     }
 
     @PostMapping("/registrations/{id}/approve")
-    public String approveRegistration(@PathVariable("id") Long id, HttpSession session, RedirectAttributes redirectAttributes) {
+    public String approveGroup(@PathVariable("id") Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         AppUser user = getAuthenticatedUser(session);
         if (user == null) return "redirect:/login";
 
-        lecturerService.updateRegistrationStatus(id, "APPROVED");
-        redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt đăng ký của sinh viên thành công!");
+        lecturerService.approveGroupTopic(id, "APPROVED");
+        redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt nhóm sinh viên hướng dẫn thành công!");
         return "redirect:/lecturer/registrations";
     }
 
     @PostMapping("/registrations/{id}/reject")
-    public String rejectRegistration(@PathVariable("id") Long id, HttpSession session, RedirectAttributes redirectAttributes) {
+    public String rejectGroup(@PathVariable("id") Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         AppUser user = getAuthenticatedUser(session);
         if (user == null) return "redirect:/login";
 
-        lecturerService.updateRegistrationStatus(id, "REJECTED");
-        redirectAttributes.addFlashAttribute("errorMessage", "Đã từ chối đăng ký đề tài của sinh viên.");
+        lecturerService.approveGroupTopic(id, "REJECTED");
+        redirectAttributes.addFlashAttribute("errorMessage", "Đã từ chối nhóm đăng ký.");
         return "redirect:/lecturer/registrations";
     }
+
+    // ==================== REVIEWS (GVPB) ====================
+
+    @GetMapping("/reviews")
+    public String listReviewTopics(HttpSession session, Model model) {
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Lecturer lecturer = lecturerService.getLecturerByUser(user);
+        List<Topic> reviewerTopics = lecturerService.getReviewerTopics(lecturer);
+
+        model.addAttribute("user", user);
+        model.addAttribute("lecturer", lecturer);
+        model.addAttribute("reviewerTopics", reviewerTopics);
+
+        return "lecturer/reviews";
+    }
+
+    @PostMapping("/reviews/{topicId}/grade")
+    public String gradeReviewer(
+            @PathVariable("topicId") Long topicId,
+            @RequestParam("score") Double score,
+            @RequestParam("comments") String comments,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Lecturer lecturer = lecturerService.getLecturerByUser(user);
+        boolean ok = councilService.submitEvaluation(topicId, lecturer.getId(), "REVIEWER", score, comments);
+
+        if (ok) {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã nộp điểm và nhận xét phản biện thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể chấm phản biện cho đề tài này (xung đột lợi ích)!");
+        }
+
+        return "redirect:/lecturer/reviews";
+    }
+
+    // ==================== COUNCILS ====================
+
+    @GetMapping("/councils")
+    public String listCouncils(HttpSession session, Model model) {
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Lecturer lecturer = lecturerService.getLecturerByUser(user);
+        List<Council> councils = lecturerService.getCouncilsForLecturer(lecturer);
+
+        model.addAttribute("user", user);
+        model.addAttribute("lecturer", lecturer);
+        model.addAttribute("councils", councils);
+
+        return "lecturer/councils";
+    }
+
+    @PostMapping("/councils/{topicId}/grade")
+    public String gradeCouncil(
+            @PathVariable("topicId") Long topicId,
+            @RequestParam("score") Double score,
+            @RequestParam("comments") String comments,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Lecturer lecturer = lecturerService.getLecturerByUser(user);
+        boolean ok = councilService.submitEvaluation(topicId, lecturer.getId(), "COUNCIL", score, comments);
+
+        if (ok) {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã nộp phiếu chấm điểm Hội đồng thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "LỖI XUNG ĐỘT: Giảng viên không được chấm điểm đề tài mình đang hướng dẫn!");
+        }
+
+        return "redirect:/lecturer/councils";
+    }
+
+    // ==================== SUBMISSIONS ====================
 
     @GetMapping("/submissions")
     public String listSubmissions(HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         List<Submission> submissions = lecturerService.getSubmissionsByLecturer(lecturer);
@@ -174,7 +268,7 @@ public class LecturerController {
         if (user == null) return "redirect:/login";
 
         lecturerService.gradeSubmission(id, grade, feedback);
-        redirectAttributes.addFlashAttribute("successMessage", "Đã lưu kết quả đánh giá và gửi nhận xét thành công!");
+        redirectAttributes.addFlashAttribute("successMessage", "Đã gửi đánh giá bài nộp báo cáo thành công!");
         return "redirect:/lecturer/submissions";
     }
 }

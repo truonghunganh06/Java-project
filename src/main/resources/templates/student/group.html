@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Nhóm Sinh Viên - TopicHub</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-body: #f8fafc;
+            --text-main: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --card-bg: #ffffff;
+            --primary-accent: #0f172a;
+            --primary-hover: #1e293b;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+
+        .navbar-saas {
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        .nav-link-saas {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            padding: 0.5rem 0.875rem;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link-saas:hover {
+            color: var(--text-main);
+            background-color: #f1f5f9;
+        }
+
+        .nav-link-saas.active {
+            color: #0f172a;
+            background-color: #f1f5f9;
+            font-weight: 600;
+        }
+
+        .saas-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
+        }
+
+        .btn-saas-primary {
+            background-color: var(--primary-accent);
+            color: #ffffff;
+            font-weight: 500;
+            font-size: 0.875rem;
+            border-radius: 8px;
+            padding: 0.5rem 1.25rem;
+            border: 1px solid var(--primary-accent);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.15s ease;
+        }
+
+        .btn-saas-primary:hover {
+            background-color: var(--primary-hover);
+            color: #ffffff;
+        }
+
+        .code-pill {
+            font-family: monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            border: 1px dashed #cbd5e1;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-saas">
+        <div class="container-fluid max-width-container">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark me-4" th:href="@{/student/dashboard}">
+                <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-2" style="width: 32px; height: 32px;">
+                    <i class="fa-solid fa-user-graduate"></i>
+                </div>
+                <span>TopicHub <span class="badge bg-light text-secondary border fw-normal fs-6">Sinh viên</span></span>
+            </a>
+            <div class="collapse navbar-collapse">
+                <div class="navbar-nav me-auto gap-1">
+                    <a class="nav-link-saas" th:href="@{/student/dashboard}">Tổng quan</a>
+                    <a class="nav-link-saas active" th:href="@{/student/group}">Nhóm của tôi</a>
+                    <a class="nav-link-saas" th:href="@{/student/topics}">Danh mục đề tài</a>
+                    <a class="nav-link-saas" th:href="@{/student/my-topic}">Đề tài đã chọn</a>
+                    <a class="nav-link-saas" th:href="@{/student/submissions}">Nộp báo cáo</a>
+                    <a class="nav-link-saas" th:href="@{/student/results}">Kết quả & Điểm</a>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-secondary small fw-medium" th:text="${user.fullName}">Sinh viên</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-outline-secondary rounded-pill">Đăng xuất</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-4">
+
+        <!-- Flash messages -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-3 mb-4" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="mb-4">
+            <h1 class="h4 fw-bold text-dark mb-1">Quản Lý Nhóm Thực Hiện Đề Tài</h1>
+            <p class="text-muted small mb-0">Quy định: Mỗi nhóm có tối đa <strong>3 thành viên</strong>. Mỗi sinh viên chỉ tham gia <strong>1 nhóm duy nhất</strong> trong đợt. <strong>Chỉ Nhóm trưởng mới được nộp báo cáo đề tài.</strong></p>
+        </div>
+
+        <!-- Case 1: Student has a group -->
+        <div th:if="${group != null}">
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="saas-card p-4 mb-4">
+                        <div class="d-flex justify-content-between align-items-start pb-3 mb-3 border-bottom">
+                            <div>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle mb-1" th:text="'Đợt: ' + (${group.period != null ? group.period.name : 'Chung'})"></span>
+                                <h2 class="h5 fw-bold text-dark mb-1" th:text="${group.groupName}">Nhóm 01</h2>
+                                <p class="text-muted small mb-0">Mã nhóm chia sẻ: <span class="code-pill ms-1" th:text="${group.groupCode}">GRP-XYZ</span></p>
+                            </div>
+                            <div>
+                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-3 py-2" th:text="${group.members.size()} + ' / 3 Thành viên'"></span>
+                            </div>
+                        </div>
+
+                        <h6 class="small fw-bold text-dark text-uppercase mb-3">Danh sách thành viên nhóm:</h6>
+                        <div class="list-group list-group-flush border rounded-3 mb-4">
+                            <div th:each="m : ${group.members}" class="list-group-item d-flex justify-content-between align-items-center py-3 px-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="d-inline-flex align-items-center justify-content-center bg-light text-dark rounded-circle border" style="width: 40px; height: 40px;">
+                                        <i class="fa-solid fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold text-dark" th:text="${m.student != null && m.student.user != null ? m.student.user.fullName : 'SV'}">Nguyễn Văn A</div>
+                                        <small class="text-muted" th:text="'Mã SV: ' + (${m.student != null ? m.student.studentCode : ''}) + ' | Lớp: ' + (${m.student != null ? m.student.className : 'CNTT'})"></small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span th:if="${m.roleInGroup == 'LEADER'}" class="badge bg-warning text-dark"><i class="fa-solid fa-crown me-1"></i>Nhóm trưởng (Leader)</span>
+                                    <span th:if="${m.roleInGroup == 'MEMBER'}" class="badge bg-light text-muted border">Thành viên</span>
+
+                                    <!-- Leader can remove members if no topic or draft -->
+                                    <form th:if="${group.isLeader(student) && m.roleInGroup != 'LEADER'}" th:action="@{/student/group/remove-member}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa thành viên này khỏi nhóm?');">
+                                        <input type="hidden" name="studentId" th:value="${m.student.id}">
+                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0 ms-2" title="Xóa thành viên"><i class="fa-solid fa-user-xmark"></i></button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Invite Member Form (Only Leader and if < 3 members) -->
+                        <div th:if="${group.isLeader(student) && group.members.size() < 3}" class="p-3 bg-light rounded-3 border">
+                            <h6 class="small fw-bold text-dark mb-2"><i class="fa-solid fa-user-plus me-1"></i> Mời thành viên bằng Mã Sinh Viên (Tối đa 3 người)</h6>
+                            <form th:action="@{/student/group/invite}" method="post" class="row g-2">
+                                <div class="col-sm-8">
+                                    <input type="text" name="studentCode" class="form-control form-control-sm" placeholder="Nhập Mã sinh viên (ví dụ: student1, SV002...)" required>
+                                </div>
+                                <div class="col-sm-4">
+                                    <button type="submit" class="btn btn-sm btn-dark w-100"><i class="fa-solid fa-plus me-1"></i> Thêm vào nhóm</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div th:if="${group.members.size() >= 3}" class="alert alert-info py-2 px-3 small rounded-3 mb-0">
+                            <i class="fa-solid fa-circle-info me-1"></i> Nhóm của bạn đã đạt số lượng tối đa <strong>3 thành viên</strong> theo quy định.
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Group Status & Topic Sidebar -->
+                <div class="col-lg-4">
+                    <div class="saas-card p-4 mb-4">
+                        <h6 class="small fw-bold text-dark text-uppercase mb-3">Đề tài của nhóm</h6>
+                        <div th:if="${group.topic != null}">
+                            <span class="badge bg-light text-dark border mb-1" th:text="${group.topic.code}">DT-01</span>
+                            <h2 class="h6 fw-bold text-dark mb-2" th:text="${group.topic.title}">Tên đề tài</h2>
+                            <p class="small text-muted mb-2"><i class="fa-solid fa-chalkboard-user me-1"></i> GVHD: <span th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.user.fullName : 'N/A'}"></span></p>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle mb-3" th:text="'Trạng thái nhóm: ' + ${group.status}"></span>
+                            <div class="d-grid gap-2">
+                                <a th:href="@{/student/my-topic}" class="btn btn-sm btn-outline-dark"><i class="fa-solid fa-circle-info me-1"></i> Chi tiết đề tài</a>
+                                <a th:href="@{/student/submissions}" class="btn btn-sm btn-primary"><i class="fa-solid fa-file-arrow-up me-1"></i> Nộp báo cáo tiến độ</a>
+                            </div>
+                        </div>
+                        <div th:if="${group.topic == null}" class="text-center py-3 text-muted small">
+                            <i class="fa-regular fa-folder-open fs-3 mb-2 d-block text-secondary"></i>
+                            Nhóm chưa đăng ký đề tài nào.
+                            <div class="mt-3" th:if="${group.isLeader(student)}">
+                                <a th:href="@{/student/topics}" class="btn btn-sm btn-dark"><i class="fa-solid fa-magnifying-glass me-1"></i> Chọn đề tài ngay</a>
+                            </div>
+                            <div class="mt-2 text-muted" th:unless="${group.isLeader(student)}">
+                                <em>Vui lòng nhắc Nhóm trưởng chọn và đăng ký đề tài.</em>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Role Card -->
+                    <div class="saas-card p-4">
+                        <h6 class="small fw-bold text-dark text-uppercase mb-2">Vai trò của bạn</h6>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span th:if="${group.isLeader(student)}" class="badge bg-warning text-dark p-2"><i class="fa-solid fa-crown me-1"></i> Bạn là Nhóm trưởng</span>
+                            <span th:unless="${group.isLeader(student)}" class="badge bg-light text-dark border p-2"><i class="fa-solid fa-user me-1"></i> Bạn là Thành viên</span>
+                        </div>
+                        <small class="text-muted d-block" th:if="${group.isLeader(student)}">Bạn có quyền quản lý thành viên, đăng ký đề tài và nộp bài báo cáo tiến độ cho cả nhóm.</small>
+                        <small class="text-muted d-block" th:unless="${group.isLeader(student)}">Bạn có quyền theo dõi tiến độ đề tài, xem nhận xét và xem kết quả chấm điểm của cả nhóm.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Case 2: Student has NOT joined or created any group -->
+        <div th:unless="${group != null}">
+            <div class="row g-4 justify-content-center">
+                <div class="col-md-6">
+                    <div class="saas-card p-4 p-md-5 text-center h-100">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-circle mb-3" style="width: 56px; height: 56px;">
+                            <i class="fa-solid fa-plus fs-4"></i>
+                        </div>
+                        <h2 class="h5 fw-bold text-dark mb-2">Tạo Nhóm Mới</h2>
+                        <p class="text-muted small mb-4">Bạn sẽ trở thành <strong>Nhóm trưởng (Leader)</strong>, có thể mời tối đa 2 bạn cùng làm đề tài và đại diện nhóm nộp bài báo cáo.</p>
+                        
+                        <form th:action="@{/student/group/create}" method="post">
+                            <div class="mb-3 text-start">
+                                <label class="form-label small fw-semibold">Đợt đăng ký *</label>
+                                <select name="periodId" class="form-select form-select-sm" required>
+                                    <option th:each="p : ${activePeriods}" th:value="${p.id}" th:text="${p.name + ' (' + p.getPeriodTypeName() + ')'}"></option>
+                                </select>
+                            </div>
+                            <div class="mb-3 text-start">
+                                <label class="form-label small fw-semibold">Tên nhóm của bạn *</label>
+                                <input type="text" name="groupName" class="form-control form-control-sm" placeholder="Ví dụ: Nhóm Nghiên cứu AI K16" required>
+                            </div>
+                            <button type="submit" class="btn-saas-primary w-100 justify-content-center"><i class="fa-solid fa-crown me-1"></i> Tạo nhóm ngay</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="saas-card p-4 p-md-5 text-center h-100">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-light text-dark border rounded-circle mb-3" style="width: 56px; height: 56px;">
+                            <i class="fa-solid fa-right-to-bracket fs-4"></i>
+                        </div>
+                        <h2 class="h5 fw-bold text-dark mb-2">Gia Nhập Bằng Mã Nhóm</h2>
+                        <p class="text-muted small mb-4">Nếu bạn của bạn đã tạo nhóm trước, hãy nhập <strong>Mã nhóm (Group Code)</strong> do bạn cung cấp để tham gia.</p>
+                        
+                        <form th:action="@{/student/group/join}" method="post">
+                            <div class="mb-3 text-start">
+                                <label class="form-label small fw-semibold">Nhập mã nhóm (6 ký tự) *</label>
+                                <input type="text" name="groupCode" class="form-control form-control-sm text-center fw-bold" placeholder="Ví dụ: GRP-A1B2C3" required style="letter-spacing: 0.1em; text-transform: uppercase;">
+                            </div>
+                            <div style="height: 58px;"></div>
+                            <button type="submit" class="btn btn-outline-dark w-100"><i class="fa-solid fa-user-group me-1"></i> Tham gia nhóm</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

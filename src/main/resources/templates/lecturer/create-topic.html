@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đề xuất đề tài mới - TopicHub</title>
+    <title>Đề Xuất Đề Tài Mới - Giảng Viên</title>
     
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Bootstrap 5.3 & FontAwesome 6 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -29,7 +26,7 @@
         body {
             background-color: var(--bg-body);
             color: var(--text-main);
-            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
             min-height: 100vh;
         }
 
@@ -89,208 +86,114 @@
             background-color: var(--primary-hover);
             color: #ffffff;
         }
-
-        .btn-saas-secondary {
-            background-color: #ffffff;
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 0.875rem;
-            border-radius: 8px;
-            padding: 0.6rem 1.25rem;
-            border: 1px solid var(--border-color);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.15s ease;
-        }
-
-        .btn-saas-secondary:hover {
-            background-color: #f8fafc;
-            color: var(--text-main);
-            border-color: #cbd5e1;
-        }
-
-        .form-label {
-            font-size: 0.8125rem;
-            font-weight: 600;
-            color: #334155;
-            margin-bottom: 0.375rem;
-        }
-
-        .form-control, .form-select {
-            font-size: 0.875rem;
-            border-color: #cbd5e1;
-            border-radius: 8px;
-            padding: 0.6rem 0.75rem;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: #64748b;
-            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
-        }
-
-        .badge-saas {
-            font-size: 0.75rem;
-            font-weight: 500;
-            padding: 0.25rem 0.625rem;
-            border-radius: 9999px;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .badge-role { background-color: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
-
-        .user-avatar-circle {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background-color: #f1f5f9;
-            color: #334155;
-            font-weight: 600;
-            font-size: 0.875rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #cbd5e1;
-        }
     </style>
 </head>
 <body>
 
-<!-- Navigation Bar -->
-<nav class="navbar-saas">
-    <div class="container-xl d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center gap-4">
-            <a class="d-flex align-items-center text-decoration-none gap-2" href="/lecturer/dashboard">
-                <div style="width: 34px; height: 34px; background: #0f172a; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fa-solid fa-graduation-cap"></i>
+    <nav class="navbar navbar-expand-lg navbar-saas">
+        <div class="container-fluid max-width-container">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark me-4" th:href="@{/lecturer/dashboard}">
+                <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-2" style="width: 32px; height: 32px;">
+                    <i class="fa-solid fa-chalkboard-user"></i>
                 </div>
-                <span class="fw-bold text-dark fs-6" style="letter-spacing: -0.02em;">TopicHub</span>
+                <span>TopicHub <span class="badge bg-light text-secondary border fw-normal fs-6">Giảng viên</span></span>
             </a>
-
-            <div class="d-none d-md-flex align-items-center gap-1">
-                <a href="/lecturer/dashboard" class="nav-link-saas">
-                    <i class="fa-solid fa-chart-pie me-1 text-muted"></i>Tổng quan
-                </a>
-                <a href="/lecturer/topics" class="nav-link-saas active">
-                    <i class="fa-solid fa-book me-1 text-muted"></i>Đề tài của tôi
-                </a>
-                <a href="/lecturer/registrations" class="nav-link-saas">
-                    <i class="fa-solid fa-user-check me-1 text-muted"></i>Duyệt đăng ký
-                </a>
-                <a href="/lecturer/submissions" class="nav-link-saas">
-                    <i class="fa-solid fa-file-signature me-1 text-muted"></i>Chấm báo cáo
-                </a>
-            </div>
-        </div>
-
-        <div class="d-flex align-items-center gap-3">
-            <div class="d-none d-sm-flex align-items-center gap-2 pe-3 border-end">
-                <div class="user-avatar-circle" th:text="${user != null and user.fullName != null and !user.fullName.isEmpty() ? user.fullName.substring(0, 1) : 'G'}">G</div>
-                <div class="text-start">
-                    <div class="fw-semibold text-dark small" style="line-height: 1.2;" th:text="${user != null ? user.fullName : 'Giảng viên'}">TS. Hướng Dẫn</div>
-                    <span class="badge-saas badge-role">Giảng viên</span>
+            <div class="collapse navbar-collapse">
+                <div class="navbar-nav me-auto gap-1">
+                    <a class="nav-link-saas" th:href="@{/lecturer/dashboard}">Tổng quan</a>
+                    <a class="nav-link-saas active" th:href="@{/lecturer/topics}">Đề tài của tôi</a>
+                    <a class="nav-link-saas" th:href="@{/lecturer/registrations}">Nhóm SV hướng dẫn</a>
+                    <a class="nav-link-saas" th:href="@{/lecturer/reviews}">Chấm Phản biện (GVPB)</a>
+                    <a class="nav-link-saas" th:href="@{/lecturer/councils}">Chấm Hội đồng</a>
+                    <a class="nav-link-saas" th:href="@{/lecturer/submissions}">Báo cáo tiến độ</a>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-secondary small fw-medium" th:text="${user.fullName}">Giảng viên</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-outline-secondary rounded-pill">Đăng xuất</a>
                 </div>
             </div>
-
-            <a th:href="@{/logout}" class="btn-saas-secondary btn-sm">
-                <i class="fa-solid fa-arrow-right-from-bracket text-muted"></i>
-                <span class="d-none d-sm-inline">Đăng xuất</span>
-            </a>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<main class="container-xl py-4">
-    
-    <div class="mb-4">
-        <a href="/lecturer/topics" class="text-decoration-none text-muted small d-inline-flex align-items-center gap-1 mb-2">
-            <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách đề tài
-        </a>
-        <h1 class="fs-4 fw-bold text-dark mb-1">Đề xuất đề tài nghiên cứu / khóa luận mới</h1>
-        <p class="text-secondary small mb-0">Điền thông tin chi tiết về đề tài để gửi Hội đồng Bộ môn thẩm định và phê duyệt.</p>
-    </div>
+    <main class="container py-4" style="max-width: 800px;">
 
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="saas-card p-4 p-md-5">
-                <form th:action="@{/lecturer/topics/create}" method="post">
-                    
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-4">
-                            <label class="form-label">Mã đề tài <span class="text-danger">*</span></label>
-                            <input type="text" name="code" class="form-control font-monospace" placeholder="VD: DT-2026-015" required>
-                            <small class="text-muted" style="font-size: 0.75rem;">Mã phân biệt đề tài trong học kỳ</small>
-                        </div>
-                        
-                        <div class="col-md-8">
-                            <label class="form-label">Tên đề tài <span class="text-danger">*</span></label>
-                            <input type="text" name="title" class="form-control" placeholder="Nhập tên đề tài nghiên cứu hoặc khóa luận..." required>
-                        </div>
-                    </div>
-
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-4">
-                            <label class="form-label">Chuyên ngành <span class="text-danger">*</span></label>
-                            <select name="majorId" class="form-select" required>
-                                <option value="" disabled selected>-- Chọn chuyên ngành --</option>
-                                <option th:each="m : ${majors}" th:value="${m.id}" th:text="${m.name}">Kỹ thuật phần mềm</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label">Số sinh viên tối đa</label>
-                            <select name="maxStudents" class="form-select">
-                                <option value="1">1 sinh viên</option>
-                                <option value="2" selected>2 sinh viên (Nhóm)</option>
-                                <option value="3">3 sinh viên</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label">Năm học</label>
-                            <input type="text" name="academicYear" class="form-control" value="2026-2027" required>
-                        </div>
-
-                        <div class="col-md-2">
-                            <label class="form-label">Học kỳ</label>
-                            <select name="semester" class="form-select">
-                                <option value="1" selected>HK 1</option>
-                                <option value="2">HK 2</option>
-                                <option value="3">HK Hè</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label">Mô tả mục tiêu & Nội dung nghiên cứu <span class="text-danger">*</span></label>
-                        <textarea name="description" class="form-control" rows="4" placeholder="Mô tả bối cảnh, tính cấp thiết và các nội dung chính sinh viên sẽ thực hiện trong đề tài..." required></textarea>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label">Yêu cầu đối với sinh viên</label>
-                        <textarea name="requirements" class="form-control" rows="3" placeholder="Yêu cầu về kiến thức, kỹ năng công nghệ (VD: Java, Spring Boot, PyTorch, Docker, GPA tối thiểu...)..."></textarea>
-                    </div>
-
-                    <div class="p-3 bg-light rounded-3 mb-4 border small text-muted">
-                        <i class="fa-solid fa-circle-info text-primary me-1"></i> Sau khi bấm <strong>"Gửi đề xuất"</strong>, đề tài sẽ ở trạng thái <code>PENDING (Chờ duyệt)</code> và được gửi tới Trưởng bộ môn phụ trách.
-                    </div>
-
-                    <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top">
-                        <a href="/lecturer/topics" class="btn-saas-secondary">Hủy bỏ</a>
-                        <button type="submit" class="btn-saas-primary">
-                            <i class="fa-solid fa-paper-plane"></i> Gửi đề xuất đề tài
-                        </button>
-                    </div>
-
-                </form>
-            </div>
+        <div class="mb-4">
+            <a th:href="@{/lecturer/topics}" class="text-decoration-none text-muted small"><i class="fa-solid fa-arrow-left me-1"></i> Quay lại danh sách đề tài</a>
+            <h1 class="h4 fw-bold text-dark mt-2 mb-1">Đề Xuất Đề Tài Nghiên Cứu / Khóa Luận Mới</h1>
+            <p class="text-muted small mb-0">Nhập đầy đủ thông tin đề tài, chọn đợt đăng ký đang mở và giảng viên hướng dẫn phụ (nếu có).</p>
         </div>
-    </div>
 
-</main>
+        <div class="saas-card p-4 p-md-5">
+            <form th:action="@{/lecturer/topics/create}" method="post">
+                <div class="row g-3">
 
+                    <div class="col-md-12">
+                        <label class="form-label small fw-semibold">Tên đề tài *</label>
+                        <input type="text" name="title" class="form-control" placeholder="Ví dụ: Nghiên cứu và xây dựng ứng dụng Web phân loại tài liệu bằng học sâu" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Đợt đăng ký *</label>
+                        <select name="periodId" class="form-select" required>
+                            <option value="">-- Chọn đợt đăng ký đang mở --</option>
+                            <option th:each="p : ${openPeriods}" th:value="${p.id}" th:text="${p.name + ' (' + p.getPeriodTypeName() + ')'}"></option>
+                        </select>
+                        <small class="text-muted" th:if="${#lists.isEmpty(openPeriods)}"><em>Hiện không có đợt nào trong thời gian mở đề xuất.</em></small>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Chuyên ngành / Bộ môn *</label>
+                        <select name="majorId" class="form-select" required>
+                            <option value="">-- Chọn chuyên ngành --</option>
+                            <option th:each="m : ${majors}" th:value="${m.id}" th:text="${m.name}"></option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Giảng viên hướng dẫn chính (GVHD 1)</label>
+                        <input type="text" class="form-control bg-light" th:value="${lecturer.academicTitle + ' ' + user.fullName + ' (Bạn)'}" readonly>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Giảng viên hướng dẫn phụ (GVHD 2 - Tùy chọn)</label>
+                        <select name="coSupervisorId" class="form-select">
+                            <option value="">-- Không có GVHD phụ --</option>
+                            <option th:each="l : ${coSupervisors}" th:value="${l.id}" th:text="${l.academicTitle + ' ' + l.user.fullName + ' (' + l.lecturerCode + ')'}"></option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Số lượng sinh viên tối đa trong nhóm</label>
+                        <input type="number" name="maxStudents" class="form-control" value="3" min="1" max="3" required>
+                        <small class="text-muted">Mỗi nhóm tối đa 3 sinh viên.</small>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Mã đề tài (Tùy chọn, để trống sẽ tự sinh)</label>
+                        <input type="text" name="code" class="form-control" placeholder="Ví dụ: KLTN-AI-01">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Mô tả mục tiêu & phạm vi đề tài *</label>
+                        <textarea name="description" class="form-control" rows="4" placeholder="Mô tả tóm tắt mục tiêu, công nghệ áp dụng và kết quả dự kiến đạt được..." required></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Yêu cầu kiến thức đối với sinh viên</label>
+                        <textarea name="requirements" class="form-control" rows="3" placeholder="Yêu cầu về kỹ năng lập trình (Java, Python, React...), điểm GPA hoặc môn học tiên quyết..."></textarea>
+                    </div>
+
+                    <div class="col-12 pt-3 border-top d-flex justify-content-end gap-2">
+                        <a th:href="@{/lecturer/topics}" class="btn btn-secondary btn-sm">Hủy bỏ</a>
+                        <button type="submit" class="btn-saas-primary"><i class="fa-solid fa-paper-plane"></i> Gửi đề xuất đề tài</button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

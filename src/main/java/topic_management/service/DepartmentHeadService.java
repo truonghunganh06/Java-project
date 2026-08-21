@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 import topic_management.entity.*;
 import topic_management.repository.*;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,10 @@ public class DepartmentHeadService {
     private final LecturerRepository lecturerRepository;
     private final StudentRepository studentRepository;
     private final TopicRegistrationRepository registrationRepository;
+    private final RegistrationPeriodRepository periodRepository;
+    private final StudentGroupRepository studentGroupRepository;
+    private final CouncilRepository councilRepository;
+    private final AnnouncementRepository announcementRepository;
 
     public DepartmentHeadService(
             TopicRepository topicRepository,
@@ -24,26 +29,32 @@ public class DepartmentHeadService {
             MajorRepository majorRepository,
             LecturerRepository lecturerRepository,
             StudentRepository studentRepository,
-            TopicRegistrationRepository registrationRepository) {
+            TopicRegistrationRepository registrationRepository,
+            RegistrationPeriodRepository periodRepository,
+            StudentGroupRepository studentGroupRepository,
+            CouncilRepository councilRepository,
+            AnnouncementRepository announcementRepository) {
         this.topicRepository = topicRepository;
         this.departmentRepository = departmentRepository;
         this.majorRepository = majorRepository;
         this.lecturerRepository = lecturerRepository;
         this.studentRepository = studentRepository;
         this.registrationRepository = registrationRepository;
+        this.periodRepository = periodRepository;
+        this.studentGroupRepository = studentGroupRepository;
+        this.councilRepository = councilRepository;
+        this.announcementRepository = announcementRepository;
     }
 
     public Department getDepartmentForUser(AppUser user) {
         if (user != null) {
             Optional<Lecturer> lecturerOpt = lecturerRepository.findByUserId(user.getId());
             if (lecturerOpt.isPresent() && lecturerOpt.get().getDepartment() != null) {
-                System.out.println("[DB-HEAD] getDepartmentForUser: Tìm thấy khoa của Trưởng khoa '" + user.getUsername() + "' -> " + lecturerOpt.get().getDepartment().getName());
                 return lecturerOpt.get().getDepartment();
             }
         }
 
         List<Department> departments = departmentRepository.findAll();
-        System.out.println("[DB-HEAD] getDepartmentForUser: Lấy danh sách khoa từ DB (Tổng: " + departments.size() + " khoa)");
         if (!departments.isEmpty()) {
             return departments.get(0);
         }
@@ -55,26 +66,75 @@ public class DepartmentHeadService {
         return defaultDept;
     }
 
-    public List<Major> getDepartmentMajors(Long departmentId) {
-        List<Major> majors;
+    // ==================== REGISTRATION PERIODS ====================
+
+    public List<RegistrationPeriod> getAllPeriods(Long departmentId) {
         if (departmentId != null) {
-            majors = majorRepository.findByDepartmentId(departmentId);
-        } else {
-            majors = majorRepository.findAll();
+            List<RegistrationPeriod> list = periodRepository.findByDepartmentId(departmentId);
+            if (!list.isEmpty()) return list;
         }
-        System.out.println("[DB-HEAD] getDepartmentMajors: Lấy " + majors.size() + " chuyên ngành từ DB cho DepartmentId=" + departmentId);
-        return majors;
+        return periodRepository.findByIsActiveTrueOrderByIdDesc();
     }
 
-    public List<Topic> getDepartmentTopics(Long departmentId, String status, Long majorId, String keyword) {
+    public RegistrationPeriod getPeriodById(Long id) {
+        if (id == null) return null;
+        return periodRepository.findById(id).orElse(null);
+    }
+
+    @Transactional
+    public RegistrationPeriod createPeriod(Department dept, String name, String periodType, String academicYear, Integer semester,
+                                           OffsetDateTime propStart, OffsetDateTime propEnd,
+                                           OffsetDateTime regStart, OffsetDateTime regEnd,
+                                           OffsetDateTime revDead, OffsetDateTime defenseDate) {
+        RegistrationPeriod p = new RegistrationPeriod();
+        p.setDepartment(dept);
+        p.setName(name);
+        p.setPeriodType(periodType != null ? periodType : "KLTN");
+        p.setAcademicYear(academicYear != null ? academicYear : "2026-2027");
+        p.setSemester(semester != null ? semester : 1);
+        p.setLecturerProposalStart(propStart != null ? propStart : OffsetDateTime.now());
+        p.setLecturerProposalEnd(propEnd != null ? propEnd : OffsetDateTime.now().plusDays(15));
+        p.setStudentRegistrationStart(regStart != null ? regStart : OffsetDateTime.now().plusDays(16));
+        p.setStudentRegistrationEnd(regEnd != null ? regEnd : OffsetDateTime.now().plusDays(30));
+        p.setReviewerDeadline(revDead != null ? revDead : OffsetDateTime.now().plusDays(60));
+        p.setCouncilDefenseDate(defenseDate != null ? defenseDate : OffsetDateTime.now().plusDays(75));
+        p.setStatus("OPEN");
+        p.setIsActive(true);
+        p.setCreatedAt(OffsetDateTime.now());
+
+        RegistrationPeriod saved = periodRepository.save(p);
+        System.out.println("[DB-HEAD] Đã tạo đợt đăng ký mới: '" + name + "' (ID=" + saved.getId() + ")");
+        return saved;
+    }
+
+    @Transactional
+    public boolean updatePeriodStatus(Long periodId, String status) {
+        RegistrationPeriod p = getPeriodById(periodId);
+        if (p != null) {
+            p.setStatus(status);
+            periodRepository.save(p);
+            System.out.println("[DB-HEAD] Cập nhật trạng thái đợt ID=" + periodId + " -> " + status);
+            return true;
+        }
+        return false;
+    }
+
+    // ==================== MAJORS & TOPICS ====================
+
+    public List<Major> getDepartmentMajors(Long departmentId) {
+        if (departmentId != null) {
+            return majorRepository.findByDepartmentId(departmentId);
+        }
+        return majorRepository.findAll();
+    }
+
+    public List<Topic> getDepartmentTopics(Long departmentId, String status, Long majorId, Long periodId, String keyword) {
         List<Topic> topics;
         if (departmentId != null) {
             topics = topicRepository.findByMajorDepartmentId(departmentId);
         } else {
             topics = topicRepository.findAll();
         }
-
-        System.out.println("[DB-HEAD] getDepartmentTopics: Truy vấn từ DB được " + topics.size() + " đề tài (DepartmentId=" + departmentId + ")");
 
         return topics.stream()
                 .filter(t -> {
@@ -83,6 +143,9 @@ public class DepartmentHeadService {
                     }
                     if (majorId != null) {
                         if (t.getMajor() == null || !majorId.equals(t.getMajor().getId())) return false;
+                    }
+                    if (periodId != null) {
+                        if (t.getPeriod() == null || !periodId.equals(t.getPeriod().getId())) return false;
                     }
                     if (keyword != null && !keyword.trim().isEmpty()) {
                         String kw = keyword.trim().toLowerCase();
@@ -101,9 +164,7 @@ public class DepartmentHeadService {
 
     public Topic getTopicById(Long topicId) {
         if (topicId == null) return null;
-        Optional<Topic> opt = topicRepository.findById(topicId);
-        System.out.println("[DB-HEAD] getTopicById(" + topicId + "): " + (opt.isPresent() ? "Tìm thấy đề tài: " + opt.get().getTitle() : "Không tìm thấy"));
-        return opt.orElse(null);
+        return topicRepository.findById(topicId).orElse(null);
     }
 
     @Transactional
@@ -114,10 +175,9 @@ public class DepartmentHeadService {
             t.setStatus("APPROVED");
             t.setRejectionReason(null);
             topicRepository.save(t);
-            System.out.println("[DB-HEAD] approveTopic(" + topicId + "): Đã cập nhật trạng thái APPROVED vào DB thành công!");
+            System.out.println("[DB-HEAD] Phê duyệt đề tài ID=" + topicId + " thành công!");
             return true;
         }
-        System.out.println("[DB-HEAD] approveTopic(" + topicId + "): Thất bại, không tìm thấy đề tài trong DB.");
         return false;
     }
 
@@ -129,62 +189,44 @@ public class DepartmentHeadService {
             t.setStatus("REJECTED");
             t.setRejectionReason(rejectionReason);
             topicRepository.save(t);
-            System.out.println("[DB-HEAD] rejectTopic(" + topicId + "): Đã cập nhật trạng thái REJECTED (Lý do: " + rejectionReason + ") vào DB thành công!");
+            System.out.println("[DB-HEAD] Từ chối đề tài ID=" + topicId + " (Lý do: " + rejectionReason + ")");
             return true;
         }
-        System.out.println("[DB-HEAD] rejectTopic(" + topicId + "): Thất bại, không tìm thấy đề tài trong DB.");
         return false;
     }
 
+    // ==================== LECTURERS & STUDENTS ====================
+
     public List<Lecturer> getLecturersInDepartment(Long departmentId) {
-        List<Lecturer> list;
         if (departmentId != null) {
-            list = lecturerRepository.findByDepartmentId(departmentId);
-        } else {
-            list = lecturerRepository.findAll();
+            return lecturerRepository.findByDepartmentId(departmentId);
         }
-        System.out.println("[DB-HEAD] getLecturersInDepartment: Lấy " + list.size() + " giảng viên từ DB (DepartmentId=" + departmentId + ")");
-        return list;
+        return lecturerRepository.findAll();
     }
 
     public List<Student> getStudentsInDepartment(Long departmentId) {
-        List<Student> list;
         if (departmentId != null) {
-            list = studentRepository.findByMajorDepartmentId(departmentId);
-        } else {
-            list = studentRepository.findAll();
+            return studentRepository.findByMajorDepartmentId(departmentId);
         }
-        System.out.println("[DB-HEAD] getStudentsInDepartment: Lấy " + list.size() + " sinh viên từ DB (DepartmentId=" + departmentId + ")");
-        return list;
+        return studentRepository.findAll();
     }
 
-    public Map<Long, TopicRegistration> getStudentRegistrationsMap() {
-        Map<Long, TopicRegistration> map = new HashMap<>();
-        List<TopicRegistration> list = registrationRepository.findAll();
-        for (TopicRegistration r : list) {
-            if (r.getStudent() != null) {
-                map.put(r.getStudent().getId(), r);
-            }
-        }
-        System.out.println("[DB-HEAD] getStudentRegistrationsMap: Lấy " + list.size() + " bản ghi đăng ký đề tài từ DB");
-        return map;
+    public List<StudentGroup> getAllGroups() {
+        return studentGroupRepository.findAll();
     }
 
     public Map<String, Object> getDepartmentStats(Long departmentId) {
-        List<Topic> topics = getDepartmentTopics(departmentId, "ALL", null, null);
+        List<Topic> topics = getDepartmentTopics(departmentId, "ALL", null, null, null);
         List<Lecturer> lecturers = getLecturersInDepartment(departmentId);
         List<Student> students = getStudentsInDepartment(departmentId);
         List<Major> majors = getDepartmentMajors(departmentId);
+        List<RegistrationPeriod> periods = getAllPeriods(departmentId);
+        List<Council> councils = councilRepository.findByDepartmentId(departmentId);
+        List<StudentGroup> groups = studentGroupRepository.findAll();
 
         long pendingCount = topics.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
         long approvedCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus())).count();
         long rejectedCount = topics.stream().filter(t -> "REJECTED".equalsIgnoreCase(t.getStatus())).count();
-
-        Map<String, Long> majorTopicMap = new HashMap<>();
-        for (Major m : majors) {
-            long count = topics.stream().filter(t -> t.getMajor() != null && m.getId().equals(t.getMajor().getId())).count();
-            majorTopicMap.put(m.getName(), count);
-        }
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalTopics", topics.size());
@@ -193,9 +235,10 @@ public class DepartmentHeadService {
         stats.put("rejectedTopics", rejectedCount);
         stats.put("totalLecturers", lecturers.size());
         stats.put("totalStudents", students.size());
-        stats.put("majorTopicMap", majorTopicMap);
+        stats.put("totalPeriods", periods.size());
+        stats.put("totalCouncils", councils.size());
+        stats.put("totalGroups", groups.size());
 
-        System.out.println("[DB-HEAD] getDepartmentStats: Thống kê từ DB -> Tổng đề tài: " + topics.size() + ", Chờ duyệt: " + pendingCount + ", Đã duyệt: " + approvedCount + ", Từ chối: " + rejectedCount);
         return stats;
     }
 }
