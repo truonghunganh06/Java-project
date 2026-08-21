@@ -1,10 +1,463 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Tài khoản - TopicHub Admin</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5.3 & FontAwesome 6 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-body: #f8fafc;
+            --text-main: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --card-bg: #ffffff;
+            --primary-accent: #0f172a;
+            --primary-hover: #1e293b;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+        }
+
+        .navbar-saas {
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        .nav-link-saas {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            padding: 0.5rem 0.875rem;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link-saas:hover {
+            color: var(--text-main);
+            background-color: #f1f5f9;
+        }
+
+        .nav-link-saas.active {
+            color: #0f172a;
+            background-color: #f1f5f9;
+            font-weight: 600;
+        }
+
+        .saas-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
+        }
+
+        .btn-saas-primary {
+            background-color: var(--primary-accent);
+            color: #ffffff;
+            font-weight: 500;
+            font-size: 0.875rem;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--primary-accent);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: all 0.15s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-saas-primary:hover {
+            background-color: var(--primary-hover);
+            color: #ffffff;
+        }
+
+        .btn-saas-secondary {
+            background-color: #ffffff;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.875rem;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.15s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-saas-secondary:hover {
+            background-color: #f8fafc;
+            color: var(--text-main);
+            border-color: #cbd5e1;
+        }
+
+        .badge-saas {
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .badge-approved { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .badge-rejected { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        .badge-role-admin { background-color: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+        .badge-role-dept { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .badge-role-lecturer { background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+        .badge-role-student { background-color: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
+
+        .table-saas { margin-bottom: 0; width: 100%; }
+        .table-saas thead th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        .table-saas tbody td {
+            padding: 0.875rem 1rem;
+            vertical-align: middle;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .table-saas tbody tr:hover { background-color: #f8fafc; }
+
+        .user-avatar-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #f1f5f9;
+            color: #334155;
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #cbd5e1;
+        }
+    </style>
 </head>
 <body>
-$END$
+
+<!-- Navigation Bar -->
+<nav class="navbar-saas">
+    <div class="container-xl d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-4">
+            <a class="d-flex align-items-center text-decoration-none gap-2" href="/admin/dashboard">
+                <div style="width: 34px; height: 34px; background: #0f172a; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <span class="fw-bold text-dark fs-6" style="letter-spacing: -0.02em;">TopicHub Admin</span>
+            </a>
+
+            <!-- Sub Nav Links -->
+            <div class="d-none d-md-flex align-items-center gap-1">
+                <a href="/admin/dashboard" class="nav-link-saas">
+                    <i class="fa-solid fa-gauge me-1 text-muted"></i>Tổng quan
+                </a>
+                <a href="/admin/users" class="nav-link-saas active">
+                    <i class="fa-solid fa-users-gear me-1 text-muted"></i>Tài khoản người dùng
+                </a>
+                <a href="/admin/departments" class="nav-link-saas">
+                    <i class="fa-solid fa-building-columns me-1 text-muted"></i>Khoa & Chuyên ngành
+                </a>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+            <div class="d-none d-sm-flex align-items-center gap-2 pe-3 border-end">
+                <div class="user-avatar-circle" th:text="${user != null and user.fullName != null and !user.fullName.isEmpty() ? user.fullName.substring(0, 1) : 'A'}">A</div>
+                <div class="text-start">
+                    <div class="fw-semibold text-dark small" style="line-height: 1.2;" th:text="${user != null ? user.fullName : 'Admin'}">Quản trị viên</div>
+                    <span class="badge-saas badge-role-admin">Quản trị hệ thống</span>
+                </div>
+            </div>
+
+            <a th:href="@{/logout}" class="btn-saas-secondary btn-sm">
+                <i class="fa-solid fa-arrow-right-from-bracket text-muted"></i>
+                <span class="d-none d-sm-inline">Đăng xuất</span>
+            </a>
+        </div>
+    </div>
+</nav>
+
+<main class="container-xl py-4">
+
+    <!-- Flash Messages -->
+    <div th:if="${successMessage}" class="alert alert-success d-flex align-items-center py-2 px-3 mb-4 rounded-3 border" role="alert">
+        <i class="fa-solid fa-circle-check text-success me-2"></i>
+        <span th:text="${successMessage}">Thao tác thành công!</span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger d-flex align-items-center py-2 px-3 mb-4 rounded-3 border" role="alert">
+        <i class="fa-solid fa-circle-exclamation text-danger me-2"></i>
+        <span th:text="${errorMessage}">Đã xảy ra lỗi!</span>
+    </div>
+
+    <!-- Header & Action -->
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="fs-4 fw-bold text-dark mb-1">Quản lý Tài khoản Người dùng</h1>
+            <p class="text-secondary small mb-0">Xem danh sách, thêm tài khoản mới, phân quyền vai trò và quản lý trạng thái truy cập.</p>
+        </div>
+        <button type="button" class="btn-saas-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+            <i class="fa-solid fa-plus"></i> Thêm tài khoản mới
+        </button>
+    </div>
+
+    <!-- Filter & Search Card -->
+    <div class="saas-card p-3 mb-4">
+        <form th:action="@{/admin/users}" method="get" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" name="keyword" th:value="${keyword}" class="form-control border-start-0 ps-0" placeholder="Tìm theo họ tên, username hoặc email...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select name="role" class="form-select">
+                    <option value="ALL" th:selected="${selectedRole == null or selectedRole == 'ALL'}">-- Tất cả vai trò --</option>
+                    <option th:each="r : ${roles}" th:value="${r.code}" th:text="${r.name + ' (' + r.code + ')'}" th:selected="${selectedRole == r.code}"></option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn-saas-secondary w-100 justify-content-center">
+                    <i class="fa-solid fa-filter"></i> Lọc
+                </button>
+                <a th:href="@{/admin/users}" class="btn btn-light border w-auto" title="Đặt lại bộ lọc">
+                    <i class="fa-solid fa-rotate-left text-muted"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Users Data Table -->
+    <div class="saas-card">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+            <span class="fw-semibold text-dark small" th:text="'Tổng số: ' + ${#lists.size(users)} + ' tài khoản'">Tổng số: 5 tài khoản</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-saas">
+                <thead>
+                    <tr>
+                        <th>Họ và tên</th>
+                        <th>Tên đăng nhập</th>
+                        <th>Email / Số điện thoại</th>
+                        <th>Vai trò</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${users}">
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="user-avatar-circle" th:text="${u.fullName != null and !u.fullName.isEmpty() ? u.fullName.substring(0, 1) : 'U'}">U</div>
+                                <div>
+                                    <div class="fw-bold text-dark" th:text="${u.fullName}">Họ tên</div>
+                                    <small class="text-muted" th:text="'ID: #' + ${u.id}">ID: #1</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <code class="text-dark fw-semibold" th:text="${u.username}">username</code>
+                        </td>
+                        <td>
+                            <div th:text="${u.email}">email@edu.vn</div>
+                            <small class="text-muted" th:text="${u.phone != null and !u.phone.isEmpty() ? u.phone : 'Chưa cập nhật SĐT'}">0912345678</small>
+                        </td>
+                        <td>
+                            <span th:if="${u.role != null and u.role.code == 'ADMIN'}" class="badge-saas badge-role-admin">Quản trị viên</span>
+                            <span th:if="${u.role != null and u.role.code == 'DEPARTMENT_HEAD'}" class="badge-saas badge-role-dept">Trưởng bộ môn</span>
+                            <span th:if="${u.role != null and u.role.code == 'LECTURER'}" class="badge-saas badge-role-lecturer">Giảng viên</span>
+                            <span th:if="${u.role != null and u.role.code == 'STUDENT'}" class="badge-saas badge-role-student">Sinh viên</span>
+                        </td>
+                        <td>
+                            <span th:if="${u.isActive}" class="badge-saas badge-approved">
+                                <i class="fa-solid fa-circle-check"></i> Hoạt động
+                            </span>
+                            <span th:unless="${u.isActive}" class="badge-saas badge-rejected">
+                                <i class="fa-solid fa-lock"></i> Đã khóa
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1">
+                                <!-- Edit button modal trigger -->
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2" data-bs-toggle="modal" th:data-bs-target="'#editUserModal-' + ${u.id}" title="Chỉnh sửa">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+
+                                <!-- Toggle lock/unlock -->
+                                <form th:action="@{/admin/users/{id}/toggle-status(id=${u.id})}" method="post" class="d-inline">
+                                    <button th:if="${u.isActive}" type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Khóa tài khoản">
+                                        <i class="fa-solid fa-lock"></i>
+                                    </button>
+                                    <button th:unless="${u.isActive}" type="submit" class="btn btn-sm btn-outline-success py-1 px-2" title="Mở khóa tài khoản">
+                                        <i class="fa-solid fa-lock-open"></i>
+                                    </button>
+                                </form>
+
+                                <!-- Reset password trigger -->
+                                <button type="button" class="btn btn-sm btn-outline-dark py-1 px-2" data-bs-toggle="modal" th:data-bs-target="'#resetPwdModal-' + ${u.id}" title="Đặt lại mật khẩu">
+                                    <i class="fa-solid fa-key"></i>
+                                </button>
+                            </div>
+
+                            <!-- Modal Edit User -->
+                            <div class="modal fade text-start" th:id="'editUserModal-' + ${u.id}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form th:action="@{/admin/users/{id}/edit(id=${u.id})}" method="post">
+                                            <div class="modal-header">
+                                                <h6 class="modal-title fw-bold text-dark">Chỉnh sửa Tài khoản: <span th:text="${u.username}"></span></h6>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Họ và tên</label>
+                                                    <input type="text" name="fullName" th:value="${u.fullName}" class="form-control form-control-sm" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Email</label>
+                                                    <input type="email" name="email" th:value="${u.email}" class="form-control form-control-sm" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Số điện thoại</label>
+                                                    <input type="text" name="phone" th:value="${u.phone}" class="form-control form-control-sm">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Vai trò hệ thống</label>
+                                                    <select name="roleId" class="form-select form-select-sm" required>
+                                                        <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}" th:selected="${u.role != null and u.role.id == r.id}"></option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-check form-switch mb-2">
+                                                    <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${u.isActive}" id="activeCheck">
+                                                    <label class="form-check-label small" for="activeCheck">Kích hoạt tài khoản</label>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Hủy</button>
+                                                <button type="submit" class="btn btn-sm btn-dark">Lưu thay đổi</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Modal Reset Password -->
+                            <div class="modal fade text-start" th:id="'resetPwdModal-' + ${u.id}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-sm">
+                                    <div class="modal-content">
+                                        <form th:action="@{/admin/users/{id}/reset-password(id=${u.id})}" method="post">
+                                            <div class="modal-header">
+                                                <h6 class="modal-title fw-bold text-dark">Đặt lại Mật khẩu</h6>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p class="small text-muted mb-2">Đặt lại mật khẩu cho tài khoản <strong th:text="${u.username}"></strong>:</p>
+                                                <div class="mb-2">
+                                                    <label class="form-label small fw-semibold">Mật khẩu mới</label>
+                                                    <input type="text" name="newPassword" value="123456" class="form-control form-control-sm" required>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Hủy</button>
+                                                <button type="submit" class="btn btn-sm btn-danger">Xác nhận</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </td>
+                    </tr>
+                    <tr th:if="${users == null or users.isEmpty()}">
+                        <td colspan="6" class="text-center py-4 text-muted">Không tìm thấy tài khoản người dùng phù hợp.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<!-- Modal Create User -->
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form th:action="@{/admin/users/create}" method="post">
+                <div class="modal-header">
+                    <h6 class="modal-title fw-bold text-dark" id="createUserModalLabel">Thêm Mới Tài khoản Người dùng</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Tên đăng nhập (Username / MSSV / Mã GV) <span class="text-danger">*</span></label>
+                        <input type="text" name="username" class="form-control form-control-sm" placeholder="VD: lecturer02, 20210099..." required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Họ và tên đầy đủ <span class="text-danger">*</span></label>
+                        <input type="text" name="fullName" class="form-control form-control-sm" placeholder="VD: Nguyễn Văn B" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Email <span class="text-danger">*</span></label>
+                        <input type="email" name="email" class="form-control form-control-sm" placeholder="VD: user@topicmanagement.edu.vn" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Số điện thoại</label>
+                        <input type="text" name="phone" class="form-control form-control-sm" placeholder="VD: 0912345678">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Vai trò <span class="text-danger">*</span></label>
+                        <select name="roleId" class="form-select form-select-sm" required>
+                            <option value="">-- Chọn vai trò --</option>
+                            <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}"></option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Mật khẩu ban đầu</label>
+                        <input type="password" name="passwordHash" value="123456" class="form-control form-control-sm" placeholder="Mặc định: 123456">
+                        <small class="text-muted">Mặc định là <code>123456</code> nếu để trống.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn-saas-primary">Tạo tài khoản</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
