@@ -8,6 +8,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import topic_management.entity.*;
 import topic_management.service.*;
 
+import topic_management.repository.StudentGroupRepository;
+import topic_management.repository.SubmissionRepository;
+
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -19,16 +22,22 @@ public class DepartmentHeadController {
     private final CouncilService councilService;
     private final AnnouncementService announcementService;
     private final LecturerService lecturerService;
+    private final StudentGroupRepository studentGroupRepository;
+    private final SubmissionRepository submissionRepository;
 
     public DepartmentHeadController(
             DepartmentHeadService departmentHeadService,
             CouncilService councilService,
             AnnouncementService announcementService,
-            LecturerService lecturerService) {
+            LecturerService lecturerService,
+            StudentGroupRepository studentGroupRepository,
+            SubmissionRepository submissionRepository) {
         this.departmentHeadService = departmentHeadService;
         this.councilService = councilService;
         this.announcementService = announcementService;
         this.lecturerService = lecturerService;
+        this.studentGroupRepository = studentGroupRepository;
+        this.submissionRepository = submissionRepository;
     }
 
     private AppUser getAuthenticatedDeptHead(HttpSession session) {
@@ -52,13 +61,16 @@ public class DepartmentHeadController {
         List<Topic> pendingTopics = departmentHeadService.getDepartmentTopics(dept.getId(), "PENDING", null, null, null);
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
         List<Announcement> announcements = announcementService.getAnnouncementsByDepartment(dept.getId());
+        List<Council> councils = councilService.getCouncilsByDepartment(dept.getId());
 
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
         model.addAttribute("stats", stats);
         model.addAttribute("pendingTopics", pendingTopics.stream().limit(5).toList());
-        model.addAttribute("periods", periods);
-        model.addAttribute("announcements", announcements.stream().limit(5).toList());
+        model.addAttribute("periods", periods.stream().limit(4).toList());
+        model.addAttribute("allPeriods", periods);
+        model.addAttribute("councils", councils.stream().limit(4).toList());
+        model.addAttribute("announcements", announcements.stream().limit(3).toList());
 
         return "department-head/dashboard";
     }
@@ -323,12 +335,16 @@ public class DepartmentHeadController {
         Department dept = departmentHeadService.getDepartmentForUser(user);
         List<Topic> topics = departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, periodId, null);
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
+        Map<Long, List<Evaluation>> topicEvaluationsMap = councilService.getEvaluationsMapForTopics(topics);
+        Map<Long, StudentGroup> topicGroupsMap = councilService.getGroupsMapForTopics(topics);
 
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
         model.addAttribute("topics", topics);
         model.addAttribute("periods", periods);
         model.addAttribute("selectedPeriodId", periodId);
+        model.addAttribute("topicEvaluationsMap", topicEvaluationsMap);
+        model.addAttribute("topicGroupsMap", topicGroupsMap);
 
         return "department-head/results";
     }
@@ -346,6 +362,25 @@ public class DepartmentHeadController {
         councilService.publishTopicResults(topicId, isFinalized);
         redirectAttributes.addFlashAttribute("successMessage", Boolean.TRUE.equals(isFinalized) ? "Đã công bố kết quả điểm số cho sinh viên!" : "Đã chuyển về trạng thái dự thảo điểm.");
         return "redirect:/department-head/results";
+    }
+
+    @PostMapping("/results/publish-all")
+    public String publishAllResults(
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            @RequestParam(value = "isFinalized", defaultValue = "true") Boolean isFinalized,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) return "redirect:/login";
+
+        Department dept = departmentHeadService.getDepartmentForUser(user);
+        int count = councilService.publishAllResults(dept.getId(), periodId, isFinalized);
+        redirectAttributes.addFlashAttribute("successMessage",
+                Boolean.TRUE.equals(isFinalized)
+                        ? "Đã công bố kết quả điểm chính thức cho toàn bộ " + count + " đề tài trong đợt!"
+                        : "Đã chuyển " + count + " đề tài về trạng thái dự thảo điểm.");
+        return "redirect:/department-head/results" + (periodId != null ? "?periodId=" + periodId : "");
     }
 
     // ==================== ANNOUNCEMENTS ====================
@@ -415,20 +450,58 @@ public class DepartmentHeadController {
     }
 
     @GetMapping("/students")
-    public String listStudents(HttpSession session, Model model) {
+    public String listStudents(
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            HttpSession session,
+            Model model) {
+
         AppUser user = getAuthenticatedDeptHead(session);
         if (user == null) return "redirect:/login";
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
-        List<Student> students = departmentHeadService.getStudentsInDepartment(dept.getId());
-        List<StudentGroup> groups = departmentHeadService.getAllGroups();
+        List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
+
+        // Default to first period if none selected
+        Long effectivePeriodId = periodId;
+        if (effectivePeriodId == null && !periods.isEmpty()) {
+            effectivePeriodId = periods.get(0).getId();
+        }
+
+        List<StudentGroup> groups = departmentHeadService.getGroupsInDepartmentAndPeriod(dept.getId(), effectivePeriodId);
+
+        Map<Long, List<Submission>> groupSubmissionsMap = new HashMap<>();
+        for (StudentGroup g : groups) {
+            groupSubmissionsMap.put(g.getId(), submissionRepository.findByGroupId(g.getId()));
+        }
 
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
-        model.addAttribute("students", students);
         model.addAttribute("groups", groups);
+        model.addAttribute("periods", periods);
+        model.addAttribute("selectedPeriodId", effectivePeriodId);
+        model.addAttribute("groupSubmissionsMap", groupSubmissionsMap);
 
         return "department-head/students";
+    }
+
+    @PostMapping("/students/groups/{id}/unassign-topic")
+    public String unassignTopicFromGroup(
+            @PathVariable("id") Long groupId,
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) return "redirect:/login";
+
+        StudentGroup group = studentGroupRepository.findById(groupId).orElse(null);
+        if (group != null) {
+            group.setTopic(null);
+            group.setStatus("DRAFT");
+            studentGroupRepository.save(group);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã hủy gán đề tài cho nhóm " + group.getGroupName() + "!");
+        }
+        return "redirect:/department-head/students" + (periodId != null ? "?periodId=" + periodId : "");
     }
 
     private OffsetDateTime parseDate(String dateStr) {

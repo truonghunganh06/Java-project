@@ -20,4 +20,7 @@ public interface StudentGroupRepository extends JpaRepository<StudentGroup, Long
 
     @Query("SELECT g FROM StudentGroup g JOIN g.members m WHERE m.student.id = :studentId")
     List<StudentGroup> findByStudentId(@Param("studentId") Long studentId);
+
+    List<StudentGroup> findByPeriodDepartmentId(Long departmentId);
+    List<StudentGroup> findByPeriodDepartmentIdAndPeriodId(Long departmentId, Long periodId);
 }

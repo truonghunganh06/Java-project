@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<body>
+    <header class="saas-topbar" th:fragment="topbar(pageTitle, breadcrumbParent, breadcrumbParentUrl, user)">
+        <div class="d-flex align-items-center gap-3">
+            <!-- Mobile Toggle -->
+            <button class="btn btn-sm btn-light border d-lg-none rounded-xl" type="button" onclick="toggleSidebar()" aria-label="Toggle navigation">
+                <i class="fa-solid fa-bars text-secondary"></i>
+            </button>
+
+            <!-- Breadcrumbs -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb topbar-breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
+                            <i class="fa-solid fa-house-chimney text-muted me-1"></i> Trang chủ
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item" th:if="${breadcrumbParent != null}">
+                        <a th:href="@{${breadcrumbParentUrl != null ? breadcrumbParentUrl : '#'}}" th:text="${breadcrumbParent}">Quản lý</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page" th:text="${pageTitle != null ? pageTitle : 'Bảng điều khiển'}">Bảng điều khiển</li>
+                </ol>
+            </nav>
+        </div>
+
+        <!-- Topbar Right Actions -->
+        <div class="d-flex align-items-center gap-3">
+            
+            <!-- Academic Session Tag -->
+            <div class="d-none d-md-flex align-items-center gap-2 px-3 py-1.5 bg-slate-100 border border-slate-200/80 rounded-full" style="font-size: 0.8125rem;">
+                <i class="fa-regular fa-calendar-check text-blue-600"></i>
+                <span class="text-secondary">Học kỳ:</span>
+                <strong class="text-dark">HK1 2026-2027</strong>
+            </div>
+
+            <!-- Notifications Dropdown (Hidden by default, popover on click) -->
+            <div class="dropdown">
+                <button class="btn btn-sm btn-light border border-slate-200 rounded-full p-2 position-relative d-flex align-items-center justify-content-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 38px; height: 38px;" title="Thông báo hệ thống">
+                    <i class="fa-regular fa-bell text-secondary"></i>
+                    <span class="position-absolute top-1 end-1 p-1 bg-red-500 border-2 border-white rounded-full">
+                        <span class="visually-hidden">Thông báo mới</span>
+                    </span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end shadow-xl border border-slate-200 rounded-2xl p-0 mt-2" style="width: 320px; z-index: 1050;">
+                    <div class="p-3 border-b border-slate-100 bg-slate-50 rounded-t-2xl d-flex align-items-center justify-content-between">
+                        <span class="fw-bold text-dark text-sm">Thông báo hệ thống</span>
+                        <span class="badge-pill-approved" style="font-size: 0.7rem; padding: 2px 8px;">Mới</span>
+                    </div>
+                    <div class="p-2 divide-y divide-slate-100" style="max-height: 280px; overflow-y: auto;">
+                        <div class="p-2.5 rounded-xl hover:bg-slate-50 transition cursor-pointer d-flex gap-2.5 align-items-start">
+                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fa-solid fa-bullhorn text-xs"></i>
+                            </div>
+                            <div class="text-xs">
+                                <p class="mb-0.5 fw-semibold text-dark">Đợt đăng ký KLTN 2026-2027 đang mở</p>
+                                <span class="text-muted">Hạn chót đề xuất: 15/09/2026</span>
+                            </div>
+                        </div>
+                        <div class="p-2.5 rounded-xl hover:bg-slate-50 transition cursor-pointer d-flex gap-2.5 align-items-start">
+                            <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fa-solid fa-triangle-exclamation text-xs"></i>
+                            </div>
+                            <div class="text-xs">
+                                <p class="mb-0.5 fw-semibold text-dark">Quy định phân công Giảng viên phản biện</p>
+                                <span class="text-muted">GVPB không được trùng GVHD</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-2 border-t border-slate-100 text-center bg-slate-50/50 rounded-b-2xl">
+                        <span class="text-xs text-muted">Hệ thống Quản lý Đề tài Khoa CNTT</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Menu Dropdown -->
+            <div class="dropdown">
+                <button class="btn p-0 border-0 d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="rounded-full bg-blue-600 text-white d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 38px; height: 38px; font-size: 0.875rem;">
+                        <span th:text="${user != null && user.fullName != null && user.fullName.length() > 0 ? user.fullName.substring(0, 1) : 'U'}">U</span>
+                    </div>
+                    <div class="d-none d-xl-flex flex-column text-start">
+                        <span class="fw-semibold text-dark lh-1" style="font-size: 0.875rem;" th:text="${user != null ? user.fullName : 'Người dùng'}">Họ và Tên</span>
+                        <span class="text-muted mt-1" style="font-size: 0.75rem;" th:text="${user != null && user.role != null ? user.role.name : 'Vai trò'}">Vai trò</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-muted small ms-1 d-none d-xl-inline"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-xl border border-slate-200 rounded-2xl p-1.5 mt-2">
+                    <li class="px-3 py-2.5 border-b border-slate-100 mb-1">
+                        <p class="mb-0 fw-bold text-dark text-sm" th:text="${user != null ? user.fullName : 'Tài khoản'}">Họ Tên</p>
+                        <p class="mb-0 text-muted" style="font-size: 0.75rem;" th:text="${user != null ? user.email : 'email@cntt.edu.vn'}">email@cntt.edu.vn</p>
+                    </li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-2.5 rounded-xl text-xs font-medium" th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
+                            <i class="fa-solid fa-chart-pie text-muted"></i>
+                            <span>Bảng điều khiển</span>
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider my-1 border-slate-100"></li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-2.5 rounded-xl text-xs font-medium text-rose-600 hover:bg-rose-50" th:href="@{/logout}">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                            <span>Đăng xuất</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </header>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<body>
+    <div th:fragment="scripts">
+        <!-- Global Announcement Detail Modal (Available across all pages) -->
+        <div class="modal fade" id="announcementDetailModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-2xl border-0 shadow-xl">
+                    <div class="modal-header border-b border-slate-100 p-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0">
+                                <i class="fa-solid fa-bullhorn text-sm"></i>
+                            </div>
+                            <div>
+                                <span id="modalAnnouncementCategory" class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200 mb-0.5 d-inline-block">Thông báo chung</span>
+                                <h6 id="modalAnnouncementTitle" class="modal-title font-bold text-slate-900 text-sm mb-0">Tiêu đề thông báo</h6>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-3">
+                        <div class="d-flex align-items-center justify-content-between text-xs text-slate-400 pb-2 border-b border-slate-100">
+                            <div><i class="fa-solid fa-user-pen me-1"></i> Người đăng: <strong id="modalAnnouncementAuthor" class="text-slate-700">Ban chủ nhiệm Khoa</strong></div>
+                            <div><i class="fa-regular fa-clock me-1"></i> <span id="modalAnnouncementTime">--</span></div>
+                        </div>
+                        <div id="modalAnnouncementPeriodWrap" class="p-2.5 bg-blue-50/50 rounded-xl border border-blue-100 text-xs text-blue-800 d-none">
+                            <i class="fa-solid fa-bookmark me-1.5 text-blue-600"></i> Áp dụng cho: <strong id="modalAnnouncementPeriod">Đợt KLTN</strong>
+                        </div>
+                        <div id="modalAnnouncementContent" class="text-xs text-slate-700 leading-relaxed p-3 bg-slate-50/70 rounded-xl border border-slate-100" style="white-space: pre-line; min-height: 120px;">
+                            Nội dung chi tiết thông báo...
+                        </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 p-3">
+                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-4 text-xs font-semibold" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap 5.3 JS Bundle -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+        <script>
+            // Sidebar Mobile Toggle
+            function toggleSidebar() {
+                const sidebar = document.getElementById('saasSidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (sidebar) sidebar.classList.toggle('show');
+                if (overlay) overlay.classList.toggle('show');
+            }
+
+            // Clean UTF-8 Topic Drawer Opener (supports DOM element or JSON object)
+            function openTopicDrawer(source) {
+                if (!source) return;
+
+                let data = {};
+                if (source instanceof HTMLElement) {
+                    data = {
+                        id: source.dataset.topicId || source.dataset.id,
+                        code: source.dataset.topicCode || source.dataset.code,
+                        title: source.dataset.topicTitle || source.dataset.title,
+                        period: source.dataset.topicPeriod || source.dataset.period,
+                        major: source.dataset.topicMajor || source.dataset.major,
+                        supervisor: source.dataset.topicSupervisor || source.dataset.supervisor,
+                        coSupervisor: source.dataset.topicCoSupervisor || source.dataset.coSupervisor,
+                        reviewer: source.dataset.topicReviewer || source.dataset.reviewer,
+                        council: source.dataset.topicCouncil || source.dataset.council,
+                        maxStudents: source.dataset.topicMaxStudents || source.dataset.maxStudents,
+                        status: source.dataset.topicStatus || source.dataset.status,
+                        description: source.dataset.topicDescription || source.dataset.description,
+                        requirements: source.dataset.topicRequirements || source.dataset.requirements,
+                        groupName: source.dataset.topicGroupName || source.dataset.groupName,
+                        leaderName: source.dataset.topicLeaderName || source.dataset.leaderName,
+                        leaderCode: source.dataset.topicLeaderCode || source.dataset.leaderCode,
+                        role: source.dataset.topicRole || source.dataset.role,
+                        hasGroupTopic: source.dataset.topicHasGroup === 'true'
+                    };
+                } else {
+                    data = source;
+                }
+
+                const backdrop = document.getElementById('topicDrawerBackdrop');
+                const panel = document.getElementById('topicDrawerPanel');
+
+                if (document.getElementById('drawerTopicCode')) {
+                    document.getElementById('drawerTopicCode').textContent = data.code || 'DT-N/A';
+                }
+                if (document.getElementById('drawerTopicTitle')) {
+                    document.getElementById('drawerTopicTitle').textContent = data.title || 'Chi tiết đề tài';
+                }
+                if (document.getElementById('drawerTopicPeriod')) {
+                    document.getElementById('drawerTopicPeriod').textContent = data.period || 'Chung';
+                }
+                if (document.getElementById('drawerTopicMajor')) {
+                    document.getElementById('drawerTopicMajor').textContent = data.major || 'CNTT';
+                }
+                if (document.getElementById('drawerTopicSupervisor')) {
+                    document.getElementById('drawerTopicSupervisor').textContent = data.supervisor || 'Chưa phân công';
+                }
+                if (document.getElementById('drawerTopicCoSupervisor')) {
+                    document.getElementById('drawerTopicCoSupervisor').textContent = data.coSupervisor || 'Không có';
+                }
+                if (document.getElementById('drawerTopicReviewer')) {
+                    document.getElementById('drawerTopicReviewer').textContent = data.reviewer || 'Chưa phân công GVPB';
+                }
+                if (document.getElementById('drawerTopicCouncil')) {
+                    document.getElementById('drawerTopicCouncil').textContent = data.council || 'Chưa phân hội đồng';
+                }
+                if (document.getElementById('drawerTopicQuota')) {
+                    document.getElementById('drawerTopicQuota').textContent = 'Tối đa ' + (data.maxStudents || 3) + ' SV';
+                }
+                if (document.getElementById('drawerTopicDescription')) {
+                    document.getElementById('drawerTopicDescription').textContent = data.description || 'Chưa có mô tả chi tiết.';
+                }
+                if (document.getElementById('drawerTopicRequirements')) {
+                    document.getElementById('drawerTopicRequirements').textContent = data.requirements || 'Theo hướng dẫn của Giảng viên.';
+                }
+
+                // Status Badge
+                const statusBadge = document.getElementById('drawerTopicStatusBadge');
+                if (statusBadge) {
+                    const status = (data.status || 'PENDING').toUpperCase();
+                    if (status === 'APPROVED') {
+                        statusBadge.className = 'badge-pill-approved';
+                        statusBadge.innerHTML = '<i class="fa-solid fa-check"></i> Đã duyệt';
+                    } else if (status === 'REJECTED') {
+                        statusBadge.className = 'badge-pill-rejected';
+                        statusBadge.innerHTML = '<i class="fa-solid fa-xmark"></i> Từ chối';
+                    } else {
+                        statusBadge.className = 'badge-pill-pending';
+                        statusBadge.innerHTML = '<i class="fa-regular fa-clock"></i> Chờ duyệt';
+                    }
+                }
+
+                // Group Info
+                const groupInfo = document.getElementById('drawerTopicGroupInfo');
+                if (groupInfo) {
+                    if (data.groupName) {
+                        groupInfo.innerHTML = `
+                            <div class="p-2.5 rounded-xl bg-blue-50/50 border border-blue-100">
+                                <div class="fw-bold text-dark mb-1"><i class="fa-solid fa-users text-blue-600 me-1"></i> ${data.groupName}</div>
+                                <div class="text-muted text-xs">Trưởng nhóm: <strong class="text-dark">${data.leaderName || 'Sinh viên'}</strong> (${data.leaderCode || ''})</div>
+                            </div>
+                        `;
+                    } else {
+                        groupInfo.innerHTML = '<span class="text-muted">Chưa có nhóm nào đăng ký đề tài này.</span>';
+                    }
+                }
+
+                // Dynamic Action Buttons
+                const actionContainer = document.getElementById('drawerActionButtons');
+                if (actionContainer) {
+                    actionContainer.innerHTML = '';
+                    if (data.role === 'DEPARTMENT_HEAD' && data.status === 'PENDING') {
+                        actionContainer.innerHTML = `
+                            <form action="/department-head/topics/${data.id}/approve" method="post" class="d-inline" onsubmit="return confirm('Xác nhận PHÊ DUYỆT đề tài này?');">
+                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">
+                                    <i class="fa-solid fa-check me-1"></i> Phê duyệt
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3 text-xs font-semibold" data-bs-toggle="modal" data-bs-target="#rejectModal" onclick="prepareRejectModal(${data.id}, '${(data.title || '').replace(/'/g, "\\'")}')">
+                                <i class="fa-solid fa-xmark me-1"></i> Từ chối
+                            </button>
+                        `;
+                    } else if (data.role === 'STUDENT' && data.status === 'APPROVED' && !data.hasGroupTopic) {
+                        actionContainer.innerHTML = `
+                            <form action="/student/topics/${data.id}/register" method="post" class="d-inline" onsubmit="return confirm('Xác nhận đăng ký đề tài này cho nhóm của bạn?');">
+                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">
+                                    <i class="fa-solid fa-bookmark me-1"></i> Đăng ký ngay
+                                </button>
+                            </form>
+                        `;
+                    }
+                }
+
+                // Show drawer
+                if (backdrop) backdrop.classList.add('show');
+                if (panel) panel.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeTopicDrawer() {
+                const backdrop = document.getElementById('topicDrawerBackdrop');
+                const panel = document.getElementById('topicDrawerPanel');
+                if (backdrop) backdrop.classList.remove('show');
+                if (panel) panel.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+
+            // Close on ESC key
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') closeTopicDrawer();
+            });
+
+            // Global Announcement Detail Modal Opener
+            function showAnnouncementDetail(element) {
+                if (!element) return;
+                const title = element.dataset.title || 'Thông báo';
+                const category = element.dataset.category || 'Thông báo chung';
+                const author = element.dataset.author || 'Ban chủ nhiệm Khoa';
+                const time = element.dataset.createdAt || '';
+                const period = element.dataset.period || '';
+                const content = element.dataset.content || 'Không có nội dung chi tiết.';
+
+                const modalTitle = document.getElementById('modalAnnouncementTitle');
+                const modalCategory = document.getElementById('modalAnnouncementCategory');
+                const modalAuthor = document.getElementById('modalAnnouncementAuthor');
+                const modalTime = document.getElementById('modalAnnouncementTime');
+                const modalContent = document.getElementById('modalAnnouncementContent');
+                const periodWrap = document.getElementById('modalAnnouncementPeriodWrap');
+                const modalPeriod = document.getElementById('modalAnnouncementPeriod');
+
+                if (modalTitle) modalTitle.textContent = title;
+                if (modalCategory) modalCategory.textContent = category;
+                if (modalAuthor) modalAuthor.textContent = author;
+                if (modalTime) modalTime.textContent = time;
+                if (modalContent) modalContent.textContent = content;
+
+                if (periodWrap && modalPeriod) {
+                    if (period && period.trim() !== '') {
+                        modalPeriod.textContent = period;
+                        periodWrap.classList.remove('d-none');
+                    } else {
+                        periodWrap.classList.add('d-none');
+                    }
+                }
+
+                const modalEl = document.getElementById('announcementDetailModal');
+                if (modalEl) {
+                    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    bsModal.show();
+                }
+            }
+
+            // Segmented Control Tabs Filtering
+            function filterTableByStatus(status, tabElement) {
+                const tabs = document.querySelectorAll('.segmented-tab, .filter-pill-tab');
+                tabs.forEach(t => t.classList.remove('active'));
+                if (tabElement) tabElement.classList.add('active');
+
+                const rows = document.querySelectorAll('.filterable-row');
+                let count = 0;
+                rows.forEach(row => {
+                    const rowStatus = (row.getAttribute('data-status') || '').toUpperCase();
+                    if (!status || status === 'ALL' || rowStatus === status.toUpperCase()) {
+                        row.style.display = '';
+                        count++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                updateRowCountDisplay(count);
+            }
+
+            // Quick Search Filter
+            function filterTableByKeyword(keyword) {
+                const term = (keyword || '').toLowerCase().trim();
+                const rows = document.querySelectorAll('.filterable-row');
+                let count = 0;
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (!term || text.includes(term)) {
+                        row.style.display = '';
+                        count++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                updateRowCountDisplay(count);
+            }
+
+            // Multi-attribute Table Filter (Dropdown + Keyword)
+            function filterTableByAttribute(attrName, attrVal) {
+                const term = (attrVal || '').toLowerCase().trim();
+                const rows = document.querySelectorAll('.filterable-row');
+                let count = 0;
+                rows.forEach(row => {
+                    const val = (row.getAttribute('data-' + attrName) || '').toLowerCase();
+                    if (!term || term === 'all' || val === term || val.includes(term)) {
+                        row.style.display = '';
+                        count++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                updateRowCountDisplay(count);
+            }
+
+            function updateRowCountDisplay(count) {
+                const counter = document.getElementById('filteredRowCount');
+                if (counter) {
+                    counter.textContent = 'Hiển thị: ' + count + ' mục';
+                }
+            }
+
+            // Prepare Reject Modal (Department Head)
+            function prepareRejectModal(id, title) {
+                const form = document.getElementById('rejectForm');
+                const titleSpan = document.getElementById('rejectTopicTitle');
+                if (form) form.action = '/department-head/topics/' + id + '/reject';
+                if (titleSpan) titleSpan.textContent = title || '';
+            }
+
+            // Auto Initialize Tooltips & Popovers
+            document.addEventListener('DOMContentLoaded', function () {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.forEach(function (el) { new bootstrap.Tooltip(el); });
+            });
+        </script>
+    </div>
+</body>
+</html>

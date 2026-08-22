@@ -215,6 +215,17 @@ public class DepartmentHeadService {
         return studentGroupRepository.findAll();
     }
 
+    public List<StudentGroup> getGroupsInDepartmentAndPeriod(Long departmentId, Long periodId) {
+        if (periodId != null) {
+            return studentGroupRepository.findByPeriodId(periodId);
+        }
+        if (departmentId != null) {
+            List<StudentGroup> list = studentGroupRepository.findByPeriodDepartmentId(departmentId);
+            if (!list.isEmpty()) return list;
+        }
+        return studentGroupRepository.findAll();
+    }
+
     public Map<String, Object> getDepartmentStats(Long departmentId) {
         List<Topic> topics = getDepartmentTopics(departmentId, "ALL", null, null, null);
         List<Lecturer> lecturers = getLecturersInDepartment(departmentId);

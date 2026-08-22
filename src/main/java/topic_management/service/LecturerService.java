@@ -175,4 +175,8 @@ public class LecturerService {
     public List<Major> getAllMajors() {
         return majorRepository.findAll();
     }
+
+    public List<RegistrationPeriod> getAllPeriods() {
+        return periodRepository.findAll();
+    }
 }
