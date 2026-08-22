@@ -1,232 +1,431 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng điều khiển Trưởng Khoa / Bộ Môn - TopicHub</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        :root {
-            --bg-body: #f8fafc;
-            --text-main: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --card-bg: #ffffff;
-            --primary-accent: #0f172a;
-            --primary-hover: #1e293b;
-        }
-
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-            min-height: 100vh;
-        }
-
-        .navbar-saas {
-            background-color: #ffffff;
-            border-bottom: 1px solid var(--border-color);
-            padding: 0.75rem 1.5rem;
-            position: sticky;
-            top: 0;
-            z-index: 1020;
-        }
-
-        .nav-link-saas {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            padding: 0.5rem 0.875rem;
-            border-radius: 6px;
-            text-decoration: none;
-            transition: all 0.15s ease;
-        }
-
-        .nav-link-saas:hover {
-            color: var(--text-main);
-            background-color: #f1f5f9;
-        }
-
-        .nav-link-saas.active {
-            color: #0f172a;
-            background-color: #f1f5f9;
-            font-weight: 600;
-        }
-
-        .saas-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
-        }
-
-        .stat-card {
-            padding: 1.25rem 1.5rem;
-        }
-
-        .stat-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-value {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--text-main);
-            line-height: 1;
-        }
-    </style>
-</head>
+<head th:replace="~{fragments/head :: head('Bảng điều khiển Trưởng Khoa')}"></head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-saas">
-        <div class="container-fluid max-width-container">
-            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark me-4" th:href="@{/department-head/dashboard}">
-                <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-2" style="width: 32px; height: 32px;">
-                    <i class="fa-solid fa-graduation-cap"></i>
-                </div>
-                <span>TopicHub <span class="badge bg-light text-secondary border fw-normal fs-6">Khoa CNTT</span></span>
-            </a>
-            <div class="collapse navbar-collapse">
-                <div class="navbar-nav me-auto gap-1">
-                    <a class="nav-link-saas active" th:href="@{/department-head/dashboard}">Tổng quan</a>
-                    <a class="nav-link-saas" th:href="@{/department-head/periods}">Đợt đăng ký</a>
-                    <a class="nav-link-saas" th:href="@{/department-head/topics}">Quản lý đề tài</a>
-                    <a class="nav-link-saas" th:href="@{/department-head/councils}">Hội đồng bảo vệ</a>
-                    <a class="nav-link-saas" th:href="@{/department-head/results}">Tổng hợp điểm</a>
-                    <a class="nav-link-saas" th:href="@{/department-head/announcements}">Thông báo</a>
-                    <a class="nav-link-saas" th:href="@{/department-head/lecturers}">Giảng viên</a>
-                    <a class="nav-link-saas" th:href="@{/department-head/students}">Sinh viên</a>
-                </div>
-                <div class="d-flex align-items-center gap-3">
-                    <span class="text-secondary small fw-medium" th:text="${user.fullName}">Trưởng khoa</span>
-                    <a th:href="@{/logout}" class="btn btn-sm btn-outline-secondary rounded-pill">Đăng xuất</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('dashboard', ${user})}"></aside>
 
-    <main class="container py-4">
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header th:replace="~{fragments/topbar :: topbar('Bảng điều khiển', 'Trưởng Khoa', '/department-head/dashboard', ${user})}"></header>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h4 fw-bold text-dark mb-1">Tổng quan Khoa & Học kỳ</h1>
-                <p class="text-muted small mb-0" th:text="'Quản lý đợt đăng ký, phê duyệt đề tài và thành lập hội đồng - ' + ${department.name}"></p>
+        <!-- Main Content View -->
+        <main class="saas-content">
+            
+            <!-- Alert Messages -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200" role="alert">
+                <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
             </div>
-            <div class="d-flex gap-2">
-                <a th:href="@{/department-head/periods}" class="btn btn-sm btn-outline-dark"><i class="fa-solid fa-calendar-plus me-1"></i> Quản lý đợt</a>
-                <a th:href="@{/department-head/topics(status='PENDING')}" class="btn btn-sm btn-dark"><i class="fa-solid fa-list-check me-1"></i> Duyệt đề tài</a>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
             </div>
-        </div>
 
-        <!-- Stat Cards -->
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-lg-3">
-                <div class="saas-card stat-card">
-                    <div class="stat-label">Tổng số đề tài</div>
-                    <div class="stat-value" th:text="${stats.totalTopics}">0</div>
-                    <small class="text-muted mt-2 d-block"><span class="text-success fw-medium" th:text="${stats.approvedTopics}">0</span> đã duyệt</small>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="saas-card stat-card">
-                    <div class="stat-label text-warning-emphasis">Chờ phê duyệt</div>
-                    <div class="stat-value text-warning" th:text="${stats.pendingTopics}">0</div>
-                    <small class="text-muted mt-2 d-block">Đề xuất từ giảng viên</small>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="saas-card stat-card">
-                    <div class="stat-label">Hội đồng bảo vệ</div>
-                    <div class="stat-value" th:text="${stats.totalCouncils}">0</div>
-                    <small class="text-muted mt-2 d-block">Đang hoạt động</small>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="saas-card stat-card">
-                    <div class="stat-label">Giảng viên / Nhóm SV</div>
-                    <div class="stat-value" th:text="${stats.totalLecturers} + ' / ' + ${stats.totalGroups}">0 / 0</div>
-                    <small class="text-muted mt-2 d-block">Trong toàn khoa</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-4">
-            <!-- Pending Topics -->
-            <div class="col-lg-7">
-                <div class="saas-card p-4 h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h2 class="h6 fw-bold text-dark mb-0"><i class="fa-regular fa-clock text-warning me-1"></i> Đề tài chờ phê duyệt</h2>
-                        <a th:href="@{/department-head/topics(status='PENDING')}" class="small text-decoration-none">Xem tất cả &rarr;</a>
+            <!-- Page Title Header & Action Bar -->
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <h1 class="text-xl font-bold text-slate-900 mb-0">Bảng điều khiển Trưởng Khoa / Bộ Môn</h1>
+                        <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200" th:text="${department != null ? department.name : 'Khoa CNTT'}">Khoa CNTT</span>
                     </div>
-                    <div class="list-group list-group-flush" th:if="${pendingTopics != null && !#lists.isEmpty(pendingTopics)}">
-                        <div th:each="t : ${pendingTopics}" class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="badge bg-light text-dark border mb-1" th:text="${t.code}">DT-01</span>
-                                <div class="fw-semibold text-dark" th:text="${t.title}">Tên đề tài</div>
-                                <small class="text-muted" th:text="'GV: ' + (${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'N/A'})"></small>
+                    <p class="text-xs text-slate-500 mb-0 mt-1">Giám sát quy trình đề xuất đề tài, tiến độ hội đồng bảo vệ và các đợt đăng ký trong khoa.</p>
+                </div>
+                <div class="d-flex align-items-center gap-2.5">
+                    <!-- Action Button 1: Duyệt đề tài (Ghost button with subtle badge) -->
+                    <a th:href="@{/department-head/topics(status='PENDING')}" 
+                       class="btn bg-amber-50 text-amber-800 border border-amber-200/60 hover:bg-amber-100 rounded-xl px-3.5 py-2 text-xs font-semibold transition d-inline-flex align-items-center gap-2 shadow-xs">
+                        <i class="fa-solid fa-clock-rotate-left text-amber-600 text-xs"></i>
+                        <span>Duyệt đề tài</span>
+                        <span th:if="${stats != null && stats['pendingTopics'] != null && stats['pendingTopics'] > 0}" 
+                              class="rounded-full bg-amber-200/80 text-amber-900 text-xs px-2 py-0.5 font-bold" 
+                              th:text="${stats['pendingTopics']}">0</span>
+                    </a>
+                    <!-- Action Button 2: Đăng thông báo (Primary Soft) -->
+                    <button class="btn bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2 text-xs font-semibold shadow-sm shadow-blue-500/20 d-inline-flex align-items-center gap-2 transition" data-bs-toggle="modal" data-bs-target="#modalCreateAnnouncement">
+                        <i class="fa-solid fa-bullhorn text-xs"></i>
+                        <span>Đăng thông báo</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 1. METRIC KPI STAT CARDS (Row of 4 with Impeccable Style) -->
+            <div class="row g-3 mb-4">
+                <!-- Card 1: Total Topics (Blue Accent) -->
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="stat-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Tổng số Đề tài</div>
+                            <div class="text-2xl font-black text-slate-900 mb-1" th:text="${stats != null ? stats['totalTopics'] : 0}">0</div>
+                            <div class="text-slate-500 text-xs">
+                                <span class="text-emerald-600 font-semibold" th:text="${(stats != null ? stats['approvedTopics'] : 0) + ' đã duyệt'}">0 đã duyệt</span>
                             </div>
-                            <form th:action="@{/department-head/topics/{id}/approve(id=${t.id})}" method="post">
-                                <button type="submit" class="btn btn-sm btn-outline-success"><i class="fa-solid fa-check"></i> Duyệt nhanh</button>
-                            </form>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 text-base">
+                            <i class="fa-solid fa-book-open"></i>
                         </div>
                     </div>
-                    <div th:if="${pendingTopics == null || #lists.isEmpty(pendingTopics)}" class="text-center py-4 text-muted small">
-                        <i class="fa-regular fa-circle-check fs-3 mb-2 d-block text-success"></i>
-                        Hiện tại không có đề tài nào cần duyệt!
+                </div>
+
+                <!-- Card 2: Pending Topics (Amber Accent) -->
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="stat-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-1">Đề tài chờ duyệt</div>
+                            <div class="text-2xl font-black text-amber-600 mb-1" th:text="${stats != null ? stats['pendingTopics'] : 0}">0</div>
+                            <div class="text-slate-500 text-xs">
+                                <a th:href="@{/department-head/topics(status='PENDING')}" class="text-amber-600 font-semibold hover:underline">Xử lý ngay &rarr;</a>
+                            </div>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 text-base">
+                            <i class="fa-solid fa-hourglass-half"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Councils (Purple Accent) -->
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="stat-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Hội đồng Bảo vệ</div>
+                            <div class="text-2xl font-black text-slate-900 mb-1" th:text="${stats != null ? stats['totalCouncils'] : 0}">0</div>
+                            <div class="text-slate-500 text-xs">
+                                <a th:href="@{/department-head/councils}" class="text-purple-600 font-medium hover:underline">Xem Hội đồng &rarr;</a>
+                            </div>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0 text-base">
+                            <i class="fa-solid fa-scale-balanced"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Lecturers & Students (Emerald Accent) -->
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="stat-card p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Giảng viên / Sinh viên</div>
+                            <div class="text-2xl font-black text-slate-900 mb-1" th:text="${(stats != null ? stats['totalLecturers'] : 0) + ' / ' + (stats != null ? stats['totalStudents'] : 0)}">0 / 0</div>
+                            <div class="text-slate-500 text-xs">
+                                <a th:href="@{/department-head/lecturers}" class="text-emerald-600 font-medium hover:underline">Quản lý nhân sự &rarr;</a>
+                            </div>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 text-base">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Active Periods & Announcements -->
-            <div class="col-lg-5">
-                <div class="saas-card p-4 mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h2 class="h6 fw-bold text-dark mb-0"><i class="fa-regular fa-calendar-check text-primary me-1"></i> Các đợt đang mở</h2>
-                        <a th:href="@{/department-head/periods}" class="small text-decoration-none">Chi tiết &rarr;</a>
-                    </div>
-                    <div th:if="${periods != null && !#lists.isEmpty(periods)}" class="d-flex flex-column gap-2">
-                        <div th:each="p : ${periods}" class="p-2 border rounded-3 bg-light d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong class="small text-dark d-block" th:text="${p.name}"></strong>
-                                <small class="text-muted" th:text="${p.getPeriodTypeName()}"></small>
+            <!-- 2. MAIN BALANCED 2-COLUMN GRID (65% Left Stream - 35% Right Stream) -->
+            <div class="row g-4 mb-4">
+                
+                <!-- Left Column (col-12 col-xl-8): Main Operational Stream -->
+                <div class="col-12 col-xl-8 d-flex flex-column gap-4">
+                    
+                    <!-- Card 1: Pending Topics (5 mới nhất với bảng tinh tế & Quick Approve) -->
+                    <div class="saas-card rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 d-flex align-items-center justify-content-between bg-white">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-clipboard-question text-xs"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 font-bold text-slate-900 text-xs">Đề tài chờ phê duyệt (5 mới nhất)</h6>
+                                    <span class="text-slate-400 text-xs">Phê duyệt hoặc mở kiểm tra chi tiết</span>
+                                </div>
                             </div>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle" th:text="${p.status}">OPEN</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge-pill-pending font-bold text-xs" th:text="${pendingTopics != null ? pendingTopics.size() + ' chờ duyệt' : '0'}">0</span>
+                                <a th:href="@{/department-head/topics(status='PENDING')}" class="text-blue-600 text-xs font-semibold hover:underline">
+                                    Xem tất cả &rarr;
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-saas mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50%;">Mã & Tên đề tài</th>
+                                        <th style="width: 25%;">Giảng viên hướng dẫn</th>
+                                        <th style="width: 25%;" class="text-end">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:if="${pendingTopics == null || pendingTopics.isEmpty()}">
+                                        <td colspan="3" class="text-center py-5 text-slate-400 text-xs">
+                                            <i class="fa-solid fa-circle-check d-block text-2xl mb-2 text-emerald-500"></i>
+                                            Tuyệt vời! Hiện không có đề tài nào đang chờ duyệt.
+                                        </td>
+                                    </tr>
+                                    <tr th:each="t : ${pendingTopics}" class="cursor-pointer hover:bg-slate-50/70 transition"
+                                        th:onclick="openTopicDrawer({
+                                            id: [[${t.id}]],
+                                            code: '[[${t.code}]]',
+                                            title: '[[${#strings.escapeJavaScript(t.title)}]]',
+                                            period: '[[${t.period != null ? #strings.escapeJavaScript(t.period.name) : 'Chung'}]]',
+                                            major: '[[${t.major != null ? #strings.escapeJavaScript(t.major.name) : 'CNTT'}]]',
+                                            supervisor: '[[${t.supervisor != null && t.supervisor.user != null ? #strings.escapeJavaScript(t.supervisor.academicTitle + ' ' + t.supervisor.user.fullName) : 'Chưa phân công'}]]',
+                                            coSupervisor: '[[${t.coSupervisor != null && t.coSupervisor.user != null ? #strings.escapeJavaScript(t.coSupervisor.academicTitle + ' ' + t.coSupervisor.user.fullName) : 'Không có'}]]',
+                                            reviewer: '[[${t.reviewer != null && t.reviewer.user != null ? #strings.escapeJavaScript(t.reviewer.academicTitle + ' ' + t.reviewer.user.fullName) : 'Chưa phân công'}]]',
+                                            council: '[[${t.council != null ? #strings.escapeJavaScript(t.council.name) : 'Chưa phân hội đồng'}]]',
+                                            maxStudents: [[${t.maxStudents}]],
+                                            status: '[[${t.status}]]',
+                                            description: '[[${#strings.escapeJavaScript(t.description)}]]',
+                                            requirements: '[[${#strings.escapeJavaScript(t.requirements)}]]',
+                                            role: 'DEPARTMENT_HEAD'
+                                        })">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold" th:text="${t.code != null ? t.code : 'DT-NEW'}">DT01</span>
+                                                <span class="badge-pill-neutral font-medium text-xs" th:text="${t.major != null ? t.major.name : 'CNTT'}">CNTT</span>
+                                            </div>
+                                            <div class="font-semibold text-slate-900 text-xs line-clamp-1 hover:text-blue-600 transition" th:text="${t.title}">Tên đề tài nghiên cứu</div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-xs flex-shrink-0"
+                                                     th:text="${t.supervisor != null && t.supervisor.user != null && t.supervisor.user.fullName != null && !t.supervisor.user.fullName.isEmpty() ? t.supervisor.user.fullName.substring(0, 1) : 'G'}">G</div>
+                                                <div>
+                                                    <span class="font-medium text-slate-800 text-xs d-block" th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.academicTitle + ' ' + t.supervisor.user.fullName : 'GVHD'}">GVHD</span>
+                                                    <span class="text-slate-400 text-xs" th:text="${t.period != null ? t.period.name : 'Đợt chung'}"></span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-end" onclick="event.stopPropagation()">
+                                            <div class="d-inline-flex align-items-center gap-1.5">
+                                                <!-- Quick Approve Button -->
+                                                <form th:action="@{/department-head/topics/{id}/approve(id=${t.id})}" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/60 rounded-xl px-2.5 py-1 text-xs font-semibold transition" title="Duyệt nhanh">
+                                                        <i class="fa-solid fa-check me-1 text-xs"></i> Duyệt nhanh
+                                                    </button>
+                                                </form>
+                                                <!-- View Detail Drawer Button -->
+                                                <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100" 
+                                                        th:onclick="openTopicDrawer({
+                                                            id: [[${t.id}]],
+                                                            code: '[[${t.code}]]',
+                                                            title: '[[${#strings.escapeJavaScript(t.title)}]]',
+                                                            period: '[[${t.period != null ? #strings.escapeJavaScript(t.period.name) : 'Chung'}]]',
+                                                            major: '[[${t.major != null ? #strings.escapeJavaScript(t.major.name) : 'CNTT'}]]',
+                                                            supervisor: '[[${t.supervisor != null && t.supervisor.user != null ? #strings.escapeJavaScript(t.supervisor.academicTitle + ' ' + t.supervisor.user.fullName) : 'Chưa phân công'}]]',
+                                                            coSupervisor: '[[${t.coSupervisor != null && t.coSupervisor.user != null ? #strings.escapeJavaScript(t.coSupervisor.academicTitle + ' ' + t.coSupervisor.user.fullName) : 'Không có'}]]',
+                                                            reviewer: '[[${t.reviewer != null && t.reviewer.user != null ? #strings.escapeJavaScript(t.reviewer.academicTitle + ' ' + t.reviewer.user.fullName) : 'Chưa phân công'}]]',
+                                                            council: '[[${t.council != null ? #strings.escapeJavaScript(t.council.name) : 'Chưa phân hội đồng'}]]',
+                                                            maxStudents: [[${t.maxStudents}]],
+                                                            status: '[[${t.status}]]',
+                                                            description: '[[${#strings.escapeJavaScript(t.description)}]]',
+                                                            requirements: '[[${#strings.escapeJavaScript(t.requirements)}]]',
+                                                            role: 'DEPARTMENT_HEAD'
+                                                        })" title="Xem chi tiết">
+                                                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div th:if="${periods == null || #lists.isEmpty(periods)}" class="text-muted small text-center py-3">
-                        Chưa có đợt nào.
+
+                    <!-- Card 2: Tiến độ Hội đồng bảo vệ (với Progress Bar mini) -->
+                    <div class="saas-card rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 d-flex align-items-center justify-content-between bg-white">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-scale-balanced text-xs"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 font-bold text-slate-900 text-xs">Tiến độ Hội đồng Phản biện & Bảo vệ</h6>
+                                    <span class="text-slate-400 text-xs">Theo dõi tiến độ chấm điểm và bảo vệ khóa luận</span>
+                                </div>
+                            </div>
+                            <a th:href="@{/department-head/councils}" class="text-blue-600 text-xs font-semibold hover:underline">
+                                Quản lý Hội đồng &rarr;
+                            </a>
+                        </div>
+                        
+                        <div class="p-3 d-flex flex-column gap-2.5" th:if="${councils != null && !councils.isEmpty()}">
+                            <div class="p-3.5 bg-slate-50/70 rounded-xl border border-slate-100 d-flex flex-column gap-2" th:each="c : ${councils}">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold" th:text="${c.code != null ? c.code : 'HĐ-01'}">HĐ-01</span>
+                                        <span class="font-bold text-slate-900 text-xs" th:text="${c.name}">Hội đồng Khóa luận 01</span>
+                                    </div>
+                                    <span class="badge-pill-approved font-semibold text-xs" th:text="${c.status != null ? c.status : 'ACTIVE'}">ACTIVE</span>
+                                </div>
+                                
+                                <!-- Meta tags: Date, Room, Members -->
+                                <div class="text-slate-500 text-xs d-flex flex-wrap align-items-center gap-3">
+                                    <span><i class="fa-regular fa-calendar text-slate-400 me-1"></i><span th:text="${c.defenseDate != null ? #temporals.format(c.defenseDate, 'dd/MM/yyyy HH:mm') : 'Chưa xếp lịch'}"></span></span>
+                                    <span><i class="fa-solid fa-location-dot text-slate-400 me-1"></i><span th:text="${c.location != null ? c.location : 'Phòng bảo vệ Khoa'}"></span></span>
+                                    <span><i class="fa-solid fa-users text-slate-400 me-1"></i><span th:text="${c.members != null ? c.members.size() + ' Cán bộ chấm' : 'Chưa gán GV'}"></span></span>
+                                </div>
+
+                                <!-- Mini Progress bar -->
+                                <div class="d-flex align-items-center gap-3 mt-1">
+                                    <div class="flex-grow-1 bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                        <div class="bg-blue-600 h-1.5 rounded-full" style="width: 75%;"></div>
+                                    </div>
+                                    <span class="text-xs text-slate-500 font-semibold font-mono">Đang tiến hành</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-5 text-center text-slate-400 text-xs" th:if="${councils == null || councils.isEmpty()}">
+                            <i class="fa-solid fa-scale-balanced text-2xl mb-2 d-block text-slate-300"></i>
+                            Chưa có Hội đồng bảo vệ nào được thành lập trong đợt này.
+                        </div>
                     </div>
                 </div>
 
-                <div class="saas-card p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h2 class="h6 fw-bold text-dark mb-0"><i class="fa-solid fa-bullhorn text-secondary me-1"></i> Bảng tin thông báo</h2>
-                        <a th:href="@{/department-head/announcements}" class="small text-decoration-none">Đăng bài &rarr;</a>
-                    </div>
-                    <div th:if="${announcements != null && !#lists.isEmpty(announcements)}" class="d-flex flex-column gap-2">
-                        <div th:each="a : ${announcements}" class="small py-2 border-bottom">
-                            <strong class="text-dark d-block" th:text="${a.title}"></strong>
-                            <span class="text-muted" th:text="${#temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                <!-- Right Column (col-12 col-xl-4): Secondary Activity Stream -->
+                <div class="col-12 col-xl-4 d-flex flex-column gap-4">
+                    
+                    <!-- Card 3: Các đợt đăng ký đang mở (kèm Deadline Countdown tags) -->
+                    <div class="saas-card rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 d-flex align-items-center justify-content-between bg-white">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-calendar-days text-xs"></i>
+                                </div>
+                                <h6 class="mb-0 font-bold text-slate-900 text-xs">Các Đợt Đăng Ký Đang Mở</h6>
+                            </div>
+                            <a th:href="@{/department-head/periods}" class="text-blue-600 text-xs font-semibold hover:underline">
+                                Xem tất cả &rarr;
+                            </a>
+                        </div>
+
+                        <div class="p-3 d-flex flex-column gap-2.5 overflow-y-auto" style="max-height: 360px;" th:if="${periods != null && !periods.isEmpty()}">
+                            <div class="p-3.5 rounded-xl border border-slate-100 bg-white hover:border-blue-200 transition shadow-xs" th:each="p, iterStat : ${periods}" th:if="${iterStat.index < 4}">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200 mb-1 d-inline-block" th:text="${p.getPeriodTypeName()}">KLTN</span>
+                                        <div class="font-bold text-slate-900 text-xs line-clamp-1" th:text="${p.name}">Đợt Khóa luận Tốt nghiệp 2026-2027</div>
+                                    </div>
+                                    <span th:if="${p.status == 'OPEN'}" class="badge-pill-approved font-semibold text-xs">Đang mở</span>
+                                    <span th:unless="${p.status == 'OPEN'}" class="badge-pill-neutral font-medium text-xs">Đã đóng</span>
+                                </div>
+
+                                <div class="p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 text-xs space-y-1">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-slate-400">Hạn GV đề xuất:</span>
+                                        <strong class="text-slate-800" th:text="${p.lecturerProposalEnd != null ? #temporals.format(p.lecturerProposalEnd, 'dd/MM/yyyy') : 'N/A'}"></strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-slate-400">Hạn SV đăng ký:</span>
+                                        <strong class="text-blue-600" th:text="${p.studentRegistrationEnd != null ? #temporals.format(p.studentRegistrationEnd, 'dd/MM/yyyy') : 'N/A'}"></strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 text-center text-slate-400 text-xs" th:if="${periods == null || periods.isEmpty()}">
+                            Chưa có đợt đăng ký nào đang mở.
                         </div>
                     </div>
+
+                    <!-- Card 4: Bảng tin thông báo & Hoạt động (kèm nút Đăng nhanh) -->
+                    <div class="saas-card rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 d-flex align-items-center justify-content-between bg-white">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-bullhorn text-xs"></i>
+                                </div>
+                                <h6 class="mb-0 font-bold text-slate-900 text-xs">Bảng Tin Thông Báo Khoa</h6>
+                            </div>
+                            <button class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100" data-bs-toggle="modal" data-bs-target="#modalCreateAnnouncement">
+                                <i class="fa-solid fa-plus text-xs me-1"></i> Đăng nhanh
+                            </button>
+                        </div>
+
+                        <div class="p-3 d-flex flex-column gap-2 overflow-y-auto" style="max-height: 320px;" th:if="${announcements != null && !announcements.isEmpty()}">
+                            <div class="p-3 rounded-xl border border-slate-100 bg-white hover:border-slate-300 hover:shadow-xs transition cursor-pointer" 
+                                 th:each="a, aStat : ${announcements}" th:if="${aStat.index < 3}"
+                                 onclick="showAnnouncementDetail(this)"
+                                 th:data-title="${a.title}"
+                                 th:data-category="${a.category != null ? a.category : 'THÔNG BÁO'}"
+                                 th:data-author="${a.author != null ? a.author.fullName : 'Ban chủ nhiệm Khoa'}"
+                                 th:data-created-at="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm') : ''}"
+                                 th:data-period="${a.period != null ? a.period.name : ''}"
+                                 th:data-content="${a.content}">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200" th:text="${a.category != null ? a.category : 'THÔNG BÁO'}">THÔNG BÁO</span>
+                                    <span class="text-slate-400 text-xs" th:text="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy') : ''}">22/08/2026</span>
+                                </div>
+                                <h6 class="font-bold text-slate-900 text-xs mb-1 line-clamp-1 hover:text-blue-600 transition" th:text="${a.title}">Tiêu đề thông báo khoa</h6>
+                                <p class="text-slate-500 text-xs mb-0 line-clamp-2 leading-relaxed" th:text="${a.content}">Nội dung tóm tắt thông báo...</p>
+                            </div>
+                        </div>
+                        <div class="p-4 text-center text-slate-400 text-xs" th:if="${announcements == null || announcements.isEmpty()}">
+                            <i class="fa-regular fa-bell-slash text-2xl mb-2 d-block opacity-40"></i>
+                            Hiện chưa có thông báo mới nào từ Khoa.
+                        </div>
+                    </div>
+
                 </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal Create Announcement -->
+    <div class="modal fade" id="modalCreateAnnouncement" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-2xl border-0 shadow-xl">
+                <form th:action="@{/department-head/announcements/create}" method="post">
+                    <div class="modal-header border-b border-slate-100 p-4">
+                        <h6 class="modal-title font-bold text-slate-900 text-sm">
+                            <i class="fa-solid fa-bullhorn text-blue-600 me-1.5"></i> Đăng Thông Báo Mới Của Khoa
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-3">
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700">Đợt đăng ký liên quan</label>
+                            <select name="periodId" class="form-select text-xs rounded-xl">
+                                <option value="">-- Thông báo chung toàn khoa --</option>
+                                <option th:each="p : ${allPeriods}" th:value="${p.id}" th:text="${p.name}"></option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700">Danh mục thông báo *</label>
+                            <select name="category" class="form-select text-xs rounded-xl" required>
+                                <option value="LỊCH TRÌNH">Lịch trình & Thời hạn</option>
+                                <option value="HỘI ĐỒNG">Hội đồng bảo vệ</option>
+                                <option value="QUY ĐỊNH">Quy định & Biểu mẫu</option>
+                                <option value="KẾT QUẢ">Kết quả & Điểm số</option>
+                                <option value="CHUNG">Thông báo chung</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700">Tiêu đề thông báo *</label>
+                            <input type="text" name="title" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Lịch bảo vệ Khóa luận Tốt nghiệp đợt 1 năm 2026" required>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700">Nội dung chi tiết *</label>
+                            <textarea name="content" class="form-control text-xs rounded-xl" rows="5" placeholder="Nhập nội dung thông báo đầy đủ cho Giảng viên và Sinh viên..." required></textarea>
+                        </div>
+                        <div class="form-check form-switch pt-1">
+                            <input class="form-check-input" type="checkbox" name="isPinned" value="true" id="pinnedCheck">
+                            <label class="form-check-label text-xs font-semibold text-slate-700" for="pinnedCheck">Ghim lên đầu bảng tin</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 p-3">
+                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">
+                            <i class="fa-solid fa-paper-plane me-1 text-xs"></i> Đăng thông báo
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
 
-    </main>
+    <!-- Reusable Slide-over Topic Drawer Fragment -->
+    <div th:replace="~{fragments/drawer :: topicDrawer}"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Scripts Fragment -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
 </body>
 </html>

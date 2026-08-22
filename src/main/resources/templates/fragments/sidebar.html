@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<body>
+    <aside class="saas-sidebar" id="saasSidebar" th:fragment="sidebar(activePage, user)">
+        <!-- Brand Header -->
+        <a class="sidebar-brand" th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
+            <div class="sidebar-brand-logo me-2">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div class="d-flex flex-column">
+                <span class="fw-bold fs-6 text-dark lh-1">TopicHub</span>
+                <span class="text-muted small mt-1" style="font-size: 0.7rem;" th:text="${user != null && user.role != null ? user.role.name : 'Hệ Thống'}">Quản Lý Đề Tài</span>
+            </div>
+        </a>
+
+        <!-- Navigation Menu Container -->
+        <div class="sidebar-nav-container">
+            
+            <!-- ================= ADMIN MENU ================= -->
+            <div th:if="${user != null && user.role != null && user.role.code == 'ADMIN'}">
+                <div class="sidebar-section-title">Tổng quan</div>
+                <a th:href="@{/admin/dashboard}" class="saas-nav-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Bảng điều khiển</span>
+                </a>
+
+                <div class="sidebar-section-title mt-2">Quản trị hệ thống</div>
+                <a th:href="@{/admin/users}" class="saas-nav-link" th:classappend="${activePage == 'users' ? 'active' : ''}">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span>Quản lý tài khoản</span>
+                </a>
+                <a th:href="@{/admin/departments}" class="saas-nav-link" th:classappend="${activePage == 'departments' ? 'active' : ''}">
+                    <i class="fa-solid fa-building-columns"></i>
+                    <span>Khoa & Chuyên ngành</span>
+                </a>
+            </div>
+
+            <!-- ================= DEPARTMENT HEAD MENU ================= -->
+            <div th:if="${user != null && user.role != null && user.role.code == 'DEPARTMENT_HEAD'}">
+                <div class="sidebar-section-title">Tổng quan</div>
+                <a th:href="@{/department-head/dashboard}" class="saas-nav-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Bảng điều khiển</span>
+                </a>
+
+                <div class="sidebar-section-title mt-2">Quản lý Đề tài & Đợt</div>
+                <a th:href="@{/department-head/topics}" class="saas-nav-link" th:classappend="${activePage == 'topics' ? 'active' : ''}">
+                    <i class="fa-solid fa-book-open-reader"></i>
+                    <span>Duyệt đề tài Khoa</span>
+                </a>
+                <a th:href="@{/department-head/periods}" class="saas-nav-link" th:classappend="${activePage == 'periods' ? 'active' : ''}">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <span>Đợt đăng ký</span>
+                </a>
+                <a th:href="@{/department-head/councils}" class="saas-nav-link" th:classappend="${activePage == 'councils' ? 'active' : ''}">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <span>Hội đồng bảo vệ</span>
+                </a>
+                <a th:href="@{/department-head/results}" class="saas-nav-link" th:classappend="${activePage == 'results' ? 'active' : ''}">
+                    <i class="fa-solid fa-square-poll-vertical"></i>
+                    <span>Công bố kết quả</span>
+                </a>
+
+                <div class="sidebar-section-title mt-2">Nhân sự & Bảng tin</div>
+                <a th:href="@{/department-head/announcements}" class="saas-nav-link" th:classappend="${activePage == 'announcements' ? 'active' : ''}">
+                    <i class="fa-solid fa-bullhorn"></i>
+                    <span>Bảng tin thông báo</span>
+                </a>
+                <a th:href="@{/department-head/lecturers}" class="saas-nav-link" th:classappend="${activePage == 'lecturers' ? 'active' : ''}">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                    <span>Giảng viên Khoa</span>
+                </a>
+                <a th:href="@{/department-head/students}" class="saas-nav-link" th:classappend="${activePage == 'students' ? 'active' : ''}">
+                    <i class="fa-solid fa-user-group"></i>
+                    <span>Sinh viên & Nhóm</span>
+                </a>
+            </div>
+
+            <!-- ================= LECTURER MENU ================= -->
+            <div th:if="${user != null && user.role != null && user.role.code == 'LECTURER'}">
+                <div class="sidebar-section-title">Tổng quan</div>
+                <a th:href="@{/lecturer/dashboard}" class="saas-nav-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Bảng điều khiển</span>
+                </a>
+
+                <div class="sidebar-section-title mt-2">Hướng dẫn Đề tài</div>
+                <a th:href="@{/lecturer/topics}" class="saas-nav-link" th:classappend="${activePage == 'topics' ? 'active' : ''}">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>Đề tài của tôi</span>
+                </a>
+                <a th:href="@{/lecturer/topics/create}" class="saas-nav-link" th:classappend="${activePage == 'create-topic' ? 'active' : ''}">
+                    <i class="fa-solid fa-circle-plus"></i>
+                    <span>Đề xuất đề tài</span>
+                </a>
+                <a th:href="@{/lecturer/registrations}" class="saas-nav-link" th:classappend="${activePage == 'registrations' ? 'active' : ''}">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Nhóm SV hướng dẫn</span>
+                </a>
+                <a th:href="@{/lecturer/submissions}" class="saas-nav-link" th:classappend="${activePage == 'submissions' ? 'active' : ''}">
+                    <i class="fa-solid fa-file-arrow-up"></i>
+                    <span>Bài nộp tiến độ</span>
+                </a>
+
+                <div class="sidebar-section-title mt-2">Phản biện & Hội đồng</div>
+                <a th:href="@{/lecturer/reviews}" class="saas-nav-link" th:classappend="${activePage == 'reviews' ? 'active' : ''}">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    <span>Chấm phản biện (GVPB)</span>
+                </a>
+                <a th:href="@{/lecturer/councils}" class="saas-nav-link" th:classappend="${activePage == 'councils' ? 'active' : ''}">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <span>Hội đồng bảo vệ</span>
+                </a>
+            </div>
+
+            <!-- ================= STUDENT MENU ================= -->
+            <div th:if="${user != null && user.role != null && user.role.code == 'STUDENT'}">
+                <div class="sidebar-section-title">Tổng quan</div>
+                <a th:href="@{/student/dashboard}" class="saas-nav-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Bảng điều khiển</span>
+                </a>
+
+                <div class="sidebar-section-title mt-2">Đề tài & Nhóm</div>
+                <a th:href="@{/student/group}" class="saas-nav-link" th:classappend="${activePage == 'group' ? 'active' : ''}">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Nhóm sinh viên</span>
+                </a>
+                <a th:href="@{/student/topics}" class="saas-nav-link" th:classappend="${activePage == 'topics' ? 'active' : ''}">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>Tra cứu đề tài mở</span>
+                </a>
+                <a th:href="@{/student/my-topic}" class="saas-nav-link" th:classappend="${activePage == 'my-topic' ? 'active' : ''}">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Đề tài của nhóm</span>
+                </a>
+
+                <div class="sidebar-section-title mt-2">Tiến độ & Kết quả</div>
+                <a th:href="@{/student/submissions}" class="saas-nav-link" th:classappend="${activePage == 'submissions' ? 'active' : ''}">
+                    <i class="fa-solid fa-file-arrow-up"></i>
+                    <span>Nộp báo cáo</span>
+                </a>
+                <a th:href="@{/student/results}" class="saas-nav-link" th:classappend="${activePage == 'results' ? 'active' : ''}">
+                    <i class="fa-solid fa-award"></i>
+                    <span>Kết quả đánh giá</span>
+                </a>
+            </div>
+
+        </div>
+
+        <!-- User Profile Footer -->
+        <div class="sidebar-footer">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                    <div class="rounded-circle bg-blue-600 text-white d-flex align-items-center justify-content-center flex-shrink-0 fw-bold shadow-sm" style="width: 34px; height: 34px; font-size: 0.8125rem;">
+                        <span th:text="${user != null && user.fullName != null && user.fullName.length() > 0 ? user.fullName.substring(0, 1) : 'U'}">U</span>
+                    </div>
+                    <div class="d-flex flex-column overflow-hidden">
+                        <span class="text-dark text-truncate fw-semibold" style="font-size: 0.8125rem;" th:text="${user != null ? user.fullName : 'Người dùng'}">Họ và Tên</span>
+                        <span class="text-muted text-truncate" style="font-size: 0.7rem;" th:text="${user != null ? user.username : 'user'}">username</span>
+                    </div>
+                </div>
+                <a th:href="@{/logout}" class="btn btn-sm btn-light border text-secondary p-1 px-2 rounded-lg" title="Đăng xuất">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Overlay for mobile screens -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+</body>
+</html>

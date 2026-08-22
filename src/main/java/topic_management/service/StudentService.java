@@ -216,17 +216,8 @@ public class StudentService {
 
     @Transactional
     public String registerTopicForGroup(Student student, StudentGroup group, Long topicId) {
-        if (group == null) {
-            return "Bạn cần tạo hoặc gia nhập một nhóm trước khi đăng ký đề tài.";
-        }
-
-        // Leader check
-        if (!group.isLeader(student)) {
-            return "Chỉ Nhóm trưởng mới có quyền chọn và đăng ký đề tài cho nhóm!";
-        }
-
-        if (group.getTopic() != null) {
-            return "Nhóm đã đăng ký đề tài: '" + group.getTopic().getTitle() + "'.";
+        if (student == null) {
+            return "Vui lòng đăng nhập lại!";
         }
 
         Topic topic = getTopicById(topicId);
@@ -234,14 +225,35 @@ public class StudentService {
             return "Đề tài không tồn tại hoặc chưa được duyệt!";
         }
 
-        // Check if registration period is open
+        RegistrationPeriod period = topic.getPeriod();
+
+        // Nếu sinh viên chưa có nhóm trong đợt này, tự động tạo nhóm mới để đăng ký trực tiếp
+        if (group == null) {
+            try {
+                String defaultGroupName = "Nhóm " + (student.getUser() != null ? student.getUser().getFullName() : student.getStudentCode());
+                group = createGroup(student, period != null ? period.getId() : null, defaultGroupName);
+            } catch (Exception e) {
+                return "Không thể khởi tạo nhóm: " + e.getMessage();
+            }
+        } else {
+            // Kiểm tra quyền Trưởng nhóm nếu đã thuộc nhóm
+            if (!group.isLeader(student)) {
+                return "Chỉ Nhóm trưởng mới có quyền chọn và đăng ký đề tài cho nhóm!";
+            }
+        }
+
+        if (group.getTopic() != null) {
+            return "Nhóm đã đăng ký đề tài: '" + group.getTopic().getTitle() + "'.";
+        }
+
+        // Kiểm tra thời hạn đợt đăng ký
         if (topic.getPeriod() != null && !topic.getPeriod().isStudentRegistrationOpen()) {
             return "Đợt đăng ký đề tài này hiện không trong thời gian mở đăng ký cho sinh viên!";
         }
 
-        // Check capacity
+        // Kiểm tra chỉ tiêu đăng ký (mỗi đề tài 1 nhóm)
         List<StudentGroup> existingGroupsOnTopic = groupRepository.findByTopicId(topicId);
-        if (existingGroupsOnTopic.size() >= 1) { // 1 group per topic standard
+        if (!existingGroupsOnTopic.isEmpty()) {
             return "Đề tài này đã được một nhóm khác đăng ký!";
         }
 

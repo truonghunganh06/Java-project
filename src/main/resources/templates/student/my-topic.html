@@ -1,189 +1,90 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đề Tài Đã Chọn - TopicHub</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        :root {
-            --bg-body: #f8fafc;
-            --text-main: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --card-bg: #ffffff;
-            --primary-accent: #0f172a;
-            --primary-hover: #1e293b;
-        }
-
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-            min-height: 100vh;
-        }
-
-        .navbar-saas {
-            background-color: #ffffff;
-            border-bottom: 1px solid var(--border-color);
-            padding: 0.75rem 1.5rem;
-            position: sticky;
-            top: 0;
-            z-index: 1020;
-        }
-
-        .nav-link-saas {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            padding: 0.5rem 0.875rem;
-            border-radius: 6px;
-            text-decoration: none;
-            transition: all 0.15s ease;
-        }
-
-        .nav-link-saas:hover {
-            color: var(--text-main);
-            background-color: #f1f5f9;
-        }
-
-        .nav-link-saas.active {
-            color: #0f172a;
-            background-color: #f1f5f9;
-            font-weight: 600;
-        }
-
-        .saas-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
-        }
-
-        .btn-saas-primary {
-            background-color: var(--primary-accent);
-            color: #ffffff;
-            font-weight: 500;
-            font-size: 0.875rem;
-            border-radius: 8px;
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--primary-accent);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.15s ease;
-        }
-
-        .btn-saas-primary:hover {
-            background-color: var(--primary-hover);
-            color: #ffffff;
-        }
-    </style>
-</head>
+<head th:replace="~{fragments/head :: head('Đề Tài Của Nhóm')}"></head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-saas">
-        <div class="container-fluid max-width-container">
-            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark me-4" th:href="@{/student/dashboard}">
-                <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-2" style="width: 32px; height: 32px;">
-                    <i class="fa-solid fa-user-graduate"></i>
-                </div>
-                <span>TopicHub <span class="badge bg-light text-secondary border fw-normal fs-6">Sinh viên</span></span>
-            </a>
-            <div class="collapse navbar-collapse">
-                <div class="navbar-nav me-auto gap-1">
-                    <a class="nav-link-saas" th:href="@{/student/dashboard}">Tổng quan</a>
-                    <a class="nav-link-saas" th:href="@{/student/group}">Nhóm của tôi</a>
-                    <a class="nav-link-saas" th:href="@{/student/topics}">Danh mục đề tài</a>
-                    <a class="nav-link-saas active" th:href="@{/student/my-topic}">Đề tài đã chọn</a>
-                    <a class="nav-link-saas" th:href="@{/student/submissions}">Nộp báo cáo</a>
-                    <a class="nav-link-saas" th:href="@{/student/results}">Kết quả & Điểm</a>
-                </div>
-                <div class="d-flex align-items-center gap-3">
-                    <span class="text-secondary small fw-medium" th:text="${user.fullName}">Sinh viên</span>
-                    <a th:href="@{/logout}" class="btn btn-sm btn-outline-secondary rounded-pill">Đăng xuất</a>
-                </div>
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('my-topic', ${user})}"></aside>
+
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header th:replace="~{fragments/topbar :: topbar('Đề Tài Đã Nhận', 'Sinh Viên', '/student/dashboard', ${user})}"></header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+
+            <!-- Flash Messages -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200" role="alert">
+                <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
             </div>
-        </div>
-    </nav>
 
-    <main class="container py-4">
-
-        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert">
-            <i class="fa-solid fa-circle-check me-2"></i> <span th:text="${successMessage}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-
-        <div class="mb-4">
-            <h1 class="h4 fw-bold text-dark mb-1">Chi Tiết Đề Tài Của Nhóm</h1>
-            <p class="text-muted small mb-0">Xem thông tin đề tài nghiên cứu, giảng viên hướng dẫn và các mốc tiến độ.</p>
-        </div>
-
-        <div th:if="${group == null || group.topic == null}">
-            <div class="saas-card text-center py-5 text-muted">
-                <i class="fa-regular fa-folder-open fs-2 mb-2 d-block text-secondary"></i>
-                Nhóm của bạn chưa đăng ký đề tài nào.
-                <div class="mt-3">
-                    <a th:href="@{/student/topics}" class="btn btn-sm btn-dark">Đến danh mục đề tài</a>
-                </div>
+            <!-- Page Header -->
+            <div class="mb-4">
+                <h1 class="text-xl font-bold text-slate-900 mb-1">Chi Tiết Đề Tài Của Nhóm</h1>
+                <p class="text-xs text-slate-500 mb-0">Xem thông tin đề tài nghiên cứu, giảng viên hướng dẫn và các mốc tiến độ.</p>
             </div>
-        </div>
 
-        <div th:if="${group != null && group.topic != null}" class="row g-4">
-            <div class="col-lg-8">
-                <div class="saas-card p-4 mb-4">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <span class="badge bg-light text-dark border" th:text="${group.topic.code}">DT-01</span>
-                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1" th:text="${group.status}">ĐÃ ĐĂNG KÝ</span>
+            <div th:if="${group == null || group.topic == null}">
+                <div class="saas-card text-center py-5 text-muted text-xs">
+                    <i class="fa-regular fa-folder-open text-3xl mb-2 d-block text-slate-300"></i>
+                    Nhóm của bạn chưa đăng ký đề tài nào.
+                    <div class="mt-3">
+                        <a th:href="@{/student/topics}" class="btn btn-sm btn-dark rounded-xl px-3 text-xs">Đến danh mục đề tài</a>
                     </div>
-                    <h2 class="h5 fw-bold text-dark mb-3" th:text="${group.topic.title}">Tên đề tài</h2>
-                    
-                    <h6 class="small fw-bold text-dark text-uppercase mb-2">Mục tiêu & Nội dung:</h6>
-                    <p class="small text-secondary mb-4" style="line-height: 1.7;" th:text="${group.topic.description}">Mô tả đề tài...</p>
-
-                    <h6 class="small fw-bold text-dark text-uppercase mb-2">Yêu cầu chuyên môn:</h6>
-                    <p class="small text-secondary mb-0" th:text="${group.topic.requirements != null ? group.topic.requirements : 'Theo hướng dẫn của GV'}"></p>
                 </div>
             </div>
 
-            <div class="col-lg-4">
-                <div class="saas-card p-4 mb-4">
-                    <h6 class="small fw-bold text-dark text-uppercase mb-3">Giảng viên hướng dẫn</h6>
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-circle" style="width: 44px; height: 44px;">
-                            <i class="fa-solid fa-chalkboard-user"></i>
+            <div th:if="${group != null && group.topic != null}" class="row g-4 mb-4">
+                <div class="col-lg-8">
+                    <div class="saas-card p-4 mb-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold" th:text="${group.topic.code}">DT-01</span>
+                            <span class="badge-pill-approved font-semibold text-xs" th:text="${group.status}">ĐÃ ĐĂNG KÝ</span>
                         </div>
-                        <div>
-                            <div class="fw-semibold text-dark" th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.academicTitle + ' ' + group.topic.supervisor.user.fullName : 'Chưa có'}"></div>
-                            <small class="text-muted" th:text="'Mã GV: ' + (${group.topic.supervisor != null ? group.topic.supervisor.lecturerCode : ''})"></small>
+                        <h2 class="text-lg font-bold text-slate-900 mb-3" th:text="${group.topic.title}">Tên đề tài</h2>
+                        
+                        <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Mục tiêu & Nội dung:</h6>
+                        <p class="text-xs text-slate-600 mb-4 leading-relaxed" style="white-space: pre-line;" th:text="${group.topic.description}">Mô tả đề tài...</p>
+
+                        <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Yêu cầu chuyên môn:</h6>
+                        <p class="text-xs text-slate-600 mb-0 leading-relaxed" th:text="${group.topic.requirements != null ? group.topic.requirements : 'Theo hướng dẫn của GV'}"></p>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="saas-card p-4 mb-4">
+                        <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">Giảng viên hướng dẫn</h6>
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-sm flex-shrink-0">
+                                <i class="fa-solid fa-chalkboard-user"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold text-slate-900 text-xs" th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.academicTitle + ' ' + group.topic.supervisor.user.fullName : 'Chưa có'}"></div>
+                                <span class="text-slate-400 text-xs font-mono" th:text="'Mã GV: ' + (${group.topic.supervisor != null ? group.topic.supervisor.lecturerCode : ''})"></span>
+                            </div>
+                        </div>
+                        <div th:if="${group.topic.coSupervisor != null}" class="pt-2 border-t border-slate-100">
+                            <span class="text-slate-400 text-xs d-block mb-1">GVHD phụ (Đồng hướng dẫn):</span>
+                            <strong class="text-slate-800 text-xs font-medium" th:text="${group.topic.coSupervisor.academicTitle + ' ' + group.topic.coSupervisor.user.fullName}"></strong>
                         </div>
                     </div>
-                    <div th:if="${group.topic.coSupervisor != null}" class="pt-2 border-top">
-                        <small class="text-muted d-block mb-1">GVHD phụ (Đồng hướng dẫn):</small>
-                        <strong class="text-dark small" th:text="${group.topic.coSupervisor.academicTitle + ' ' + group.topic.coSupervisor.user.fullName}"></strong>
-                    </div>
-                </div>
 
-                <div class="saas-card p-4">
-                    <h6 class="small fw-bold text-dark text-uppercase mb-3">Thao tác nhanh</h6>
-                    <div class="d-grid gap-2">
-                        <a th:href="@{/student/submissions}" class="btn btn-sm btn-dark"><i class="fa-solid fa-file-arrow-up me-1"></i> Đến trang nộp báo cáo</a>
-                        <a th:href="@{/student/results}" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-star me-1"></i> Xem kết quả & Điểm</a>
+                    <div class="saas-card p-4">
+                        <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">Thao tác nhanh</h6>
+                        <div class="d-grid gap-2">
+                            <a th:href="@{/student/submissions}" class="btn btn-sm btn-dark rounded-xl px-3 py-2 text-xs font-medium"><i class="fa-solid fa-file-arrow-up me-1"></i> Đến trang nộp báo cáo</a>
+                            <a th:href="@{/student/results}" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-star me-1 text-amber-500"></i> Xem kết quả & Điểm</a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-    </main>
+        </main>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Scripts Fragment -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
 </body>
 </html>

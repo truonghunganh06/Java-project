@@ -1,492 +1,301 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Khoa & Chuyên ngành - TopicHub Admin</title>
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Bootstrap 5.3 & FontAwesome 6 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        :root {
-            --bg-body: #f8fafc;
-            --text-main: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --card-bg: #ffffff;
-            --primary-accent: #0f172a;
-            --primary-hover: #1e293b;
-        }
-
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            min-height: 100vh;
-        }
-
-        .navbar-saas {
-            background-color: #ffffff;
-            border-bottom: 1px solid var(--border-color);
-            padding: 0.75rem 1.5rem;
-            position: sticky;
-            top: 0;
-            z-index: 1020;
-        }
-
-        .nav-link-saas {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            padding: 0.5rem 0.875rem;
-            border-radius: 6px;
-            text-decoration: none;
-            transition: all 0.15s ease;
-        }
-
-        .nav-link-saas:hover {
-            color: var(--text-main);
-            background-color: #f1f5f9;
-        }
-
-        .nav-link-saas.active {
-            color: #0f172a;
-            background-color: #f1f5f9;
-            font-weight: 600;
-        }
-
-        .saas-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
-        }
-
-        .btn-saas-primary {
-            background-color: var(--primary-accent);
-            color: #ffffff;
-            font-weight: 500;
-            font-size: 0.875rem;
-            border-radius: 8px;
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--primary-accent);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-            transition: all 0.15s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-saas-primary:hover {
-            background-color: var(--primary-hover);
-            color: #ffffff;
-        }
-
-        .btn-saas-secondary {
-            background-color: #ffffff;
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 0.875rem;
-            border-radius: 8px;
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--border-color);
-            transition: all 0.15s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-saas-secondary:hover {
-            background-color: #f8fafc;
-            color: var(--text-main);
-            border-color: #cbd5e1;
-        }
-
-        .badge-saas {
-            font-size: 0.75rem;
-            font-weight: 500;
-            padding: 0.25rem 0.625rem;
-            border-radius: 9999px;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .badge-approved { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-        .badge-rejected { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
-        .badge-role-admin { background-color: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
-
-        .table-saas { margin-bottom: 0; width: 100%; }
-        .table-saas thead th {
-            background-color: #f8fafc;
-            color: #475569;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 0.875rem 1rem;
-            border-bottom: 1px solid var(--border-color);
-            white-space: nowrap;
-        }
-        .table-saas tbody td {
-            padding: 0.875rem 1rem;
-            vertical-align: middle;
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .table-saas tbody tr:hover { background-color: #f8fafc; }
-
-        .user-avatar-circle {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background-color: #f1f5f9;
-            color: #334155;
-            font-weight: 600;
-            font-size: 0.875rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #cbd5e1;
-        }
-    </style>
-</head>
+<head th:replace="~{fragments/head :: head('Khoa & Chuyên ngành')}"></head>
 <body>
 
-<!-- Navigation Bar -->
-<nav class="navbar-saas">
-    <div class="container-xl d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center gap-4">
-            <a class="d-flex align-items-center text-decoration-none gap-2" href="/admin/dashboard">
-                <div style="width: 34px; height: 34px; background: #0f172a; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </div>
-                <span class="fw-bold text-dark fs-6" style="letter-spacing: -0.02em;">TopicHub Admin</span>
-            </a>
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('departments', ${user})}"></aside>
 
-            <!-- Sub Nav Links -->
-            <div class="d-none d-md-flex align-items-center gap-1">
-                <a href="/admin/dashboard" class="nav-link-saas">
-                    <i class="fa-solid fa-gauge me-1 text-muted"></i>Tổng quan
-                </a>
-                <a href="/admin/users" class="nav-link-saas">
-                    <i class="fa-solid fa-users-gear me-1 text-muted"></i>Tài khoản người dùng
-                </a>
-                <a href="/admin/departments" class="nav-link-saas active">
-                    <i class="fa-solid fa-building-columns me-1 text-muted"></i>Khoa & Chuyên ngành
-                </a>
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header th:replace="~{fragments/topbar :: topbar('Khoa & Chuyên ngành', 'Quản trị', '/admin/dashboard', ${user})}"></header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+
+            <!-- Flash Messages -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200" role="alert">
+                <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
             </div>
-        </div>
-
-        <div class="d-flex align-items-center gap-3">
-            <div class="d-none d-sm-flex align-items-center gap-2 pe-3 border-end">
-                <div class="user-avatar-circle" th:text="${user != null and user.fullName != null and !user.fullName.isEmpty() ? user.fullName.substring(0, 1) : 'A'}">A</div>
-                <div class="text-start">
-                    <div class="fw-semibold text-dark small" style="line-height: 1.2;" th:text="${user != null ? user.fullName : 'Admin'}">Quản trị viên</div>
-                    <span class="badge-saas badge-role-admin">Quản trị hệ thống</span>
-                </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
             </div>
 
-            <a th:href="@{/logout}" class="btn-saas-secondary btn-sm">
-                <i class="fa-solid fa-arrow-right-from-bracket text-muted"></i>
-                <span class="d-none d-sm-inline">Đăng xuất</span>
-            </a>
-        </div>
-    </div>
-</nav>
-
-<main class="container-xl py-4">
-
-    <!-- Flash Messages -->
-    <div th:if="${successMessage}" class="alert alert-success d-flex align-items-center py-2 px-3 mb-4 rounded-3 border" role="alert">
-        <i class="fa-solid fa-circle-check text-success me-2"></i>
-        <span th:text="${successMessage}">Thao tác thành công!</span>
-    </div>
-    <div th:if="${errorMessage}" class="alert alert-danger d-flex align-items-center py-2 px-3 mb-4 rounded-3 border" role="alert">
-        <i class="fa-solid fa-circle-exclamation text-danger me-2"></i>
-        <span th:text="${errorMessage}">Đã xảy ra lỗi!</span>
-    </div>
-
-    <!-- Header -->
-    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
-        <div>
-            <h1 class="fs-4 fw-bold text-dark mb-1">Quản lý Danh mục Khoa & Chuyên ngành</h1>
-            <p class="text-secondary small mb-0">Cấu hình các đơn vị đào tạo, các chuyên ngành trực thuộc phục vụ phân loại và xét duyệt đề tài.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <button type="button" class="btn-saas-primary" data-bs-toggle="modal" data-bs-target="#createDeptModal">
-                <i class="fa-solid fa-plus"></i> Thêm Khoa mới
-            </button>
-            <button type="button" class="btn-saas-secondary" data-bs-toggle="modal" data-bs-target="#createMajorModal">
-                <i class="fa-solid fa-plus"></i> Thêm Chuyên ngành
-            </button>
-        </div>
-    </div>
-
-    <div class="row g-4">
-        
-        <!-- Departments Column -->
-        <div class="col-lg-6">
-            <div class="saas-card h-100">
-                <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="fw-bold mb-0 text-dark">Danh sách Khoa đào tạo</h6>
-                        <small class="text-muted" th:text="${#lists.size(departments)} + ' khoa trong hệ thống'">3 khoa</small>
-                    </div>
+            <!-- Header -->
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900 mb-1">Quản lý Danh mục Khoa & Chuyên ngành</h1>
+                    <p class="text-xs text-slate-500 mb-0">Cấu hình các đơn vị đào tạo, các chuyên ngành trực thuộc phục vụ phân loại và xét duyệt đề tài.</p>
                 </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-dark rounded-xl px-3 py-2 text-xs font-semibold shadow-sm d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createDeptModal">
+                        <i class="fa-solid fa-plus text-xs"></i> Thêm Khoa mới
+                    </button>
+                    <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createMajorModal">
+                        <i class="fa-solid fa-plus text-xs"></i> Thêm Chuyên ngành
+                    </button>
+                </div>
+            </div>
 
-                <div class="table-responsive">
-                    <table class="table table-saas">
-                        <thead>
-                            <tr>
-                                <th>Mã khoa</th>
-                                <th>Tên Khoa</th>
-                                <th>Trạng thái</th>
-                                <th class="text-end">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="d : ${departments}">
-                                <td><span class="badge bg-light text-dark border font-monospace" th:text="${d.code}">FIT</span></td>
-                                <td>
-                                    <div class="fw-semibold text-dark" th:text="${d.name}">Khoa CNTT</div>
-                                    <small class="text-muted text-truncate d-block" style="max-width: 200px;" th:text="${d.description}">Mô tả</small>
-                                </td>
-                                <td>
-                                    <span th:if="${d.isActive}" class="badge-saas badge-approved">Đang mở</span>
-                                    <span th:unless="${d.isActive}" class="badge-saas badge-rejected">Tạm khóa</span>
-                                </td>
-                                <td class="text-end">
-                                    <div class="d-inline-flex gap-1">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2" data-bs-toggle="modal" th:data-bs-target="'#editDeptModal-' + ${d.id}" title="Chỉnh sửa">
-                                            <i class="fa-solid fa-pen-to-square"></i>
-                                        </button>
-                                        <form th:action="@{/admin/departments/{id}/toggle-status(id=${d.id})}" method="post" class="d-inline">
-                                            <button th:if="${d.isActive}" type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Tạm khóa">
-                                                <i class="fa-solid fa-lock"></i>
-                                            </button>
-                                            <button th:unless="${d.isActive}" type="submit" class="btn btn-sm btn-outline-success py-1 px-2" title="Mở khóa">
-                                                <i class="fa-solid fa-lock-open"></i>
-                                            </button>
-                                        </form>
-                                    </div>
+            <div class="row g-4 mb-4">
+                
+                <!-- Departments Column -->
+                <div class="col-lg-6">
+                    <div class="saas-card h-100">
+                        <div class="saas-card-header d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-building-columns text-blue-600"></i>
+                                <h6 class="font-bold mb-0 text-slate-900 text-xs">Danh sách Khoa đào tạo</h6>
+                            </div>
+                            <span class="badge-pill-neutral font-semibold text-xs" th:text="${#lists.size(departments)} + ' khoa'">3 khoa</span>
+                        </div>
 
-                                    <!-- Modal Edit Department -->
-                                    <div class="modal fade text-start" th:id="'editDeptModal-' + ${d.id}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <form th:action="@{/admin/departments/{id}/edit(id=${d.id})}" method="post">
-                                                    <div class="modal-header">
-                                                        <h6 class="modal-title fw-bold text-dark">Chỉnh sửa Khoa: <span th:text="${d.code}"></span></h6>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <div class="mb-3">
-                                                            <label class="form-label small fw-semibold">Mã khoa</label>
-                                                            <input type="text" name="code" th:value="${d.code}" class="form-control form-control-sm" required>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label small fw-semibold">Tên khoa</label>
-                                                            <input type="text" name="name" th:value="${d.name}" class="form-control form-control-sm" required>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label small fw-semibold">Mô tả</label>
-                                                            <textarea name="description" th:text="${d.description}" rows="3" class="form-control form-control-sm"></textarea>
-                                                        </div>
-                                                        <div class="form-check form-switch mb-2">
-                                                            <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${d.isActive}" id="activeDeptCheck">
-                                                            <label class="form-check-label small" for="activeDeptCheck">Kích hoạt khoa</label>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Hủy</button>
-                                                        <button type="submit" class="btn btn-sm btn-dark">Lưu thay đổi</button>
-                                                    </div>
+                        <div class="table-responsive">
+                            <table class="table table-saas mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Mã khoa</th>
+                                        <th>Tên Khoa</th>
+                                        <th>Trạng thái</th>
+                                        <th class="text-end">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="d : ${departments}">
+                                        <td><span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold" th:text="${d.code}">FIT</span></td>
+                                        <td>
+                                            <div class="font-semibold text-slate-900 text-xs" th:text="${d.name}">Khoa CNTT</div>
+                                            <span class="text-slate-400 text-xs line-clamp-1" th:text="${d.description}">Mô tả</span>
+                                        </td>
+                                        <td>
+                                            <span th:if="${d.isActive}" class="badge-pill-approved">Đang mở</span>
+                                            <span th:unless="${d.isActive}" class="badge-pill-rejected">Tạm khóa</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-1">
+                                                <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2 py-1 text-xs text-slate-600 hover:bg-slate-100" data-bs-toggle="modal" th:data-bs-target="'#editDeptModal-' + ${d.id}" title="Chỉnh sửa">
+                                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                                </button>
+                                                <form th:action="@{/admin/departments/{id}/toggle-status(id=${d.id})}" method="post" class="d-inline">
+                                                    <button th:if="${d.isActive}" type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-2 py-1 text-xs font-medium" title="Tạm khóa">
+                                                        <i class="fa-solid fa-lock text-xs"></i>
+                                                    </button>
+                                                    <button th:unless="${d.isActive}" type="submit" class="btn btn-sm btn-outline-success rounded-xl px-2 py-1 text-xs font-medium" title="Mở khóa">
+                                                        <i class="fa-solid fa-lock-open text-xs"></i>
+                                                    </button>
                                                 </form>
                                             </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
 
-        <!-- Majors Column -->
-        <div class="col-lg-6">
-            <div class="saas-card h-100">
-                <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="fw-bold mb-0 text-dark">Danh sách Chuyên ngành</h6>
-                        <small class="text-muted" th:text="${#lists.size(majors)} + ' chuyên ngành'">5 chuyên ngành</small>
+                                            <!-- Modal Edit Department -->
+                                            <div class="modal fade text-start" th:id="'editDeptModal-' + ${d.id}" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content rounded-2xl border-0 shadow-xl">
+                                                        <form th:action="@{/admin/departments/{id}/edit(id=${d.id})}" method="post">
+                                                            <div class="modal-header border-b border-slate-100 p-4">
+                                                                <h6 class="modal-title font-bold text-slate-900 text-sm">Chỉnh sửa Khoa: <span th:text="${d.code}"></span></h6>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <div class="modal-body p-4 space-y-3">
+                                                                <div>
+                                                                    <label class="form-label text-xs font-semibold text-slate-700">Mã khoa</label>
+                                                                    <input type="text" name="code" th:value="${d.code}" class="form-control text-xs rounded-xl" required>
+                                                                </div>
+                                                                <div>
+                                                                    <label class="form-label text-xs font-semibold text-slate-700">Tên khoa</label>
+                                                                    <input type="text" name="name" th:value="${d.name}" class="form-control text-xs rounded-xl" required>
+                                                                </div>
+                                                                <div>
+                                                                    <label class="form-label text-xs font-semibold text-slate-700">Mô tả</label>
+                                                                    <textarea name="description" th:text="${d.description}" rows="3" class="form-control text-xs rounded-xl"></textarea>
+                                                                </div>
+                                                                <div class="form-check form-switch pt-1">
+                                                                    <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${d.isActive}" id="activeDeptCheck">
+                                                                    <label class="form-check-label text-xs font-semibold text-slate-700" for="activeDeptCheck">Kích hoạt khoa</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer border-t border-slate-100 p-3">
+                                                                <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                                                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu thay đổi</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table table-saas">
-                        <thead>
-                            <tr>
-                                <th>Mã ngành</th>
-                                <th>Tên Chuyên ngành</th>
-                                <th>Khoa trực thuộc</th>
-                                <th class="text-end">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="m : ${majors}">
-                                <td><span class="badge bg-light text-dark border font-monospace" th:text="${m.code}">SE</span></td>
-                                <td>
-                                    <div class="fw-semibold text-dark" th:text="${m.name}">Kỹ thuật phần mềm</div>
-                                    <span th:if="${m.isActive}" class="badge-saas badge-approved" style="font-size: 10px;">Hoạt động</span>
-                                    <span th:unless="${m.isActive}" class="badge-saas badge-rejected" style="font-size: 10px;">Tạm khóa</span>
-                                </td>
-                                <td>
-                                    <span class="badge bg-secondary-subtle text-secondary border" th:text="${m.department != null ? m.department.name : 'Chưa gán khoa'}">Khoa CNTT</span>
-                                </td>
-                                <td class="text-end">
-                                    <div class="d-inline-flex gap-1">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2" data-bs-toggle="modal" th:data-bs-target="'#editMajorModal-' + ${m.id}" title="Chỉnh sửa">
-                                            <i class="fa-solid fa-pen-to-square"></i>
-                                        </button>
-                                        <form th:action="@{/admin/majors/{id}/toggle-status(id=${m.id})}" method="post" class="d-inline">
-                                            <button th:if="${m.isActive}" type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Tạm khóa">
-                                                <i class="fa-solid fa-lock"></i>
-                                            </button>
-                                            <button th:unless="${m.isActive}" type="submit" class="btn btn-sm btn-outline-success py-1 px-2" title="Mở khóa">
-                                                <i class="fa-solid fa-lock-open"></i>
-                                            </button>
-                                        </form>
-                                    </div>
+                <!-- Majors Column -->
+                <div class="col-lg-6">
+                    <div class="saas-card h-100">
+                        <div class="saas-card-header d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-diagram-project text-emerald-600"></i>
+                                <h6 class="font-bold mb-0 text-slate-900 text-xs">Danh sách Chuyên ngành</h6>
+                            </div>
+                            <span class="badge-pill-neutral font-semibold text-xs" th:text="${#lists.size(majors)} + ' chuyên ngành'">5 chuyên ngành</span>
+                        </div>
 
-                                    <!-- Modal Edit Major -->
-                                    <div class="modal fade text-start" th:id="'editMajorModal-' + ${m.id}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <form th:action="@{/admin/majors/{id}/edit(id=${m.id})}" method="post">
-                                                    <div class="modal-header">
-                                                        <h6 class="modal-title fw-bold text-dark">Chỉnh sửa Chuyên ngành: <span th:text="${m.code}"></span></h6>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <div class="mb-3">
-                                                            <label class="form-label small fw-semibold">Mã chuyên ngành</label>
-                                                            <input type="text" name="code" th:value="${m.code}" class="form-control form-control-sm" required>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label small fw-semibold">Tên chuyên ngành</label>
-                                                            <input type="text" name="name" th:value="${m.name}" class="form-control form-control-sm" required>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label small fw-semibold">Khoa trực thuộc</label>
-                                                            <select name="departmentId" class="form-select form-select-sm" required>
-                                                                <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name}" th:selected="${m.department != null and m.department.id == d.id}"></option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="form-check form-switch mb-2">
-                                                            <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${m.isActive}" id="activeMajorCheck">
-                                                            <label class="form-check-label small" for="activeMajorCheck">Kích hoạt chuyên ngành</label>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Hủy</button>
-                                                        <button type="submit" class="btn btn-sm btn-dark">Lưu thay đổi</button>
-                                                    </div>
+                        <div class="table-responsive">
+                            <table class="table table-saas mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Mã ngành</th>
+                                        <th>Tên Chuyên ngành</th>
+                                        <th>Khoa trực thuộc</th>
+                                        <th class="text-end">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="m : ${majors}">
+                                        <td><span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold" th:text="${m.code}">SE</span></td>
+                                        <td>
+                                            <div class="font-semibold text-slate-900 text-xs" th:text="${m.name}">Kỹ thuật phần mềm</div>
+                                            <span th:if="${m.isActive}" class="badge-pill-approved font-semibold" style="font-size: 0.65rem; padding: 1px 6px;">Hoạt động</span>
+                                            <span th:unless="${m.isActive}" class="badge-pill-rejected font-semibold" style="font-size: 0.65rem; padding: 1px 6px;">Tạm khóa</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge-pill-neutral text-xs" th:text="${m.department != null ? m.department.name : 'Chưa gán khoa'}">Khoa CNTT</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-1">
+                                                <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2 py-1 text-xs text-slate-600 hover:bg-slate-100" data-bs-toggle="modal" th:data-bs-target="'#editMajorModal-' + ${m.id}" title="Chỉnh sửa">
+                                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                                </button>
+                                                <form th:action="@{/admin/majors/{id}/toggle-status(id=${m.id})}" method="post" class="d-inline">
+                                                    <button th:if="${m.isActive}" type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-2 py-1 text-xs font-medium" title="Tạm khóa">
+                                                        <i class="fa-solid fa-lock text-xs"></i>
+                                                    </button>
+                                                    <button th:unless="${m.isActive}" type="submit" class="btn btn-sm btn-outline-success rounded-xl px-2 py-1 text-xs font-medium" title="Mở khóa">
+                                                        <i class="fa-solid fa-lock-open text-xs"></i>
+                                                    </button>
                                                 </form>
                                             </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+                                            <!-- Modal Edit Major -->
+                                            <div class="modal fade text-start" th:id="'editMajorModal-' + ${m.id}" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content rounded-2xl border-0 shadow-xl">
+                                                        <form th:action="@{/admin/majors/{id}/edit(id=${m.id})}" method="post">
+                                                            <div class="modal-header border-b border-slate-100 p-4">
+                                                                <h6 class="modal-title font-bold text-slate-900 text-sm">Chỉnh sửa Chuyên ngành: <span th:text="${m.code}"></span></h6>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <div class="modal-body p-4 space-y-3">
+                                                                <div>
+                                                                    <label class="form-label text-xs font-semibold text-slate-700">Mã chuyên ngành</label>
+                                                                    <input type="text" name="code" th:value="${m.code}" class="form-control text-xs rounded-xl" required>
+                                                                </div>
+                                                                <div>
+                                                                    <label class="form-label text-xs font-semibold text-slate-700">Tên chuyên ngành</label>
+                                                                    <input type="text" name="name" th:value="${m.name}" class="form-control text-xs rounded-xl" required>
+                                                                </div>
+                                                                <div>
+                                                                    <label class="form-label text-xs font-semibold text-slate-700">Khoa trực thuộc</label>
+                                                                    <select name="departmentId" class="form-select text-xs rounded-xl" required>
+                                                                        <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name}" th:selected="${m.department != null and m.department.id == d.id}"></option>
+                                                                    </select>
+                                                                </div>
+                                                                <div class="form-check form-switch pt-1">
+                                                                    <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${m.isActive}" id="activeMajorCheck">
+                                                                    <label class="form-check-label text-xs font-semibold text-slate-700" for="activeMajorCheck">Kích hoạt chuyên ngành</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer border-t border-slate-100 p-3">
+                                                                <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                                                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu thay đổi</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Create Department -->
+    <div class="modal fade" id="createDeptModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-2xl border-0 shadow-xl">
+                <form th:action="@{/admin/departments/create}" method="post">
+                    <div class="modal-header border-b border-slate-100 p-4">
+                        <h6 class="modal-title font-bold text-slate-900 text-sm"><i class="fa-solid fa-building-columns text-blue-600 me-1.5"></i> Thêm Mới Khoa Đào tạo</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-3">
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700">Mã khoa (Viết tắt) <span class="text-rose-600">*</span></label>
+                            <input type="text" name="code" class="form-control text-xs rounded-xl" placeholder="VD: FIT, FET, FEB..." required>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700">Tên đầy đủ của Khoa <span class="text-rose-600">*</span></label>
+                            <input type="text" name="name" class="form-control text-xs rounded-xl" placeholder="VD: Khoa Công nghệ Thông tin" required>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700">Mô tả giới thiệu</label>
+                            <textarea name="description" rows="2" class="form-control text-xs rounded-xl" placeholder="VD: Đào tạo Kỹ sư CNTT, KHMT, KTPM..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 p-3">
+                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Tạo Khoa</button>
+                    </div>
+                </form>
             </div>
         </div>
-
     </div>
 
-</main>
-
-<!-- Modal Create Department -->
-<div class="modal fade" id="createDeptModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form th:action="@{/admin/departments/create}" method="post">
-                <div class="modal-header">
-                    <h6 class="modal-title fw-bold text-dark">Thêm Mới Khoa Đào tạo</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Mã khoa (Viết tắt) <span class="text-danger">*</span></label>
-                        <input type="text" name="code" class="form-control form-control-sm" placeholder="VD: FIT, FET, FEB..." required>
+    <!-- Modal Create Major -->
+    <div class="modal fade" id="createMajorModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-2xl border-0 shadow-xl">
+                <form th:action="@{/admin/majors/create}" method="post">
+                    <div class="modal-header border-b border-slate-100 p-4">
+                        <h6 class="modal-title font-bold text-slate-900 text-sm"><i class="fa-solid fa-diagram-project text-emerald-600 me-1.5"></i> Thêm Mới Chuyên ngành</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Tên đầy đủ của Khoa <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control form-control-sm" placeholder="VD: Khoa Công nghệ Thông tin" required>
+                    <div class="modal-body p-4 space-y-3">
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700">Mã chuyên ngành <span class="text-rose-600">*</span></label>
+                            <input type="text" name="code" class="form-control text-xs rounded-xl" placeholder="VD: SE, DS, IS, CS, AI..." required>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700">Tên chuyên ngành <span class="text-rose-600">*</span></label>
+                            <input type="text" name="name" class="form-control text-xs rounded-xl" placeholder="VD: Trí tuệ nhân tạo" required>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700">Thuộc Khoa <span class="text-rose-600">*</span></label>
+                            <select name="departmentId" class="form-select text-xs rounded-xl" required>
+                                <option value="">-- Chọn Khoa trực thuộc --</option>
+                                <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name + ' (' + d.code + ')'}"></option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Mô tả giới thiệu</label>
-                        <textarea name="description" rows="3" class="form-control form-control-sm" placeholder="Mô tả phạm vi đào tạo..."></textarea>
+                    <div class="modal-footer border-t border-slate-100 p-3">
+                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Tạo Chuyên ngành</button>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn-saas-primary">Tạo Khoa</button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Modal Create Major -->
-<div class="modal fade" id="createMajorModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form th:action="@{/admin/majors/create}" method="post">
-                <div class="modal-header">
-                    <h6 class="modal-title fw-bold text-dark">Thêm Mới Chuyên ngành</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Mã chuyên ngành <span class="text-danger">*</span></label>
-                        <input type="text" name="code" class="form-control form-control-sm" placeholder="VD: SE, DS, IS, CS, AI..." required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Tên chuyên ngành <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control form-control-sm" placeholder="VD: Trí tuệ nhân tạo" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Thuộc Khoa <span class="text-danger">*</span></label>
-                        <select name="departmentId" class="form-select form-select-sm" required>
-                            <option value="">-- Chọn Khoa trực thuộc --</option>
-                            <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name + ' (' + d.code + ')'}"></option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn-saas-primary">Tạo Chuyên ngành</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Scripts Fragment -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
 </body>
 </html>

@@ -18,6 +18,7 @@ public class CouncilService {
     private final LecturerRepository lecturerRepository;
     private final RegistrationPeriodRepository periodRepository;
     private final DepartmentRepository departmentRepository;
+    private final StudentGroupRepository groupRepository;
 
     public CouncilService(
             CouncilRepository councilRepository,
@@ -26,7 +27,8 @@ public class CouncilService {
             TopicRepository topicRepository,
             LecturerRepository lecturerRepository,
             RegistrationPeriodRepository periodRepository,
-            DepartmentRepository departmentRepository) {
+            DepartmentRepository departmentRepository,
+            StudentGroupRepository groupRepository) {
         this.councilRepository = councilRepository;
         this.councilMemberRepository = councilMemberRepository;
         this.evaluationRepository = evaluationRepository;
@@ -34,6 +36,7 @@ public class CouncilService {
         this.lecturerRepository = lecturerRepository;
         this.periodRepository = periodRepository;
         this.departmentRepository = departmentRepository;
+        this.groupRepository = groupRepository;
     }
 
     public List<Council> getAllCouncils() {
@@ -202,5 +205,45 @@ public class CouncilService {
         topicRepository.save(topic);
         System.out.println("[DB-EVAL] Cập nhật công bố kết quả đề tài ID=" + topicId + " -> isFinalized=" + topic.getIsFinalized());
         return true;
+    }
+
+    @Transactional
+    public int publishAllResults(Long departmentId, Long periodId, Boolean isFinalized) {
+        List<Topic> topics = (departmentId != null) 
+                ? topicRepository.findByMajorDepartmentId(departmentId) 
+                : topicRepository.findAll();
+        int count = 0;
+        for (Topic t : topics) {
+            if (periodId == null || (t.getPeriod() != null && t.getPeriod().getId().equals(periodId))) {
+                if ("APPROVED".equalsIgnoreCase(t.getStatus())) {
+                    t.setIsFinalized(Boolean.TRUE.equals(isFinalized));
+                    topicRepository.save(t);
+                    count++;
+                }
+            }
+        }
+        System.out.println("[DB-EVAL] Đã cập nhật công bố toàn đợt cho " + count + " đề tài (isFinalized=" + isFinalized + ")");
+        return count;
+    }
+
+    public Map<Long, List<Evaluation>> getEvaluationsMapForTopics(List<Topic> topics) {
+        Map<Long, List<Evaluation>> map = new HashMap<>();
+        if (topics == null || topics.isEmpty()) return map;
+        for (Topic t : topics) {
+            map.put(t.getId(), evaluationRepository.findByTopicId(t.getId()));
+        }
+        return map;
+    }
+
+    public Map<Long, StudentGroup> getGroupsMapForTopics(List<Topic> topics) {
+        Map<Long, StudentGroup> map = new HashMap<>();
+        if (topics == null || topics.isEmpty()) return map;
+        for (Topic t : topics) {
+            List<StudentGroup> groups = groupRepository.findByTopicId(t.getId());
+            if (!groups.isEmpty()) {
+                map.put(t.getId(), groups.get(0));
+            }
+        }
+        return map;
     }
 }

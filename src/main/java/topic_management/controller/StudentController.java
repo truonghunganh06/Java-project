@@ -38,11 +38,15 @@ public class StudentController {
         StudentGroup group = studentService.getMyActiveGroup(student, null);
         List<Announcement> announcements = announcementService.getAllAnnouncements();
         List<RegistrationPeriod> activePeriods = studentService.getAllActivePeriods();
+        List<Submission> submissions = studentService.getGroupSubmissions(group);
+        List<Evaluation> evaluations = studentService.getGroupEvaluations(group);
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
         model.addAttribute("group", group);
-        model.addAttribute("announcements", announcements.stream().limit(5).toList());
+        model.addAttribute("submissions", submissions);
+        model.addAttribute("evaluations", evaluations);
+        model.addAttribute("announcements", announcements.stream().limit(3).toList());
         model.addAttribute("activePeriods", activePeriods);
 
         return "student/dashboard";
