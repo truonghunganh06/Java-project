@@ -326,6 +326,7 @@ public class DepartmentHeadController {
     @GetMapping("/results")
     public String listResults(
             @RequestParam(value = "periodId", required = false) Long periodId,
+            @RequestParam(value = "page", defaultValue = "1") int page,
             HttpSession session,
             Model model) {
 
@@ -333,18 +334,35 @@ public class DepartmentHeadController {
         if (user == null) return "redirect:/login";
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
-        List<Topic> topics = departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, periodId, null);
+        List<Topic> allTopics = departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, periodId, null);
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
-        Map<Long, List<Evaluation>> topicEvaluationsMap = councilService.getEvaluationsMapForTopics(topics);
-        Map<Long, StudentGroup> topicGroupsMap = councilService.getGroupsMapForTopics(topics);
+
+        // Pagination: Limit to 10 topics per page
+        int pageSize = 10;
+        int totalTopics = allTopics.size();
+        int totalPages = totalTopics > 0 ? (int) Math.ceil((double) totalTopics / pageSize) : 1;
+        int currentPage = Math.max(1, Math.min(page, totalPages));
+        int fromIndex = (currentPage - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalTopics);
+
+        List<Topic> pagedTopics = (fromIndex < totalTopics) ? allTopics.subList(fromIndex, toIndex) : Collections.emptyList();
+
+        Map<Long, List<Evaluation>> topicEvaluationsMap = councilService.getEvaluationsMapForTopics(pagedTopics);
+        Map<Long, StudentGroup> topicGroupsMap = councilService.getGroupsMapForTopics(pagedTopics);
 
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
-        model.addAttribute("topics", topics);
+        model.addAttribute("topics", pagedTopics);
         model.addAttribute("periods", periods);
         model.addAttribute("selectedPeriodId", periodId);
         model.addAttribute("topicEvaluationsMap", topicEvaluationsMap);
         model.addAttribute("topicGroupsMap", topicGroupsMap);
+        model.addAttribute("currentPage", currentPage);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("totalTopics", totalTopics);
+        model.addAttribute("pageSize", pageSize);
+        model.addAttribute("hasPrevious", currentPage > 1);
+        model.addAttribute("hasNext", currentPage < totalPages);
 
         return "department-head/results";
     }
@@ -452,6 +470,7 @@ public class DepartmentHeadController {
     @GetMapping("/students")
     public String listStudents(
             @RequestParam(value = "periodId", required = false) Long periodId,
+            @RequestParam(value = "page", defaultValue = "1") int page,
             HttpSession session,
             Model model) {
 
@@ -467,19 +486,41 @@ public class DepartmentHeadController {
             effectivePeriodId = periods.get(0).getId();
         }
 
-        List<StudentGroup> groups = departmentHeadService.getGroupsInDepartmentAndPeriod(dept.getId(), effectivePeriodId);
+        List<StudentGroup> allGroups = departmentHeadService.getGroupsInDepartmentAndPeriod(dept.getId(), effectivePeriodId);
+
+        // Pagination: Limit to 8 groups per page
+        int pageSize = 8;
+        int totalGroups = allGroups.size();
+        int totalPages = totalGroups > 0 ? (int) Math.ceil((double) totalGroups / pageSize) : 1;
+        int currentPage = Math.max(1, Math.min(page, totalPages));
+        int fromIndex = (currentPage - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalGroups);
+
+        List<StudentGroup> pagedGroups = (fromIndex < totalGroups) ? allGroups.subList(fromIndex, toIndex) : Collections.emptyList();
 
         Map<Long, List<Submission>> groupSubmissionsMap = new HashMap<>();
-        for (StudentGroup g : groups) {
+        List<Topic> pagedTopics = new ArrayList<>();
+        for (StudentGroup g : pagedGroups) {
             groupSubmissionsMap.put(g.getId(), submissionRepository.findByGroupId(g.getId()));
+            if (g.getTopic() != null) {
+                pagedTopics.add(g.getTopic());
+            }
         }
+        Map<Long, List<Evaluation>> topicEvaluationsMap = councilService.getEvaluationsMapForTopics(pagedTopics);
 
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
-        model.addAttribute("groups", groups);
+        model.addAttribute("groups", pagedGroups);
         model.addAttribute("periods", periods);
         model.addAttribute("selectedPeriodId", effectivePeriodId);
         model.addAttribute("groupSubmissionsMap", groupSubmissionsMap);
+        model.addAttribute("topicEvaluationsMap", topicEvaluationsMap);
+        model.addAttribute("currentPage", currentPage);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("totalGroups", totalGroups);
+        model.addAttribute("pageSize", pageSize);
+        model.addAttribute("hasPrevious", currentPage > 1);
+        model.addAttribute("hasNext", currentPage < totalPages);
 
         return "department-head/students";
     }

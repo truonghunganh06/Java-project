@@ -1,5 +1,6 @@
 package topic_management.service;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import topic_management.entity.*;
@@ -39,6 +40,36 @@ public class CouncilService {
         this.groupRepository = groupRepository;
     }
 
+    /**
+     * Data Cleanup Runner: Removes orphan evaluations and resets scores on topics that have no student group.
+     */
+    @PostConstruct
+    @Transactional
+    public void cleanupOrphanEvaluationsAndScores() {
+        List<Topic> allTopics = topicRepository.findAll();
+        int cleanedScores = 0;
+        int deletedEvals = 0;
+        for (Topic t : allTopics) {
+            List<StudentGroup> groups = groupRepository.findByTopicId(t.getId());
+            if (groups.isEmpty()) {
+                if (t.getFinalScore() != null || Boolean.TRUE.equals(t.getIsFinalized())) {
+                    t.setFinalScore(null);
+                    t.setIsFinalized(false);
+                    topicRepository.save(t);
+                    cleanedScores++;
+                }
+                List<Evaluation> evals = evaluationRepository.findByTopicId(t.getId());
+                if (!evals.isEmpty()) {
+                    evaluationRepository.deleteAll(evals);
+                    deletedEvals += evals.size();
+                }
+            }
+        }
+        if (cleanedScores > 0 || deletedEvals > 0) {
+            System.out.println("[DATA-CLEANUP] Đã xóa " + deletedEvals + " phiếu chấm rác và reset điểm cho " + cleanedScores + " đề tài chưa có nhóm sinh viên!");
+        }
+    }
+
     public List<Council> getAllCouncils() {
         return councilRepository.findAll();
     }
@@ -62,89 +93,108 @@ public class CouncilService {
     }
 
     @Transactional
-    public Council createCouncil(Long departmentId, Long periodId, String code, String name, String location, OffsetDateTime defenseDate, List<Long> lecturerIds, List<String> roles) {
+    public Council createCouncil(
+            Long departmentId,
+            Long periodId,
+            String councilCode,
+            String councilName,
+            String location,
+            OffsetDateTime defenseDate,
+            List<Long> lecturerIds,
+            List<String> roles) {
+
+        Department dept = departmentRepository.findById(departmentId).orElse(null);
+        RegistrationPeriod period = periodId != null ? periodRepository.findById(periodId).orElse(null) : null;
+
         Council council = new Council();
-        if (departmentId != null) {
-            council.setDepartment(departmentRepository.findById(departmentId).orElse(null));
-        }
-        if (periodId != null) {
-            council.setPeriod(periodRepository.findById(periodId).orElse(null));
-        }
-        council.setCode(code != null && !code.trim().isEmpty() ? code.trim() : "HD-" + System.currentTimeMillis() % 10000);
-        council.setName(name);
+        council.setDepartment(dept);
+        council.setPeriod(period);
+        council.setCode(councilCode);
+        council.setName(councilName);
         council.setLocation(location);
-        council.setDefenseDate(defenseDate != null ? defenseDate : OffsetDateTime.now().plusDays(7));
+        council.setDefenseDate(defenseDate);
         council.setStatus("ESTABLISHED");
-        council.setCreatedAt(OffsetDateTime.now());
 
-        Council saved = councilRepository.save(council);
+        Council savedCouncil = councilRepository.save(council);
 
-        // Add members (3 to 5 lecturers)
-        if (lecturerIds != null && !lecturerIds.isEmpty()) {
+        if (lecturerIds != null && roles != null) {
             for (int i = 0; i < lecturerIds.size(); i++) {
-                Long lId = lecturerIds.get(i);
-                if (lId == null) continue;
-                Optional<Lecturer> lOpt = lecturerRepository.findById(lId);
-                if (lOpt.isPresent()) {
-                    CouncilMember cm = new CouncilMember();
-                    cm.setCouncil(saved);
-                    cm.setLecturer(lOpt.get());
-                    String role = (roles != null && i < roles.size()) ? roles.get(i) : "MEMBER";
-                    cm.setCouncilRole(role);
-                    cm.setCreatedAt(OffsetDateTime.now());
-                    councilMemberRepository.save(cm);
+                Long lecturerId = lecturerIds.get(i);
+                String role = (i < roles.size()) ? roles.get(i) : "MEMBER";
+
+                Lecturer lecturer = lecturerRepository.findById(lecturerId).orElse(null);
+                if (lecturer != null) {
+                    CouncilMember member = new CouncilMember();
+                    member.setCouncil(savedCouncil);
+                    member.setLecturer(lecturer);
+                    member.setCouncilRole(role);
+                    councilMemberRepository.save(member);
                 }
             }
         }
 
-        System.out.println("[DB-COUNCIL] Đã thành lập hội đồng: '" + name + "' (ID=" + saved.getId() + ")");
-        return saved;
+        System.out.println("[DB-COUNCIL] Tạo mới Hội đồng: " + councilName + " (Mã: " + councilCode + ")");
+        return savedCouncil;
     }
 
     @Transactional
     public boolean assignTopicToCouncil(Long topicId, Long councilId) {
         Topic topic = topicRepository.findById(topicId).orElse(null);
+        Council council = councilId != null ? councilRepository.findById(councilId).orElse(null) : null;
+
         if (topic == null) return false;
 
-        if (councilId != null) {
-            Council council = councilRepository.findById(councilId).orElse(null);
-            topic.setCouncil(council);
-        } else {
-            topic.setCouncil(null);
+        // Conflict of interest check: Council members CANNOT be supervisor or coSupervisor of the topic
+        if (council != null) {
+            List<CouncilMember> members = councilMemberRepository.findByCouncilId(council.getId());
+            for (CouncilMember m : members) {
+                if (topic.isSupervisorOrCoSupervisor(m.getLecturer())) {
+                    System.err.println("[DB-COUNCIL] Xung đột lợi ích! Giảng viên hướng dẫn '"
+                            + (m.getLecturer().getUser() != null ? m.getLecturer().getUser().getFullName() : "ID=" + m.getLecturer().getId())
+                            + "' là thành viên của Hội đồng '" + council.getName() + "'. Không thể gán đề tài!");
+                    return false;
+                }
+            }
         }
+
+        topic.setCouncil(council);
         topicRepository.save(topic);
-        System.out.println("[DB-COUNCIL] Gán đề tài ID=" + topicId + " vào hội đồng ID=" + councilId);
+        System.out.println("[DB-COUNCIL] Gán đề tài ID=" + topicId + " vào Hội đồng: " + (council != null ? council.getName() : "NULL"));
         return true;
     }
 
     @Transactional
     public boolean assignReviewer(Long topicId, Long reviewerId) {
         Topic topic = topicRepository.findById(topicId).orElse(null);
+        Lecturer reviewer = reviewerId != null ? lecturerRepository.findById(reviewerId).orElse(null) : null;
+
         if (topic == null) return false;
 
-        if (reviewerId != null) {
-            Lecturer reviewer = lecturerRepository.findById(reviewerId).orElse(null);
-            // Check reviewer is not supervisor or co-supervisor
-            if (reviewer != null && topic.isSupervisorOrCoSupervisor(reviewer)) {
-                System.err.println("[DB-COUNCIL] Không thể phân công GVPB trùng với GVHD!");
-                return false;
-            }
-            topic.setReviewer(reviewer);
-        } else {
-            topic.setReviewer(null);
+        // Conflict of interest check: Reviewer CANNOT be supervisor or coSupervisor
+        if (reviewer != null && topic.isSupervisorOrCoSupervisor(reviewer)) {
+            System.err.println("[DB-COUNCIL] Xung đột lợi ích! Giảng viên hướng dẫn không thể làm Giảng viên phản biện cho đề tài của chính mình.");
+            return false;
         }
+
+        topic.setReviewer(reviewer);
         topicRepository.save(topic);
-        System.out.println("[DB-COUNCIL] Phân công GVPB ID=" + reviewerId + " cho đề tài ID=" + topicId);
+        System.out.println("[DB-COUNCIL] Phân công GVPB cho đề tài ID=" + topicId + ": " + (reviewer != null && reviewer.getUser() != null ? reviewer.getUser().getFullName() : "NULL"));
         return true;
     }
 
     public List<Topic> getTopicsInCouncil(Long councilId) {
-        if (councilId == null) return Collections.emptyList();
         return topicRepository.findByCouncilId(councilId);
     }
 
+    public List<Topic> getTopicsByReviewer(Long reviewerId) {
+        return topicRepository.findByReviewerId(reviewerId);
+    }
+
+    public List<CouncilMember> getCouncilMembers(Long councilId) {
+        return councilMemberRepository.findByCouncilId(councilId);
+    }
+
     public List<Evaluation> getEvaluationsForTopic(Long topicId) {
-        if (topicId == null) return Collections.emptyList();
         return evaluationRepository.findByTopicId(topicId);
     }
 
@@ -157,6 +207,13 @@ public class CouncilService {
         Topic topic = topicRepository.findById(topicId).orElse(null);
         Lecturer lecturer = lecturerRepository.findById(lecturerId).orElse(null);
         if (topic == null || lecturer == null) return false;
+
+        // Business Rule: Topic MUST have a registered student group to receive evaluation
+        List<StudentGroup> groups = groupRepository.findByTopicId(topicId);
+        if (groups.isEmpty()) {
+            System.err.println("[DB-EVAL] Lỗi! Đề tài ID=" + topicId + " chưa có nhóm sinh viên đăng ký thực hiện, tuyệt đối không được chấm điểm!");
+            return false;
+        }
 
         // Conflict of interest check: If evaluationType is COUNCIL or REVIEWER, lecturer CANNOT be supervisor or coSupervisor
         if (("COUNCIL".equalsIgnoreCase(evaluationType) || "REVIEWER".equalsIgnoreCase(evaluationType))
@@ -186,6 +243,15 @@ public class CouncilService {
 
     @Transactional
     public void calculateAndSetFinalScore(Topic topic) {
+        List<StudentGroup> groups = groupRepository.findByTopicId(topic.getId());
+        if (groups.isEmpty()) {
+            // Strictly reset to null if topic has no student group
+            topic.setFinalScore(null);
+            topic.setIsFinalized(false);
+            topicRepository.save(topic);
+            return;
+        }
+
         List<Evaluation> evals = evaluationRepository.findByTopicId(topic.getId());
         List<Evaluation> validEvals = evals.stream().filter(e -> e.getScore() != null).toList();
         if (!validEvals.isEmpty()) {
@@ -194,6 +260,9 @@ public class CouncilService {
             topic.setFinalScore(avg);
             topicRepository.save(topic);
             System.out.println("[DB-EVAL] Đã cập nhật điểm TB đề tài ID=" + topic.getId() + " -> " + avg + " (Tổng " + validEvals.size() + " phiếu chấm)");
+        } else {
+            topic.setFinalScore(null);
+            topicRepository.save(topic);
         }
     }
 
@@ -201,6 +270,13 @@ public class CouncilService {
     public boolean publishTopicResults(Long topicId, Boolean isFinalized) {
         Topic topic = topicRepository.findById(topicId).orElse(null);
         if (topic == null) return false;
+
+        List<StudentGroup> groups = groupRepository.findByTopicId(topicId);
+        if (groups.isEmpty()) {
+            System.err.println("[DB-EVAL] Không thể công bố điểm cho đề tài chưa có nhóm sinh viên!");
+            return false;
+        }
+
         topic.setIsFinalized(Boolean.TRUE.equals(isFinalized));
         topicRepository.save(topic);
         System.out.println("[DB-EVAL] Cập nhật công bố kết quả đề tài ID=" + topicId + " -> isFinalized=" + topic.getIsFinalized());
@@ -215,14 +291,15 @@ public class CouncilService {
         int count = 0;
         for (Topic t : topics) {
             if (periodId == null || (t.getPeriod() != null && t.getPeriod().getId().equals(periodId))) {
-                if ("APPROVED".equalsIgnoreCase(t.getStatus())) {
+                List<StudentGroup> groups = groupRepository.findByTopicId(t.getId());
+                if ("APPROVED".equalsIgnoreCase(t.getStatus()) && !groups.isEmpty() && t.getFinalScore() != null) {
                     t.setIsFinalized(Boolean.TRUE.equals(isFinalized));
                     topicRepository.save(t);
                     count++;
                 }
             }
         }
-        System.out.println("[DB-EVAL] Đã cập nhật công bố toàn đợt cho " + count + " đề tài (isFinalized=" + isFinalized + ")");
+        System.out.println("[DB-EVAL] Đã cập nhật công bố toàn đợt cho " + count + " đề tài hợp lệ (isFinalized=" + isFinalized + ")");
         return count;
     }
 
@@ -230,7 +307,13 @@ public class CouncilService {
         Map<Long, List<Evaluation>> map = new HashMap<>();
         if (topics == null || topics.isEmpty()) return map;
         for (Topic t : topics) {
-            map.put(t.getId(), evaluationRepository.findByTopicId(t.getId()));
+            List<StudentGroup> groups = groupRepository.findByTopicId(t.getId());
+            // Only return evaluations for topics that have a registered student group
+            if (!groups.isEmpty()) {
+                map.put(t.getId(), evaluationRepository.findByTopicId(t.getId()));
+            } else {
+                map.put(t.getId(), Collections.emptyList());
+            }
         }
         return map;
     }

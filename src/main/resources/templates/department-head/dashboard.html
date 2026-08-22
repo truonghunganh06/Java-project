@@ -161,22 +161,21 @@
                                         </td>
                                     </tr>
                                     <tr th:each="t : ${pendingTopics}" class="cursor-pointer hover:bg-slate-50/70 transition"
-                                        th:onclick="openTopicDrawer({
-                                            id: [[${t.id}]],
-                                            code: '[[${t.code}]]',
-                                            title: '[[${#strings.escapeJavaScript(t.title)}]]',
-                                            period: '[[${t.period != null ? #strings.escapeJavaScript(t.period.name) : 'Chung'}]]',
-                                            major: '[[${t.major != null ? #strings.escapeJavaScript(t.major.name) : 'CNTT'}]]',
-                                            supervisor: '[[${t.supervisor != null && t.supervisor.user != null ? #strings.escapeJavaScript(t.supervisor.academicTitle + ' ' + t.supervisor.user.fullName) : 'Chưa phân công'}]]',
-                                            coSupervisor: '[[${t.coSupervisor != null && t.coSupervisor.user != null ? #strings.escapeJavaScript(t.coSupervisor.academicTitle + ' ' + t.coSupervisor.user.fullName) : 'Không có'}]]',
-                                            reviewer: '[[${t.reviewer != null && t.reviewer.user != null ? #strings.escapeJavaScript(t.reviewer.academicTitle + ' ' + t.reviewer.user.fullName) : 'Chưa phân công'}]]',
-                                            council: '[[${t.council != null ? #strings.escapeJavaScript(t.council.name) : 'Chưa phân hội đồng'}]]',
-                                            maxStudents: [[${t.maxStudents}]],
-                                            status: '[[${t.status}]]',
-                                            description: '[[${#strings.escapeJavaScript(t.description)}]]',
-                                            requirements: '[[${#strings.escapeJavaScript(t.requirements)}]]',
-                                            role: 'DEPARTMENT_HEAD'
-                                        })">
+                                        th:data-topic-id="${t.id}"
+                                        th:data-topic-code="${t.code != null ? t.code : 'DT-NEW'}"
+                                        th:data-topic-title="${t.title}"
+                                        th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
+                                        th:data-topic-major="${t.major != null ? t.major.name : 'CNTT'}"
+                                        th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? (t.supervisor.academicTitle != null ? t.supervisor.academicTitle + ' ' : '') + t.supervisor.user.fullName : 'Chưa phân công'}"
+                                        th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? (t.coSupervisor.academicTitle != null ? t.coSupervisor.academicTitle + ' ' : '') + t.coSupervisor.user.fullName : 'Không có'}"
+                                        th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? (t.reviewer.academicTitle != null ? t.reviewer.academicTitle + ' ' : '') + t.reviewer.user.fullName : 'Chưa phân công'}"
+                                        th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
+                                        th:data-topic-max-students="${t.maxStudents}"
+                                        th:data-topic-status="${t.status}"
+                                        th:data-topic-description="${t.description}"
+                                        th:data-topic-requirements="${t.requirements}"
+                                        th:data-topic-role="DEPARTMENT_HEAD"
+                                        onclick="openTopicDrawer(this)">
                                         <td>
                                             <div class="d-flex align-items-center gap-2 mb-1">
                                                 <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold" th:text="${t.code != null ? t.code : 'DT-NEW'}">DT01</span>
@@ -189,7 +188,7 @@
                                                 <div class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-xs flex-shrink-0"
                                                      th:text="${t.supervisor != null && t.supervisor.user != null && t.supervisor.user.fullName != null && !t.supervisor.user.fullName.isEmpty() ? t.supervisor.user.fullName.substring(0, 1) : 'G'}">G</div>
                                                 <div>
-                                                    <span class="font-medium text-slate-800 text-xs d-block" th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.academicTitle + ' ' + t.supervisor.user.fullName : 'GVHD'}">GVHD</span>
+                                                    <span class="font-medium text-slate-800 text-xs d-block" th:text="${t.supervisor != null && t.supervisor.user != null ? (t.supervisor.academicTitle != null ? t.supervisor.academicTitle + ' ' : '') + t.supervisor.user.fullName : 'GVHD'}">GVHD</span>
                                                     <span class="text-slate-400 text-xs" th:text="${t.period != null ? t.period.name : 'Đợt chung'}"></span>
                                                 </div>
                                             </div>
@@ -204,22 +203,7 @@
                                                 </form>
                                                 <!-- View Detail Drawer Button -->
                                                 <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100" 
-                                                        th:onclick="openTopicDrawer({
-                                                            id: [[${t.id}]],
-                                                            code: '[[${t.code}]]',
-                                                            title: '[[${#strings.escapeJavaScript(t.title)}]]',
-                                                            period: '[[${t.period != null ? #strings.escapeJavaScript(t.period.name) : 'Chung'}]]',
-                                                            major: '[[${t.major != null ? #strings.escapeJavaScript(t.major.name) : 'CNTT'}]]',
-                                                            supervisor: '[[${t.supervisor != null && t.supervisor.user != null ? #strings.escapeJavaScript(t.supervisor.academicTitle + ' ' + t.supervisor.user.fullName) : 'Chưa phân công'}]]',
-                                                            coSupervisor: '[[${t.coSupervisor != null && t.coSupervisor.user != null ? #strings.escapeJavaScript(t.coSupervisor.academicTitle + ' ' + t.coSupervisor.user.fullName) : 'Không có'}]]',
-                                                            reviewer: '[[${t.reviewer != null && t.reviewer.user != null ? #strings.escapeJavaScript(t.reviewer.academicTitle + ' ' + t.reviewer.user.fullName) : 'Chưa phân công'}]]',
-                                                            council: '[[${t.council != null ? #strings.escapeJavaScript(t.council.name) : 'Chưa phân hội đồng'}]]',
-                                                            maxStudents: [[${t.maxStudents}]],
-                                                            status: '[[${t.status}]]',
-                                                            description: '[[${#strings.escapeJavaScript(t.description)}]]',
-                                                            requirements: '[[${#strings.escapeJavaScript(t.requirements)}]]',
-                                                            role: 'DEPARTMENT_HEAD'
-                                                        })" title="Xem chi tiết">
+                                                        onclick="openTopicDrawer(this.closest('tr'))" title="Xem chi tiết">
                                                     <i class="fa-solid fa-chevron-right text-xs"></i>
                                                 </button>
                                             </div>

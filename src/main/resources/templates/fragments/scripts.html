@@ -41,6 +41,21 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
         <script>
+            // Robust Unicode String Decoder (fixes any \uXXXX or \xXX escape artifacts)
+            function decodeUnicode(str) {
+                if (!str || typeof str !== 'string') return str || '';
+                try {
+                    if (/\\u[0-9a-fA-F]{4}|\\x[0-9a-fA-F]{2}/.test(str)) {
+                        return JSON.parse('"' + str.replace(/"/g, '\\"') + '"');
+                    }
+                } catch (e) {
+                    try {
+                        return decodeURIComponent(escape(str));
+                    } catch (e2) {}
+                }
+                return str;
+            }
+
             // Sidebar Mobile Toggle
             function toggleSidebar() {
                 const sidebar = document.getElementById('saasSidebar');
@@ -49,10 +64,20 @@
                 if (overlay) overlay.classList.toggle('show');
             }
 
-            // Clean UTF-8 Topic Drawer Opener (supports DOM element or JSON object)
+            // Clean UTF-8 Topic Drawer Opener (supports ID number, DOM element, or Object)
             function openTopicDrawer(source) {
                 if (!source) return;
 
+                // Case 1: Numeric ID passed -> Fetch clean UTF-8 JSON from REST API
+                if (typeof source === 'number' || (typeof source === 'string' && /^\d+$/.test(source))) {
+                    fetch('/api/topics/' + source)
+                        .then(res => res.json())
+                        .then(data => renderTopicDrawer(data))
+                        .catch(err => console.error('Error fetching topic detail:', err));
+                    return;
+                }
+
+                // Case 2: DOM Element or Object passed
                 let data = {};
                 if (source instanceof HTMLElement) {
                     data = {
@@ -79,41 +104,62 @@
                     data = source;
                 }
 
+                renderTopicDrawer(data);
+            }
+
+            function renderTopicDrawer(data) {
+                if (!data) return;
+
+                // Decode all text fields through Unicode decoder
+                const code = decodeUnicode(data.code) || 'DT-N/A';
+                const title = decodeUnicode(data.title) || 'Chi tiết đề tài';
+                const period = decodeUnicode(data.period) || 'Chung';
+                const major = decodeUnicode(data.major) || 'CNTT';
+                const supervisor = decodeUnicode(data.supervisor) || 'Chưa phân công';
+                const coSupervisor = decodeUnicode(data.coSupervisor) || 'Không có';
+                const reviewer = decodeUnicode(data.reviewer) || 'Chưa phân công GVPB';
+                const council = decodeUnicode(data.council) || 'Chưa phân hội đồng';
+                const description = decodeUnicode(data.description) || 'Chưa có mô tả chi tiết.';
+                const requirements = decodeUnicode(data.requirements) || 'Theo hướng dẫn của Giảng viên.';
+                const groupName = decodeUnicode(data.groupName);
+                const leaderName = decodeUnicode(data.leaderName);
+                const leaderCode = decodeUnicode(data.leaderCode);
+
                 const backdrop = document.getElementById('topicDrawerBackdrop');
                 const panel = document.getElementById('topicDrawerPanel');
 
                 if (document.getElementById('drawerTopicCode')) {
-                    document.getElementById('drawerTopicCode').textContent = data.code || 'DT-N/A';
+                    document.getElementById('drawerTopicCode').textContent = code;
                 }
                 if (document.getElementById('drawerTopicTitle')) {
-                    document.getElementById('drawerTopicTitle').textContent = data.title || 'Chi tiết đề tài';
+                    document.getElementById('drawerTopicTitle').textContent = title;
                 }
                 if (document.getElementById('drawerTopicPeriod')) {
-                    document.getElementById('drawerTopicPeriod').textContent = data.period || 'Chung';
+                    document.getElementById('drawerTopicPeriod').textContent = period;
                 }
                 if (document.getElementById('drawerTopicMajor')) {
-                    document.getElementById('drawerTopicMajor').textContent = data.major || 'CNTT';
+                    document.getElementById('drawerTopicMajor').textContent = major;
                 }
                 if (document.getElementById('drawerTopicSupervisor')) {
-                    document.getElementById('drawerTopicSupervisor').textContent = data.supervisor || 'Chưa phân công';
+                    document.getElementById('drawerTopicSupervisor').textContent = supervisor;
                 }
                 if (document.getElementById('drawerTopicCoSupervisor')) {
-                    document.getElementById('drawerTopicCoSupervisor').textContent = data.coSupervisor || 'Không có';
+                    document.getElementById('drawerTopicCoSupervisor').textContent = coSupervisor;
                 }
                 if (document.getElementById('drawerTopicReviewer')) {
-                    document.getElementById('drawerTopicReviewer').textContent = data.reviewer || 'Chưa phân công GVPB';
+                    document.getElementById('drawerTopicReviewer').textContent = reviewer;
                 }
                 if (document.getElementById('drawerTopicCouncil')) {
-                    document.getElementById('drawerTopicCouncil').textContent = data.council || 'Chưa phân hội đồng';
+                    document.getElementById('drawerTopicCouncil').textContent = council;
                 }
                 if (document.getElementById('drawerTopicQuota')) {
                     document.getElementById('drawerTopicQuota').textContent = 'Tối đa ' + (data.maxStudents || 3) + ' SV';
                 }
                 if (document.getElementById('drawerTopicDescription')) {
-                    document.getElementById('drawerTopicDescription').textContent = data.description || 'Chưa có mô tả chi tiết.';
+                    document.getElementById('drawerTopicDescription').textContent = description;
                 }
                 if (document.getElementById('drawerTopicRequirements')) {
-                    document.getElementById('drawerTopicRequirements').textContent = data.requirements || 'Theo hướng dẫn của Giảng viên.';
+                    document.getElementById('drawerTopicRequirements').textContent = requirements;
                 }
 
                 // Status Badge
@@ -135,11 +181,11 @@
                 // Group Info
                 const groupInfo = document.getElementById('drawerTopicGroupInfo');
                 if (groupInfo) {
-                    if (data.groupName) {
+                    if (groupName) {
                         groupInfo.innerHTML = `
                             <div class="p-2.5 rounded-xl bg-blue-50/50 border border-blue-100">
-                                <div class="fw-bold text-dark mb-1"><i class="fa-solid fa-users text-blue-600 me-1"></i> ${data.groupName}</div>
-                                <div class="text-muted text-xs">Trưởng nhóm: <strong class="text-dark">${data.leaderName || 'Sinh viên'}</strong> (${data.leaderCode || ''})</div>
+                                <div class="fw-bold text-dark mb-1"><i class="fa-solid fa-users text-blue-600 me-1"></i> ${groupName}</div>
+                                <div class="text-muted text-xs">Trưởng nhóm: <strong class="text-dark">${leaderName || 'Sinh viên'}</strong> (${leaderCode || ''})</div>
                             </div>
                         `;
                     } else {
@@ -158,7 +204,7 @@
                                     <i class="fa-solid fa-check me-1"></i> Phê duyệt
                                 </button>
                             </form>
-                            <button type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3 text-xs font-semibold" data-bs-toggle="modal" data-bs-target="#rejectModal" onclick="prepareRejectModal(${data.id}, '${(data.title || '').replace(/'/g, "\\'")}')">
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3 text-xs font-semibold" data-bs-toggle="modal" data-bs-target="#rejectModal" onclick="prepareRejectModal(${data.id}, '${title.replace(/'/g, "\\'")}')">
                                 <i class="fa-solid fa-xmark me-1"></i> Từ chối
                             </button>
                         `;
@@ -195,12 +241,12 @@
             // Global Announcement Detail Modal Opener
             function showAnnouncementDetail(element) {
                 if (!element) return;
-                const title = element.dataset.title || 'Thông báo';
-                const category = element.dataset.category || 'Thông báo chung';
-                const author = element.dataset.author || 'Ban chủ nhiệm Khoa';
+                const title = decodeUnicode(element.dataset.title) || 'Thông báo';
+                const category = decodeUnicode(element.dataset.category) || 'Thông báo chung';
+                const author = decodeUnicode(element.dataset.author) || 'Ban chủ nhiệm Khoa';
                 const time = element.dataset.createdAt || '';
-                const period = element.dataset.period || '';
-                const content = element.dataset.content || 'Không có nội dung chi tiết.';
+                const period = decodeUnicode(element.dataset.period) || '';
+                const content = decodeUnicode(element.dataset.content) || 'Không có nội dung chi tiết.';
 
                 const modalTitle = document.getElementById('modalAnnouncementTitle');
                 const modalCategory = document.getElementById('modalAnnouncementCategory');
@@ -298,7 +344,7 @@
                 const form = document.getElementById('rejectForm');
                 const titleSpan = document.getElementById('rejectTopicTitle');
                 if (form) form.action = '/department-head/topics/' + id + '/reject';
-                if (titleSpan) titleSpan.textContent = title || '';
+                if (titleSpan) titleSpan.textContent = decodeUnicode(title) || '';
             }
 
             // Auto Initialize Tooltips & Popovers
