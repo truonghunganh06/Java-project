@@ -1,5 +1,7 @@
 package topic_management.service;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import topic_management.entity.*;
@@ -15,6 +17,7 @@ public class AdminService {
     private final RoleRepository roleRepository;
     private final DepartmentRepository departmentRepository;
     private final MajorRepository majorRepository;
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public AdminService(
             UserRepository userRepository,
@@ -47,6 +50,12 @@ public class AdminService {
         user.setIsActive(true);
         user.setCreatedAt(OffsetDateTime.now());
         user.setUpdatedAt(OffsetDateTime.now());
+
+        // BUG-12 FIX: Hash mật khẩu bằng BCrypt trước khi lưu
+        String rawPassword = user.getPasswordHash();
+        if (rawPassword != null && !rawPassword.startsWith("$2a$") && !rawPassword.startsWith("$2b$")) {
+            user.setPasswordHash(passwordEncoder.encode(rawPassword));
+        }
 
         AppUser saved = userRepository.save(user);
         System.out.println("[DB-ADMIN] createUser: ĐÃ TẠO TÀI KHOẢN MỚI VÀO DB! (ID=" + saved.getId() + ", Username='" + saved.getUsername() + "')");
@@ -98,10 +107,11 @@ public class AdminService {
         Optional<AppUser> opt = userRepository.findById(id);
         if (opt.isPresent()) {
             AppUser user = opt.get();
-            user.setPasswordHash(newPassword);
+            // BUG-12 FIX: Hash mật khẩu mới bằng BCrypt
+            user.setPasswordHash(passwordEncoder.encode(newPassword));
             user.setUpdatedAt(OffsetDateTime.now());
             userRepository.save(user);
-            System.out.println("[DB-ADMIN] resetUserPassword(" + id + "): Đã đổi mật khẩu cho user '" + user.getUsername() + "' vào DB");
+            System.out.println("[DB-ADMIN] resetUserPassword(" + id + "): Đã đổi mật khẩu (BCrypt) cho user '" + user.getUsername() + "' vào DB");
             return true;
         }
         return false;

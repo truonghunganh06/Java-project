@@ -83,6 +83,8 @@ public class ThesisWorkflowIntegrationTest {
     private Lecturer gv1;
     private Lecturer gv2;
     private Lecturer gv3;
+    private Lecturer gvCouncil1;
+    private Lecturer gvCouncil2;
     private Student sv1;
     private Student sv2;
     private Student sv3;
@@ -198,6 +200,28 @@ public class ThesisWorkflowIntegrationTest {
             return userRepository.save(u);
         });
         gv3 = lecturerService.getLecturerByUser(uGv3);
+
+        AppUser uGvCouncil1 = userRepository.findByUsername("test_gvcouncil1").orElseGet(() -> {
+            AppUser u = new AppUser();
+            u.setUsername("test_gvcouncil1");
+            u.setPasswordHash("123456");
+            u.setFullName("TS. Hoàng Thành Viên HĐ 1");
+            u.setEmail("gvcouncil1.test@university.edu.vn");
+            u.setRole(rLecturer);
+            return userRepository.save(u);
+        });
+        gvCouncil1 = lecturerService.getLecturerByUser(uGvCouncil1);
+
+        AppUser uGvCouncil2 = userRepository.findByUsername("test_gvcouncil2").orElseGet(() -> {
+            AppUser u = new AppUser();
+            u.setUsername("test_gvcouncil2");
+            u.setPasswordHash("123456");
+            u.setFullName("TS. Vũ Thành Viên HĐ 2");
+            u.setEmail("gvcouncil2.test@university.edu.vn");
+            u.setRole(rLecturer);
+            return userRepository.save(u);
+        });
+        gvCouncil2 = lecturerService.getLecturerByUser(uGvCouncil2);
 
         // 5. Students: SV1 (Leader), SV2 (Member), SV3 (Member), SV4 (Extra SV)
         AppUser uSv1 = userRepository.findByUsername("test_sv1").orElseGet(() -> {
@@ -324,7 +348,7 @@ public class ThesisWorkflowIntegrationTest {
     void step4_departmentHeadApproveTopic() {
         System.out.println("\n[TEST-4] BƯỚC 4: Trưởng khoa phê duyệt đề tài");
 
-        boolean approved = departmentHeadService.approveTopic(testTopic.getId());
+        boolean approved = departmentHeadService.approveTopic(testTopic.getId(), testDept.getId());
         assertTrue(approved, "Phê duyệt đề tài phải thành công");
 
         Topic updatedTopic = lecturerService.getTopicById(testTopic.getId());
@@ -412,7 +436,7 @@ public class ThesisWorkflowIntegrationTest {
         List<StudentGroup> lecturerGroups = lecturerService.getGroupsForLecturerTopics(gv1);
         assertFalse(lecturerGroups.isEmpty(), "GV1 phải thấy nhóm đăng ký đề tài của mình");
 
-        boolean approved = lecturerService.approveGroupTopic(testGroup.getId(), "APPROVED");
+        boolean approved = lecturerService.approveGroupTopic(testGroup.getId(), "APPROVED", gv1);
         assertTrue(approved, "Duyệt nhóm phải thành công");
 
         StudentGroup reloaded = studentService.getMyActiveGroup(sv1, testPeriod.getId());
@@ -453,7 +477,7 @@ public class ThesisWorkflowIntegrationTest {
 
         // 5. GVHD chấm điểm nhận xét tiến độ
         Submission sub = groupSubmissions.get(1); // Vòng 1
-        boolean graded = lecturerService.gradeSubmission(sub.getId(), 9.0, "Đề cương chi tiết tốt, bám sát yêu cầu đề tài.");
+        boolean graded = lecturerService.gradeSubmission(sub.getId(), 9.0, "Đề cương chi tiết tốt, bám sát yêu cầu đề tài.", gv1);
         assertTrue(graded, "GVHD chấm điểm tiến độ phải thành công");
 
         System.out.println("-> [ĐẠT CHUẨN] Nhóm trưởng SV1 đã nộp 2 bài báo cáo, GVHD đã nhận xét và chấm điểm tiến độ.");
@@ -465,7 +489,23 @@ public class ThesisWorkflowIntegrationTest {
     void step9_createCouncilAndAssignReviewer() {
         System.out.println("\n[TEST-9] BƯỚC 9: Thành lập Hội đồng bảo vệ & Phân công GVPB");
 
-        // 1. Thành lập Hội đồng bảo vệ gồm 3 GV (Chủ tịch, Thư ký, Ủy viên)
+        // 1. KIỂM TRA RÀNG BUỘC CHỐNG XUNG ĐỘT LỢI ÍCH:
+        // Cố tình tạo Hội đồng có chứa GVHD (GV1) và gán đề tài -> Phải bị chặn!
+        Council conflictCouncil = councilService.createCouncil(
+                testDept.getId(),
+                testPeriod.getId(),
+                "HD-CONFLICT-01",
+                "Hội đồng có chứa GVHD",
+                "Phòng A1",
+                OffsetDateTime.now().plusDays(15),
+                List.of(gv3.getId(), gv2.getId(), gv1.getId()),
+                List.of("CHAIR", "SECRETARY", "MEMBER")
+        );
+        boolean assignedConflictCouncil = councilService.assignTopicToCouncil(testTopic.getId(), conflictCouncil.getId());
+        assertFalse(assignedConflictCouncil, "Hệ thống phải chặn gán đề tài vào Hội đồng có chứa GVHD hoặc GV đồng hướng dẫn");
+        System.out.println("-> [ĐẠT CHUẨN BẢO VỆ] Chặn thành công gán đề tài vào Hội đồng có chứa GVHD!");
+
+        // 2. Thành lập Hội đồng bảo vệ độc lập hợp lệ gồm 3 GV (Chủ tịch, Thư ký, Ủy viên)
         testCouncil = councilService.createCouncil(
                 testDept.getId(),
                 testPeriod.getId(),
@@ -473,7 +513,7 @@ public class ThesisWorkflowIntegrationTest {
                 "Hội đồng chấm KLTN chuyên ngành KTPM 01",
                 "Phòng Hội thảo B1-205",
                 OffsetDateTime.now().plusDays(15),
-                List.of(gv3.getId(), gv2.getId(), gv1.getId()),
+                List.of(gv3.getId(), gvCouncil1.getId(), gvCouncil2.getId()),
                 List.of("CHAIR", "SECRETARY", "MEMBER")
         );
 
@@ -483,16 +523,16 @@ public class ThesisWorkflowIntegrationTest {
         List<CouncilMember> councilMembers = councilMemberRepository.findByCouncilId(testCouncil.getId());
         assertEquals(3, councilMembers.size(), "Hội đồng phải có 3 thành viên");
 
-        // 2. Gán đề tài vào Hội đồng bảo vệ
+        // 3. Gán đề tài vào Hội đồng bảo vệ hợp lệ
         boolean assignedCouncil = councilService.assignTopicToCouncil(testTopic.getId(), testCouncil.getId());
-        assertTrue(assignedCouncil, "Gán đề tài vào Hội đồng phải thành công");
+        assertTrue(assignedCouncil, "Gán đề tài vào Hội đồng độc lập phải thành công");
 
-        // 3. KIỂM TRA RÀNG BUỘC: Phân công GVPB trùng với GVHD (GV1) -> Phải bị chặn!
+        // 4. KIỂM TRA RÀNG BUỘC: Phân công GVPB trùng với GVHD (GV1) -> Phải bị chặn!
         boolean invalidReviewer = councilService.assignReviewer(testTopic.getId(), gv1.getId());
         assertFalse(invalidReviewer, "Hệ thống phải chặn phân công GVPB trùng với GVHD");
         System.out.println("-> [ĐẠT CHUẨN BẢO VỆ] Chặn thành công phân công GVPB trùng với GVHD (GV1)");
 
-        // 4. Phân công GVPB hợp lệ (GV3 - độc lập, không phải GVHD)
+        // 5. Phân công GVPB hợp lệ (GV3 - độc lập, không phải GVHD)
         boolean validReviewer = councilService.assignReviewer(testTopic.getId(), gv3.getId());
         assertTrue(validReviewer, "Phân công GV3 làm GVPB phải thành công");
 
@@ -517,24 +557,24 @@ public class ThesisWorkflowIntegrationTest {
         assertFalse(gv1ConflictReviewer, "GVHD không được phép chấm điểm đề tài của mình ở vai trò REVIEWER");
         System.out.println("-> [ĐẠT CHUẨN BẢO VỆ] Chặn thành công GVHD tự chấm điểm ở vai trò COUNCIL và REVIEWER!");
 
-        // 2. GVHD (GV1) chấm điểm hướng dẫn (SUPERVISOR) hợp lệ: 9.0
+        // 2. GVHD (GV1) chấm điểm hướng dẫn (SUPERVISOR) hợp lệ: 9.0 (Trọng số 40%)
         boolean evalSupervisor = councilService.submitEvaluation(testTopic.getId(), gv1.getId(), "SUPERVISOR", 9.0, "Sinh viên chủ động, hoàn thành tốt các mục tiêu nghiên cứu.");
         assertTrue(evalSupervisor, "GVHD chấm điểm hướng dẫn phải thành công");
 
-        // 3. GVPB (GV3) chấm điểm phản biện (REVIEWER) hợp lệ: 8.5
+        // 3. GVPB (GV3) chấm điểm phản biện (REVIEWER) hợp lệ: 8.5 (Trọng số 30%)
         boolean evalReviewer = councilService.submitEvaluation(testTopic.getId(), gv3.getId(), "REVIEWER", 8.5, "Đề tài có tính ứng dụng cao, mô hình AI đạt độ chính xác tốt.");
         assertTrue(evalReviewer, "GVPB chấm điểm phản biện phải thành công");
 
-        // 4. Thành viên Hội đồng độc lập (GV3) chấm điểm bảo vệ (COUNCIL) hợp lệ: 9.0
-        boolean evalCouncil = councilService.submitEvaluation(testTopic.getId(), gv3.getId(), "COUNCIL", 9.0, "Bảo vệ tự tin, trả lời xuất sắc các câu hỏi chuyên sâu.");
+        // 4. Thành viên Hội đồng độc lập (gvCouncil1) chấm điểm bảo vệ (COUNCIL) hợp lệ: 9.0 (Trọng số 30%)
+        boolean evalCouncil = councilService.submitEvaluation(testTopic.getId(), gvCouncil1.getId(), "COUNCIL", 9.0, "Bảo vệ tự tin, trả lời xuất sắc các câu hỏi chuyên sâu.");
         assertTrue(evalCouncil, "Thành viên Hội đồng chấm điểm bảo vệ phải thành công");
 
-        // 5. Kiểm tra tính toán điểm trung bình tự động:
-        // Avg = (9.0 + 8.5 + 9.0) / 3 = 8.83
+        // 5. Kiểm tra tính toán điểm trung bình có trọng số tự động:
+        // Weighted Avg = 9.0 * 0.40 + 8.5 * 0.30 + 9.0 * 0.30 = 3.60 + 2.55 + 2.70 = 8.85
         Topic topicWithScore = lecturerService.getTopicById(testTopic.getId());
         assertNotNull(topicWithScore.getFinalScore(), "Điểm tổng kết finalScore phải được tự động tính");
-        assertEquals(8.83, topicWithScore.getFinalScore(), 0.05, "Điểm trung bình cộng phải xấp xỉ 8.83");
-        System.out.println("-> [ĐẠT CHUẨN] Điểm trung bình tự động tính: " + topicWithScore.getFinalScore() + " / 10.0 (3 phiếu chấm hợp lệ)");
+        assertEquals(8.85, topicWithScore.getFinalScore(), 0.05, "Điểm trung bình có trọng số phải xấp xỉ 8.85");
+        System.out.println("-> [ĐẠT CHUẨN] Điểm trung bình có trọng số tự động tính: " + topicWithScore.getFinalScore() + " / 10.0 (3 phiếu chấm hợp lệ)");
     }
 
     @Test

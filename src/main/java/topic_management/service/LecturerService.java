@@ -104,8 +104,14 @@ public class LecturerService {
         topic.setMajor(major);
         topic.setSupervisor(supervisor);
 
+        // BUG-01 FIX: Kiểm tra đợt đăng ký có đang mở cho giảng viên đề xuất không
         if (periodId != null) {
-            topic.setPeriod(periodRepository.findById(periodId).orElse(null));
+            RegistrationPeriod period = periodRepository.findById(periodId).orElse(null);
+            if (period != null && !period.isLecturerProposalOpen()) {
+                throw new IllegalStateException("Đợt '" + period.getName()
+                        + "' hiện không trong giai đoạn nhận đề xuất đề tài từ giảng viên!");
+            }
+            topic.setPeriod(period);
         }
 
         if (coSupervisorId != null && !coSupervisorId.equals(supervisor.getId())) {
@@ -134,16 +140,23 @@ public class LecturerService {
         return groups;
     }
 
+    /**
+     * BUG-07 FIX: Kiểm tra nhóm SV thuộc đề tài của GV hiện tại trước khi duyệt/từ chối
+     */
     @Transactional
-    public boolean approveGroupTopic(Long groupId, String status) {
+    public boolean approveGroupTopic(Long groupId, String status, Lecturer currentLecturer) {
         StudentGroup group = studentGroupRepository.findById(groupId).orElse(null);
-        if (group != null) {
-            group.setStatus(status);
-            studentGroupRepository.save(group);
-            System.out.println("[DB-LECTURER] Cập nhật trạng thái nhóm ID=" + groupId + " -> " + status);
-            return true;
+        if (group == null) return false;
+        // Guard: Chỉ GVHD/GVHD phụ mới được duyệt
+        if (group.getTopic() != null && currentLecturer != null
+                && !group.getTopic().isSupervisorOrCoSupervisor(currentLecturer)) {
+            System.err.println("[SECURITY] GV ID=" + currentLecturer.getId() + " cố duyệt nhóm của đề tài không phải mình hướng dẫn!");
+            return false;
         }
-        return false;
+        group.setStatus(status);
+        studentGroupRepository.save(group);
+        System.out.println("[DB-LECTURER] Cập nhật trạng thái nhóm ID=" + groupId + " -> " + status);
+        return true;
     }
 
     public List<Submission> getSubmissionsByLecturer(Lecturer lecturer) {
@@ -151,12 +164,21 @@ public class LecturerService {
         return submissionRepository.findBySupervisorOrCoSupervisorId(lecturer.getId());
     }
 
+    /**
+     * BUG-08 FIX: Kiểm tra bài nộp thuộc đề tài của GV hiện tại trước khi chấm điểm
+     */
     @Transactional
-    public boolean gradeSubmission(Long submissionId, Double grade, String feedback) {
+    public boolean gradeSubmission(Long submissionId, Double grade, String feedback, Lecturer currentLecturer) {
         if (submissionId == null) return false;
         Optional<Submission> opt = submissionRepository.findById(submissionId);
         if (opt.isPresent()) {
             Submission sub = opt.get();
+            // Guard: Chỉ GVHD/GVHD phụ mới được chấm bài nộp
+            if (sub.getTopic() != null && currentLecturer != null
+                    && !sub.getTopic().isSupervisorOrCoSupervisor(currentLecturer)) {
+                System.err.println("[SECURITY] GV ID=" + currentLecturer.getId() + " cố chấm bài nộp của đề tài không phải mình hướng dẫn!");
+                return false;
+            }
             sub.setGrade(grade);
             sub.setFeedback(feedback);
             submissionRepository.save(sub);

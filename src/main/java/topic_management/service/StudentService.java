@@ -126,8 +126,14 @@ public class StudentService {
     public String inviteMemberByCode(StudentGroup group, String studentCode) {
         if (group == null) return "Không tìm thấy nhóm.";
         List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
-        if (currentMembers.size() >= 3) {
-            return "Nhóm đã đạt số lượng tối đa 3 thành viên!";
+        
+        // BUG-03 FIX: Kiểm tra giới hạn thành viên theo topic.maxStudents nếu nhóm đã có đề tài
+        int maxAllowed = 3;
+        if (group.getTopic() != null && group.getTopic().getMaxStudents() != null && group.getTopic().getMaxStudents() > 0) {
+            maxAllowed = Math.min(3, group.getTopic().getMaxStudents());
+        }
+        if (currentMembers.size() >= maxAllowed) {
+            return "Nhóm đã đạt số lượng tối đa " + maxAllowed + " thành viên" + (group.getTopic() != null ? " theo quy định đề tài!" : "!");
         }
 
         Student invitee = getStudentByCode(studentCode);
@@ -164,8 +170,14 @@ public class StudentService {
 
         StudentGroup group = opt.get();
         List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
-        if (currentMembers.size() >= 3) {
-            return "Nhóm " + group.getGroupName() + " đã đủ 3 thành viên!";
+
+        // BUG-03 FIX: Kiểm tra giới hạn thành viên theo topic.maxStudents nếu nhóm đã có đề tài
+        int maxAllowed = 3;
+        if (group.getTopic() != null && group.getTopic().getMaxStudents() != null && group.getTopic().getMaxStudents() > 0) {
+            maxAllowed = Math.min(3, group.getTopic().getMaxStudents());
+        }
+        if (currentMembers.size() >= maxAllowed) {
+            return "Nhóm " + group.getGroupName() + " đã đủ " + maxAllowed + " thành viên" + (group.getTopic() != null ? " theo quy định đề tài!" : "!");
         }
 
         Long periodId = group.getPeriod() != null ? group.getPeriod().getId() : null;
@@ -203,6 +215,8 @@ public class StudentService {
         return list.stream()
                 .filter(t -> periodId == null || (t.getPeriod() != null && periodId.equals(t.getPeriod().getId())))
                 .filter(t -> majorId == null || (t.getMajor() != null && majorId.equals(t.getMajor().getId())))
+                // BUG-02 FIX: Chỉ hiển thị đề tài trong đợt đang mở đăng ký cho sinh viên
+                .filter(t -> t.getPeriod() == null || t.getPeriod().isStudentRegistrationOpen())
                 .filter(t -> keyword == null || keyword.trim().isEmpty() ||
                         (t.getTitle() != null && t.getTitle().toLowerCase().contains(keyword.toLowerCase())) ||
                         (t.getCode() != null && t.getCode().toLowerCase().contains(keyword.toLowerCase())))
@@ -251,7 +265,15 @@ public class StudentService {
             return "Đợt đăng ký đề tài này hiện không trong thời gian mở đăng ký cho sinh viên!";
         }
 
-        // Kiểm tra chỉ tiêu đăng ký (mỗi đề tài 1 nhóm)
+        // BUG-03 FIX: Kiểm tra số lượng thành viên nhóm không được vượt quá maxStudents của đề tài
+        List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
+        int memberCount = (currentMembers != null && !currentMembers.isEmpty()) ? currentMembers.size() : 1;
+        int maxStudentsAllowed = (topic.getMaxStudents() != null && topic.getMaxStudents() > 0) ? topic.getMaxStudents() : 3;
+        if (memberCount > maxStudentsAllowed) {
+            return "Số lượng thành viên của nhóm (" + memberCount + " SV) vượt quá số lượng tối đa cho phép của đề tài này (" + maxStudentsAllowed + " SV)!";
+        }
+
+        // Kiểm tra chỉ tiêu đăng ký (mỗi đề tài chỉ 1 nhóm thực hiện)
         List<StudentGroup> existingGroupsOnTopic = groupRepository.findByTopicId(topicId);
         if (!existingGroupsOnTopic.isEmpty()) {
             return "Đề tài này đã được một nhóm khác đăng ký!";
@@ -308,8 +330,15 @@ public class StudentService {
 
     // ==================== RESULTS & EVALUATIONS ====================
 
+    /**
+     * BUG-10 FIX: Chỉ trả về evaluations khi đề tài đã được công bố chính thức (isFinalized = true)
+     */
     public List<Evaluation> getGroupEvaluations(StudentGroup group) {
         if (group == null || group.getTopic() == null) return Collections.emptyList();
+        // Guard: Ẩn điểm cho SV khi chưa được công bố
+        if (!Boolean.TRUE.equals(group.getTopic().getIsFinalized())) {
+            return Collections.emptyList();
+        }
         return evaluationRepository.findByTopicId(group.getTopic().getId());
     }
 

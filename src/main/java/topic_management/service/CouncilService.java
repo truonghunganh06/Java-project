@@ -241,6 +241,10 @@ public class CouncilService {
         return true;
     }
 
+    /**
+     * BUG-09 FIX: Tính điểm trung bình có trọng số theo evaluationType
+     * SUPERVISOR: 40%, REVIEWER: 30%, COUNCIL: 30%
+     */
     @Transactional
     public void calculateAndSetFinalScore(Topic topic) {
         List<StudentGroup> groups = groupRepository.findByTopicId(topic.getId());
@@ -255,11 +259,39 @@ public class CouncilService {
         List<Evaluation> evals = evaluationRepository.findByTopicId(topic.getId());
         List<Evaluation> validEvals = evals.stream().filter(e -> e.getScore() != null).toList();
         if (!validEvals.isEmpty()) {
-            double sum = validEvals.stream().mapToDouble(Evaluation::getScore).sum();
-            double avg = Math.round((sum / validEvals.size()) * 100.0) / 100.0;
-            topic.setFinalScore(avg);
+            // Trọng số mặc định theo loại đánh giá
+            Map<String, Double> weights = Map.of(
+                    "SUPERVISOR", 0.40,
+                    "REVIEWER", 0.30,
+                    "COUNCIL", 0.30
+            );
+
+            // Nhóm evaluations theo loại
+            Map<String, List<Evaluation>> groupedByType = validEvals.stream()
+                    .collect(java.util.stream.Collectors.groupingBy(
+                            e -> e.getEvaluationType() != null ? e.getEvaluationType().toUpperCase() : "OTHER"
+                    ));
+
+            double weightedSum = 0;
+            double totalWeight = 0;
+
+            for (Map.Entry<String, List<Evaluation>> entry : groupedByType.entrySet()) {
+                String type = entry.getKey();
+                List<Evaluation> typeEvals = entry.getValue();
+                double typeAvg = typeEvals.stream().mapToDouble(Evaluation::getScore).average().orElse(0);
+                double w = weights.getOrDefault(type, 1.0 / groupedByType.size());
+                weightedSum += typeAvg * w;
+                totalWeight += w;
+            }
+
+            double finalScore = totalWeight > 0
+                    ? Math.round((weightedSum / totalWeight) * 100.0) / 100.0
+                    : 0;
+            topic.setFinalScore(finalScore);
             topicRepository.save(topic);
-            System.out.println("[DB-EVAL] Đã cập nhật điểm TB đề tài ID=" + topic.getId() + " -> " + avg + " (Tổng " + validEvals.size() + " phiếu chấm)");
+            System.out.println("[DB-EVAL] Đã cập nhật điểm TB (có trọng số) đề tài ID=" + topic.getId()
+                    + " -> " + finalScore + " (Tổng " + validEvals.size() + " phiếu chấm, "
+                    + groupedByType.size() + " loại)");
         } else {
             topic.setFinalScore(null);
             topicRepository.save(topic);

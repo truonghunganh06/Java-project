@@ -135,8 +135,14 @@ public class DepartmentHeadController {
         AppUser user = getAuthenticatedDeptHead(session);
         if (user == null) return "redirect:/login";
 
-        departmentHeadService.updatePeriodStatus(id, status);
-        redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái đợt thành công!");
+        // BUG-06 FIX: Truyền departmentId để kiểm tra cross-department
+        Department dept = departmentHeadService.getDepartmentForUser(user);
+        boolean success = departmentHeadService.updatePeriodStatus(id, status, dept.getId());
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái đợt thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật trạng thái đợt này!");
+        }
         return "redirect:/department-head/periods";
     }
 
@@ -183,13 +189,15 @@ public class DepartmentHeadController {
         AppUser user = getAuthenticatedDeptHead(session);
         if (user == null) return "redirect:/login";
 
+        // BUG-06 FIX: Truyền departmentId để kiểm tra cross-department
+        Department dept = departmentHeadService.getDepartmentForUser(user);
         Topic topic = departmentHeadService.getTopicById(id);
-        boolean success = departmentHeadService.approveTopic(id);
+        boolean success = departmentHeadService.approveTopic(id, dept.getId());
 
         if (success) {
             redirectAttributes.addFlashAttribute("successMessage", "Phê duyệt thành công đề tài: '" + (topic != null ? topic.getTitle() : "") + "'!");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy đề tài để phê duyệt!");
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể phê duyệt đề tài (không tìm thấy hoặc không thuộc bộ môn của bạn)!");
         }
 
         return "redirect:/department-head/topics";
@@ -205,10 +213,16 @@ public class DepartmentHeadController {
         AppUser user = getAuthenticatedDeptHead(session);
         if (user == null) return "redirect:/login";
 
+        // BUG-06 FIX: Truyền departmentId để kiểm tra cross-department
+        Department dept = departmentHeadService.getDepartmentForUser(user);
         Topic topic = departmentHeadService.getTopicById(id);
-        departmentHeadService.rejectTopic(id, rejectionReason != null ? rejectionReason.trim() : "Chưa đạt yêu cầu");
+        boolean success = departmentHeadService.rejectTopic(id, rejectionReason != null ? rejectionReason.trim() : "Chưa đạt yêu cầu", dept.getId());
 
-        redirectAttributes.addFlashAttribute("errorMessage", "Đã từ chối đề tài '" + (topic != null ? topic.getTitle() : "") + "'.");
+        if (success) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Đã từ chối đề tài '" + (topic != null ? topic.getTitle() : "") + "'.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể từ chối đề tài (không tìm thấy hoặc không thuộc bộ môn của bạn)!");
+        }
         return "redirect:/department-head/topics";
     }
 
