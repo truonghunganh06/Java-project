@@ -110,15 +110,11 @@ public class AdminController {
         AppUser admin = getAuthenticatedAdmin(session);
         if (admin == null) return "redirect:/login";
 
-        if (newUser.getPasswordHash() == null || newUser.getPasswordHash().trim().isEmpty()) {
-            newUser.setPasswordHash("123456"); // Default password
-        }
-
-        boolean success = adminService.createUser(newUser, roleId);
-        if (success) {
+        String err = adminService.createUser(newUser, roleId);
+        if (err == null) {
             redirectAttributes.addFlashAttribute("successMessage", "Thêm mới tài khoản '" + newUser.getUsername() + "' thành công!");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể tạo tài khoản, vui lòng thử lại!");
+            redirectAttributes.addFlashAttribute("errorMessage", err);
         }
 
         return "redirect:/admin/users";

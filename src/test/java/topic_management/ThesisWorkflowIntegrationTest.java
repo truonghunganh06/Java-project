@@ -410,15 +410,29 @@ public class ThesisWorkflowIntegrationTest {
     void step6_registerTopicForGroupLeaderOnly() {
         System.out.println("\n[TEST-6] BƯỚC 6: Đăng ký đề tài cho nhóm & Kiểm tra quyền Leader");
 
-        // 1. KIỂM TRA RÀNG BUỘC: SV2 (Thành viên không phải Leader) cố tình đăng ký đề tài -> Bị chặn
+        // 1. KIỂM TRA RÀNG BUỘC 1: SV4 (Chưa có nhóm) cố tình đăng ký đề tài -> Bị chặn tuyệt đối!
+        String noGroupRegError = studentService.registerTopicForGroup(sv4, null, testTopic.getId());
+        assertNotNull(noGroupRegError, "Sinh viên chưa có nhóm không được đăng ký đề tài");
+        assertTrue(noGroupRegError.contains("chưa thuộc nhóm sinh viên nào"), "Phải có thông báo lỗi chưa thuộc nhóm");
+        System.out.println("-> [ĐẠT CHUẨN BẢO VỆ] Chặn thành công sinh viên chưa có nhóm đăng ký đề tài: \"" + noGroupRegError + "\"");
+
+        // 2. KIỂM TRA RÀNG BUỘC 2: SV2 (Thành viên không phải Leader) cố tình đăng ký đề tài -> Bị chặn
         String memberRegError = studentService.registerTopicForGroup(sv2, testGroup, testTopic.getId());
         assertNotNull(memberRegError, "Thành viên không phải Leader không được đăng ký đề tài");
         assertTrue(memberRegError.contains("Chỉ Nhóm trưởng mới có quyền"), "Phải có thông báo từ chối quyền hạn của thành viên");
         System.out.println("-> [ĐẠT CHUẨN] Chặn thành công thành viên đăng ký thay Leader: \"" + memberRegError + "\"");
 
-        // 2. SV1 (Nhóm trưởng) đăng ký đề tài
+        // 3. SV1 (Nhóm trưởng) đăng ký đề tài
         String leaderRegResult = studentService.registerTopicForGroup(sv1, testGroup, testTopic.getId());
         assertNull(leaderRegResult, "Nhóm trưởng đăng ký đề tài phải thành công");
+
+        // 4. KIỂM TRA RÀNG BUỘC 3: Khi đề tài/nhóm đang ở trạng thái REGISTERED (chưa APPROVED), cố tình nộp báo cáo -> Bị chặn!
+        String prematureSubmitError = studentService.submitGroupReport(
+                sv1, testGroup, "Báo cáo nộp sớm khi chưa duyệt", 1, "early_report.pdf", 1024L
+        );
+        assertNotNull(prematureSubmitError, "Không được phép nộp báo cáo khi đề tài chưa được duyệt");
+        assertTrue(prematureSubmitError.contains("Đề tài chưa được phê duyệt"), "Phải thông báo đề tài chưa được phê duyệt");
+        System.out.println("-> [ĐẠT CHUẨN BẢO VỆ] Chặn thành công nộp báo cáo khi đề tài chưa được GVHD phê duyệt: \"" + prematureSubmitError + "\"");
 
         StudentGroup reloaded = studentService.getMyActiveGroup(sv1, testPeriod.getId());
         assertNotNull(reloaded.getTopic(), "Nhóm phải được gán đề tài");
@@ -439,8 +453,8 @@ public class ThesisWorkflowIntegrationTest {
         boolean approved = lecturerService.approveGroupTopic(testGroup.getId(), "APPROVED", gv1);
         assertTrue(approved, "Duyệt nhóm phải thành công");
 
-        StudentGroup reloaded = studentService.getMyActiveGroup(sv1, testPeriod.getId());
-        assertEquals("APPROVED", reloaded.getStatus(), "Trạng thái nhóm phải chuyển sang APPROVED");
+        testGroup = studentService.getMyActiveGroup(sv1, testPeriod.getId());
+        assertEquals("APPROVED", testGroup.getStatus(), "Trạng thái nhóm phải chuyển sang APPROVED");
         System.out.println("-> Giảng viên 1 đã phê duyệt nhóm ID=" + testGroup.getId() + " (Status: APPROVED)");
     }
 

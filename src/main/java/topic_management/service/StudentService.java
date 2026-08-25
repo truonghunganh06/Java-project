@@ -240,25 +240,19 @@ public class StudentService {
             return "Đề tài không tồn tại hoặc chưa được duyệt!";
         }
 
-        RegistrationPeriod period = topic.getPeriod();
-
-        // Nếu sinh viên chưa có nhóm trong đợt này, tự động tạo nhóm mới để đăng ký trực tiếp
+        // LỖI 1 FIX: Bắt buộc sinh viên phải thuộc một nhóm hợp lệ và là nhóm trưởng
         if (group == null) {
-            try {
-                String defaultGroupName = "Nhóm " + (student.getUser() != null ? student.getUser().getFullName() : student.getStudentCode());
-                group = createGroup(student, period != null ? period.getId() : null, defaultGroupName);
-            } catch (Exception e) {
-                return "Không thể khởi tạo nhóm: " + e.getMessage();
-            }
-        } else {
-            // Kiểm tra quyền Trưởng nhóm nếu đã thuộc nhóm
-            if (!group.isLeader(student)) {
-                return "Chỉ Nhóm trưởng mới có quyền chọn và đăng ký đề tài cho nhóm!";
-            }
+            return "Bạn chưa thuộc nhóm sinh viên nào! Vui lòng tạo nhóm hoặc tham gia nhóm trước khi đăng ký đề tài.";
         }
 
+        // Kiểm tra quyền Trưởng nhóm: Chỉ Trưởng nhóm mới có quyền chọn và đăng ký đề tài
+        if (!group.isLeader(student)) {
+            return "Chỉ Nhóm trưởng mới có quyền chọn và đăng ký đề tài cho nhóm!";
+        }
+
+        // Kiểm tra nhóm đã đăng ký đề tài nào khác trong đợt này chưa
         if (group.getTopic() != null) {
-            return "Nhóm đã đăng ký đề tài: '" + group.getTopic().getTitle() + "'.";
+            return "Nhóm của bạn đã đăng ký đề tài: '" + group.getTopic().getTitle() + "'. Mỗi nhóm chỉ được đăng ký 1 đề tài trong một đợt!";
         }
 
         // Kiểm tra thời hạn đợt đăng ký
@@ -304,6 +298,10 @@ public class StudentService {
             return "Bạn chưa thuộc nhóm nào!";
         }
 
+        if (group.getId() != null) {
+            group = groupRepository.findById(group.getId()).orElse(group);
+        }
+
         // BẮT BUỘC: CHỈ NHÓM TRƯỞNG MỚI ĐƯỢC NỘP BÁO CÁO ĐỀ TÀI
         if (!group.isLeader(student)) {
             return "QUYỀN HẠN BỊ TỪ CHỐI: Chỉ Nhóm trưởng mới có quyền nộp bài báo cáo đề tài!";
@@ -311,6 +309,11 @@ public class StudentService {
 
         if (group.getTopic() == null) {
             return "Nhóm của bạn chưa đăng ký đề tài nào!";
+        }
+
+        // LỖI 2 FIX: Chỉ cho phép nộp báo cáo khi đề tài và đăng ký nhóm đã được GVHD phê duyệt (APPROVED)
+        if (!"APPROVED".equalsIgnoreCase(group.getStatus()) || !"APPROVED".equalsIgnoreCase(group.getTopic().getStatus())) {
+            return "Đề tài chưa được phê duyệt, không thể nộp báo cáo!";
         }
 
         Submission sub = new Submission();
