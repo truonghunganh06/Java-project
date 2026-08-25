@@ -491,11 +491,12 @@ public class ThesisWorkflowIntegrationTest {
 
         // 1. KIỂM TRA RÀNG BUỘC CHỐNG XUNG ĐỘT LỢI ÍCH:
         // Cố tình tạo Hội đồng có chứa GVHD (GV1) và gán đề tài -> Phải bị chặn!
+        String suffix = "_" + System.currentTimeMillis();
         Council conflictCouncil = councilService.createCouncil(
                 testDept.getId(),
                 testPeriod.getId(),
-                "HD-CONFLICT-01",
-                "Hội đồng có chứa GVHD",
+                "HD-CONFLICT" + suffix,
+                "Hội đồng có chứa GVHD " + suffix,
                 "Phòng A1",
                 OffsetDateTime.now().plusDays(15),
                 List.of(gv3.getId(), gv2.getId(), gv1.getId()),
@@ -506,11 +507,12 @@ public class ThesisWorkflowIntegrationTest {
         System.out.println("-> [ĐẠT CHUẨN BẢO VỆ] Chặn thành công gán đề tài vào Hội đồng có chứa GVHD!");
 
         // 2. Thành lập Hội đồng bảo vệ độc lập hợp lệ gồm 3 GV (Chủ tịch, Thư ký, Ủy viên)
+        String validCouncilName = "Hội đồng chấm KLTN chuyên ngành KTPM " + suffix;
         testCouncil = councilService.createCouncil(
                 testDept.getId(),
                 testPeriod.getId(),
-                "HD-KLTN-01",
-                "Hội đồng chấm KLTN chuyên ngành KTPM 01",
+                "HD-KLTN" + suffix,
+                validCouncilName,
                 "Phòng Hội thảo B1-205",
                 OffsetDateTime.now().plusDays(15),
                 List.of(gv3.getId(), gvCouncil1.getId(), gvCouncil2.getId()),
@@ -522,6 +524,37 @@ public class ThesisWorkflowIntegrationTest {
         
         List<CouncilMember> councilMembers = councilMemberRepository.findByCouncilId(testCouncil.getId());
         assertEquals(3, councilMembers.size(), "Hội đồng phải có 3 thành viên");
+
+        // 2b. KIỂM TRA RÀNG BUỘC CHỐNG TRÙNG LẶP HỘI ĐỒNG TRONG CÙNG ĐỢT ĐĂNG KÝ:
+        // Cố tình tạo Hội đồng trùng tên trong cùng một đợt -> Phải ném IllegalArgumentException
+        assertThrows(IllegalArgumentException.class, () -> {
+            councilService.createCouncil(
+                    testDept.getId(),
+                    testPeriod.getId(),
+                    "HD-DUPLICATE" + suffix,
+                    validCouncilName, // Trùng tên với testCouncil
+                    "Phòng Hội thảo B1-206",
+                    OffsetDateTime.now().plusDays(15),
+                    List.of(gv3.getId(), gvCouncil1.getId(), gvCouncil2.getId()),
+                    List.of("CHAIR", "SECRETARY", "MEMBER")
+            );
+        }, "Hệ thống phải chặn tạo Hội đồng trùng tên trong cùng một đợt đăng ký!");
+
+        // Kiểm tra chặn tên rỗng
+        assertThrows(IllegalArgumentException.class, () -> {
+            councilService.createCouncil(
+                    testDept.getId(),
+                    testPeriod.getId(),
+                    "HD-EMPTY" + suffix,
+                    "   ",
+                    "Phòng A1",
+                    OffsetDateTime.now().plusDays(15),
+                    List.of(gv3.getId(), gvCouncil1.getId(), gvCouncil2.getId()),
+                    List.of("CHAIR", "SECRETARY", "MEMBER")
+            );
+        }, "Hệ thống phải chặn tên hội đồng rỗng");
+
+        System.out.println("-> [ĐẠT CHUẨN TOÀN VẸN DỮ LIỆU] Chặn thành công tạo Hội đồng trùng tên trong cùng đợt đăng ký và tên rỗng!");
 
         // 3. Gán đề tài vào Hội đồng bảo vệ hợp lệ
         boolean assignedCouncil = councilService.assignTopicToCouncil(testTopic.getId(), testCouncil.getId());

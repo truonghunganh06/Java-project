@@ -255,8 +255,12 @@ public class DepartmentHeadController {
         AppUser user = getAuthenticatedDeptHead(session);
         if (user == null) return "redirect:/login";
 
-        councilService.assignTopicToCouncil(topicId, councilId);
-        redirectAttributes.addFlashAttribute("successMessage", "Phân công đề tài vào Hội đồng bảo vệ thành công!");
+        boolean ok = councilService.assignTopicToCouncil(topicId, councilId);
+        if (ok) {
+            redirectAttributes.addFlashAttribute("successMessage", "Phân công đề tài vào Hội đồng bảo vệ thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Xung đột lợi ích: Không thể gán đề tài vào Hội đồng có chứa Giảng viên hướng dẫn!");
+        }
         return "redirect:/department-head/topics";
     }
 
@@ -301,6 +305,11 @@ public class DepartmentHeadController {
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
 
+        if (name == null || name.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Tên hội đồng không được để trống!");
+            return "redirect:/department-head/councils";
+        }
+
         List<Long> lecturerIds = new ArrayList<>();
         List<String> roles = new ArrayList<>();
 
@@ -330,8 +339,23 @@ public class DepartmentHeadController {
             return "redirect:/department-head/councils";
         }
 
-        councilService.createCouncil(dept.getId(), periodId, code, name, location, parseDate(defenseDate), lecturerIds, roles);
-        redirectAttributes.addFlashAttribute("successMessage", "Thành lập Hội đồng '" + name + "' thành công với " + lecturerIds.size() + " giảng viên!");
+        Set<Long> uniqueLids = new HashSet<>();
+        for (Long lid : lecturerIds) {
+            if (!uniqueLids.add(lid)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Một giảng viên không thể đảm nhiệm nhiều vị trí trong cùng một Hội đồng!");
+                return "redirect:/department-head/councils";
+            }
+        }
+
+        try {
+            councilService.createCouncil(dept.getId(), periodId, code, name, location, parseDate(defenseDate), lecturerIds, roles);
+            redirectAttributes.addFlashAttribute("successMessage", "Thành lập Hội đồng '" + name.trim() + "' thành công với " + lecturerIds.size() + " giảng viên!");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi tạo hội đồng: " + ex.getMessage());
+        }
+
         return "redirect:/department-head/councils";
     }
 

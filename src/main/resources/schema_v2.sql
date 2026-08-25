@@ -32,8 +32,18 @@ CREATE TABLE IF NOT EXISTS councils (
     defense_date TIMESTAMPTZ,
     location VARCHAR(255),
     status VARCHAR(50) NOT NULL DEFAULT 'ESTABLISHED', -- ESTABLISHED, IN_PROGRESS, COMPLETED
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_councils_period_name UNIQUE (period_id, name)
 );
+
+-- Ràng buộc chống trùng lặp Hội đồng trong cùng một đợt đăng ký (cho các DB đã tạo bảng từ trước)
+-- Script dọn dẹp các bản ghi rác đang bị trùng tên trong cùng một đợt (giữ lại bản ghi ID nhỏ nhất):
+-- DELETE FROM councils a USING councils b 
+-- WHERE a.id > b.id 
+--   AND (a.period_id = b.period_id OR (a.period_id IS NULL AND b.period_id IS NULL))
+--   AND TRIM(LOWER(a.name)) = TRIM(LOWER(b.name));
+-- ALTER TABLE councils DROP CONSTRAINT IF EXISTS uk_councils_period_name;
+-- ALTER TABLE councils ADD CONSTRAINT uk_councils_period_name UNIQUE (period_id, name);
 
 -- 3. Bảng Thành Viên Hội Đồng (Council Members: 3 - 5 GV)
 CREATE TABLE IF NOT EXISTS council_members (

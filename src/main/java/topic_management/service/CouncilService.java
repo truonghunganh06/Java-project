@@ -103,15 +103,44 @@ public class CouncilService {
             List<Long> lecturerIds,
             List<String> roles) {
 
-        Department dept = departmentRepository.findById(departmentId).orElse(null);
+        // 1. Validation Tên Hội đồng
+        if (councilName == null || councilName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên hội đồng không được để trống!");
+        }
+        String trimmedName = councilName.trim();
+
+        // 2. Chặn trùng lặp Tên Hội đồng trong cùng một đợt đăng ký
+        if (councilRepository.existsByPeriodAndNameIgnoreCase(periodId, trimmedName)) {
+            throw new IllegalArgumentException("Tên hội đồng '" + trimmedName + "' đã tồn tại trong đợt đăng ký này! Vui lòng đặt tên khác.");
+        }
+
+        // 3. Kiểm tra trùng lặp Mã Hội đồng nếu có cung cấp
+        String trimmedCode = (councilCode != null && !councilCode.trim().isEmpty()) ? councilCode.trim() : null;
+        if (trimmedCode != null) {
+            if (councilRepository.findByCode(trimmedCode).isPresent()) {
+                throw new IllegalArgumentException("Mã hội đồng '" + trimmedCode + "' đã tồn tại trong hệ thống! Vui lòng chọn mã khác.");
+            }
+        }
+
+        // 4. Kiểm tra trùng lặp giảng viên trong cùng hội đồng
+        if (lecturerIds != null) {
+            Set<Long> seenLecturerIds = new HashSet<>();
+            for (Long lid : lecturerIds) {
+                if (lid != null && !seenLecturerIds.add(lid)) {
+                    throw new IllegalArgumentException("Một giảng viên không thể đảm nhiệm nhiều vị trí trong cùng một Hội đồng!");
+                }
+            }
+        }
+
+        Department dept = departmentId != null ? departmentRepository.findById(departmentId).orElse(null) : null;
         RegistrationPeriod period = periodId != null ? periodRepository.findById(periodId).orElse(null) : null;
 
         Council council = new Council();
         council.setDepartment(dept);
         council.setPeriod(period);
-        council.setCode(councilCode);
-        council.setName(councilName);
-        council.setLocation(location);
+        council.setCode(trimmedCode);
+        council.setName(trimmedName);
+        council.setLocation(location != null ? location.trim() : null);
         council.setDefenseDate(defenseDate);
         council.setStatus("ESTABLISHED");
 
@@ -133,8 +162,77 @@ public class CouncilService {
             }
         }
 
-        System.out.println("[DB-COUNCIL] Tạo mới Hội đồng: " + councilName + " (Mã: " + councilCode + ")");
+        System.out.println("[DB-COUNCIL] Tạo mới Hội đồng: " + trimmedName + " (Mã: " + trimmedCode + ")");
         return savedCouncil;
+    }
+
+    @Transactional
+    public Council updateCouncil(
+            Long councilId,
+            Long periodId,
+            String councilCode,
+            String councilName,
+            String location,
+            OffsetDateTime defenseDate,
+            List<Long> lecturerIds,
+            List<String> roles) {
+
+        Council council = councilRepository.findById(councilId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy Hội đồng với ID=" + councilId));
+
+        if (councilName == null || councilName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên hội đồng không được để trống!");
+        }
+        String trimmedName = councilName.trim();
+
+        if (councilRepository.existsByPeriodAndNameIgnoreCaseExcludingId(periodId, trimmedName, councilId)) {
+            throw new IllegalArgumentException("Tên hội đồng '" + trimmedName + "' đã tồn tại trong đợt đăng ký này! Vui lòng đặt tên khác.");
+        }
+
+        String trimmedCode = (councilCode != null && !councilCode.trim().isEmpty()) ? councilCode.trim() : null;
+        if (trimmedCode != null) {
+            Optional<Council> existingWithCode = councilRepository.findByCode(trimmedCode);
+            if (existingWithCode.isPresent() && !existingWithCode.get().getId().equals(councilId)) {
+                throw new IllegalArgumentException("Mã hội đồng '" + trimmedCode + "' đã tồn tại trong hệ thống! Vui lòng chọn mã khác.");
+            }
+        }
+
+        if (lecturerIds != null) {
+            Set<Long> seenLecturerIds = new HashSet<>();
+            for (Long lid : lecturerIds) {
+                if (lid != null && !seenLecturerIds.add(lid)) {
+                    throw new IllegalArgumentException("Một giảng viên không thể đảm nhiệm nhiều vị trí trong cùng một Hội đồng!");
+                }
+            }
+        }
+
+        RegistrationPeriod period = periodId != null ? periodRepository.findById(periodId).orElse(null) : null;
+        council.setPeriod(period);
+        council.setCode(trimmedCode);
+        council.setName(trimmedName);
+        council.setLocation(location != null ? location.trim() : null);
+        council.setDefenseDate(defenseDate);
+
+        if (lecturerIds != null && roles != null) {
+            councilMemberRepository.deleteByCouncilId(councilId);
+            council.getMembers().clear();
+            for (int i = 0; i < lecturerIds.size(); i++) {
+                Long lecturerId = lecturerIds.get(i);
+                String role = (i < roles.size()) ? roles.get(i) : "MEMBER";
+                Lecturer lecturer = lecturerRepository.findById(lecturerId).orElse(null);
+                if (lecturer != null) {
+                    CouncilMember member = new CouncilMember();
+                    member.setCouncil(council);
+                    member.setLecturer(lecturer);
+                    member.setCouncilRole(role);
+                    councilMemberRepository.save(member);
+                    council.getMembers().add(member);
+                }
+            }
+        }
+
+        System.out.println("[DB-COUNCIL] Cập nhật Hội đồng ID=" + councilId + ": " + trimmedName);
+        return councilRepository.save(council);
     }
 
     @Transactional
