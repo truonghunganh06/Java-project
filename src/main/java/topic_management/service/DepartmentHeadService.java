@@ -169,6 +169,10 @@ public class DepartmentHeadService {
                 .collect(Collectors.toList());
     }
 
+    public org.springframework.data.domain.Page<Topic> getDepartmentTopicsPaged(Long departmentId, String status, Long majorId, Long periodId, String keyword, org.springframework.data.domain.Pageable pageable) {
+        return topicRepository.findDepartmentTopicsPaged(departmentId, status, majorId, periodId, keyword, pageable);
+    }
+
     public Topic getTopicById(Long topicId) {
         if (topicId == null) return null;
         return topicRepository.findById(topicId).orElse(null);

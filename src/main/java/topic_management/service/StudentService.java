@@ -211,9 +211,10 @@ public class StudentService {
     // ==================== TOPIC REGISTRATION ====================
 
     public List<Topic> getAvailableTopics(Long periodId, Long majorId, String keyword) {
-        List<Topic> list = topicRepository.findByStatus("APPROVED");
+        List<Topic> list = (periodId != null)
+                ? topicRepository.findApprovedByPeriodId(periodId)
+                : topicRepository.findByStatus("APPROVED");
         return list.stream()
-                .filter(t -> periodId == null || (t.getPeriod() != null && periodId.equals(t.getPeriod().getId())))
                 .filter(t -> majorId == null || (t.getMajor() != null && majorId.equals(t.getMajor().getId())))
                 // BUG-02 FIX: Chỉ hiển thị đề tài trong đợt đang mở đăng ký cho sinh viên
                 .filter(t -> t.getPeriod() == null || t.getPeriod().isStudentRegistrationOpen())

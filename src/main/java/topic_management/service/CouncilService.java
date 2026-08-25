@@ -8,6 +8,7 @@ import topic_management.repository.*;
 
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CouncilService {
@@ -47,18 +48,32 @@ public class CouncilService {
     @Transactional
     public void cleanupOrphanEvaluationsAndScores() {
         List<Topic> allTopics = topicRepository.findAll();
+        if (allTopics.isEmpty()) return;
+
+        List<Long> topicIds = allTopics.stream().map(Topic::getId).filter(Objects::nonNull).toList();
+        List<StudentGroup> allGroups = groupRepository.findByTopicIdIn(topicIds);
+        Set<Long> topicsWithGroups = allGroups.stream()
+                .filter(g -> g.getTopic() != null)
+                .map(g -> g.getTopic().getId())
+                .collect(Collectors.toSet());
+
         int cleanedScores = 0;
         int deletedEvals = 0;
+
+        List<Evaluation> allEvals = evaluationRepository.findByTopicIdIn(topicIds);
+        Map<Long, List<Evaluation>> evalsByTopic = allEvals.stream()
+                .filter(e -> e.getTopic() != null)
+                .collect(Collectors.groupingBy(e -> e.getTopic().getId()));
+
         for (Topic t : allTopics) {
-            List<StudentGroup> groups = groupRepository.findByTopicId(t.getId());
-            if (groups.isEmpty()) {
+            if (!topicsWithGroups.contains(t.getId())) {
                 if (t.getFinalScore() != null || Boolean.TRUE.equals(t.getIsFinalized())) {
                     t.setFinalScore(null);
                     t.setIsFinalized(false);
                     topicRepository.save(t);
                     cleanedScores++;
                 }
-                List<Evaluation> evals = evaluationRepository.findByTopicId(t.getId());
+                List<Evaluation> evals = evalsByTopic.getOrDefault(t.getId(), Collections.emptyList());
                 if (!evals.isEmpty()) {
                     evaluationRepository.deleteAll(evals);
                     deletedEvals += evals.size();
@@ -80,10 +95,12 @@ public class CouncilService {
     }
 
     public List<Council> getCouncilsByPeriod(Long periodId) {
+        if (periodId == null) return councilRepository.findAll();
         return councilRepository.findByPeriodId(periodId);
     }
 
     public List<Council> getCouncilsByLecturer(Long lecturerId) {
+        if (lecturerId == null) return Collections.emptyList();
         return councilRepository.findByLecturerId(lecturerId);
     }
 
@@ -92,6 +109,9 @@ public class CouncilService {
         return councilRepository.findById(id).orElse(null);
     }
 
+    /**
+     * Tạo Hội đồng mới với Transactional & Unique Name Check theo đợt
+     */
     @Transactional
     public Council createCouncil(
             Long departmentId,
@@ -103,31 +123,27 @@ public class CouncilService {
             List<Long> lecturerIds,
             List<String> roles) {
 
-        // 1. Validation Tên Hội đồng
         if (councilName == null || councilName.trim().isEmpty()) {
             throw new IllegalArgumentException("Tên hội đồng không được để trống!");
         }
         String trimmedName = councilName.trim();
 
-        // 2. Chặn trùng lặp Tên Hội đồng trong cùng một đợt đăng ký
         if (councilRepository.existsByPeriodAndNameIgnoreCase(periodId, trimmedName)) {
-            throw new IllegalArgumentException("Tên hội đồng '" + trimmedName + "' đã tồn tại trong đợt đăng ký này! Vui lòng đặt tên khác.");
+            throw new IllegalArgumentException("Hội đồng với tên '" + trimmedName + "' đã tồn tại trong đợt này. Vui lòng chọn tên khác!");
         }
 
-        // 3. Kiểm tra trùng lặp Mã Hội đồng nếu có cung cấp
-        String trimmedCode = (councilCode != null && !councilCode.trim().isEmpty()) ? councilCode.trim() : null;
+        String trimmedCode = councilCode != null && !councilCode.trim().isEmpty() ? councilCode.trim() : null;
         if (trimmedCode != null) {
             if (councilRepository.findByCode(trimmedCode).isPresent()) {
-                throw new IllegalArgumentException("Mã hội đồng '" + trimmedCode + "' đã tồn tại trong hệ thống! Vui lòng chọn mã khác.");
+                throw new IllegalArgumentException("Mã hội đồng '" + trimmedCode + "' đã tồn tại. Vui lòng chọn mã khác!");
             }
         }
 
-        // 4. Kiểm tra trùng lặp giảng viên trong cùng hội đồng
-        if (lecturerIds != null) {
-            Set<Long> seenLecturerIds = new HashSet<>();
-            for (Long lid : lecturerIds) {
-                if (lid != null && !seenLecturerIds.add(lid)) {
-                    throw new IllegalArgumentException("Một giảng viên không thể đảm nhiệm nhiều vị trí trong cùng một Hội đồng!");
+        if (lecturerIds != null && !lecturerIds.isEmpty()) {
+            Set<Long> uniqueLecturers = new HashSet<>();
+            for (Long lId : lecturerIds) {
+                if (lId != null && !uniqueLecturers.add(lId)) {
+                    throw new IllegalArgumentException("Không được chọn trùng giảng viên trong cùng một hội đồng!");
                 }
             }
         }
@@ -136,12 +152,12 @@ public class CouncilService {
         RegistrationPeriod period = periodId != null ? periodRepository.findById(periodId).orElse(null) : null;
 
         Council council = new Council();
+        council.setName(trimmedName);
+        council.setCode(trimmedCode != null ? trimmedCode : ("HD-" + System.currentTimeMillis() % 10000));
         council.setDepartment(dept);
         council.setPeriod(period);
-        council.setCode(trimmedCode);
-        council.setName(trimmedName);
         council.setLocation(location != null ? location.trim() : null);
-        council.setDefenseDate(defenseDate);
+        council.setDefenseDate(defenseDate != null ? defenseDate : OffsetDateTime.now().plusDays(15));
         council.setStatus("ESTABLISHED");
 
         Council savedCouncil = councilRepository.save(council);
@@ -166,6 +182,9 @@ public class CouncilService {
         return savedCouncil;
     }
 
+    /**
+     * Cập nhật thông tin Hội đồng & Danh sách thành viên (có kiểm tra trùng lặp)
+     */
     @Transactional
     public Council updateCouncil(
             Long councilId,
@@ -177,8 +196,11 @@ public class CouncilService {
             List<Long> lecturerIds,
             List<String> roles) {
 
+        if (councilId == null) {
+            throw new IllegalArgumentException("ID hội đồng không hợp lệ!");
+        }
         Council council = councilRepository.findById(councilId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy Hội đồng với ID=" + councilId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hội đồng với ID=" + councilId));
 
         if (councilName == null || councilName.trim().isEmpty()) {
             throw new IllegalArgumentException("Tên hội đồng không được để trống!");
@@ -186,53 +208,57 @@ public class CouncilService {
         String trimmedName = councilName.trim();
 
         if (councilRepository.existsByPeriodAndNameIgnoreCaseExcludingId(periodId, trimmedName, councilId)) {
-            throw new IllegalArgumentException("Tên hội đồng '" + trimmedName + "' đã tồn tại trong đợt đăng ký này! Vui lòng đặt tên khác.");
+            throw new IllegalArgumentException("Hội đồng với tên '" + trimmedName + "' đã tồn tại trong đợt này. Vui lòng chọn tên khác!");
         }
 
-        String trimmedCode = (councilCode != null && !councilCode.trim().isEmpty()) ? councilCode.trim() : null;
+        String trimmedCode = councilCode != null && !councilCode.trim().isEmpty() ? councilCode.trim() : null;
         if (trimmedCode != null) {
             Optional<Council> existingWithCode = councilRepository.findByCode(trimmedCode);
             if (existingWithCode.isPresent() && !existingWithCode.get().getId().equals(councilId)) {
-                throw new IllegalArgumentException("Mã hội đồng '" + trimmedCode + "' đã tồn tại trong hệ thống! Vui lòng chọn mã khác.");
+                throw new IllegalArgumentException("Mã hội đồng '" + trimmedCode + "' đã tồn tại ở hội đồng khác. Vui lòng chọn mã khác!");
             }
         }
 
-        if (lecturerIds != null) {
-            Set<Long> seenLecturerIds = new HashSet<>();
-            for (Long lid : lecturerIds) {
-                if (lid != null && !seenLecturerIds.add(lid)) {
-                    throw new IllegalArgumentException("Một giảng viên không thể đảm nhiệm nhiều vị trí trong cùng một Hội đồng!");
+        if (lecturerIds != null && !lecturerIds.isEmpty()) {
+            Set<Long> uniqueLecturers = new HashSet<>();
+            for (Long lId : lecturerIds) {
+                if (lId != null && !uniqueLecturers.add(lId)) {
+                    throw new IllegalArgumentException("Không được chọn trùng giảng viên trong cùng một hội đồng!");
                 }
             }
         }
 
         RegistrationPeriod period = periodId != null ? periodRepository.findById(periodId).orElse(null) : null;
         council.setPeriod(period);
-        council.setCode(trimmedCode);
         council.setName(trimmedName);
+        if (trimmedCode != null) {
+            council.setCode(trimmedCode);
+        }
         council.setLocation(location != null ? location.trim() : null);
-        council.setDefenseDate(defenseDate);
+        council.setDefenseDate(defenseDate != null ? defenseDate : council.getDefenseDate());
+
+        Council savedCouncil = councilRepository.save(council);
 
         if (lecturerIds != null && roles != null) {
-            councilMemberRepository.deleteByCouncilId(councilId);
-            council.getMembers().clear();
+            List<CouncilMember> existingMembers = councilMemberRepository.findByCouncilId(councilId);
+            councilMemberRepository.deleteAll(existingMembers);
+
             for (int i = 0; i < lecturerIds.size(); i++) {
                 Long lecturerId = lecturerIds.get(i);
                 String role = (i < roles.size()) ? roles.get(i) : "MEMBER";
                 Lecturer lecturer = lecturerRepository.findById(lecturerId).orElse(null);
                 if (lecturer != null) {
                     CouncilMember member = new CouncilMember();
-                    member.setCouncil(council);
+                    member.setCouncil(savedCouncil);
                     member.setLecturer(lecturer);
                     member.setCouncilRole(role);
                     councilMemberRepository.save(member);
-                    council.getMembers().add(member);
                 }
             }
         }
 
         System.out.println("[DB-COUNCIL] Cập nhật Hội đồng ID=" + councilId + ": " + trimmedName);
-        return councilRepository.save(council);
+        return savedCouncil;
     }
 
     @Transactional
@@ -242,22 +268,24 @@ public class CouncilService {
 
         if (topic == null) return false;
 
-        // Conflict of interest check: Council members CANNOT be supervisor or coSupervisor of the topic
         if (council != null) {
             List<CouncilMember> members = councilMemberRepository.findByCouncilId(council.getId());
-            for (CouncilMember m : members) {
-                if (topic.isSupervisorOrCoSupervisor(m.getLecturer())) {
-                    System.err.println("[DB-COUNCIL] Xung đột lợi ích! Giảng viên hướng dẫn '"
-                            + (m.getLecturer().getUser() != null ? m.getLecturer().getUser().getFullName() : "ID=" + m.getLecturer().getId())
-                            + "' là thành viên của Hội đồng '" + council.getName() + "'. Không thể gán đề tài!");
-                    return false;
+            for (CouncilMember cm : members) {
+                if (cm.getLecturer() != null) {
+                    if (topic.getSupervisor() != null && cm.getLecturer().getId().equals(topic.getSupervisor().getId())) {
+                        System.err.println("[DB-COUNCIL] Xung đột lợi ích! GVHD (" + (topic.getSupervisor().getUser() != null ? topic.getSupervisor().getUser().getFullName() : "") + ") không được ngồi trong Hội đồng chấm đề tài này!");
+                        return false;
+                    }
+                    if (topic.getCoSupervisor() != null && cm.getLecturer().getId().equals(topic.getCoSupervisor().getId())) {
+                        System.err.println("[DB-COUNCIL] Xung đột lợi ích! GVHD phụ (" + (topic.getCoSupervisor().getUser() != null ? topic.getCoSupervisor().getUser().getFullName() : "") + ") không được ngồi trong Hội đồng chấm đề tài này!");
+                        return false;
+                    }
                 }
             }
         }
 
         topic.setCouncil(council);
         topicRepository.save(topic);
-        System.out.println("[DB-COUNCIL] Gán đề tài ID=" + topicId + " vào Hội đồng: " + (council != null ? council.getName() : "NULL"));
         return true;
     }
 
@@ -268,19 +296,27 @@ public class CouncilService {
 
         if (topic == null) return false;
 
-        // Conflict of interest check: Reviewer CANNOT be supervisor or coSupervisor
-        if (reviewer != null && topic.isSupervisorOrCoSupervisor(reviewer)) {
-            System.err.println("[DB-COUNCIL] Xung đột lợi ích! Giảng viên hướng dẫn không thể làm Giảng viên phản biện cho đề tài của chính mình.");
-            return false;
+        if (reviewer != null) {
+            if (topic.getSupervisor() != null && reviewer.getId().equals(topic.getSupervisor().getId())) {
+                System.err.println("[DB-COUNCIL] Xung đột lợi ích! Giảng viên phản biện không được trùng với Giảng viên hướng dẫn chính!");
+                return false;
+            }
+            if (topic.getCoSupervisor() != null && reviewer.getId().equals(topic.getCoSupervisor().getId())) {
+                System.err.println("[DB-COUNCIL] Xung đột lợi ích! Giảng viên phản biện không được trùng với Giảng viên đồng hướng dẫn!");
+                return false;
+            }
         }
 
         topic.setReviewer(reviewer);
         topicRepository.save(topic);
-        System.out.println("[DB-COUNCIL] Phân công GVPB cho đề tài ID=" + topicId + ": " + (reviewer != null && reviewer.getUser() != null ? reviewer.getUser().getFullName() : "NULL"));
         return true;
     }
 
     public List<Topic> getTopicsInCouncil(Long councilId) {
+        return topicRepository.findByCouncilId(councilId);
+    }
+
+    public List<Topic> getTopicsByCouncil(Long councilId) {
         return topicRepository.findByCouncilId(councilId);
     }
 
@@ -292,7 +328,15 @@ public class CouncilService {
         return councilMemberRepository.findByCouncilId(councilId);
     }
 
+    public List<CouncilMember> getMembersByCouncil(Long councilId) {
+        return councilMemberRepository.findByCouncilId(councilId);
+    }
+
     public List<Evaluation> getEvaluationsForTopic(Long topicId) {
+        return evaluationRepository.findByTopicId(topicId);
+    }
+
+    public List<Evaluation> getEvaluationsByTopic(Long topicId) {
         return evaluationRepository.findByTopicId(topicId);
     }
 
@@ -304,20 +348,20 @@ public class CouncilService {
     public boolean submitEvaluation(Long topicId, Long lecturerId, String evaluationType, Double score, String comments) {
         Topic topic = topicRepository.findById(topicId).orElse(null);
         Lecturer lecturer = lecturerRepository.findById(lecturerId).orElse(null);
+
         if (topic == null || lecturer == null) return false;
 
-        // Business Rule: Topic MUST have a registered student group to receive evaluation
         List<StudentGroup> groups = groupRepository.findByTopicId(topicId);
         if (groups.isEmpty()) {
             System.err.println("[DB-EVAL] Lỗi! Đề tài ID=" + topicId + " chưa có nhóm sinh viên đăng ký thực hiện, tuyệt đối không được chấm điểm!");
             return false;
         }
 
-        // Conflict of interest check: If evaluationType is COUNCIL or REVIEWER, lecturer CANNOT be supervisor or coSupervisor
-        if (("COUNCIL".equalsIgnoreCase(evaluationType) || "REVIEWER".equalsIgnoreCase(evaluationType))
-                && topic.isSupervisorOrCoSupervisor(lecturer)) {
-            System.err.println("[DB-EVAL] Xung đột lợi ích! Giảng viên hướng dẫn không được chấm điểm đề tài của mình ở vai trò " + evaluationType);
-            return false;
+        if (topic.getSupervisor() != null && lecturer.getId().equals(topic.getSupervisor().getId())) {
+            if ("REVIEWER".equalsIgnoreCase(evaluationType) || "COUNCIL".equalsIgnoreCase(evaluationType)) {
+                System.err.println("[DB-EVAL] Xung đột lợi ích! GVHD không được tự chấm điểm với tư cách Phản biện hoặc Hội đồng!");
+                return false;
+            }
         }
 
         Evaluation eval = evaluationRepository.findByTopicIdAndLecturerIdAndEvaluationType(topicId, lecturerId, evaluationType)
@@ -325,29 +369,28 @@ public class CouncilService {
 
         eval.setTopic(topic);
         eval.setLecturer(lecturer);
+        eval.setGroup(!groups.isEmpty() ? groups.get(0) : null);
         eval.setEvaluationType(evaluationType);
         eval.setScore(score);
         eval.setComments(comments);
-        eval.setIsSubmitted(true);
         eval.setEvaluatedAt(OffsetDateTime.now());
 
         evaluationRepository.save(eval);
-        System.out.println("[DB-EVAL] Lưu điểm (" + score + ") loại " + evaluationType + " cho đề tài ID=" + topicId + " bởi GV ID=" + lecturerId);
 
-        // Auto update topic average score
         calculateAndSetFinalScore(topic);
         return true;
     }
 
     /**
-     * BUG-09 FIX: Tính điểm trung bình có trọng số theo evaluationType
-     * SUPERVISOR: 40%, REVIEWER: 30%, COUNCIL: 30%
+     * Tính điểm trung bình có trọng số theo evaluationType:
+     * SUPERVISOR: 40%, REVIEWER: 30%, COUNCIL: 30% (hoặc chia đều theo cấu hình)
      */
     @Transactional
     public void calculateAndSetFinalScore(Topic topic) {
+        if (topic == null) return;
+
         List<StudentGroup> groups = groupRepository.findByTopicId(topic.getId());
         if (groups.isEmpty()) {
-            // Strictly reset to null if topic has no student group
             topic.setFinalScore(null);
             topic.setIsFinalized(false);
             topicRepository.save(topic);
@@ -355,18 +398,22 @@ public class CouncilService {
         }
 
         List<Evaluation> evals = evaluationRepository.findByTopicId(topic.getId());
+        if (evals.isEmpty()) {
+            topic.setFinalScore(null);
+            topicRepository.save(topic);
+            return;
+        }
+
         List<Evaluation> validEvals = evals.stream().filter(e -> e.getScore() != null).toList();
         if (!validEvals.isEmpty()) {
-            // Trọng số mặc định theo loại đánh giá
             Map<String, Double> weights = Map.of(
                     "SUPERVISOR", 0.40,
                     "REVIEWER", 0.30,
                     "COUNCIL", 0.30
             );
 
-            // Nhóm evaluations theo loại
             Map<String, List<Evaluation>> groupedByType = validEvals.stream()
-                    .collect(java.util.stream.Collectors.groupingBy(
+                    .collect(Collectors.groupingBy(
                             e -> e.getEvaluationType() != null ? e.getEvaluationType().toUpperCase() : "OTHER"
                     ));
 
@@ -387,9 +434,6 @@ public class CouncilService {
                     : 0;
             topic.setFinalScore(finalScore);
             topicRepository.save(topic);
-            System.out.println("[DB-EVAL] Đã cập nhật điểm TB (có trọng số) đề tài ID=" + topic.getId()
-                    + " -> " + finalScore + " (Tổng " + validEvals.size() + " phiếu chấm, "
-                    + groupedByType.size() + " loại)");
         } else {
             topic.setFinalScore(null);
             topicRepository.save(topic);
@@ -407,6 +451,11 @@ public class CouncilService {
             return false;
         }
 
+        if (topic.getFinalScore() == null) {
+            System.err.println("[DB-EVAL] Không thể công bố: Đề tài chưa có điểm tổng kết hợp lệ!");
+            return false;
+        }
+
         topic.setIsFinalized(Boolean.TRUE.equals(isFinalized));
         topicRepository.save(topic);
         System.out.println("[DB-EVAL] Cập nhật công bố kết quả đề tài ID=" + topicId + " -> isFinalized=" + topic.getIsFinalized());
@@ -418,11 +467,19 @@ public class CouncilService {
         List<Topic> topics = (departmentId != null) 
                 ? topicRepository.findByMajorDepartmentId(departmentId) 
                 : topicRepository.findAll();
+        if (topics.isEmpty()) return 0;
+
+        List<Long> topicIds = topics.stream().map(Topic::getId).filter(Objects::nonNull).toList();
+        List<StudentGroup> allGroups = groupRepository.findByTopicIdIn(topicIds);
+        Set<Long> topicsWithGroups = allGroups.stream()
+                .filter(g -> g.getTopic() != null)
+                .map(g -> g.getTopic().getId())
+                .collect(Collectors.toSet());
+
         int count = 0;
         for (Topic t : topics) {
             if (periodId == null || (t.getPeriod() != null && t.getPeriod().getId().equals(periodId))) {
-                List<StudentGroup> groups = groupRepository.findByTopicId(t.getId());
-                if ("APPROVED".equalsIgnoreCase(t.getStatus()) && !groups.isEmpty() && t.getFinalScore() != null) {
+                if ("APPROVED".equalsIgnoreCase(t.getStatus()) && topicsWithGroups.contains(t.getId()) && t.getFinalScore() != null) {
                     t.setIsFinalized(Boolean.TRUE.equals(isFinalized));
                     topicRepository.save(t);
                     count++;
@@ -436,13 +493,26 @@ public class CouncilService {
     public Map<Long, List<Evaluation>> getEvaluationsMapForTopics(List<Topic> topics) {
         Map<Long, List<Evaluation>> map = new HashMap<>();
         if (topics == null || topics.isEmpty()) return map;
-        for (Topic t : topics) {
-            List<StudentGroup> groups = groupRepository.findByTopicId(t.getId());
-            // Only return evaluations for topics that have a registered student group
-            if (!groups.isEmpty()) {
-                map.put(t.getId(), evaluationRepository.findByTopicId(t.getId()));
+
+        List<Long> topicIds = topics.stream().map(Topic::getId).filter(Objects::nonNull).toList();
+        if (topicIds.isEmpty()) return map;
+
+        List<StudentGroup> allGroups = groupRepository.findByTopicIdIn(topicIds);
+        Set<Long> topicsWithGroups = allGroups.stream()
+                .filter(g -> g.getTopic() != null)
+                .map(g -> g.getTopic().getId())
+                .collect(Collectors.toSet());
+
+        List<Evaluation> allEvaluations = evaluationRepository.findByTopicIdIn(topicIds);
+        Map<Long, List<Evaluation>> evalsByTopicId = allEvaluations.stream()
+                .filter(e -> e.getTopic() != null)
+                .collect(Collectors.groupingBy(e -> e.getTopic().getId()));
+
+        for (Long topicId : topicIds) {
+            if (topicsWithGroups.contains(topicId)) {
+                map.put(topicId, evalsByTopicId.getOrDefault(topicId, Collections.emptyList()));
             } else {
-                map.put(t.getId(), Collections.emptyList());
+                map.put(topicId, Collections.emptyList());
             }
         }
         return map;
@@ -451,10 +521,14 @@ public class CouncilService {
     public Map<Long, StudentGroup> getGroupsMapForTopics(List<Topic> topics) {
         Map<Long, StudentGroup> map = new HashMap<>();
         if (topics == null || topics.isEmpty()) return map;
-        for (Topic t : topics) {
-            List<StudentGroup> groups = groupRepository.findByTopicId(t.getId());
-            if (!groups.isEmpty()) {
-                map.put(t.getId(), groups.get(0));
+
+        List<Long> topicIds = topics.stream().map(Topic::getId).filter(Objects::nonNull).toList();
+        if (topicIds.isEmpty()) return map;
+
+        List<StudentGroup> allGroups = groupRepository.findByTopicIdIn(topicIds);
+        for (StudentGroup g : allGroups) {
+            if (g.getTopic() != null && !map.containsKey(g.getTopic().getId())) {
+                map.put(g.getTopic().getId(), g);
             }
         }
         return map;
