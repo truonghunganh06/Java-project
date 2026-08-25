@@ -199,14 +199,10 @@ public class StudentService {
     // ==================== TOPIC REGISTRATION ====================
 
     public List<Topic> getAvailableTopics(Long periodId, Long majorId, String keyword) {
-        List<Topic> list = topicRepository.findByStatus("APPROVED");
-        return list.stream()
-                .filter(t -> periodId == null || (t.getPeriod() != null && periodId.equals(t.getPeriod().getId())))
-                .filter(t -> majorId == null || (t.getMajor() != null && majorId.equals(t.getMajor().getId())))
-                .filter(t -> keyword == null || keyword.trim().isEmpty() ||
-                        (t.getTitle() != null && t.getTitle().toLowerCase().contains(keyword.toLowerCase())) ||
-                        (t.getCode() != null && t.getCode().toLowerCase().contains(keyword.toLowerCase())))
-                .collect(Collectors.toList());
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            return topicRepository.findApprovedTopicsByKeyword(keyword.trim());
+        }
+        return topicRepository.findApprovedTopicsByCriteria(periodId, majorId);
     }
 
     public Topic getTopicById(Long id) {

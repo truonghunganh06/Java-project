@@ -23,7 +23,7 @@ public class RegistrationPeriod {
     @Column(nullable = false)
     private Integer semester = 1;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private Department department;
 

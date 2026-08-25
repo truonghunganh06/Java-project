@@ -15,7 +15,7 @@ public class CouncilMember {
     @JoinColumn(name = "council_id", nullable = false)
     private Council council;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lecturer_id", nullable = false)
     private Lecturer lecturer;
 

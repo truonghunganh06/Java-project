@@ -25,6 +25,15 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
     @Query("SELECT t FROM Topic t WHERE t.period.id = :periodId AND t.status = 'APPROVED'")
     List<Topic> findApprovedByPeriodId(@Param("periodId") Long periodId);
 
+    @Query("SELECT t FROM Topic t WHERE t.status = 'APPROVED' AND (t.period.id = :periodId OR :periodId IS NULL) AND (t.major.id = :majorId OR :majorId IS NULL) ORDER BY t.createdAt DESC")
+    List<Topic> findApprovedTopicsByCriteria(@Param("periodId") Long periodId, @Param("majorId") Long majorId);
+
+    @Query("SELECT t FROM Topic t WHERE t.status = 'APPROVED' AND (t.title ILIKE CONCAT('%', :keyword, '%') OR t.code ILIKE CONCAT('%', :keyword, '%')) ORDER BY t.createdAt DESC")
+    List<Topic> findApprovedTopicsByKeyword(@Param("keyword") String keyword);
+
+    @Query("SELECT COUNT(t) FROM Topic t WHERE t.status = :status AND t.supervisor.id = :lecturerId")
+    long countBySupervisorAndStatus(@Param("lecturerId") Long lecturerId, @Param("status") String status);
+
     boolean existsByCode(String code);
     long countByMajorDepartmentIdAndStatus(Long departmentId, String status);
     long countByMajorDepartmentId(Long departmentId);
