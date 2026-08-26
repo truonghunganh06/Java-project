@@ -3,9 +3,22 @@ package topic_management.entity;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 
+/**
+ * Ghi nhận lịch sử đăng ký đề tài của một NHÓM sinh viên.
+ * Đây là audit log — mỗi nhóm chỉ có một bản ghi active (APPROVED) tại một thời điểm.
+ *
+ * Lưu ý: Source of truth chính vẫn là StudentGroup.topic (FK trực tiếp).
+ * Bảng này phục vụ việc truy vết: ai đăng ký lúc nào, lý do bị từ chối là gì.
+ */
 @Entity
-@Table(name = "topic_registrations")
+@Table(name = "topic_registrations", uniqueConstraints = {
+    @UniqueConstraint(
+        name = "uk_topic_registration_group",
+        columnNames = {"topic_id", "group_id"}
+    )
+})
 public class TopicRegistration {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -14,12 +27,26 @@ public class TopicRegistration {
     @JoinColumn(name = "topic_id", nullable = false)
     private Topic topic;
 
+    /**
+     * BUG-J FIX: Đổi từ student_id → group_id.
+     * Đăng ký đề tài là hành động của NHÓM, không phải cá nhân sinh viên.
+     */
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "student_id", nullable = false)
-    private Student student;
+    @JoinColumn(name = "group_id", nullable = false)
+    private StudentGroup group;
+
+    /**
+     * Nhóm trưởng thực hiện hành động đăng ký (để audit).
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "registered_by_student_id")
+    private Student registeredBy;
 
     @Column(length = 50)
     private String status = "PENDING"; // PENDING, APPROVED, REJECTED
+
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
 
     @Column(name = "registered_at")
     private OffsetDateTime registeredAt = OffsetDateTime.now();
@@ -45,12 +72,20 @@ public class TopicRegistration {
         this.topic = topic;
     }
 
-    public Student getStudent() {
-        return student;
+    public StudentGroup getGroup() {
+        return group;
     }
 
-    public void setStudent(Student student) {
-        this.student = student;
+    public void setGroup(StudentGroup group) {
+        this.group = group;
+    }
+
+    public Student getRegisteredBy() {
+        return registeredBy;
+    }
+
+    public void setRegisteredBy(Student registeredBy) {
+        this.registeredBy = registeredBy;
     }
 
     public String getStatus() {
@@ -59,6 +94,14 @@ public class TopicRegistration {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
     }
 
     public OffsetDateTime getRegisteredAt() {

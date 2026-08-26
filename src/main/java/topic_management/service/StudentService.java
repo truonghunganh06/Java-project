@@ -70,18 +70,35 @@ public class StudentService {
 
     // ==================== GROUP MANAGEMENT (MAX 3 SV) ====================
 
+    /**
+     * BUG-H FIX: Khi periodId = null, uu tien tra ve nhom trong dot dang hoat
+     * dong nhat (isActive + status OPEN/IN_PROGRESS) thay vi nhom cuoi cung theo insert order.
+     */
     public StudentGroup getMyActiveGroup(Student student, Long periodId) {
         if (student == null) return null;
-        List<StudentGroup> list = groupRepository.findByStudentIdAndPeriodId(student.getId(), periodId);
-        if (!list.isEmpty()) {
-            return list.get(0);
+
+        // Case 1: period cu the duoc chi dinh
+        if (periodId != null) {
+            List<StudentGroup> list = groupRepository.findByStudentIdAndPeriodId(student.getId(), periodId);
+            if (!list.isEmpty()) return list.get(0);
         }
-        // If periodId is null, get latest group
+
+        // Case 2: Khong co periodId — tim nhom trong dot dang hoat dong nhat
         List<StudentGroup> allMyGroups = groupRepository.findByStudentId(student.getId());
-        if (!allMyGroups.isEmpty()) {
-            return allMyGroups.get(allMyGroups.size() - 1);
-        }
-        return null;
+        if (allMyGroups.isEmpty()) return null;
+
+        // Uu tien: nhom trong dot dang mo dang ky (isActive + OPEN/IN_PROGRESS)
+        return allMyGroups.stream()
+                .filter(g -> g.getPeriod() != null
+                        && Boolean.TRUE.equals(g.getPeriod().getIsActive())
+                        && ("OPEN".equalsIgnoreCase(g.getPeriod().getStatus())
+                            || "IN_PROGRESS".equalsIgnoreCase(g.getPeriod().getStatus())))
+                .max(Comparator.comparing(g -> g.getPeriod().getId()))
+                // Fallback: nhom gan nhat (theo created time)
+                .orElseGet(() -> allMyGroups.stream()
+                        .max(Comparator.comparing(StudentGroup::getCreatedAt,
+                                Comparator.nullsLast(Comparator.naturalOrder())))
+                        .orElse(null));
     }
 
     @Transactional
@@ -271,14 +288,52 @@ public class StudentService {
         // Kiểm tra chỉ tiêu đăng ký (mỗi đề tài chỉ 1 nhóm thực hiện)
         List<StudentGroup> existingGroupsOnTopic = groupRepository.findByTopicId(topicId);
         if (!existingGroupsOnTopic.isEmpty()) {
-            return "Đề tài này đã được một nhóm khác đăng ký!";
+            return "Đề tài này đã được một nhóm khác đăng ký rồi!";
+        }
+
+        // BUG-B FIX: Kiểm tra hạn mức hướng dẫn (maxTopicsQuota) của GVHD chính
+        // Quota tính theo đợt: đếm số nhóm REGISTERED/APPROVED mà GVHD đang nhận trong đợt này
+        List<String> excludedStatuses = List.of("DRAFT", "REJECTED");
+        Long topicPeriodId = (topic.getPeriod() != null) ? topic.getPeriod().getId() : null;
+
+        if (topic.getSupervisor() != null) {
+            Integer quota = topic.getSupervisor().getMaxTopicsQuota();
+            if (quota != null && quota > 0) {
+                long currentCount = groupRepository.countActiveGroupsBySupervisorInPeriod(
+                        topic.getSupervisor().getId(), topicPeriodId, excludedStatuses);
+                if (currentCount >= quota) {
+                    String supervisorName = topic.getSupervisor().getUser() != null
+                            ? topic.getSupervisor().getUser().getFullName()
+                            : "GV#" + topic.getSupervisor().getId();
+                    return "Giảng viên hướng dẫn '" + supervisorName
+                            + "' đã đạt hạn mức hướng dẫn tối đa (" + quota
+                            + " nhóm/đợt). Vui lòng chọn đề tài khác!";
+                }
+            }
+        }
+
+        // BUG-B FIX: Kiểm tra hạn mức của GVHD phụ (nếu có)
+        if (topic.getCoSupervisor() != null) {
+            Integer coQuota = topic.getCoSupervisor().getMaxTopicsQuota();
+            if (coQuota != null && coQuota > 0) {
+                long coCount = groupRepository.countActiveGroupsByCoSupervisorInPeriod(
+                        topic.getCoSupervisor().getId(), topicPeriodId, excludedStatuses);
+                if (coCount >= coQuota) {
+                    String coName = topic.getCoSupervisor().getUser() != null
+                            ? topic.getCoSupervisor().getUser().getFullName()
+                            : "GV#" + topic.getCoSupervisor().getId();
+                    return "Giảng viên đồng hướng dẫn '" + coName
+                            + "' đã đạt hạn mức hướng dẫn tối đa (" + coQuota
+                            + " nhóm/đợt). Vui lòng chọn đề tài khác!";
+                }
+            }
         }
 
         group.setTopic(topic);
         group.setStatus("REGISTERED");
         groupRepository.save(group);
 
-        System.out.println("[DB-STUDENT] Nhóm '" + group.getGroupName() + "' đã đăng ký đề tài '" + topic.getTitle() + "'");
+        System.out.println("[DB-STUDENT] Nhom '" + group.getGroupName() + "' da dang ky de tai '" + topic.getTitle() + "'");
         return null; // success
     }
 

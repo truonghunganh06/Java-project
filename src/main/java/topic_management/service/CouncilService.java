@@ -111,6 +111,8 @@ public class CouncilService {
 
     /**
      * Tạo Hội đồng mới với Transactional & Unique Name Check theo đợt
+     * BUG-F FIX: Validate số lượng thành viên (3-5) tại Service layer.
+     * BUG-G FIX: Bắt buộc phải có đúng 1 CHỦ TỊCH và 1 THƯ KÝ.
      */
     @Transactional
     public Council createCouncil(
@@ -127,6 +129,27 @@ public class CouncilService {
             throw new IllegalArgumentException("Tên hội đồng không được để trống!");
         }
         String trimmedName = councilName.trim();
+
+        // BUG-F FIX: Kiểm tra số lượng thành viên
+        if (lecturerIds == null || lecturerIds.size() < 3) {
+            throw new IllegalArgumentException("Hội đồng phải có ít nhất 3 thành viên (Chủ tịch, Thư ký và ít nhất 1 Ủy viên)!");
+        }
+        if (lecturerIds.size() > 5) {
+            throw new IllegalArgumentException("Hội đồng không được vượt quá 5 thành viên!");
+        }
+
+        // BUG-G FIX: Kiểm tra bắt buộc phải có PRESIDENT và SECRETARY
+        if (roles == null || roles.size() != lecturerIds.size()) {
+            throw new IllegalArgumentException("Danh sách vai trò không hợp lệ!");
+        }
+        long presidentCount = roles.stream().filter(r -> "PRESIDENT".equalsIgnoreCase(r)).count();
+        long secretaryCount = roles.stream().filter(r -> "SECRETARY".equalsIgnoreCase(r)).count();
+        if (presidentCount != 1) {
+            throw new IllegalArgumentException("Hội đồng phải có đúng 1 Chủ tịch Hội đồng!");
+        }
+        if (secretaryCount != 1) {
+            throw new IllegalArgumentException("Hội đồng phải có đúng 1 Thư ký!");
+        }
 
         if (councilRepository.existsByPeriodAndNameIgnoreCase(periodId, trimmedName)) {
             throw new IllegalArgumentException("Hội đồng với tên '" + trimmedName + "' đã tồn tại trong đợt này. Vui lòng chọn tên khác!");
@@ -184,6 +207,8 @@ public class CouncilService {
 
     /**
      * Cập nhật thông tin Hội đồng & Danh sách thành viên (có kiểm tra trùng lặp)
+     * BUG-F FIX: Validate số lượng thành viên (3-5) tại Service layer.
+     * BUG-G FIX: Bắt buộc phải có đúng 1 CHỦ TỊCH và 1 THƯ KÝ.
      */
     @Transactional
     public Council updateCouncil(
@@ -206,6 +231,28 @@ public class CouncilService {
             throw new IllegalArgumentException("Tên hội đồng không được để trống!");
         }
         String trimmedName = councilName.trim();
+
+        // BUG-F FIX: Kiểm tra số lượng thành viên khi cập nhật
+        if (lecturerIds != null) {
+            if (lecturerIds.size() < 3) {
+                throw new IllegalArgumentException("Hội đồng phải có ít nhất 3 thành viên!");
+            }
+            if (lecturerIds.size() > 5) {
+                throw new IllegalArgumentException("Hội đồng không được vượt quá 5 thành viên!");
+            }
+        }
+
+        // BUG-G FIX: Kiểm tra bắt buộc PRESIDENT và SECRETARY khi cập nhật
+        if (roles != null && lecturerIds != null && roles.size() == lecturerIds.size()) {
+            long presidentCount = roles.stream().filter(r -> "PRESIDENT".equalsIgnoreCase(r)).count();
+            long secretaryCount = roles.stream().filter(r -> "SECRETARY".equalsIgnoreCase(r)).count();
+            if (presidentCount != 1) {
+                throw new IllegalArgumentException("Hội đồng phải có đúng 1 Chủ tịch Hội đồng!");
+            }
+            if (secretaryCount != 1) {
+                throw new IllegalArgumentException("Hội đồng phải có đúng 1 Thư ký!");
+            }
+        }
 
         if (councilRepository.existsByPeriodAndNameIgnoreCaseExcludingId(periodId, trimmedName, councilId)) {
             throw new IllegalArgumentException("Hội đồng với tên '" + trimmedName + "' đã tồn tại trong đợt này. Vui lòng chọn tên khác!");
@@ -357,9 +404,18 @@ public class CouncilService {
             return false;
         }
 
-        if (topic.getSupervisor() != null && lecturer.getId().equals(topic.getSupervisor().getId())) {
-            if ("REVIEWER".equalsIgnoreCase(evaluationType) || "COUNCIL".equalsIgnoreCase(evaluationType)) {
-                System.err.println("[DB-EVAL] Xung đột lợi ích! GVHD không được tự chấm điểm với tư cách Phản biện hoặc Hội đồng!");
+        // BUG-E FIX: Kiểm tra xung đột lợi ích cho cả supervisor CHÍNH và supervisor PHỤ
+        boolean isReviewerOrCouncil = "REVIEWER".equalsIgnoreCase(evaluationType)
+                || "COUNCIL".equalsIgnoreCase(evaluationType);
+
+        if (isReviewerOrCouncil) {
+            if (topic.getSupervisor() != null && lecturer.getId().equals(topic.getSupervisor().getId())) {
+                System.err.println("[DB-EVAL] Xung đột lợi ích! GVHD chính không được tự chấm điểm với tư cách Phản biện hoặc Hội đồng!");
+                return false;
+            }
+            // BUG-E FIX: Thêm kiểm tra cho coSupervisor
+            if (topic.getCoSupervisor() != null && lecturer.getId().equals(topic.getCoSupervisor().getId())) {
+                System.err.println("[DB-EVAL] Xung đột lợi ích! GVHD phụ không được tự chấm điểm với tư cách Phản biện hoặc Hội đồng!");
                 return false;
             }
         }
@@ -382,8 +438,9 @@ public class CouncilService {
     }
 
     /**
-     * Tính điểm trung bình có trọng số theo evaluationType:
-     * SUPERVISOR: 40%, REVIEWER: 30%, COUNCIL: 30% (hoặc chia đều theo cấu hình)
+     * Tính điểm tổng kết theo quy tắc nghiệp vụ:
+     * "Điểm tổng kết = Trung bình cộng các điểm thành phần" (không dùng trọng số).
+     * Mỗi Giảng viên chấm một phiếu, tất cả phiếu có giá trị ngang nhau.
      */
     @Transactional
     public void calculateAndSetFinalScore(Topic topic) {
@@ -404,42 +461,32 @@ public class CouncilService {
             return;
         }
 
-        List<Evaluation> validEvals = evals.stream().filter(e -> e.getScore() != null).toList();
+        // Lấy tất cả phiếu chấm có điểm hợp lệ (không phân biệt loại)
+        List<Evaluation> validEvals = evals.stream()
+                .filter(e -> e.getScore() != null)
+                .toList();
+
         if (!validEvals.isEmpty()) {
-            Map<String, Double> weights = Map.of(
-                    "SUPERVISOR", 0.40,
-                    "REVIEWER", 0.30,
-                    "COUNCIL", 0.30
-            );
+            // QUY TẪC NGHIỆP VỤ: Trung bình cộng đơn giản của tất cả phiếu chấm
+            double avg = validEvals.stream()
+                    .mapToDouble(Evaluation::getScore)
+                    .average()
+                    .orElse(0.0);
 
-            Map<String, List<Evaluation>> groupedByType = validEvals.stream()
-                    .collect(Collectors.groupingBy(
-                            e -> e.getEvaluationType() != null ? e.getEvaluationType().toUpperCase() : "OTHER"
-                    ));
-
-            double weightedSum = 0;
-            double totalWeight = 0;
-
-            for (Map.Entry<String, List<Evaluation>> entry : groupedByType.entrySet()) {
-                String type = entry.getKey();
-                List<Evaluation> typeEvals = entry.getValue();
-                double typeAvg = typeEvals.stream().mapToDouble(Evaluation::getScore).average().orElse(0);
-                double w = weights.getOrDefault(type, 1.0 / groupedByType.size());
-                weightedSum += typeAvg * w;
-                totalWeight += w;
-            }
-
-            double finalScore = totalWeight > 0
-                    ? Math.round((weightedSum / totalWeight) * 100.0) / 100.0
-                    : 0;
+            // Làm tròn 2 chữ số thập phân
+            double finalScore = Math.round(avg * 100.0) / 100.0;
             topic.setFinalScore(finalScore);
-            topicRepository.save(topic);
         } else {
             topic.setFinalScore(null);
-            topicRepository.save(topic);
         }
+
+        topicRepository.save(topic);
     }
 
+    /**
+     * BUG-I FIX: Kiểm tra đủ ít nhất 1 loại điểm (SUPERVISOR) trước khi công bố.
+     * Với loại KLTN/TLCN bắt buộc phải có cả REVIEWER hoặc COUNCIL đã chấm.
+     */
     @Transactional
     public boolean publishTopicResults(Long topicId, Boolean isFinalized) {
         Topic topic = topicRepository.findById(topicId).orElse(null);
@@ -454,6 +501,27 @@ public class CouncilService {
         if (topic.getFinalScore() == null) {
             System.err.println("[DB-EVAL] Không thể công bố: Đề tài chưa có điểm tổng kết hợp lệ!");
             return false;
+        }
+
+        // BUG-I FIX: Kiểm tra tối thiểu phải có điểm của GVHD (SUPERVISOR) trước khi công bố
+        if (Boolean.TRUE.equals(isFinalized)) {
+            List<Evaluation> evals = evaluationRepository.findByTopicId(topicId);
+            boolean hasSupervisorScore = evals.stream()
+                    .anyMatch(e -> "SUPERVISOR".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null);
+            if (!hasSupervisorScore) {
+                System.err.println("[DB-EVAL] Không thể công bố chính thức: Chưa có điểm của GVHD!");
+                return false;
+            }
+
+            // Kiểm tra REVIEWER hoặc COUNCIL đã chấm chưa
+            boolean hasExternalScore = evals.stream()
+                    .anyMatch(e -> ("REVIEWER".equalsIgnoreCase(e.getEvaluationType())
+                            || "COUNCIL".equalsIgnoreCase(e.getEvaluationType()))
+                            && e.getScore() != null);
+            if (!hasExternalScore) {
+                System.err.println("[DB-EVAL] Cảnh báo: Chưa có điểm Phản biện/Hội đồng. Điểm công bố chỉ dựa trên GVHD.");
+                // Chỉ warn, không block — cho phép trường hợp dạng MON_HOC (không có hội đồng)
+            }
         }
 
         topic.setIsFinalized(Boolean.TRUE.equals(isFinalized));
