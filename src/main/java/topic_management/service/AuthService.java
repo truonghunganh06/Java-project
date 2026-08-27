@@ -57,6 +57,8 @@ public class AuthService {
         System.out.println("  -> Kết quả đối soát mật khẩu: " + (isMatch ? "CHÍNH XÁC (MATCH)" : "SAI (MISMATCH)"));
 
         if (isMatch) {
+            // BUG-12 FIX: Auto-upgrade plaintext passwords to BCrypt
+            upgradePasswordIfNeeded(foundUser, cleanPassword);
             System.out.println("  -> [AUTH SUCCESS] Đăng nhập THÀNH CÔNG cho user: " + foundUser.getUsername() + " (Vai trò: " + (foundUser.getRole() != null ? foundUser.getRole().getCode() : "Chưa có") + ")");
             System.out.println("==================================================");
             return foundUser;
@@ -67,18 +69,16 @@ public class AuthService {
         return null;
     }
 
+    /**
+     * Xác minh mật khẩu hỗ trợ BCrypt, plaintext cũ và mật khẩu mặc định mẫu cho dev.
+     */
     private boolean verifyPassword(String rawPassword, String storedHash) {
-        if (rawPassword == null || storedHash == null) {
+        if (rawPassword == null) {
             return false;
         }
 
-        // So sánh chuỗi trực tiếp (Plain text)
-        if (rawPassword.equals(storedHash)) {
-            return true;
-        }
-
-        // So sánh theo mã hóa BCrypt
-        if (storedHash.startsWith("$2a$") || storedHash.startsWith("$2b$") || storedHash.startsWith("$2y$")) {
+        // 1. Kiểm tra BCrypt hash
+        if (storedHash != null && (storedHash.startsWith("$2a$") || storedHash.startsWith("$2b$") || storedHash.startsWith("$2y$"))) {
             try {
                 if (passwordEncoder.matches(rawPassword, storedHash)) {
                     return true;
@@ -88,11 +88,32 @@ public class AuthService {
             }
         }
 
-        // Chấp nhận mật khẩu dev mặc định nếu khớp
+        // 2. So sánh plaintext (cho dữ liệu cũ chưa hash)
+        if (rawPassword.equals(storedHash)) {
+            return true;
+        }
+
+        // 3. Hỗ trợ mật khẩu mặc định mẫu ("123456", "admin123") cho tài khoản seed
         if ("123456".equals(rawPassword) || "admin123".equals(rawPassword)) {
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * Tự động chuẩn hóa và lưu lại BCrypt hash chuẩn vào Database sau khi đăng nhập thành công.
+     */
+    private void upgradePasswordIfNeeded(AppUser user, String rawPassword) {
+        String storedHash = user.getPasswordHash();
+        boolean isValidBcrypt = storedHash != null
+                && (storedHash.startsWith("$2a$") || storedHash.startsWith("$2b$") || storedHash.startsWith("$2y$"))
+                && passwordEncoder.matches(rawPassword, storedHash);
+
+        if (!isValidBcrypt) {
+            user.setPasswordHash(passwordEncoder.encode(rawPassword));
+            userRepository.save(user);
+            System.out.println("  -> [AUTO-UPGRADE] Đã chuẩn hóa và cập nhật BCrypt hash mới vào Database cho user: " + user.getUsername());
+        }
     }
 }

@@ -8,6 +8,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import topic_management.entity.*;
 import topic_management.service.*;
 
+import topic_management.repository.StudentGroupRepository;
+import topic_management.repository.SubmissionRepository;
+
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -19,16 +22,22 @@ public class DepartmentHeadController {
     private final CouncilService councilService;
     private final AnnouncementService announcementService;
     private final LecturerService lecturerService;
+    private final StudentGroupRepository studentGroupRepository;
+    private final SubmissionRepository submissionRepository;
 
     public DepartmentHeadController(
             DepartmentHeadService departmentHeadService,
             CouncilService councilService,
             AnnouncementService announcementService,
-            LecturerService lecturerService) {
+            LecturerService lecturerService,
+            StudentGroupRepository studentGroupRepository,
+            SubmissionRepository submissionRepository) {
         this.departmentHeadService = departmentHeadService;
         this.councilService = councilService;
         this.announcementService = announcementService;
         this.lecturerService = lecturerService;
+        this.studentGroupRepository = studentGroupRepository;
+        this.submissionRepository = submissionRepository;
     }
 
     private AppUser getAuthenticatedDeptHead(HttpSession session) {
@@ -52,13 +61,16 @@ public class DepartmentHeadController {
         List<Topic> pendingTopics = departmentHeadService.getDepartmentTopics(dept.getId(), "PENDING", null, null, null);
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
         List<Announcement> announcements = announcementService.getAnnouncementsByDepartment(dept.getId());
+        List<Council> councils = councilService.getCouncilsByDepartment(dept.getId());
 
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
         model.addAttribute("stats", stats);
         model.addAttribute("pendingTopics", pendingTopics.stream().limit(5).toList());
-        model.addAttribute("periods", periods);
-        model.addAttribute("announcements", announcements.stream().limit(5).toList());
+        model.addAttribute("periods", periods.stream().limit(4).toList());
+        model.addAttribute("allPeriods", periods);
+        model.addAttribute("councils", councils.stream().limit(4).toList());
+        model.addAttribute("announcements", announcements.stream().limit(3).toList());
 
         return "department-head/dashboard";
     }
@@ -123,8 +135,14 @@ public class DepartmentHeadController {
         AppUser user = getAuthenticatedDeptHead(session);
         if (user == null) return "redirect:/login";
 
-        departmentHeadService.updatePeriodStatus(id, status);
-        redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái đợt thành công!");
+        // BUG-06 FIX: Truyền departmentId để kiểm tra cross-department
+        Department dept = departmentHeadService.getDepartmentForUser(user);
+        boolean success = departmentHeadService.updatePeriodStatus(id, status, dept.getId());
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái đợt thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật trạng thái đợt này!");
+        }
         return "redirect:/department-head/periods";
     }
 
@@ -171,13 +189,15 @@ public class DepartmentHeadController {
         AppUser user = getAuthenticatedDeptHead(session);
         if (user == null) return "redirect:/login";
 
+        // BUG-06 FIX: Truyền departmentId để kiểm tra cross-department
+        Department dept = departmentHeadService.getDepartmentForUser(user);
         Topic topic = departmentHeadService.getTopicById(id);
-        boolean success = departmentHeadService.approveTopic(id);
+        boolean success = departmentHeadService.approveTopic(id, dept.getId());
 
         if (success) {
             redirectAttributes.addFlashAttribute("successMessage", "Phê duyệt thành công đề tài: '" + (topic != null ? topic.getTitle() : "") + "'!");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy đề tài để phê duyệt!");
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể phê duyệt đề tài (không tìm thấy hoặc không thuộc bộ môn của bạn)!");
         }
 
         return "redirect:/department-head/topics";
@@ -193,10 +213,16 @@ public class DepartmentHeadController {
         AppUser user = getAuthenticatedDeptHead(session);
         if (user == null) return "redirect:/login";
 
+        // BUG-06 FIX: Truyền departmentId để kiểm tra cross-department
+        Department dept = departmentHeadService.getDepartmentForUser(user);
         Topic topic = departmentHeadService.getTopicById(id);
-        departmentHeadService.rejectTopic(id, rejectionReason != null ? rejectionReason.trim() : "Chưa đạt yêu cầu");
+        boolean success = departmentHeadService.rejectTopic(id, rejectionReason != null ? rejectionReason.trim() : "Chưa đạt yêu cầu", dept.getId());
 
-        redirectAttributes.addFlashAttribute("errorMessage", "Đã từ chối đề tài '" + (topic != null ? topic.getTitle() : "") + "'.");
+        if (success) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Đã từ chối đề tài '" + (topic != null ? topic.getTitle() : "") + "'.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể từ chối đề tài (không tìm thấy hoặc không thuộc bộ môn của bạn)!");
+        }
         return "redirect:/department-head/topics";
     }
 
@@ -229,8 +255,12 @@ public class DepartmentHeadController {
         AppUser user = getAuthenticatedDeptHead(session);
         if (user == null) return "redirect:/login";
 
-        councilService.assignTopicToCouncil(topicId, councilId);
-        redirectAttributes.addFlashAttribute("successMessage", "Phân công đề tài vào Hội đồng bảo vệ thành công!");
+        boolean ok = councilService.assignTopicToCouncil(topicId, councilId);
+        if (ok) {
+            redirectAttributes.addFlashAttribute("successMessage", "Phân công đề tài vào Hội đồng bảo vệ thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Xung đột lợi ích: Không thể gán đề tài vào Hội đồng có chứa Giảng viên hướng dẫn!");
+        }
         return "redirect:/department-head/topics";
     }
 
@@ -275,6 +305,11 @@ public class DepartmentHeadController {
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
 
+        if (name == null || name.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Tên hội đồng không được để trống!");
+            return "redirect:/department-head/councils";
+        }
+
         List<Long> lecturerIds = new ArrayList<>();
         List<String> roles = new ArrayList<>();
 
@@ -304,8 +339,23 @@ public class DepartmentHeadController {
             return "redirect:/department-head/councils";
         }
 
-        councilService.createCouncil(dept.getId(), periodId, code, name, location, parseDate(defenseDate), lecturerIds, roles);
-        redirectAttributes.addFlashAttribute("successMessage", "Thành lập Hội đồng '" + name + "' thành công với " + lecturerIds.size() + " giảng viên!");
+        Set<Long> uniqueLids = new HashSet<>();
+        for (Long lid : lecturerIds) {
+            if (!uniqueLids.add(lid)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Một giảng viên không thể đảm nhiệm nhiều vị trí trong cùng một Hội đồng!");
+                return "redirect:/department-head/councils";
+            }
+        }
+
+        try {
+            councilService.createCouncil(dept.getId(), periodId, code, name, location, parseDate(defenseDate), lecturerIds, roles);
+            redirectAttributes.addFlashAttribute("successMessage", "Thành lập Hội đồng '" + name.trim() + "' thành công với " + lecturerIds.size() + " giảng viên!");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi tạo hội đồng: " + ex.getMessage());
+        }
+
         return "redirect:/department-head/councils";
     }
 
@@ -314,6 +364,7 @@ public class DepartmentHeadController {
     @GetMapping("/results")
     public String listResults(
             @RequestParam(value = "periodId", required = false) Long periodId,
+            @RequestParam(value = "page", defaultValue = "1") int page,
             HttpSession session,
             Model model) {
 
@@ -321,14 +372,35 @@ public class DepartmentHeadController {
         if (user == null) return "redirect:/login";
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
-        List<Topic> topics = departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, periodId, null);
+        List<Topic> allTopics = departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, periodId, null);
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
+
+        // Pagination: Limit to 10 topics per page
+        int pageSize = 10;
+        int totalTopics = allTopics.size();
+        int totalPages = totalTopics > 0 ? (int) Math.ceil((double) totalTopics / pageSize) : 1;
+        int currentPage = Math.max(1, Math.min(page, totalPages));
+        int fromIndex = (currentPage - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalTopics);
+
+        List<Topic> pagedTopics = (fromIndex < totalTopics) ? allTopics.subList(fromIndex, toIndex) : Collections.emptyList();
+
+        Map<Long, List<Evaluation>> topicEvaluationsMap = councilService.getEvaluationsMapForTopics(pagedTopics);
+        Map<Long, StudentGroup> topicGroupsMap = councilService.getGroupsMapForTopics(pagedTopics);
 
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
-        model.addAttribute("topics", topics);
+        model.addAttribute("topics", pagedTopics);
         model.addAttribute("periods", periods);
         model.addAttribute("selectedPeriodId", periodId);
+        model.addAttribute("topicEvaluationsMap", topicEvaluationsMap);
+        model.addAttribute("topicGroupsMap", topicGroupsMap);
+        model.addAttribute("currentPage", currentPage);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("totalTopics", totalTopics);
+        model.addAttribute("pageSize", pageSize);
+        model.addAttribute("hasPrevious", currentPage > 1);
+        model.addAttribute("hasNext", currentPage < totalPages);
 
         return "department-head/results";
     }
@@ -346,6 +418,25 @@ public class DepartmentHeadController {
         councilService.publishTopicResults(topicId, isFinalized);
         redirectAttributes.addFlashAttribute("successMessage", Boolean.TRUE.equals(isFinalized) ? "Đã công bố kết quả điểm số cho sinh viên!" : "Đã chuyển về trạng thái dự thảo điểm.");
         return "redirect:/department-head/results";
+    }
+
+    @PostMapping("/results/publish-all")
+    public String publishAllResults(
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            @RequestParam(value = "isFinalized", defaultValue = "true") Boolean isFinalized,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) return "redirect:/login";
+
+        Department dept = departmentHeadService.getDepartmentForUser(user);
+        int count = councilService.publishAllResults(dept.getId(), periodId, isFinalized);
+        redirectAttributes.addFlashAttribute("successMessage",
+                Boolean.TRUE.equals(isFinalized)
+                        ? "Đã công bố kết quả điểm chính thức cho toàn bộ " + count + " đề tài trong đợt!"
+                        : "Đã chuyển " + count + " đề tài về trạng thái dự thảo điểm.");
+        return "redirect:/department-head/results" + (periodId != null ? "?periodId=" + periodId : "");
     }
 
     // ==================== ANNOUNCEMENTS ====================
@@ -415,20 +506,81 @@ public class DepartmentHeadController {
     }
 
     @GetMapping("/students")
-    public String listStudents(HttpSession session, Model model) {
+    public String listStudents(
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            HttpSession session,
+            Model model) {
+
         AppUser user = getAuthenticatedDeptHead(session);
         if (user == null) return "redirect:/login";
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
-        List<Student> students = departmentHeadService.getStudentsInDepartment(dept.getId());
-        List<StudentGroup> groups = departmentHeadService.getAllGroups();
+        List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
+
+        // Default to first period if none selected
+        Long effectivePeriodId = periodId;
+        if (effectivePeriodId == null && !periods.isEmpty()) {
+            effectivePeriodId = periods.get(0).getId();
+        }
+
+        List<StudentGroup> allGroups = departmentHeadService.getGroupsInDepartmentAndPeriod(dept.getId(), effectivePeriodId);
+
+        // Pagination: Limit to 8 groups per page
+        int pageSize = 8;
+        int totalGroups = allGroups.size();
+        int totalPages = totalGroups > 0 ? (int) Math.ceil((double) totalGroups / pageSize) : 1;
+        int currentPage = Math.max(1, Math.min(page, totalPages));
+        int fromIndex = (currentPage - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalGroups);
+
+        List<StudentGroup> pagedGroups = (fromIndex < totalGroups) ? allGroups.subList(fromIndex, toIndex) : Collections.emptyList();
+
+        Map<Long, List<Submission>> groupSubmissionsMap = new HashMap<>();
+        List<Topic> pagedTopics = new ArrayList<>();
+        for (StudentGroup g : pagedGroups) {
+            groupSubmissionsMap.put(g.getId(), submissionRepository.findByGroupId(g.getId()));
+            if (g.getTopic() != null) {
+                pagedTopics.add(g.getTopic());
+            }
+        }
+        Map<Long, List<Evaluation>> topicEvaluationsMap = councilService.getEvaluationsMapForTopics(pagedTopics);
 
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
-        model.addAttribute("students", students);
-        model.addAttribute("groups", groups);
+        model.addAttribute("groups", pagedGroups);
+        model.addAttribute("periods", periods);
+        model.addAttribute("selectedPeriodId", effectivePeriodId);
+        model.addAttribute("groupSubmissionsMap", groupSubmissionsMap);
+        model.addAttribute("topicEvaluationsMap", topicEvaluationsMap);
+        model.addAttribute("currentPage", currentPage);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("totalGroups", totalGroups);
+        model.addAttribute("pageSize", pageSize);
+        model.addAttribute("hasPrevious", currentPage > 1);
+        model.addAttribute("hasNext", currentPage < totalPages);
 
         return "department-head/students";
+    }
+
+    @PostMapping("/students/groups/{id}/unassign-topic")
+    public String unassignTopicFromGroup(
+            @PathVariable("id") Long groupId,
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) return "redirect:/login";
+
+        StudentGroup group = studentGroupRepository.findById(groupId).orElse(null);
+        if (group != null) {
+            group.setTopic(null);
+            group.setStatus("DRAFT");
+            studentGroupRepository.save(group);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã hủy gán đề tài cho nhóm " + group.getGroupName() + "!");
+        }
+        return "redirect:/department-head/students" + (periodId != null ? "?periodId=" + periodId : "");
     }
 
     private OffsetDateTime parseDate(String dateStr) {

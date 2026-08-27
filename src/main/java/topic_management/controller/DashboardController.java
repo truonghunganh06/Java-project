@@ -9,7 +9,7 @@ import topic_management.entity.AppUser;
 @Controller
 public class DashboardController {
 
-    @GetMapping("/dashboard")
+    @GetMapping({"/", "/dashboard"})
     public String showDashboard(HttpSession session, Model model) {
         AppUser currentUser = (AppUser) session.getAttribute("currentUser");
         if (currentUser == null) {
@@ -32,7 +32,6 @@ public class DashboardController {
             }
         }
 
-        model.addAttribute("user", currentUser);
-        return "dashboard";
+        return "redirect:/login";
     }
 }

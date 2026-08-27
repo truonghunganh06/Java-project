@@ -138,3 +138,7 @@ application-*.properties
 application-*.yml
 !application-dev.properties
 !application-dev.yml
+
+# Graft local context cache
+graft/
+.graft/

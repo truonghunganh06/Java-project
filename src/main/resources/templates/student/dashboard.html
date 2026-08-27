@@ -1,241 +1,539 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Điều Khiển Sinh Viên - TopicHub</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        :root {
-            --bg-body: #f8fafc;
-            --text-main: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --card-bg: #ffffff;
-            --primary-accent: #0f172a;
-            --primary-hover: #1e293b;
-        }
-
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-            min-height: 100vh;
-        }
-
-        .navbar-saas {
-            background-color: #ffffff;
-            border-bottom: 1px solid var(--border-color);
-            padding: 0.75rem 1.5rem;
-            position: sticky;
-            top: 0;
-            z-index: 1020;
-        }
-
-        .nav-link-saas {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            padding: 0.5rem 0.875rem;
-            border-radius: 6px;
-            text-decoration: none;
-            transition: all 0.15s ease;
-        }
-
-        .nav-link-saas:hover {
-            color: var(--text-main);
-            background-color: #f1f5f9;
-        }
-
-        .nav-link-saas.active {
-            color: #0f172a;
-            background-color: #f1f5f9;
-            font-weight: 600;
-        }
-
-        .saas-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
-        }
-
-        .stat-card {
-            padding: 1.25rem 1.5rem;
-        }
-
-        .stat-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-main);
-            line-height: 1;
-        }
-    </style>
-</head>
+<head th:replace="~{fragments/head :: head('Bảng điều khiển Sinh viên')}"></head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-saas">
-        <div class="container-fluid max-width-container">
-            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark me-4" th:href="@{/student/dashboard}">
-                <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-2" style="width: 32px; height: 32px;">
-                    <i class="fa-solid fa-user-graduate"></i>
-                </div>
-                <span>TopicHub <span class="badge bg-light text-secondary border fw-normal fs-6">Sinh viên</span></span>
-            </a>
-            <div class="collapse navbar-collapse">
-                <div class="navbar-nav me-auto gap-1">
-                    <a class="nav-link-saas active" th:href="@{/student/dashboard}">Tổng quan</a>
-                    <a class="nav-link-saas" th:href="@{/student/group}">Nhóm của tôi</a>
-                    <a class="nav-link-saas" th:href="@{/student/topics}">Danh mục đề tài</a>
-                    <a class="nav-link-saas" th:href="@{/student/my-topic}">Đề tài đã chọn</a>
-                    <a class="nav-link-saas" th:href="@{/student/submissions}">Nộp báo cáo</a>
-                    <a class="nav-link-saas" th:href="@{/student/results}">Kết quả & Điểm</a>
-                </div>
-                <div class="d-flex align-items-center gap-3">
-                    <span class="text-secondary small fw-medium" th:text="${user.fullName}">Sinh viên</span>
-                    <a th:href="@{/logout}" class="btn btn-sm btn-outline-secondary rounded-pill">Đăng xuất</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('dashboard', ${user})}"></aside>
 
-    <main class="container py-4">
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header th:replace="~{fragments/topbar :: topbar('Bảng điều khiển', 'Sinh viên', '/student/dashboard', ${user})}"></header>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h4 fw-bold text-dark mb-1">Cổng Thông Tin Đồ Án / Khóa Luận</h1>
-                <p class="text-muted small mb-0" th:text="'Xin chào ' + ${user.fullName} + ' (Mã SV: ' + ${student.studentCode} + ' - Lớp ' + ${student.className} + ')'"></p>
+        <!-- Main Content View -->
+        <main class="saas-content">
+            
+            <!-- Alert Messages -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200" role="alert">
+                <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
             </div>
-            <div class="d-flex gap-2">
-                <a th:href="@{/student/group}" class="btn btn-sm btn-outline-dark"><i class="fa-solid fa-users me-1"></i> Quản lý nhóm</a>
-                <a th:href="@{/student/topics}" class="btn btn-sm btn-dark"><i class="fa-solid fa-book-bookmark me-1"></i> Đăng ký đề tài</a>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
             </div>
-        </div>
 
-        <!-- Status Cards -->
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-lg-3">
-                <div class="saas-card stat-card">
-                    <div class="stat-label">Nhóm của bạn</div>
-                    <div class="stat-value text-primary" th:text="${group != null ? group.groupName : 'Chưa có nhóm'}">Nhóm 01</div>
-                    <small class="text-muted mt-2 d-block" th:if="${group != null}" th:text="${group.members.size()} + ' / 3 Thành viên'"></small>
-                    <small class="text-danger mt-2 d-block" th:unless="${group != null}">Cần tạo hoặc gia nhập nhóm</small>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="saas-card stat-card">
-                    <div class="stat-label">Đề tài đã chọn</div>
-                    <div class="stat-value text-dark" style="font-size: 1.1rem; line-height: 1.3;" th:text="${group != null && group.topic != null ? group.topic.title : 'Chưa đăng ký'}">--</div>
-                    <small class="text-success mt-2 d-block" th:if="${group != null && group.topic != null}">Đã ghi nhận</small>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="saas-card stat-card">
-                    <div class="stat-label">Vai trò trong nhóm</div>
-                    <div class="stat-value" style="font-size: 1.25rem;">
-                        <span th:if="${group != null && group.isLeader(student)}" class="badge bg-warning text-dark"><i class="fa-solid fa-crown me-1"></i> Nhóm trưởng</span>
-                        <span th:if="${group != null && !group.isLeader(student)}" class="badge bg-light text-dark border">Thành viên</span>
-                        <span th:if="${group == null}" class="badge bg-light text-muted border">Chưa vào nhóm</span>
+            <!-- Page Title Header -->
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <h1 class="text-xl font-bold text-slate-900 mb-0">Cổng thông tin Sinh viên</h1>
+                        <span class="badge-pill-approved font-semibold text-xs" th:if="${student != null}" th:text="${'MSSV: ' + student.studentCode}">MSSV: 2026001</span>
                     </div>
-                    <small class="text-muted mt-2 d-block" th:if="${group != null && group.isLeader(student)}">Được quyền nộp bài</small>
-                    <small class="text-muted mt-2 d-block" th:if="${group != null && !group.isLeader(student)}">Nhóm trưởng sẽ nộp bài</small>
+                    <p class="text-xs text-slate-500 mb-0 mt-1">Theo dõi lộ trình làm đề tài, nộp báo cáo tiến độ và kết quả đánh giá từ Giảng viên.</p>
+                </div>
+                <div class="d-flex align-items-center gap-2.5">
+                    <a th:href="@{/student/group}" class="btn bg-amber-50 text-amber-800 border border-amber-200/60 hover:bg-amber-100 rounded-xl px-3.5 py-2 text-xs font-semibold transition d-inline-flex align-items-center gap-2 shadow-xs">
+                        <i class="fa-solid fa-users text-amber-600 text-xs"></i>
+                        <span>Quản lý nhóm</span>
+                    </a>
+                    <a th:href="@{/student/topics}" class="btn bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2 text-xs font-semibold shadow-sm shadow-blue-500/20 d-inline-flex align-items-center gap-2 transition">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        <span>Tìm đề tài mở</span>
+                    </a>
                 </div>
             </div>
-            <div class="col-6 col-lg-3">
-                <div class="saas-card stat-card">
-                    <div class="stat-label">Kết quả điểm số</div>
-                    <div class="stat-value text-success" th:text="${group != null && group.topic != null && group.topic.isFinalized && group.topic.finalScore != null ? #numbers.formatDecimal(group.topic.finalScore, 1, 2) : '--'}">--</div>
-                    <small class="text-muted mt-2 d-block" th:if="${group != null && group.topic != null && group.topic.isFinalized}">Đã công bố điểm</small>
-                    <small class="text-muted mt-2 d-block" th:unless="${group != null && group.topic != null && group.topic.isFinalized}">Chờ công bố</small>
-                </div>
-            </div>
-        </div>
 
-        <div class="row g-4">
-            <!-- Group & Topic Summary -->
-            <div class="col-lg-7">
-                <div class="saas-card p-4 h-100">
-                    <h2 class="h6 fw-bold text-dark mb-3"><i class="fa-solid fa-info-circle text-primary me-1"></i> Trạng thái thực hiện đề tài</h2>
+            <!-- 1. WORKFLOW STEPPER BANNER (5 BƯỚC TƯƠNG TÁC) -->
+            <div class="saas-card p-4 mb-4">
+                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-3 pb-2 border-b border-slate-100">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 d-inline-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="fa-solid fa-bars-progress text-xs"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 font-bold text-slate-900 text-xs">Lộ trình thực hiện Khóa luận / Đề tài</h6>
+                            <span class="text-[11px] text-slate-400">Nhấp vào từng mốc để chuyển hướng hoặc thao tác nhanh</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="badge-pill-approved font-semibold text-xs" 
+                              th:if="${group != null && group.status == 'APPROVED' && (submissions != null && !submissions.isEmpty())}">
+                            <i class="fa-solid fa-spinner fa-spin me-1"></i> Đang làm đề tài & nộp báo cáo
+                        </span>
+                        <span class="badge-pill-pending font-semibold text-xs" 
+                              th:if="${group != null && group.topic != null && group.status != 'APPROVED'}">
+                            <i class="fa-regular fa-clock me-1"></i> Đang chờ GVHD phê duyệt
+                        </span>
+                        <span class="badge-pill-neutral font-medium text-xs" 
+                              th:if="${group == null || group.topic == null}">
+                            <i class="fa-solid fa-user-group me-1"></i> Khởi tạo & Đăng ký
+                        </span>
+                    </div>
+                </div>
+
+                <div class="stepper-saas">
+                    <div class="step-line"></div>
+
+                    <!-- Step 1: Tạo nhóm (Interactive) -->
+                    <!-- Nếu chưa có nhóm: mở modal tạo/vào nhóm -->
+                    <a th:if="${group == null}" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#modalQuickGroup" 
+                       class="step-item active" title="Nhấn để Tạo nhóm hoặc Gia nhập nhóm ngay">
+                        <div class="step-circle">
+                            <i class="fa-solid fa-users text-sm"></i>
+                        </div>
+                        <div class="step-title">1. Tạo nhóm</div>
+                        <span class="step-action-badge step-action-badge-primary">
+                            <i class="fa-solid fa-plus text-[10px]"></i> Tạo/Vào nhóm
+                        </span>
+                    </a>
+                    <!-- Nếu đã có nhóm: mở modal xem chi tiết nhóm -->
+                    <a th:if="${group != null}" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#modalGroupDetailsDashboard" 
+                       class="step-item completed" title="Nhấn để xem thông tin chi tiết nhóm và thành viên">
+                        <div class="step-circle">
+                            <i class="fa-solid fa-check text-sm"></i>
+                        </div>
+                        <div class="step-title">1. Tạo nhóm</div>
+                        <span class="step-action-badge step-action-badge-success">
+                            <i class="fa-solid fa-users text-[10px]"></i> <span th:text="${group.groupName}">Nhóm 01</span>
+                        </span>
+                    </a>
+
+                    <!-- Step 2: Đăng ký đề tài (Interactive) -->
+                    <!-- Nếu chưa có nhóm: mở modal tạo nhóm trước -->
+                    <a th:if="${group == null}" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#modalQuickGroup" 
+                       class="step-item" title="Cần có nhóm trước khi đăng ký đề tài">
+                        <div class="step-circle">
+                            <i class="fa-solid fa-book-bookmark text-sm"></i>
+                        </div>
+                        <div class="step-title">2. Đăng ký đề tài</div>
+                        <span class="step-action-badge step-action-badge-neutral">
+                            <i class="fa-solid fa-lock text-[10px]"></i> Cần tạo nhóm
+                        </span>
+                    </a>
+                    <!-- Nếu đã có nhóm nhưng chưa có đề tài: link đến trang tìm đề tài -->
+                    <a th:if="${group != null && group.topic == null}" th:href="@{/student/topics}" 
+                       class="step-item active" title="Nhấn để tìm và đăng ký đề tài mở">
+                        <div class="step-circle">
+                            <i class="fa-solid fa-book-bookmark text-sm"></i>
+                        </div>
+                        <div class="step-title">2. Đăng ký đề tài</div>
+                        <span class="step-action-badge step-action-badge-primary">
+                            <i class="fa-solid fa-magnifying-glass text-[10px]"></i> Tìm đề tài
+                        </span>
+                    </a>
+                    <!-- Nếu đã đăng ký đề tài: link đến chi tiết đề tài của nhóm -->
+                    <a th:if="${group != null && group.topic != null}" th:href="@{/student/my-topic}" 
+                       class="step-item completed" title="Nhấn để xem thông tin chi tiết đề tài đã đăng ký">
+                        <div class="step-circle">
+                            <i class="fa-solid fa-check text-sm"></i>
+                        </div>
+                        <div class="step-title">2. Đăng ký đề tài</div>
+                        <span class="step-action-badge step-action-badge-success">
+                            <i class="fa-solid fa-circle-info text-[10px]"></i> <span th:text="${group.topic.code}">DT-01</span>
+                        </span>
+                    </a>
+
+                    <!-- Step 3: GVHD Phê duyệt (Interactive) -->
+                    <a th:href="@{/student/my-topic}" 
+                       class="step-item" 
+                       th:classappend="${group != null && group.status == 'APPROVED' ? 'completed' : (group != null && group.topic != null ? 'active' : '')}"
+                       th:title="${group != null && group.status == 'APPROVED' ? 'Đề tài đã được GVHD phê duyệt - Nhấn để xem' : (group != null && group.topic != null ? 'Đang chờ GVHD phê duyệt - Nhấn để theo dõi' : 'Chưa đăng ký đề tài')}">
+                        <div class="step-circle">
+                            <i th:if="${group != null && group.status == 'APPROVED'}" class="fa-solid fa-check text-sm"></i>
+                            <i th:unless="${group != null && group.status == 'APPROVED'}" class="fa-solid fa-user-check text-sm"></i>
+                        </div>
+                        <div class="step-title">3. GVHD Duyệt</div>
+                        <span th:if="${group != null && group.status == 'APPROVED'}" class="step-action-badge step-action-badge-success">
+                            <i class="fa-solid fa-circle-check text-[10px]"></i> Đã duyệt
+                        </span>
+                        <span th:if="${group != null && group.topic != null && group.status != 'APPROVED'}" class="step-action-badge step-action-badge-primary">
+                            <i class="fa-regular fa-clock text-[10px]"></i> Chờ duyệt
+                        </span>
+                        <span th:if="${group == null || group.topic == null}" class="step-action-badge step-action-badge-neutral">
+                            Chưa tới
+                        </span>
+                    </a>
+
+                    <!-- Step 4: Nộp Báo cáo (Interactive) -->
+                    <a th:href="@{/student/submissions}" 
+                       class="step-item" 
+                       th:classappend="${submissions != null && !submissions.isEmpty() ? 'completed' : (group != null && group.status == 'APPROVED' ? 'active' : '')}"
+                       title="Nhấn để vào trang Quản lý và Nộp Báo cáo tiến độ">
+                        <div class="step-circle">
+                            <i th:if="${submissions != null && !submissions.isEmpty()}" class="fa-solid fa-check text-sm"></i>
+                            <i th:unless="${submissions != null && !submissions.isEmpty()}" class="fa-solid fa-file-arrow-up text-sm"></i>
+                        </div>
+                        <div class="step-title">4. Nộp Báo cáo</div>
+                        <span th:if="${submissions != null && !submissions.isEmpty()}" class="step-action-badge step-action-badge-success">
+                            <i class="fa-solid fa-file-lines text-[10px]"></i> <span th:text="${submissions.size()} + ' bài nộp'">1 bài nộp</span>
+                        </span>
+                        <span th:if="${(submissions == null || submissions.isEmpty()) && group != null && group.status == 'APPROVED'}" class="step-action-badge step-action-badge-primary">
+                            <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Nộp ngay
+                        </span>
+                        <span th:if="${group == null || group.status != 'APPROVED'}" class="step-action-badge step-action-badge-neutral">
+                            Tiến độ
+                        </span>
+                    </a>
+
+                    <!-- Step 5: Đánh giá & Điểm (Interactive) -->
+                    <a th:href="@{/student/results}" 
+                       class="step-item" 
+                       th:classappend="${group != null && group.topic != null && group.topic.isFinalized ? 'completed' : ''}"
+                       title="Nhấn để xem Bảng điểm và Đánh giá từ Giảng viên & Hội đồng">
+                        <div class="step-circle">
+                            <i th:if="${group != null && group.topic != null && group.topic.isFinalized}" class="fa-solid fa-award text-sm"></i>
+                            <i th:unless="${group != null && group.topic != null && group.topic.isFinalized}" class="fa-solid fa-star text-sm"></i>
+                        </div>
+                        <div class="step-title">5. Đánh giá & Điểm</div>
+                        <span th:if="${group != null && group.topic != null && group.topic.isFinalized}" class="step-action-badge step-action-badge-success">
+                            <i class="fa-solid fa-award text-[10px]"></i> <span th:text="'Điểm: ' + ${group.topic.finalScore}">Điểm: 9.0</span>
+                        </span>
+                        <span th:unless="${group != null && group.topic != null && group.topic.isFinalized}" class="step-action-badge step-action-badge-neutral">
+                            <i class="fa-solid fa-chart-simple text-[10px]"></i> Xem điểm
+                        </span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 2. MAIN 2-COLUMN SECTION -->
+            <div class="row g-4 mb-4">
+                
+                <!-- Left Column (col-lg-7): My Topic & Submissions -->
+                <div class="col-12 col-lg-7 d-flex flex-column gap-4">
                     
-                    <div th:if="${group != null}">
-                        <div class="p-3 bg-light rounded-3 mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <strong class="text-dark" th:text="${group.groupName}">Tên nhóm</strong>
-                                <span class="badge bg-dark" th:text="'Mã: ' + ${group.groupCode}">GRP-XYZ</span>
+                    <!-- Card 1: My Topic Info -->
+                    <div class="saas-card">
+                        <div class="saas-card-header d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-book-open text-blue-600"></i>
+                                <h6 class="mb-0 font-bold text-slate-900 text-xs">Đề tài của Nhóm</h6>
                             </div>
-                            <div class="small text-muted mb-2">
-                                Thành viên: 
-                                <span th:each="m, iter : ${group.members}">
-                                    <strong th:text="${m.student.user.fullName}"></strong><span th:if="${!iter.last}">, </span>
-                                </span>
+                            <a th:href="@{/student/my-topic}" class="text-blue-600 text-xs font-semibold hover:underline">
+                                Xem chi tiết &rarr;
+                            </a>
+                        </div>
+                        
+                        <div class="p-4" th:if="${group != null && group.topic != null}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold" th:text="${group.topic.code}">DT-01</span>
+                                <span th:if="${group.status == 'APPROVED'}" class="badge-pill-approved">Đã duyệt</span>
+                                <span th:if="${group.status != 'APPROVED'}" class="badge-pill-pending">Chờ GV duyệt</span>
                             </div>
-                            <div th:if="${group.topic != null}">
-                                <div class="small text-dark fw-semibold mt-2">Đề tài: <span class="text-primary" th:text="${group.topic.title}"></span></div>
-                                <div class="small text-muted">GVHD: <span th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.user.fullName : 'N/A'}"></span></div>
+                            <h2 class="text-sm font-bold text-slate-900 mb-2 line-clamp-2" th:text="${group.topic.title}">Tên đề tài</h2>
+                            <p class="text-xs text-slate-500 mb-3 line-clamp-2 leading-relaxed" th:text="${group.topic.description}">Mô tả tóm tắt...</p>
+
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs space-y-1">
+                                <div><span class="text-slate-400">GVHD chính:</span> <strong class="text-slate-800" th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.academicTitle + ' ' + group.topic.supervisor.user.fullName : 'N/A'}"></strong></div>
+                                <div><span class="text-slate-400">Nhóm thực hiện:</span> <strong class="text-slate-800" th:text="${group.groupName}"></strong> (<span th:text="${group.members.size()} + ' thành viên'"></span>)</div>
                             </div>
                         </div>
 
-                        <div class="d-flex gap-2">
-                            <a th:href="@{/student/group}" class="btn btn-sm btn-outline-dark"><i class="fa-solid fa-users-gear me-1"></i> Quản lý thành viên</a>
-                            <a th:href="@{/student/submissions}" class="btn btn-sm btn-dark"><i class="fa-solid fa-file-arrow-up me-1"></i> Nộp báo cáo tiến độ</a>
+                        <div class="p-4 text-center text-slate-400 text-xs" th:if="${group == null || group.topic == null}">
+                            <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
+                            Bạn chưa có đề tài nào. Hãy tạo nhóm và chọn đề tài trong danh mục mở.
+                            <div class="mt-3">
+                                <a th:href="@{/student/topics}" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-medium">Tìm đề tài ngay</a>
+                            </div>
                         </div>
                     </div>
 
-                    <div th:unless="${group != null}" class="text-center py-4 text-muted">
-                        <i class="fa-solid fa-user-group fs-3 mb-2 d-block text-secondary"></i>
-                        Bạn chưa có nhóm nào trong đợt này. Hãy tạo nhóm hoặc gia nhập nhóm cùng bạn bè.
-                        <div class="mt-3">
-                            <a th:href="@{/student/group}" class="btn btn-sm btn-primary">Tạo hoặc gia nhập nhóm</a>
+                    <!-- Card 2: Submissions History -->
+                    <div class="saas-card">
+                        <div class="saas-card-header d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-file-arrow-up text-emerald-600"></i>
+                                <h6 class="mb-0 font-bold text-slate-900 text-xs">Tiến độ Nộp Báo cáo của Nhóm</h6>
+                            </div>
+                            <a th:href="@{/student/submissions}" class="text-blue-600 text-xs font-semibold hover:underline">
+                                Nộp báo cáo &rarr;
+                            </a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-saas mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Vòng nộp</th>
+                                        <th>Tiêu đề bài nộp</th>
+                                        <th>Điểm / Nhận xét</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="s : ${submissions}">
+                                        <td>
+                                            <span class="badge-pill-neutral font-semibold" th:text="'Vòng ' + ${s.submissionRound}">Vòng 1</span>
+                                        </td>
+                                        <td>
+                                            <div class="font-semibold text-slate-900 text-xs line-clamp-1" th:text="${s.title}">Báo cáo tiến độ</div>
+                                            <span class="text-slate-400 text-xs" th:text="${#temporals.format(s.submittedAt, 'dd/MM/yyyy HH:mm')}"></span>
+                                        </td>
+                                        <td>
+                                            <span th:if="${s.grade != null}" class="score-pill score-high font-bold" th:text="${s.grade} + ' đ'">8.5 đ</span>
+                                            <span th:unless="${s.grade != null}" class="badge-pill-pending">Chờ chấm</span>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${submissions == null || submissions.isEmpty()}">
+                                        <td colspan="3" class="text-center py-4 text-slate-400 text-xs">
+                                            Nhóm chưa nộp bài báo cáo tiến độ nào.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
+
+                </div>
+
+                <!-- Right Column (col-lg-5): Milestones & Announcements -->
+                <div class="col-12 col-lg-5 d-flex flex-column gap-4">
+                    
+                    <!-- Card 3: Important Milestones -->
+                    <div class="saas-card">
+                        <div class="saas-card-header d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-calendar-check text-indigo-600"></i>
+                                <h6 class="mb-0 font-bold text-slate-900 text-xs">Các Mốc Thời gian Quan trọng</h6>
+                            </div>
+                        </div>
+                        <div class="p-3 d-flex flex-column gap-2">
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 d-flex gap-3 align-items-start">
+                                <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <i class="fa-solid fa-file-signature text-xs"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="font-semibold text-slate-900 text-xs">Hạn đăng ký đề tài sinh viên</div>
+                                    <div class="text-slate-400 text-xs mt-0.5">Hoàn thành ghép nhóm và đăng ký đề tài trực tuyến</div>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 d-flex gap-3 align-items-start">
+                                <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="font-semibold text-slate-900 text-xs">Nộp Báo cáo Tiến độ (Round 1 & 2)</div>
+                                    <div class="text-slate-400 text-xs mt-0.5">Nộp qua cổng Báo cáo tiến độ để GVHD chấm điểm</div>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 d-flex gap-3 align-items-start">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <i class="fa-solid fa-graduation-cap text-xs"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="font-semibold text-slate-900 text-xs">Bảo vệ trước Hội đồng Khoa</div>
+                                    <div class="text-slate-400 text-xs mt-0.5">Lịch và phòng bảo vệ sẽ được thông báo trên bảng tin</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Announcements from Department (Top 3) -->
+                    <div class="saas-card">
+                        <div class="saas-card-header d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-bullhorn text-amber-500"></i>
+                                <h6 class="mb-0 font-bold text-slate-900 text-xs">Thông báo mới từ Khoa</h6>
+                            </div>
+                            <span class="badge-pill-neutral font-medium text-xs">Bảng tin</span>
+                        </div>
+                        <div class="p-3 d-flex flex-column gap-2" th:if="${announcements != null && !announcements.isEmpty()}">
+                            <div class="p-3 rounded-xl border border-slate-100 bg-white" th:each="a, aStat : ${announcements}" th:if="${aStat.index < 3}">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <span class="badge-pill-neutral font-semibold text-xs" th:text="${a.category != null ? a.category : 'THÔNG BÁO'}">THÔNG BÁO</span>
+                                    <span class="text-slate-400 text-xs" th:text="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy') : ''}">22/08/2026</span>
+                                </div>
+                                <h6 class="font-bold text-slate-900 text-xs mb-1 line-clamp-1" th:text="${a.title}">Tiêu đề thông báo khoa</h6>
+                                <p class="text-slate-500 text-xs mb-0 line-clamp-2" th:text="${a.content}">Nội dung tóm tắt thông báo...</p>
+                            </div>
+                            <div th:if="${announcements == null || announcements.isEmpty()}" class="text-center py-4 text-slate-400 text-xs">
+                                <i class="fa-regular fa-bell-slash text-2xl mb-2 d-block opacity-40"></i>
+                                Hiện chưa có thông báo mới nào từ Khoa.
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
-            <!-- Announcements & Open Periods -->
-            <div class="col-lg-5">
-                <div class="saas-card p-4 mb-4">
-                    <h2 class="h6 fw-bold text-dark mb-3"><i class="fa-solid fa-bullhorn text-secondary me-1"></i> Bảng tin Khoa CNTT</h2>
-                    <div th:if="${announcements != null && !#lists.isEmpty(announcements)}" class="d-flex flex-column gap-2">
-                        <div th:each="a : ${announcements}" class="p-2 border rounded-3 bg-light">
-                            <strong class="small text-dark d-block" th:text="${a.title}"></strong>
-                            <span class="small text-muted" th:text="${#temporals.format(a.createdAt, 'dd/MM/yyyy')}"></span>
+        </main>
+    </div>
+
+    <!-- MODAL 1: TẠO HOẶC GIA NHẬP NHÓM NHANH (DÀNH CHO SV CHƯA CÓ NHÓM) -->
+    <div th:if="${group == null}" class="modal fade" id="modalQuickGroup" tabindex="-1" aria-labelledby="modalQuickGroupLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
+                <div class="modal-header bg-slate-50 border-b border-slate-100 px-4 py-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="fa-solid fa-users text-sm"></i>
+                        </div>
+                        <div>
+                            <h6 class="modal-title font-bold text-slate-900 text-sm mb-0" id="modalQuickGroupLabel">Tạo nhóm hoặc Gia nhập nhóm</h6>
+                            <span class="text-[11px] text-slate-400">Bước 1 trong lộ trình thực hiện khóa luận / đề tài</span>
                         </div>
                     </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                <div class="modal-body p-4">
+                    <!-- Nav Tabs -->
+                    <ul class="nav nav-pills nav-fill bg-slate-100 p-1 rounded-xl mb-3 text-xs font-semibold" id="quickGroupTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active rounded-lg py-2" id="create-tab" data-bs-toggle="pill" data-bs-target="#tab-create-group" type="button" role="tab">
+                                <i class="fa-solid fa-plus me-1 text-blue-600"></i> Tạo nhóm mới
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link rounded-lg py-2" id="join-tab" data-bs-toggle="pill" data-bs-target="#tab-join-group" type="button" role="tab">
+                                <i class="fa-solid fa-right-to-bracket me-1 text-slate-600"></i> Gia nhập bằng mã
+                            </button>
+                        </li>
+                    </ul>
 
-                <div class="saas-card p-4">
-                    <h2 class="h6 fw-bold text-dark mb-3"><i class="fa-regular fa-calendar text-primary me-1"></i> Đợt đăng ký đang mở</h2>
-                    <div th:if="${activePeriods != null && !#lists.isEmpty(activePeriods)}" class="d-flex flex-column gap-2">
-                        <div th:each="p : ${activePeriods}" class="p-2 border rounded-3 bg-light d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong class="small text-dark d-block" th:text="${p.name}"></strong>
-                                <small class="text-muted" th:text="${p.getPeriodTypeName()}"></small>
-                            </div>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle">OPEN</span>
+                    <div class="tab-content" id="quickGroupTabContent">
+                        <!-- Tab 1: Tạo nhóm -->
+                        <div class="tab-pane fade show active" id="tab-create-group" role="tabpanel">
+                            <form th:action="@{/student/group/create}" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label text-xs font-semibold text-slate-700">Đợt đăng ký <span class="text-rose-500">*</span></label>
+                                    <select name="periodId" class="form-select form-select-sm text-xs rounded-xl" required>
+                                        <option th:each="p : ${activePeriods}" th:value="${p.id}" th:text="${p.name + ' (' + p.getPeriodTypeName() + ')'}"></option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-xs font-semibold text-slate-700">Tên nhóm của bạn <span class="text-rose-500">*</span></label>
+                                    <input type="text" name="groupName" class="form-control form-control-sm text-xs rounded-xl" placeholder="Ví dụ: Nhóm AI Solution K16" required>
+                                    <span class="text-[11px] text-slate-400 mt-1 d-block">Bạn sẽ là <strong>Nhóm trưởng</strong>, có quyền mời thêm 1-2 thành viên và chọn đề tài.</span>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2 pt-2 border-t border-slate-100">
+                                    <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                                    <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-semibold shadow-sm">
+                                        <i class="fa-solid fa-crown text-amber-400 me-1"></i> Tạo nhóm ngay
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Tab 2: Gia nhập nhóm -->
+                        <div class="tab-pane fade" id="tab-join-group" role="tabpanel">
+                            <form th:action="@{/student/group/join}" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label text-xs font-semibold text-slate-700">Nhập mã nhóm (Group Code) <span class="text-rose-500">*</span></label>
+                                    <input type="text" name="groupCode" class="form-control text-xs rounded-xl font-mono font-bold uppercase tracking-wider text-center" placeholder="Ví dụ: GRP-ABC123" required>
+                                    <span class="text-[11px] text-slate-400 mt-1 d-block">Nhập mã nhóm 6 ký tự do Nhóm trưởng cung cấp để cùng thực hiện đề tài.</span>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2 pt-2 border-t border-slate-100">
+                                    <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                                    <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-semibold shadow-sm">
+                                        <i class="fa-solid fa-user-group me-1"></i> Gia nhập nhóm
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-    </main>
+    <!-- MODAL 2: XEM CHI TIẾT NHÓM & MÃ CHIA SẺ (DÀNH CHO SV ĐÃ CÓ NHÓM) -->
+    <div th:if="${group != null}" class="modal fade" id="modalGroupDetailsDashboard" tabindex="-1" aria-labelledby="modalGroupDetailsDashboardLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
+                <div class="modal-header bg-slate-50 border-b border-slate-100 px-4 py-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="fa-solid fa-users-viewfinder text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="modal-title font-bold text-slate-900 text-sm mb-0" th:text="${group.groupName}">Nhóm 01</h6>
+                                <span class="badge-pill-approved text-xs" th:text="${group.members.size()} + ' / 3 thành viên'">2/3 thành viên</span>
+                            </div>
+                            <span class="text-[11px] text-slate-400" th:text="'Đợt: ' + (${group.period != null ? group.period.name : 'Chung'})">Đợt KLTN</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 space-y-3">
+                    <!-- Share Code Box -->
+                    <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                        <div>
+                            <span class="text-xs font-semibold text-blue-900 d-block"><i class="fa-solid fa-share-nodes text-blue-600 me-1"></i> Mã nhóm chia sẻ:</span>
+                            <strong id="dashboardGroupCode" class="font-mono text-sm text-blue-800 tracking-wider font-bold" th:text="${group.groupCode}">GRP-XYZ123</strong>
+                        </div>
+                        <button type="button" id="btnCopyGroupCode" onclick="copyGroupCode()" class="btn btn-sm bg-white hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl px-3 py-1.5 text-xs font-semibold transition d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                            <i class="fa-regular fa-copy text-xs"></i> <span>Sao chép mã</span>
+                        </button>
+                    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                    <!-- Member List -->
+                    <div>
+                        <h6 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Thành viên trong nhóm:</h6>
+                        <div class="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden bg-white">
+                            <div th:each="m : ${group.members}" class="d-flex justify-content-between align-items-center py-2.5 px-3">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-xs flex-shrink-0">
+                                        <i class="fa-solid fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-slate-900 text-xs" th:text="${m.student != null && m.student.user != null ? m.student.user.fullName : 'SV'}">Nguyễn Văn A</div>
+                                        <span class="text-slate-400 text-[11px]" th:text="'MSSV: ' + (${m.student != null ? m.student.studentCode : ''}) + ' | Lớp: ' + (${m.student != null ? m.student.className : 'CNTT'})"></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span th:if="${m.roleInGroup == 'LEADER'}" class="badge-pill-pending font-bold text-xs">
+                                        <i class="fa-solid fa-crown text-amber-500 me-1"></i>Nhóm trưởng
+                                    </span>
+                                    <span th:if="${m.roleInGroup == 'MEMBER'}" class="badge-pill-neutral font-medium text-xs">
+                                        Thành viên
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Topic Summary in Modal -->
+                    <div th:if="${group.topic != null}" class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-slate-400 font-medium">Đề tài đã đăng ký:</span>
+                            <span class="badge bg-slate-200 text-slate-800 text-[10px] font-mono font-semibold" th:text="${group.topic.code}">DT-01</span>
+                        </div>
+                        <h6 class="font-bold text-slate-900 text-xs mb-1 line-clamp-1" th:text="${group.topic.title}">Tên đề tài</h6>
+                        <span class="text-slate-500 text-[11px]"><i class="fa-solid fa-chalkboard-user me-1 text-slate-400"></i> GVHD: <strong class="text-slate-800" th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.academicTitle + ' ' + group.topic.supervisor.user.fullName : 'N/A'}"></strong></span>
+                    </div>
+                </div>
+                <div class="modal-footer bg-slate-50 border-t border-slate-100 p-3 d-flex justify-content-between">
+                    <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Đóng</button>
+                    <a th:href="@{/student/group}" class="btn btn-sm btn-dark rounded-xl px-3.5 text-xs font-semibold">
+                        <i class="fa-solid fa-gear me-1"></i> Trang Quản lý nhóm chi tiết &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Fragment -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
+    <script>
+        // 1-Click Copy Group Code
+        function copyGroupCode() {
+            const codeEl = document.getElementById('dashboardGroupCode');
+            if (!codeEl) return;
+            const text = codeEl.innerText.trim();
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('btnCopyGroupCode');
+                if (btn) {
+                    const originalHTML = btn.innerHTML;
+                    btn.innerHTML = '<i class="fa-solid fa-check text-xs text-emerald-600"></i> <span class="text-emerald-700">Đã chép!</span>';
+                    setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
+                }
+            }).catch(err => {
+                console.error('Không thể sao chép mã nhóm:', err);
+            });
+        }
+    </script>
 </body>
 </html>

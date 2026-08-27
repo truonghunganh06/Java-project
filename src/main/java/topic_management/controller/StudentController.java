@@ -25,8 +25,16 @@ public class StudentController {
         this.announcementService = announcementService;
     }
 
+    /**
+     * BUG-05 FIX: Kiểm tra role STUDENT trước khi cho phép truy cập
+     */
     private AppUser getAuthenticatedUser(HttpSession session) {
-        return (AppUser) session.getAttribute("currentUser");
+        AppUser user = (AppUser) session.getAttribute("currentUser");
+        if (user == null) return null;
+        if (user.getRole() == null || !"STUDENT".equalsIgnoreCase(user.getRole().getCode())) {
+            return null;
+        }
+        return user;
     }
 
     @GetMapping("/dashboard")
@@ -38,11 +46,15 @@ public class StudentController {
         StudentGroup group = studentService.getMyActiveGroup(student, null);
         List<Announcement> announcements = announcementService.getAllAnnouncements();
         List<RegistrationPeriod> activePeriods = studentService.getAllActivePeriods();
+        List<Submission> submissions = studentService.getGroupSubmissions(group);
+        List<Evaluation> evaluations = studentService.getGroupEvaluations(group);
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
         model.addAttribute("group", group);
-        model.addAttribute("announcements", announcements.stream().limit(5).toList());
+        model.addAttribute("submissions", submissions);
+        model.addAttribute("evaluations", evaluations);
+        model.addAttribute("announcements", announcements.stream().limit(3).toList());
         model.addAttribute("activePeriods", activePeriods);
 
         return "student/dashboard";
@@ -268,6 +280,16 @@ public class StudentController {
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
+
+        // BUG-11 FIX: Defense-in-depth - Kiểm tra quyền Trưởng nhóm ngay tại Controller layer
+        if (group == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Bạn chưa thuộc nhóm nào để nộp báo cáo!");
+            return "redirect:/student/submissions";
+        }
+        if (!group.isLeader(student)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "QUYỀN HẠN BỊ TỪ CHỐI: Chỉ Nhóm trưởng mới được nộp báo cáo!");
+            return "redirect:/student/submissions";
+        }
 
         String fileName = (file != null && !file.isEmpty()) ? file.getOriginalFilename() : "BaoCao_TienDo_Dot" + round + ".pdf";
         Long fileSize = (file != null && !file.isEmpty()) ? file.getSize() : 2048576L;

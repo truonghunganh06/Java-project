@@ -8,7 +8,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import topic_management.entity.*;
 import topic_management.service.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/lecturer")
@@ -27,8 +29,21 @@ public class LecturerController {
         this.announcementService = announcementService;
     }
 
+    /**
+     * BUG-04 FIX: Kiểm tra role LECTURER / DEPARTMENT_HEAD / ADMIN
+     * (Trưởng khoa và Admin cũng có thể là giảng viên nên được phép truy cập)
+     */
     private AppUser getAuthenticatedUser(HttpSession session) {
-        return (AppUser) session.getAttribute("currentUser");
+        AppUser user = (AppUser) session.getAttribute("currentUser");
+        if (user == null) return null;
+        if (user.getRole() == null) return null;
+        String roleCode = user.getRole().getCode();
+        if (!"LECTURER".equalsIgnoreCase(roleCode)
+                && !"DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)
+                && !"ADMIN".equalsIgnoreCase(roleCode)) {
+            return null;
+        }
+        return user;
     }
 
     @GetMapping("/dashboard")
@@ -74,11 +89,13 @@ public class LecturerController {
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         List<Topic> topics = lecturerService.getTopicsByLecturer(lecturer);
         List<Major> majors = lecturerService.getAllMajors();
+        List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("topics", topics);
         model.addAttribute("majors", majors);
+        model.addAttribute("periods", periods);
 
         return "lecturer/topics";
     }
@@ -116,9 +133,12 @@ public class LecturerController {
         if (user == null) return "redirect:/login";
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
-        lecturerService.createTopic(lecturer, periodId, majorId, coSupervisorId, topic);
-
-        redirectAttributes.addFlashAttribute("successMessage", "Đề xuất đề tài '" + topic.getTitle() + "' thành công và đang chờ Trưởng khoa xét duyệt!");
+        try {
+            lecturerService.createTopic(lecturer, periodId, majorId, coSupervisorId, topic);
+            redirectAttributes.addFlashAttribute("successMessage", "Đề xuất đề tài '" + topic.getTitle() + "' thành công và đang chờ Trưởng khoa xét duyệt!");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
         return "redirect:/lecturer/topics";
     }
 
@@ -131,10 +151,12 @@ public class LecturerController {
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         List<StudentGroup> groups = lecturerService.getGroupsForLecturerTopics(lecturer);
+        List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("groups", groups);
+        model.addAttribute("periods", periods);
 
         return "lecturer/registrations";
     }
@@ -144,8 +166,14 @@ public class LecturerController {
         AppUser user = getAuthenticatedUser(session);
         if (user == null) return "redirect:/login";
 
-        lecturerService.approveGroupTopic(id, "APPROVED");
-        redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt nhóm sinh viên hướng dẫn thành công!");
+        // BUG-07 FIX: Truyền lecturer để kiểm tra ownership
+        Lecturer lecturer = lecturerService.getLecturerByUser(user);
+        boolean success = lecturerService.approveGroupTopic(id, "APPROVED", lecturer);
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt nhóm sinh viên hướng dẫn thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể phê duyệt nhóm này (không tìm thấy hoặc không phải đề tài bạn hướng dẫn)!");
+        }
         return "redirect:/lecturer/registrations";
     }
 
@@ -154,8 +182,14 @@ public class LecturerController {
         AppUser user = getAuthenticatedUser(session);
         if (user == null) return "redirect:/login";
 
-        lecturerService.approveGroupTopic(id, "REJECTED");
-        redirectAttributes.addFlashAttribute("errorMessage", "Đã từ chối nhóm đăng ký.");
+        // BUG-07 FIX: Truyền lecturer để kiểm tra ownership
+        Lecturer lecturer = lecturerService.getLecturerByUser(user);
+        boolean success = lecturerService.approveGroupTopic(id, "REJECTED", lecturer);
+        if (success) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Đã từ chối nhóm đăng ký.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể từ chối nhóm này!");
+        }
         return "redirect:/lecturer/registrations";
     }
 
@@ -168,10 +202,12 @@ public class LecturerController {
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         List<Topic> reviewerTopics = lecturerService.getReviewerTopics(lecturer);
+        List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("reviewerTopics", reviewerTopics);
+        model.addAttribute("periods", periods);
 
         return "lecturer/reviews";
     }
@@ -208,10 +244,18 @@ public class LecturerController {
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         List<Council> councils = lecturerService.getCouncilsForLecturer(lecturer);
+        List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
+
+        Map<Long, List<Topic>> councilTopicsMap = new HashMap<>();
+        for (Council c : councils) {
+            councilTopicsMap.put(c.getId(), councilService.getTopicsInCouncil(c.getId()));
+        }
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("councils", councils);
+        model.addAttribute("councilTopicsMap", councilTopicsMap);
+        model.addAttribute("periods", periods);
 
         return "lecturer/councils";
     }
@@ -248,10 +292,12 @@ public class LecturerController {
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         List<Submission> submissions = lecturerService.getSubmissionsByLecturer(lecturer);
+        List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("submissions", submissions);
+        model.addAttribute("periods", periods);
 
         return "lecturer/submissions";
     }
@@ -267,8 +313,14 @@ public class LecturerController {
         AppUser user = getAuthenticatedUser(session);
         if (user == null) return "redirect:/login";
 
-        lecturerService.gradeSubmission(id, grade, feedback);
-        redirectAttributes.addFlashAttribute("successMessage", "Đã gửi đánh giá bài nộp báo cáo thành công!");
+        // BUG-08 FIX: Truyền lecturer để kiểm tra ownership
+        Lecturer lecturer = lecturerService.getLecturerByUser(user);
+        boolean success = lecturerService.gradeSubmission(id, grade, feedback, lecturer);
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi đánh giá bài nộp báo cáo thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể chấm bài nộp này (không tìm thấy hoặc không phải đề tài bạn hướng dẫn)!");
+        }
         return "redirect:/lecturer/submissions";
     }
 }

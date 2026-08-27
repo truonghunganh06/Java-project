@@ -1,5 +1,7 @@
 package topic_management.service;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import topic_management.entity.*;
@@ -15,16 +17,23 @@ public class AdminService {
     private final RoleRepository roleRepository;
     private final DepartmentRepository departmentRepository;
     private final MajorRepository majorRepository;
+    private final StudentRepository studentRepository;
+    private final LecturerRepository lecturerRepository;
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public AdminService(
             UserRepository userRepository,
             RoleRepository roleRepository,
             DepartmentRepository departmentRepository,
-            MajorRepository majorRepository) {
+            MajorRepository majorRepository,
+            StudentRepository studentRepository,
+            LecturerRepository lecturerRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.departmentRepository = departmentRepository;
         this.majorRepository = majorRepository;
+        this.studentRepository = studentRepository;
+        this.lecturerRepository = lecturerRepository;
     }
 
     // ==================== USER MANAGEMENT ====================
@@ -41,16 +50,78 @@ public class AdminService {
     }
 
     @Transactional
-    public boolean createUser(AppUser user, Long roleId) {
+    public String createUser(AppUser user, Long roleId) {
+        if (user == null || user.getUsername() == null || user.getUsername().trim().isEmpty()) {
+            return "Tên đăng nhập không được để trống!";
+        }
+        String cleanUsername = user.getUsername().trim();
+
+        if (userRepository.findByUsernameIgnoreCase(cleanUsername).isPresent()) {
+            return "Tên đăng nhập '" + cleanUsername + "' đã tồn tại trên hệ thống. Vui lòng chọn tên khác!";
+        }
+
+        if (user.getEmail() != null && !user.getEmail().trim().isEmpty()) {
+            String cleanEmail = user.getEmail().trim().toLowerCase();
+            if (userRepository.findByEmailIgnoreCase(cleanEmail).isPresent()) {
+                return "Email '" + cleanEmail + "' đã được sử dụng bởi tài khoản khác!";
+            }
+            user.setEmail(cleanEmail);
+        } else {
+            user.setEmail(cleanUsername.toLowerCase() + "@topicmanagement.edu.vn");
+        }
+
         Role role = getRoleById(roleId);
+        if (role == null) {
+            return "Vui lòng chọn vai trò hợp lệ cho người dùng!";
+        }
+
+        user.setUsername(cleanUsername);
         user.setRole(role);
         user.setIsActive(true);
         user.setCreatedAt(OffsetDateTime.now());
         user.setUpdatedAt(OffsetDateTime.now());
 
+        String rawPassword = user.getPasswordHash();
+        if (rawPassword == null || rawPassword.trim().isEmpty()) {
+            rawPassword = "123456";
+        }
+        user.setPasswordHash(passwordEncoder.encode(rawPassword.trim()));
+
         AppUser saved = userRepository.save(user);
-        System.out.println("[DB-ADMIN] createUser: ĐÃ TẠO TÀI KHOẢN MỚI VÀO DB! (ID=" + saved.getId() + ", Username='" + saved.getUsername() + "')");
-        return true;
+
+        // Khởi tạo hồ sơ thực thể con (Student / Lecturer) để người dùng đăng nhập sử dụng ngay
+        if ("STUDENT".equalsIgnoreCase(role.getCode())) {
+            if (studentRepository.findByUserId(saved.getId()).isEmpty()) {
+                Student student = new Student();
+                student.setUser(saved);
+                student.setStudentCode(saved.getUsername());
+                student.setClassName("CNTT-K16");
+                student.setAcademicYear("2026-2027");
+                student.setGpa(3.50);
+                List<Major> majors = majorRepository.findAll();
+                if (!majors.isEmpty()) {
+                    student.setMajor(majors.get(0));
+                }
+                studentRepository.save(student);
+            }
+        } else if ("LECTURER".equalsIgnoreCase(role.getCode()) || "DEPARTMENT_HEAD".equalsIgnoreCase(role.getCode())) {
+            if (lecturerRepository.findByUserId(saved.getId()).isEmpty()) {
+                Lecturer lecturer = new Lecturer();
+                lecturer.setUser(saved);
+                lecturer.setLecturerCode(saved.getUsername());
+                lecturer.setAcademicTitle("TS");
+                lecturer.setDegree("Tiến sĩ");
+                lecturer.setMaxTopicsQuota(5);
+                List<Department> depts = departmentRepository.findAll();
+                if (!depts.isEmpty()) {
+                    lecturer.setDepartment(depts.get(0));
+                }
+                lecturerRepository.save(lecturer);
+            }
+        }
+
+        System.out.println("[DB-ADMIN] createUser: ĐÃ TẠO TÀI KHOẢN MỚI VÀO DB! (ID=" + saved.getId() + ", Username='" + saved.getUsername() + "', Role=" + role.getCode() + ")");
+        return null; // success
     }
 
     @Transactional
@@ -98,10 +169,11 @@ public class AdminService {
         Optional<AppUser> opt = userRepository.findById(id);
         if (opt.isPresent()) {
             AppUser user = opt.get();
-            user.setPasswordHash(newPassword);
+            // BUG-12 FIX: Hash mật khẩu mới bằng BCrypt
+            user.setPasswordHash(passwordEncoder.encode(newPassword));
             user.setUpdatedAt(OffsetDateTime.now());
             userRepository.save(user);
-            System.out.println("[DB-ADMIN] resetUserPassword(" + id + "): Đã đổi mật khẩu cho user '" + user.getUsername() + "' vào DB");
+            System.out.println("[DB-ADMIN] resetUserPassword(" + id + "): Đã đổi mật khẩu (BCrypt) cho user '" + user.getUsername() + "' vào DB");
             return true;
         }
         return false;
