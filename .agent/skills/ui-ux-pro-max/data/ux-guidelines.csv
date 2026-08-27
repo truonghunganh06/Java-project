@@ -45,7 +45,7 @@ No,Category,Issue,Platform,Description,Do,Don't,Code Example Good,Code Example B
 44,Accessibility,Error Messages,All,Error messages must be announced,Use aria-live or role=alert for errors,Visual-only error indication,role='alert',Red border only,High
 45,Accessibility,Skip Links,Web,Allow keyboard users to skip navigation,Provide skip to main content link,No skip link on nav-heavy pages,Skip to main content link,100 tabs to reach content,Medium
 46,Performance,Image Optimization,All,Large images slow page load,Use appropriate size and format (WebP),Unoptimized full-size images,srcset with multiple sizes,4000px image for 400px display,High
-47,Performance,Lazy Loading,All,Load content as needed,Lazy load below-fold images and content,Load everything upfront,loading='lazy',All images eager load,Medium
+47,Performance,Lazy Loading,All,Load content as needed,Lazy load below-fold images and content,Load everything upfront,loading='lazy',All images LAZY load,Medium
 48,Performance,Code Splitting,Web,Large bundles slow initial load,Split code by route/feature,Single large bundle,dynamic import(),All code in main bundle,Medium
 49,Performance,Caching,Web,Repeat visits should be fast,Set appropriate cache headers,No caching strategy,Cache-Control headers,Every request hits server,Medium
 50,Performance,Font Loading,Web,Web fonts can block rendering,Use font-display swap or optional,Invisible text during font load,font-display: swap,FOIT (Flash of Invisible Text),Medium

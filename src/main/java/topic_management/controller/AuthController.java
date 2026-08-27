@@ -25,15 +25,10 @@ public class AuthController {
     }
 
     @GetMapping("/login")
-    public String showLoginPage(
-            @RequestParam(value = "google_unconfigured", required = false) String unconfigured,
-            HttpSession session,
-            Model model) {
+    public String showLoginPage(HttpSession session) {
         if (session.getAttribute("currentUser") != null) {
             return "redirect:/dashboard";
         }
-        model.addAttribute("googleUnconfigured", "true".equals(unconfigured));
-        model.addAttribute("isGoogleConfigured", googleAuthService.isConfigured());
         return "auth/login";
     }
 
@@ -55,8 +50,6 @@ public class AuthController {
 
         model.addAttribute("error", "Tên đăng nhập hoặc mật khẩu không chính xác!");
         model.addAttribute("username", trimmedUser);
-        model.addAttribute("googleUnconfigured", false);
-        model.addAttribute("isGoogleConfigured", googleAuthService.isConfigured());
         return "auth/login";
     }
 
@@ -94,22 +87,6 @@ public class AuthController {
 
         try {
             AppUser user = googleAuthService.processGoogleCallback(code);
-            session.setAttribute("currentUser", user);
-            return "redirect:/dashboard";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/login";
-        }
-    }
-
-    @PostMapping("/auth/google/dev-login")
-    public String handleDevStudentLogin(
-            @RequestParam("email") String email,
-            @RequestParam(value = "fullName", required = false) String fullName,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
-        try {
-            AppUser user = googleAuthService.processStudentLoginByEmail(email, fullName);
             session.setAttribute("currentUser", user);
             return "redirect:/dashboard";
         } catch (Exception e) {

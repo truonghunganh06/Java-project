@@ -231,7 +231,10 @@
                             <div class="p-3 rounded-xl border border-slate-100 bg-white" th:each="t : ${reviewerTopics}">
                                 <div class="d-flex justify-content-between align-items-start mb-1">
                                     <span class="font-bold text-slate-900 text-xs line-clamp-1" th:text="${t.title}">Tên đề tài</span>
-                                    <button class="btn btn-sm btn-dark rounded-xl px-2.5 py-1 text-xs font-medium" th:onclick="'openReviewerGradeModal(' + ${t.id} + ', \'' + ${#strings.escapeJavaScript(t.title)} + '\')'">
+                                    <button class="btn btn-sm btn-dark rounded-xl px-2.5 py-1 text-xs font-medium" 
+                                            th:data-topic-id="${t.id}"
+                                            th:data-topic-title="${t.title}"
+                                            onclick="openReviewerGradeModal(this.dataset.topicId, this.dataset.topicTitle)">
                                         Chấm điểm
                                     </button>
                                 </div>
@@ -317,7 +320,7 @@
     <script>
         function openReviewerGradeModal(topicId, title) {
             document.getElementById('formReviewerGrade').action = '/lecturer/reviews/' + topicId + '/grade';
-            document.getElementById('reviewerTopicTitle').textContent = title;
+            document.getElementById('reviewerTopicTitle').textContent = typeof decodeUnicode === 'function' ? decodeUnicode(title) : title;
             new bootstrap.Modal(document.getElementById('modalReviewerGrade')).show();
         }
     </script>

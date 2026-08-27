@@ -481,7 +481,7 @@
             align-items: flex-start;
             justify-content: space-between;
             position: relative;
-            padding: 1rem 0.5rem;
+            padding: 1.25rem 0.5rem 0.75rem 0.5rem;
         }
 
         .step-item {
@@ -492,28 +492,51 @@
             z-index: 2;
             flex: 1;
             text-align: center;
+            text-decoration: none !important;
+            color: inherit;
+            padding: 0.6rem 0.4rem;
+            border-radius: 14px;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            outline: none;
+        }
+
+        .step-item:hover, .step-item:focus-visible {
+            background-color: #f1f5f9;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
         }
 
         .step-circle {
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.95rem;
+            font-size: 1rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
-            transition: all 0.2s ease;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
             background-color: #ffffff;
             border: 2px solid #cbd5e1;
             color: #64748b;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+        }
+
+        .step-item:hover .step-circle {
+            transform: scale(1.08);
+            border-color: #94a3b8;
         }
 
         .step-item.completed .step-circle {
             background-color: #10b981;
             border-color: #10b981;
             color: #ffffff;
+        }
+
+        .step-item.completed:hover .step-circle {
+            box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.25);
         }
 
         .step-item.active .step-circle {
@@ -524,10 +547,19 @@
             animation: pulse-ring 2s infinite;
         }
 
+        .step-item.active:hover .step-circle {
+            box-shadow: 0 0 0 6px rgba(2, 132, 199, 0.3);
+        }
+
         .step-title {
             font-size: 0.8125rem;
             font-weight: 600;
             color: var(--text-secondary);
+            transition: color 0.15s ease;
+        }
+
+        .step-item:hover .step-title {
+            color: #0f172a;
         }
 
         .step-item.active .step-title {
@@ -537,13 +569,60 @@
 
         .step-item.completed .step-title {
             color: #0f172a;
+            font-weight: 600;
+        }
+
+        .step-action-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            padding: 0.2rem 0.55rem;
+            border-radius: 9999px;
+            margin-top: 0.35rem;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .step-action-badge-primary {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+
+        .step-action-badge-success {
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+
+        .step-action-badge-neutral {
+            background-color: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .step-item:hover .step-action-badge-neutral {
+            background-color: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .step-item:hover .step-action-badge-primary {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .step-item:hover .step-action-badge-success {
+            background-color: #d1fae5;
+            color: #065f46;
         }
 
         .step-line {
             position: absolute;
-            top: 31px;
-            left: 10%;
-            right: 10%;
+            top: 42px;
+            left: 8%;
+            right: 8%;
             height: 3px;
             background-color: #e2e8f0;
             z-index: 1;

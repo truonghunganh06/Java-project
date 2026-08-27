@@ -32,7 +32,6 @@ public class DataCleanupService {
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    @Transactional
     public void cleanupDuplicatePeriodsOnStartup() {
         try {
             List<RegistrationPeriod> allPeriods = periodRepository.findAll();
@@ -129,6 +128,56 @@ public class DataCleanupService {
             }
         } catch (Exception e) {
             System.err.println("[CLEANUP-WARN] Lỗi khi dọn dẹp dữ liệu đợt đăng ký: " + e.getMessage());
+        }
+
+        cleanupDuplicateCouncilsOnStartup();
+    }
+
+    public void cleanupDuplicateCouncilsOnStartup() {
+        try {
+            List<Council> allCouncils = councilRepository.findAll();
+            if (allCouncils.isEmpty()) return;
+
+            // Nhóm theo (period_id | tên_chuẩn_hóa)
+            Map<String, List<Council>> grouped = new HashMap<>();
+            for (Council c : allCouncils) {
+                if (c.getName() == null) continue;
+                String periodKey = (c.getPeriod() != null) ? String.valueOf(c.getPeriod().getId()) : "0";
+                String nameKey = c.getName().trim().toLowerCase();
+                String key = periodKey + "|" + nameKey;
+                grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(c);
+            }
+
+            int cleanedCount = 0;
+            for (Map.Entry<String, List<Council>> entry : grouped.entrySet()) {
+                List<Council> list = entry.getValue();
+                if (list.size() > 1) {
+                    // Giữ lại council có ID nhỏ nhất làm primary
+                    list.sort(Comparator.comparing(Council::getId));
+                    Council primary = list.get(0);
+
+                    for (int i = 1; i < list.size(); i++) {
+                        Council duplicate = list.get(i);
+
+                        // Chuyển giao các đề tài đang gán cho hội đồng trùng sang hội đồng chính
+                        List<Topic> assignedTopics = topicRepository.findByCouncilId(duplicate.getId());
+                        for (Topic t : assignedTopics) {
+                            t.setCouncil(primary);
+                            topicRepository.save(t);
+                        }
+
+                        // Xóa hội đồng trùng lặp
+                        councilRepository.delete(duplicate);
+                        cleanedCount++;
+                    }
+                }
+            }
+
+            if (cleanedCount > 0) {
+                System.out.println("[CLEANUP] Đã tự động dọn dẹp và hợp nhất " + cleanedCount + " hội đồng bị trùng lặp tên trong CSDL!");
+            }
+        } catch (Exception e) {
+            System.err.println("[CLEANUP-WARN] Lỗi khi dọn dẹp hội đồng trùng lặp: " + e.getMessage());
         }
     }
 }

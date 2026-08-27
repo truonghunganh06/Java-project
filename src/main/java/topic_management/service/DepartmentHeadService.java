@@ -107,16 +107,23 @@ public class DepartmentHeadService {
         return saved;
     }
 
+    /**
+     * BUG-06 FIX: Kiểm tra đợt thuộc đúng bộ môn của Trưởng khoa
+     */
     @Transactional
-    public boolean updatePeriodStatus(Long periodId, String status) {
+    public boolean updatePeriodStatus(Long periodId, String status, Long departmentId) {
         RegistrationPeriod p = getPeriodById(periodId);
-        if (p != null) {
-            p.setStatus(status);
-            periodRepository.save(p);
-            System.out.println("[DB-HEAD] Cập nhật trạng thái đợt ID=" + periodId + " -> " + status);
-            return true;
+        if (p == null) return false;
+        // Guard: Chỉ thao tác đợt thuộc bộ môn của mình
+        if (departmentId != null && p.getDepartment() != null
+                && !departmentId.equals(p.getDepartment().getId())) {
+            System.err.println("[SECURITY] Trưởng khoa (dept=" + departmentId + ") cố thay đổi đợt thuộc dept=" + p.getDepartment().getId());
+            return false;
         }
-        return false;
+        p.setStatus(status);
+        periodRepository.save(p);
+        System.out.println("[DB-HEAD] Cập nhật trạng thái đợt ID=" + periodId + " -> " + status);
+        return true;
     }
 
     // ==================== MAJORS & TOPICS ====================
@@ -162,37 +169,62 @@ public class DepartmentHeadService {
                 .collect(Collectors.toList());
     }
 
+    public org.springframework.data.domain.Page<Topic> getDepartmentTopicsPaged(Long departmentId, String status, Long majorId, Long periodId, String keyword, org.springframework.data.domain.Pageable pageable) {
+        return topicRepository.findDepartmentTopicsPaged(departmentId, status, majorId, periodId, keyword, pageable);
+    }
+
     public Topic getTopicById(Long topicId) {
         if (topicId == null) return null;
         return topicRepository.findById(topicId).orElse(null);
     }
 
+    /**
+     * BUG-06 FIX: Kiểm tra đề tài thuộc đúng bộ môn của Trưởng khoa trước khi phê duyệt
+     */
     @Transactional
-    public boolean approveTopic(Long topicId) {
+    public boolean approveTopic(Long topicId, Long departmentId) {
         Optional<Topic> opt = topicRepository.findById(topicId);
-        if (opt.isPresent()) {
-            Topic t = opt.get();
-            t.setStatus("APPROVED");
-            t.setRejectionReason(null);
-            topicRepository.save(t);
-            System.out.println("[DB-HEAD] Phê duyệt đề tài ID=" + topicId + " thành công!");
-            return true;
+        if (opt.isEmpty()) return false;
+        Topic t = opt.get();
+        // Guard: Chỉ duyệt đề tài trong bộ môn của mình
+        if (!isTopicInDepartment(t, departmentId)) {
+            System.err.println("[SECURITY] Trưởng khoa (dept=" + departmentId + ") cố duyệt đề tài ngoài bộ môn (topicId=" + topicId + ")");
+            return false;
         }
-        return false;
+        t.setStatus("APPROVED");
+        t.setRejectionReason(null);
+        topicRepository.save(t);
+        System.out.println("[DB-HEAD] Phê duyệt đề tài ID=" + topicId + " thành công!");
+        return true;
     }
 
+    /**
+     * BUG-06 FIX: Kiểm tra đề tài thuộc đúng bộ môn của Trưởng khoa trước khi từ chối
+     */
     @Transactional
-    public boolean rejectTopic(Long topicId, String rejectionReason) {
+    public boolean rejectTopic(Long topicId, String rejectionReason, Long departmentId) {
         Optional<Topic> opt = topicRepository.findById(topicId);
-        if (opt.isPresent()) {
-            Topic t = opt.get();
-            t.setStatus("REJECTED");
-            t.setRejectionReason(rejectionReason);
-            topicRepository.save(t);
-            System.out.println("[DB-HEAD] Từ chối đề tài ID=" + topicId + " (Lý do: " + rejectionReason + ")");
-            return true;
+        if (opt.isEmpty()) return false;
+        Topic t = opt.get();
+        // Guard: Chỉ từ chối đề tài trong bộ môn của mình
+        if (!isTopicInDepartment(t, departmentId)) {
+            System.err.println("[SECURITY] Trưởng khoa (dept=" + departmentId + ") cố từ chối đề tài ngoài bộ môn (topicId=" + topicId + ")");
+            return false;
         }
-        return false;
+        t.setStatus("REJECTED");
+        t.setRejectionReason(rejectionReason);
+        topicRepository.save(t);
+        System.out.println("[DB-HEAD] Từ chối đề tài ID=" + topicId + " (Lý do: " + rejectionReason + ")");
+        return true;
+    }
+
+    /**
+     * BUG-06 FIX: Helper kiểm tra đề tài có thuộc bộ môn hay không
+     */
+    private boolean isTopicInDepartment(Topic topic, Long departmentId) {
+        if (departmentId == null) return true; // Không giới hạn nếu không có departmentId
+        if (topic.getMajor() == null || topic.getMajor().getDepartment() == null) return false;
+        return departmentId.equals(topic.getMajor().getDepartment().getId());
     }
 
     // ==================== LECTURERS & STUDENTS ====================

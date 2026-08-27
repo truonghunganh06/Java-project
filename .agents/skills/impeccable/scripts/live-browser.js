@@ -8473,7 +8473,7 @@ void main() {
     }
     // The accepted variant is already the only visible child of the wrapper
     // (all other variants are display:none). HMR from the source rewrite will
-    // replace the wrapper imminently. Don't eagerly replaceChild here - React
+    // replace the wrapper imminently. Don't LAZYly replaceChild here - React
     // reconciliation races with our mutation and throws NotFoundError in Next
     // 16 / Turbopack. Schedule a fallback that runs the manual swap only if
     // HMR hasn't cleaned up by then (keeps static-server flows working).

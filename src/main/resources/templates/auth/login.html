@@ -129,15 +129,7 @@
         .form-control {
             border-radius: 0 10px 10px 0;
         }
-        .badge-student {
-            background: #eff6ff;
-            color: #1d4ed8;
-            border: 1px solid #dbeafe;
-            font-size: 0.72rem;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 20px;
-        }
+
     </style>
 </head>
 <body>
@@ -206,41 +198,7 @@
         <button type="submit" class="btn btn-login w-100 mb-3">Đăng nhập</button>
     </form>
 
-    <!-- Modal / Form kiểm thử nhanh cho Môi trường Dev nếu chưa cấu hình Google Client ID -->
-    <div th:if="${googleUnconfigured == true or isGoogleConfigured == false}" class="p-3 bg-light rounded-3 border mb-3">
-        <div class="fw-semibold text-dark small mb-1 d-flex align-items-center gap-1">
-            <i class="fa-solid fa-flask text-warning"></i> Chế độ Dev (Thử nghiệm Email SV):
-        </div>
-        <p class="text-muted mb-2" style="font-size: 11px;">
-            Chưa có Google Client ID thật? Bạn có thể nhập email sinh viên để test tạo tài khoản và đăng nhập ngay:
-        </p>
-        <form th:action="@{/auth/google/dev-login}" method="post" class="d-flex gap-2">
-            <input type="email" name="email" value="sv_cntt@student.edu.vn" class="form-control form-control-sm" placeholder="email@student.edu.vn" required style="border-radius: 6px;">
-            <input type="hidden" name="fullName" value="Sinh Viên Test">
-            <button type="submit" class="btn btn-sm btn-outline-dark text-nowrap" style="border-radius: 6px;">Vào ngay</button>
-        </form>
-    </div>
 
-    <!-- Gợi ý tài khoản SQL mẫu -->
-    <div class="p-3 bg-light rounded-3 border">
-        <div class="fw-semibold text-dark small mb-2 d-flex align-items-center gap-1">
-            <i class="fa-solid fa-database text-primary"></i> Tài khoản trong Database SQL (Pass: <code>123456</code>):
-        </div>
-        <div class="row g-1 text-muted" style="font-size: 11px;">
-            <div class="col-6 mb-1">
-                <strong>Quản trị:</strong> <code>admin</code> (<code>admin123</code>)
-            </div>
-            <div class="col-6 mb-1">
-                <strong>Trưởng khoa:</strong> <code>head</code>, <code>dean_cntt</code>
-            </div>
-            <div class="col-6 mb-1">
-                <strong>Giảng viên:</strong> <code>gv_hung</code>, <code>gv_nam</code>
-            </div>
-            <div class="col-6 mb-1">
-                <strong>Sinh viên:</strong> <code>sv_nuong</code>, <code>sv_an</code>
-            </div>
-        </div>
-    </div>
 </div>
 
 </body>
