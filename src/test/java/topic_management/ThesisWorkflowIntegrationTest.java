@@ -514,7 +514,7 @@ public class ThesisWorkflowIntegrationTest {
                 "Phòng A1",
                 OffsetDateTime.now().plusDays(15),
                 List.of(gv3.getId(), gv2.getId(), gv1.getId()),
-                List.of("CHAIR", "SECRETARY", "MEMBER")
+                List.of("PRESIDENT", "SECRETARY", "MEMBER")
         );
         boolean assignedConflictCouncil = councilService.assignTopicToCouncil(testTopic.getId(), conflictCouncil.getId());
         assertFalse(assignedConflictCouncil, "Hệ thống phải chặn gán đề tài vào Hội đồng có chứa GVHD hoặc GV đồng hướng dẫn");
@@ -530,7 +530,7 @@ public class ThesisWorkflowIntegrationTest {
                 "Phòng Hội thảo B1-205",
                 OffsetDateTime.now().plusDays(15),
                 List.of(gv3.getId(), gvCouncil1.getId(), gvCouncil2.getId()),
-                List.of("CHAIR", "SECRETARY", "MEMBER")
+                List.of("PRESIDENT", "SECRETARY", "MEMBER")
         );
 
         assertNotNull(testCouncil.getId(), "Hội đồng phải được lưu vào DB");
@@ -650,6 +650,111 @@ public class ThesisWorkflowIntegrationTest {
 
         System.out.println("\n================================================================================");
         System.out.println(">>> TẤT CẢ 11 BƯỚC KIỂM THỬ TỰ ĐỘNG ĐÃ VƯỢT QUA 100% (ALL TESTS PASSED) <<<");
+        System.out.println("================================================================================");
+    }
+
+    @Test
+    @Order(12)
+    @DisplayName("Bước 12: Kiểm thử toàn cục quy tắc kiểm tra Khoa (Global Department Validation)")
+    void step12_globalDepartmentValidation() {
+        System.out.println("\n[TEST-12] BƯỚC 12: Kiểm thử toàn cục quy tắc kiểm tra Khoa");
+
+        // 1. Tạo 2 khoa khác nhau
+        long ts = System.currentTimeMillis();
+        Department deptA = departmentRepository.save(new Department(null, "CNTT_VAL_" + ts, "Khoa CNTT Validation " + ts));
+        Department deptB = departmentRepository.save(new Department(null, "KT_VAL_" + ts, "Khoa Kinh tế Validation " + ts));
+
+        Major majorA = majorRepository.save(new Major(null, "SE_VAL_" + ts, "Kỹ thuật phần mềm Val " + ts));
+        majorA.setDepartment(deptA);
+        majorRepository.save(majorA);
+
+        Major majorB = majorRepository.save(new Major(null, "BA_VAL_" + ts, "Quản trị kinh doanh Val " + ts));
+        majorB.setDepartment(deptB);
+        majorRepository.save(majorB);
+
+        // 2. Tạo đợt đăng ký thuộc Khoa A
+        RegistrationPeriod periodA = new RegistrationPeriod();
+        periodA.setName("Đợt KLTN Khoa CNTT Test");
+        periodA.setPeriodType("KLTN");
+        periodA.setAcademicYear("2026-2027");
+        periodA.setSemester(1);
+        periodA.setDepartment(deptA);
+        periodA.setIsActive(true);
+        periodA.setStatus("OPEN");
+        final RegistrationPeriod savedPeriodA = periodRepository.save(periodA);
+
+        // 3. Tạo sinh viên thuộc Khoa A và sinh viên thuộc Khoa B
+        Role studentRole = roleRepository.findByCode("STUDENT").orElse(null);
+
+        AppUser userA = new AppUser();
+        userA.setUsername("sv_dept_a_" + System.currentTimeMillis());
+        userA.setFullName("Sinh Viên Khoa A");
+        userA.setEmail(userA.getUsername() + "@test.edu.vn");
+        userA.setPasswordHash("123456");
+        userA.setRole(studentRole);
+        userA = userRepository.save(userA);
+
+        Student studentA = new Student();
+        studentA.setUser(userA);
+        studentA.setStudentCode("SVA" + System.currentTimeMillis() % 10000);
+        studentA.setMajor(majorA);
+        final Student savedStudentA = studentRepository.save(studentA);
+
+        AppUser userB = new AppUser();
+        userB.setUsername("sv_dept_b_" + System.currentTimeMillis());
+        userB.setFullName("Sinh Viên Khoa B");
+        userB.setEmail(userB.getUsername() + "@test.edu.vn");
+        userB.setPasswordHash("123456");
+        userB.setRole(studentRole);
+        userB = userRepository.save(userB);
+
+        Student studentB = new Student();
+        studentB.setUser(userB);
+        studentB.setStudentCode("SVB" + System.currentTimeMillis() % 10000);
+        studentB.setMajor(majorB);
+        final Student savedStudentB = studentRepository.save(studentB);
+
+        // Test A: Sinh viên Khoa A hợp lệ trong đợt của Khoa A -> Không ném lỗi
+        assertDoesNotThrow(() -> studentService.validateStudentDepartmentInPeriod(savedStudentA, savedPeriodA),
+                "Sinh viên cùng khoa A phải hợp lệ với đợt khoa A");
+
+        // Test B: Sinh viên Khoa B khác khoa với đợt Khoa A -> BẮT BUỘC ném lỗi 400 Bad Request
+        org.springframework.web.server.ResponseStatusException ex = assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> studentService.validateStudentDepartmentInPeriod(savedStudentB, savedPeriodA),
+                "Sinh viên khác khoa B bắt buộc bị ném ResponseStatusException 400"
+        );
+        assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("Sinh viên không thuộc khoa quản lý đợt đăng ký này!", ex.getReason());
+        System.out.println("-> [ĐẠT CHUẨN] Chặn thành công sinh viên khác khoa với lỗi 400: " + ex.getReason());
+
+        // Test C: Tạo nhóm trong đợt Khoa A bởi sinh viên Khoa A -> Thành công
+        StudentGroup groupA = studentService.createGroup(savedStudentA, savedPeriodA.getId(), "Nhóm Khoa A Hợp Lệ");
+        assertNotNull(groupA);
+
+        // Test D: Mời sinh viên Khoa B vào nhóm Khoa A -> Bị từ chối và trả thông báo lỗi
+        String inviteErr = studentService.inviteMemberByCode(groupA, savedStudentB.getStudentCode());
+        assertEquals("Sinh viên không thuộc khoa quản lý đợt đăng ký này!", inviteErr,
+                "Mời sinh viên khác khoa phải bị từ chối với thông báo chính xác");
+        System.out.println("-> [ĐẠT CHUẨN] Mời sinh viên khác khoa bị từ chối: " + inviteErr);
+
+        // Test E: Sinh viên Khoa B tự gia nhập nhóm Khoa A bằng mã nhóm -> Bị từ chối
+        String joinErr = studentService.joinGroupByCode(savedStudentB, groupA.getGroupCode());
+        assertEquals("Sinh viên không thuộc khoa quản lý đợt đăng ký này!", joinErr,
+                "Sinh viên khác khoa join nhóm phải bị từ chối với thông báo chính xác");
+        System.out.println("-> [ĐẠT CHUẨN] Gia nhập nhóm khác khoa bị từ chối: " + joinErr);
+
+        // Test F: Sinh viên Khoa B cố gắng tạo nhóm trong đợt Khoa A -> Bị chặn đứng với lỗi 400
+        org.springframework.web.server.ResponseStatusException createEx = assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> studentService.createGroup(savedStudentB, savedPeriodA.getId(), "Nhóm Khoa B Trái Phép")
+        );
+        assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, createEx.getStatusCode());
+        assertEquals("Sinh viên không thuộc khoa quản lý đợt đăng ký này!", createEx.getReason());
+        System.out.println("-> [ĐẠT CHUẨN] Sinh viên khác khoa tạo nhóm bị chặn đứng: " + createEx.getReason());
+
+        System.out.println("\n================================================================================");
+        System.out.println(">>> QUY TẮC ĐỒNG BỘ KHOA TOÀN CỤC (GLOBAL VALIDATION) ĐÃ ĐƯỢC XÁC THỰC 100% <<<");
         System.out.println("================================================================================");
     }
 }

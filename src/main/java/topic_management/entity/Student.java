@@ -85,4 +85,15 @@ public class Student {
     public void setGpa(Double gpa) {
         this.gpa = gpa;
     }
+
+    @Transient
+    public Department getDepartment() {
+        return major != null ? major.getDepartment() : null;
+    }
+
+    @Transient
+    public Long getDepartmentId() {
+        Department dept = getDepartment();
+        return dept != null ? dept.getId() : null;
+    }
 }

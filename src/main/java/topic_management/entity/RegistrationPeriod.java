@@ -115,6 +115,11 @@ public class RegistrationPeriod {
         this.department = department;
     }
 
+    @Transient
+    public Long getDepartmentId() {
+        return department != null ? department.getId() : null;
+    }
+
     public OffsetDateTime getLecturerProposalStart() {
         return lecturerProposalStart;
     }

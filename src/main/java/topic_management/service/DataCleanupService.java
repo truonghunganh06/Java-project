@@ -98,8 +98,16 @@ public class DataCleanupService {
                         // Reassign student groups
                         List<StudentGroup> groups = groupRepository.findByPeriodId(duplicate.getId());
                         for (StudentGroup g : groups) {
-                            g.setPeriod(primary);
-                            groupRepository.save(g);
+                            try {
+                                g.setPeriod(primary);
+                                groupRepository.save(g);
+                            } catch (Exception groupEx) {
+                                try {
+                                    g.setGroupName(g.getGroupName() + " (" + duplicate.getId() + ")");
+                                    g.setPeriod(primary);
+                                    groupRepository.save(g);
+                                } catch (Exception ignored) {}
+                            }
                         }
 
                         // Reassign announcements

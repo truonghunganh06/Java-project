@@ -48,16 +48,20 @@ public interface StudentGroupRepository extends JpaRepository<StudentGroup, Long
     List<StudentGroup> findByStudentId(@Param("studentId") Long studentId);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
-    List<StudentGroup> findByPeriodDepartmentId(Long departmentId);
+    @Query("SELECT g FROM StudentGroup g WHERE g.period.department.id = :departmentId")
+    List<StudentGroup> findByPeriodDepartmentId(@Param("departmentId") Long departmentId);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
-    Page<StudentGroup> findByPeriodDepartmentId(Long departmentId, Pageable pageable);
+    @Query("SELECT g FROM StudentGroup g WHERE g.period.department.id = :departmentId")
+    Page<StudentGroup> findByPeriodDepartmentId(@Param("departmentId") Long departmentId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
-    List<StudentGroup> findByPeriodDepartmentIdAndPeriodId(Long departmentId, Long periodId);
+    @Query("SELECT g FROM StudentGroup g WHERE g.period.department.id = :departmentId AND g.period.id = :periodId")
+    List<StudentGroup> findByPeriodDepartmentIdAndPeriodId(@Param("departmentId") Long departmentId, @Param("periodId") Long periodId);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
-    Page<StudentGroup> findByPeriodDepartmentIdAndPeriodId(Long departmentId, Long periodId, Pageable pageable);
+    @Query("SELECT g FROM StudentGroup g WHERE g.period.department.id = :departmentId AND g.period.id = :periodId")
+    Page<StudentGroup> findByPeriodDepartmentIdAndPeriodId(@Param("departmentId") Long departmentId, @Param("periodId") Long periodId, Pageable pageable);
 
     /**
      * BUG-K FIX: Đếm số nhóm (không bị REJECTED/DRAFT) đang hướng dẫn bởi GV chính
