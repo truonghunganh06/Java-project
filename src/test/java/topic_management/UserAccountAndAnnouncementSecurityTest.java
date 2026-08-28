@@ -82,8 +82,8 @@ public class UserAccountAndAnnouncementSecurityTest {
         newUser.setFullName("Giảng Viên Bảo Mật Test");
         newUser.setEmail(unique + "@faculty.edu.vn");
 
-        boolean created = adminService.createUser(newUser, roleLecturer.getId());
-        assertTrue(created, "Tạo user mới thành công");
+        String created = adminService.createUser(newUser, roleLecturer.getId());
+        assertNull(created, "Tạo user mới thành công");
 
         // 1. Đăng nhập với thông tin đúng -> Thành công
         AppUser authenticated = authService.authenticate(unique, "Password@123");
@@ -110,7 +110,8 @@ public class UserAccountAndAnnouncementSecurityTest {
         newUser.setFullName("Sinh Viên Thử Nghiệm Khóa");
         newUser.setEmail(unique + "@student.edu.vn");
 
-        adminService.createUser(newUser, roleStudent.getId());
+        String created2 = adminService.createUser(newUser, roleStudent.getId());
+        assertNull(created2);
 
         AppUser createdUser = userRepository.findByUsername(unique).orElse(null);
         assertNotNull(createdUser);
@@ -141,7 +142,8 @@ public class UserAccountAndAnnouncementSecurityTest {
         newUser.setFullName("Người Dùng Đổi Mật Khẩu");
         newUser.setEmail(unique + "@uni.edu.vn");
 
-        adminService.createUser(newUser, roleDeptHead.getId());
+        String created3 = adminService.createUser(newUser, roleDeptHead.getId());
+        assertNull(created3);
         AppUser createdUser = userRepository.findByUsername(unique).orElse(null);
         assertNotNull(createdUser);
 

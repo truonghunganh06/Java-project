@@ -110,7 +110,7 @@ public class StudentGroupAndSubmissionSecurityTest {
         t1.setAcademicYear("2026-2027");
         t1.setSemester(1);
         topic1 = lecturerService.createTopic(supervisor, period.getId(), major.getId(), null, t1);
-        departmentHeadService.approveTopic(topic1.getId());
+        departmentHeadService.approveTopic(topic1.getId(), department.getId());
 
         Topic t2 = new Topic();
         t2.setCode("DT-GRP-02-" + System.nanoTime());
@@ -120,7 +120,7 @@ public class StudentGroupAndSubmissionSecurityTest {
         t2.setAcademicYear("2026-2027");
         t2.setSemester(1);
         topic2 = lecturerService.createTopic(supervisor, period.getId(), major.getId(), null, t2);
-        departmentHeadService.approveTopic(topic2.getId());
+        departmentHeadService.approveTopic(topic2.getId(), department.getId());
     }
 
     @Test
@@ -195,7 +195,7 @@ public class StudentGroupAndSubmissionSecurityTest {
         List<StudentGroup> supervisorGroups = lecturerService.getGroupsForLecturerTopics(supervisor);
         assertFalse(supervisorGroups.isEmpty());
 
-        boolean approved = lecturerService.approveGroupTopic(activeGroup.getId(), "APPROVED");
+        boolean approved = lecturerService.approveGroupTopic(activeGroup.getId(), "APPROVED", supervisor);
         assertTrue(approved, "GVHD duyệt nhóm thành công");
 
         StudentGroup reloaded = studentService.getMyActiveGroup(leader, period.getId());
@@ -226,7 +226,7 @@ public class StudentGroupAndSubmissionSecurityTest {
         assertEquals(leader.getId(), sub1.getSubmittedByStudent().getId(), "Người nộp phải là Leader");
 
         // 4. Giảng viên hướng dẫn nhận xét và chấm điểm bài nộp tiến độ
-        boolean graded = lecturerService.gradeSubmission(sub1.getId(), 9.5, "Báo cáo tiến độ rất tốt, hoàn thành đúng hạn.");
+        boolean graded = lecturerService.gradeSubmission(sub1.getId(), 9.5, "Báo cáo tiến độ rất tốt, hoàn thành đúng hạn.", supervisor);
         assertTrue(graded, "GVHD chấm điểm bài nộp thành công");
     }
 

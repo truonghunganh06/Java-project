@@ -202,7 +202,7 @@ public class RegistrationPeriodAndTopicConstraintTest {
         assertEquals(majorSoftware.getId(), createdTopic.getMajor().getId(), "Đề tài thuộc đúng chuyên ngành KTPM");
 
         // Trưởng khoa duyệt đề tài -> Chuyển thành APPROVED để công bố
-        departmentHeadService.approveTopic(createdTopic.getId());
+            departmentHeadService.approveTopic(createdTopic.getId(), department.getId());
         Topic approvedTopic = lecturerService.getTopicById(createdTopic.getId());
         assertEquals("APPROVED", approvedTopic.getStatus(), "Đề tài đã được công bố danh sách");
     }
@@ -232,7 +232,7 @@ public class RegistrationPeriodAndTopicConstraintTest {
         topic.setSemester(1);
 
         Topic saved = lecturerService.createTopic(supervisor1, earlyPeriod.getId(), majorNetwork.getId(), null, topic);
-        departmentHeadService.approveTopic(saved.getId());
+            departmentHeadService.approveTopic(saved.getId(), department.getId());
 
         StudentGroup group = studentService.createGroup(studentLeader, earlyPeriod.getId(), "Nhóm Thử Nghiệm");
         String result = studentService.registerTopicForGroup(studentLeader, group, saved.getId());
@@ -275,7 +275,7 @@ public class RegistrationPeriodAndTopicConstraintTest {
         assertTrue(regPendingResult.contains("chưa được duyệt") || regPendingResult.contains("không tồn tại"));
 
         // 2. Đề tài bị REJECTED bởi Trưởng khoa
-        departmentHeadService.rejectTopic(savedPending.getId(), "Đề tài không phù hợp chuyên ngành");
+            departmentHeadService.rejectTopic(savedPending.getId(), "Đề tài không phù hợp chuyên ngành", department.getId());
         String regRejectedResult = studentService.registerTopicForGroup(student, group, savedPending.getId());
         assertNotNull(regRejectedResult, "Không được cho đăng ký đề tài REJECTED");
     }

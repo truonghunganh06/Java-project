@@ -126,7 +126,7 @@ public class CouncilAndDefenseComprehensiveTest {
         tA.setAcademicYear("2026-2027");
         tA.setSemester(2);
         topicA = lecturerService.createTopic(gvChair, kltnPeriod.getId(), major.getId(), gvMember1.getId(), tA);
-        departmentHeadService.approveTopic(topicA.getId());
+        departmentHeadService.approveTopic(topicA.getId(), department.getId());
 
         // 4. Tạo đề tài Topic B do gvSupervisorOnly làm GVHD
         Topic tB = new Topic();
@@ -137,13 +137,13 @@ public class CouncilAndDefenseComprehensiveTest {
         tB.setAcademicYear("2026-2027");
         tB.setSemester(2);
         topicB = lecturerService.createTopic(gvSupervisorOnly, kltnPeriod.getId(), major.getId(), null, tB);
-        departmentHeadService.approveTopic(topicB.getId());
+        departmentHeadService.approveTopic(topicB.getId(), department.getId());
 
         // 5. Tạo nhóm sinh viên đăng ký Topic B
         studentLeader = createStudentFixture("sv_defense_lead", "Trần Văn Leader");
         studentGroup = studentService.createGroup(studentLeader, kltnPeriod.getId(), "Nhóm Blockchain KLTN");
         studentService.registerTopicForGroup(studentLeader, studentGroup, topicB.getId());
-        lecturerService.approveGroupTopic(studentGroup.getId(), "APPROVED");
+        lecturerService.approveGroupTopic(studentGroup.getId(), "APPROVED", gvSupervisorOnly);
     }
 
     @Test

@@ -119,7 +119,7 @@ class ExtendedBusinessRequirementTest {
         topic.setSemester(1);
 
         Topic createdTopic = lecturerService.createTopic(supervisor, closedPeriod.getId(), major.getId(), null, topic);
-        departmentHeadService.approveTopic(createdTopic.getId());
+        departmentHeadService.approveTopic(createdTopic.getId(), department.getId());
 
         Student leader = createStudent("ext_sv_closed");
         StudentGroup group = studentService.createGroup(leader, closedPeriod.getId(), "Nhóm đóng cửa");
@@ -154,7 +154,7 @@ class ExtendedBusinessRequirementTest {
         topic.setSemester(1);
 
         Topic createdTopic = lecturerService.createTopic(supervisor, period.getId(), major.getId(), null, topic);
-        departmentHeadService.approveTopic(createdTopic.getId());
+        departmentHeadService.approveTopic(createdTopic.getId(), department.getId());
 
         String firstRegistration = studentService.registerTopicForGroup(leader, firstGroup, createdTopic.getId());
         assertNull(firstRegistration, "Nhóm trưởng nên đăng ký đề tài thành công lần đầu");
