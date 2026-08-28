@@ -98,6 +98,8 @@ public class StudentController {
         try {
             StudentGroup g = studentService.createGroup(student, periodId, groupName);
             redirectAttributes.addFlashAttribute("successMessage", "Tạo nhóm '" + g.getGroupName() + "' thành công! Mã nhóm: " + g.getGroupCode());
+        } catch (org.springframework.web.server.ResponseStatusException rse) {
+            redirectAttributes.addFlashAttribute("errorMessage", rse.getReason() != null ? rse.getReason() : rse.getMessage());
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }

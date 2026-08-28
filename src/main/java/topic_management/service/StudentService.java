@@ -1,7 +1,9 @@
 package topic_management.service;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import topic_management.entity.*;
 import topic_management.repository.*;
 
@@ -38,6 +40,48 @@ public class StudentService {
         this.majorRepository = majorRepository;
         this.periodRepository = periodRepository;
         this.evaluationRepository = evaluationRepository;
+    }
+
+    /**
+     * GLOBAL VALIDATION (Áp dụng cho 100% sinh viên, không ngoại lệ):
+     * 1. Mỗi Đợt đăng ký (registration_period) thuộc về một Khoa cụ thể (department_id).
+     * 2. Bất kỳ sinh viên nào (student) được mời vào nhóm hoặc tham gia trong đợt đó,
+     *    hệ thống BẮT BUỘC phải check: student.department_id PHẢI TRÙNG KHỚP với period.department_id.
+     * 3. Nếu khác khoa, tuyệt đối từ chối và chặn đứng ở tầng Backend, ném ra lỗi 400
+     *    với thông báo: "Sinh viên không thuộc khoa quản lý đợt đăng ký này!".
+     */
+    public void validateStudentDepartmentInPeriod(Student student, RegistrationPeriod period) {
+        if (student == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không tìm thấy thông tin sinh viên!");
+        }
+        if (period == null) {
+            return;
+        }
+
+        // Lấy Khoa của đợt đăng ký
+        Department periodDept = period.getDepartment();
+        if (periodDept == null && period.getId() != null) {
+            RegistrationPeriod reloaded = periodRepository.findById(period.getId()).orElse(null);
+            if (reloaded != null) {
+                periodDept = reloaded.getDepartment();
+            }
+        }
+        if (periodDept == null || periodDept.getId() == null) {
+            return; // Đợt dùng chung toàn trường không gán khoa
+        }
+
+        // Lấy Khoa của sinh viên thông qua Chuyên ngành (Major)
+        Department studentDept = student.getDepartment();
+        if (studentDept == null && student.getMajor() != null && student.getMajor().getId() != null) {
+            Major m = majorRepository.findById(student.getMajor().getId()).orElse(null);
+            if (m != null) {
+                studentDept = m.getDepartment();
+            }
+        }
+
+        if (studentDept == null || !Objects.equals(studentDept.getId(), periodDept.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sinh viên không thuộc khoa quản lý đợt đăng ký này!");
+        }
     }
 
     @Transactional
@@ -109,6 +153,11 @@ public class StudentService {
             if (!activePeriods.isEmpty()) period = activePeriods.get(0);
         }
 
+        // GLOBAL VALIDATION: Kiểm tra tính đồng bộ Khoa cho Trưởng nhóm
+        if (period != null) {
+            validateStudentDepartmentInPeriod(leader, period);
+        }
+
         // Check if student already in a group in this period
         if (period != null) {
             List<StudentGroup> existing = groupRepository.findByStudentIdAndPeriodId(leader.getId(), period.getId());
@@ -158,7 +207,17 @@ public class StudentService {
             return "Không tìm thấy sinh viên có mã: " + studentCode;
         }
 
-        Long periodId = group.getPeriod() != null ? group.getPeriod().getId() : null;
+        // GLOBAL VALIDATION: Bắt buộc sinh viên được mời phải cùng Khoa với Đợt đăng ký
+        RegistrationPeriod period = group.getPeriod();
+        if (period != null) {
+            try {
+                validateStudentDepartmentInPeriod(invitee, period);
+            } catch (ResponseStatusException ex) {
+                return ex.getReason() != null ? ex.getReason() : "Sinh viên không thuộc khoa quản lý đợt đăng ký này!";
+            }
+        }
+
+        Long periodId = period != null ? period.getId() : null;
         List<StudentGroup> existing = groupRepository.findByStudentIdAndPeriodId(invitee.getId(), periodId);
         if (!existing.isEmpty()) {
             return "Sinh viên " + invitee.getUser().getFullName() + " (" + studentCode + ") đã tham gia một nhóm khác trong đợt này!";
@@ -186,6 +245,17 @@ public class StudentService {
         }
 
         StudentGroup group = opt.get();
+        RegistrationPeriod period = group.getPeriod();
+
+        // GLOBAL VALIDATION: Bắt buộc sinh viên gia nhập phải cùng Khoa với Đợt đăng ký
+        if (period != null) {
+            try {
+                validateStudentDepartmentInPeriod(student, period);
+            } catch (ResponseStatusException ex) {
+                return ex.getReason() != null ? ex.getReason() : "Sinh viên không thuộc khoa quản lý đợt đăng ký này!";
+            }
+        }
+
         List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
 
         // BUG-03 FIX: Kiểm tra giới hạn thành viên theo topic.maxStudents nếu nhóm đã có đề tài
@@ -197,7 +267,7 @@ public class StudentService {
             return "Nhóm " + group.getGroupName() + " đã đủ " + maxAllowed + " thành viên" + (group.getTopic() != null ? " theo quy định đề tài!" : "!");
         }
 
-        Long periodId = group.getPeriod() != null ? group.getPeriod().getId() : null;
+        Long periodId = period != null ? period.getId() : null;
         List<StudentGroup> existing = groupRepository.findByStudentIdAndPeriodId(student.getId(), periodId);
         if (!existing.isEmpty()) {
             return "Bạn đã thuộc một nhóm khác trong đợt này rồi!";
