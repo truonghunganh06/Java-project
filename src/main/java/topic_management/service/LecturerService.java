@@ -132,7 +132,12 @@ public class LecturerService {
 
     public List<StudentGroup> getGroupsForLecturerTopics(Lecturer lecturer) {
         if (lecturer == null || lecturer.getId() == null) return Collections.emptyList();
-        return studentGroupRepository.findByLecturerTopics(lecturer.getId());
+        List<Topic> myTopics = getTopicsByLecturer(lecturer);
+        List<StudentGroup> groups = new ArrayList<>();
+        for (Topic t : myTopics) {
+            groups.addAll(studentGroupRepository.findByTopicId(t.getId()));
+        }
+        return groups;
     }
 
     /**
