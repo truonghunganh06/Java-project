@@ -1,7 +1,87 @@
 @echo off
+setlocal enabledelayedexpansion
 title Topic Management Web Server
-echo Dang khoi dong ung dung web Spring Boot...
-set JAVA_HOME=C:\Users\Windows\.jdks\openjdk-26.0.2.1
-set PATH=%JAVA_HOME%\bin;%PATH%
-call mvnw.cmd spring-boot:run
+chcp 65001 >nul
+
+echo ===================================================
+echo   TOPIC MANAGEMENT SYSTEM - KHOI DONG SERVER
+echo ===================================================
+
+:: 1. Kiem tra JAVA_HOME hien tai hop le
+if defined JAVA_HOME (
+    if exist "%JAVA_HOME%\bin\javac.exe" (
+        goto :FOUND_JAVA
+    )
+)
+
+:: 2. Do tim cac thu muc JDK pho bien tren may
+if exist "C:\Program Files\Microsoft\jdk-21.0.12.101-hotspot\bin\javac.exe" (
+    set "JAVA_HOME=C:\Program Files\Microsoft\jdk-21.0.12.101-hotspot"
+    goto :FOUND_JAVA
+)
+
+for /d %%D in ("C:\Program Files\Microsoft\jdk-*") do (
+    if exist "%%D\bin\javac.exe" (
+        set "JAVA_HOME=%%D"
+        goto :FOUND_JAVA
+    )
+)
+
+for /d %%D in ("C:\Program Files\Eclipse Adoptium\jdk-*") do (
+    if exist "%%D\bin\javac.exe" (
+        set "JAVA_HOME=%%D"
+        goto :FOUND_JAVA
+    )
+)
+
+for /d %%D in ("C:\Program Files\Java\jdk-*") do (
+    if exist "%%D\bin\javac.exe" (
+        set "JAVA_HOME=%%D"
+        goto :FOUND_JAVA
+    )
+)
+
+for /d %%D in ("C:\Program Files\Amazon Corretto\jdk-*") do (
+    if exist "%%D\bin\javac.exe" (
+        set "JAVA_HOME=%%D"
+        goto :FOUND_JAVA
+    )
+)
+
+for /d %%D in ("%USERPROFILE%\.jdks\*") do (
+    if exist "%%D\bin\javac.exe" (
+        set "JAVA_HOME=%%D"
+        goto :FOUND_JAVA
+    )
+)
+
+:FOUND_JAVA
+if not defined JAVA_HOME (
+    echo [LOI] Khong tim thay JDK hop le tren may cua ban!
+    echo Vui long cai dat JDK 21 va thu lai.
+    pause
+    exit /b 1
+)
+
+echo [*] Su dung JAVA_HOME: %JAVA_HOME%
+set "PATH=%JAVA_HOME%\bin;%PATH%"
+
+echo [*] Dang bien dich va dong goi du an...
+call mvnw.cmd package -DskipTests
+
+if %ERRORLEVEL% NEQ 0 (
+    echo [LOI] Bien dich du an that bai! Vui long kiem tra loi tren.
+    pause
+    exit /b %ERRORLEVEL%
+)
+
+echo.
+echo ===================================================
+echo [*] Dang khoi dong ung dung web Spring Boot...
+echo [*] Truy cap sau khi khoi dong xong: http://localhost:8080
+echo ===================================================
+echo.
+
+"%JAVA_HOME%\bin\java.exe" -Dfile.encoding=UTF-8 -jar "target\topic_management-0.0.1-SNAPSHOT.jar"
+
 pause
