@@ -196,10 +196,14 @@ public class StudentController {
         List<Major> majors = studentService.getAllMajors();
         List<RegistrationPeriod> periods = studentService.getAllActivePeriods();
 
+        // Lấy danh sách ID đề tài đã có nhóm đăng ký (để làm mờ/disable nút trên UI)
+        java.util.Set<Long> takenTopicIds = studentService.getTakenTopicIds(topics);
+
         model.addAttribute("user", user);
         model.addAttribute("student", student);
         model.addAttribute("group", group);
         model.addAttribute("topics", topics);
+        model.addAttribute("takenTopicIds", takenTopicIds);
         model.addAttribute("majors", majors);
         model.addAttribute("periods", periods);
         model.addAttribute("selectedPeriodId", periodId);

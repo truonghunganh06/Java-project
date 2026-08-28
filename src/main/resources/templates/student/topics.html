@@ -69,7 +69,9 @@
                     Không tìm thấy đề tài nào phù hợp với bộ lọc.
                 </div>
 
+                <!-- th:with dùng để tính sẵn biến isTaken cho mỗi thẻ -->
                 <div th:each="t : ${topics}" class="col-lg-6 filterable-row"
+                     th:with="isTaken=${takenTopicIds != null and takenTopicIds.contains(t.id)}"
                      th:data-topic-id="${t.id}"
                      th:data-topic-code="${t.code}"
                      th:data-topic-title="${t.title}"
@@ -85,14 +87,24 @@
                      th:data-topic-requirements="${t.requirements}"
                      th:data-topic-role="STUDENT"
                      th:data-topic-has-group-topic="${group != null && group.topic != null}">
-                    <div class="saas-card p-4 h-100 d-flex flex-column justify-content-between cursor-pointer hover:border-blue-300 hover:shadow-md transition"
-                         onclick="openTopicDrawer(this.closest('.filterable-row'))">
+                    <!-- Card: mờ đi nếu đề tài đã được nhóm khác đăng ký -->
+                    <div class="saas-card p-4 h-100 d-flex flex-column justify-content-between transition"
+                         th:classappend="${isTaken} ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-blue-300 hover:shadow-md'"
+                         th:onclick="${isTaken} ? 'void(0)' : 'openTopicDrawer(this.closest(\'.filterable-row\'))'">
                         <div>
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold" th:text="${t.code}">DT-01</span>
-                                <span class="badge-pill-neutral font-medium text-xs" th:text="${t.major != null ? t.major.name : 'CNTT'}">Chuyên ngành</span>
+                                <div class="d-flex align-items-center gap-1">
+                                    <!-- Badge "Đã đăng ký" nổi bật khi đề tài bị chiếm -->
+                                    <span th:if="${isTaken}" class="badge bg-rose-100 text-rose-700 border border-rose-200 text-xs px-2 py-0.5 rounded-pill fw-semibold">
+                                        <i class="fa-solid fa-lock me-1 text-xs"></i>Đã có nhóm đăng ký
+                                    </span>
+                                    <span class="badge-pill-neutral font-medium text-xs" th:text="${t.major != null ? t.major.name : 'CNTT'}">Chuyên ngành</span>
+                                </div>
                             </div>
-                            <h2 class="text-sm font-bold text-slate-900 mb-2 line-clamp-2 hover:text-blue-600 transition" th:text="${t.title}">Tên đề tài</h2>
+                            <h2 class="text-sm font-bold text-slate-900 mb-2 line-clamp-2 transition"
+                                th:classappend="${isTaken} ? '' : 'hover:text-blue-600'"
+                                th:text="${t.title}">Tên đề tài</h2>
                             <p class="text-xs text-slate-500 mb-3 line-clamp-2 leading-relaxed" th:text="${t.description}">Mô tả đề tài...</p>
 
                             <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs mb-3 space-y-1">
@@ -106,27 +118,37 @@
                                 <i class="fa-solid fa-users me-1"></i> <span th:text="'Tối đa ' + ${t.maxStudents} + ' SV'">Tối đa 3 SV</span>
                             </span>
 
-                            <div th:if="${group != null}">
-                                <div th:if="${group.topic != null && group.topic.id == t.id}">
-                                    <span class="badge-pill-approved font-semibold text-xs">
-                                        <i class="fa-solid fa-check text-xs me-1"></i> Đang thực hiện
-                                    </span>
-                                </div>
-                                <div th:if="${group.topic == null && group.isLeader(student)}">
-                                    <form th:action="@{/student/topics/{id}/register(id=${t.id})}" method="post" onsubmit="return confirm('Bạn có chắc muốn đăng ký đề tài này cho nhóm?');">
-                                        <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">
-                                            <i class="fa-solid fa-paper-plane me-1"></i> Đăng ký đề tài
-                                        </button>
-                                    </form>
-                                </div>
-                                <div th:if="${group.topic == null && !group.isLeader(student)}">
-                                    <span class="text-xs text-slate-400 italic">Chỉ nhóm trưởng đăng ký</span>
-                                </div>
+                            <!-- Trường hợp: Đề tài đã bị nhóm khác đăng ký — DISABLE hoàn toàn -->
+                            <div th:if="${isTaken}">
+                                <button type="button" class="btn btn-sm rounded-xl px-3 text-xs font-semibold bg-slate-100 text-slate-400 border border-slate-200" disabled>
+                                    <i class="fa-solid fa-ban me-1"></i>Đã được đăng ký
+                                </button>
                             </div>
-                            <div th:if="${group == null}">
-                                <a th:href="@{/student/group}" class="text-blue-600 text-xs font-medium hover:underline">
-                                    Tạo nhóm để đăng ký &rarr;
-                                </a>
+
+                            <!-- Trường hợp: Đề tài còn trống — hiện nút đăng ký bình thường -->
+                            <div th:if="${!isTaken}">
+                                <div th:if="${group != null}">
+                                    <div th:if="${group.topic != null && group.topic.id == t.id}">
+                                        <span class="badge-pill-approved font-semibold text-xs">
+                                            <i class="fa-solid fa-check text-xs me-1"></i> Đang thực hiện
+                                        </span>
+                                    </div>
+                                    <div th:if="${group.topic == null && group.isLeader(student)}">
+                                        <form th:action="@{/student/topics/{id}/register(id=${t.id})}" method="post" onsubmit="return confirm('Bạn có chắc muốn đăng ký đề tài này cho nhóm?');">
+                                            <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">
+                                                <i class="fa-solid fa-paper-plane me-1"></i> Đăng ký đề tài
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <div th:if="${group.topic == null && !group.isLeader(student)}">
+                                        <span class="text-xs text-slate-400 italic">Chỉ nhóm trưởng đăng ký</span>
+                                    </div>
+                                </div>
+                                <div th:if="${group == null}">
+                                    <a th:href="@{/student/group}" class="text-blue-600 text-xs font-medium hover:underline">
+                                        Tạo nhóm để đăng ký &rarr;
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>

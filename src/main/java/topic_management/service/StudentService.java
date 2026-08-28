@@ -311,6 +311,26 @@ public class StudentService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Trả về tập hợp các topicId đã có nhóm đăng ký (trạng thái != DRAFT, != REJECTED).
+     * Dùng để UI hiển thị trực quan đề tài nào còn trống / đã kín chỗ.
+     */
+    public java.util.Set<Long> getTakenTopicIds(List<Topic> topics) {
+        if (topics == null || topics.isEmpty()) return java.util.Collections.emptySet();
+        List<Long> topicIds = topics.stream().map(Topic::getId).collect(Collectors.toList());
+        List<StudentGroup> groups = groupRepository.findByTopicIdIn(topicIds);
+        java.util.Set<Long> takenIds = new java.util.HashSet<>();
+        for (StudentGroup g : groups) {
+            // Chỉ tính nhóm đang ACTIVE (không phải DRAFT hay REJECTED)
+            if (g.getTopic() != null && g.getStatus() != null
+                    && !"DRAFT".equalsIgnoreCase(g.getStatus())
+                    && !"REJECTED".equalsIgnoreCase(g.getStatus())) {
+                takenIds.add(g.getTopic().getId());
+            }
+        }
+        return takenIds;
+    }
+
     public Topic getTopicById(Long id) {
         if (id == null) return null;
         return topicRepository.findById(id).orElse(null);
