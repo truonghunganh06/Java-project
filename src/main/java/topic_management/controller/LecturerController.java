@@ -62,13 +62,28 @@ public class LecturerController {
         long approvedCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus())).count();
         long pendingCount = topics.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
 
+        List<StudentGroup> pendingGroups = groups.stream()
+                .filter(g -> "DRAFT".equalsIgnoreCase(g.getStatus()) || "REGISTERED".equalsIgnoreCase(g.getStatus()) || "PENDING".equalsIgnoreCase(g.getStatus()))
+                .toList();
+        List<Submission> ungradedSubmissions = submissions.stream()
+                .filter(s -> s.getGrade() == null)
+                .toList();
+        List<Topic> rejectedTopics = topics.stream()
+                .filter(t -> "REJECTED".equalsIgnoreCase(t.getStatus()))
+                .toList();
+
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("topics", topics);
         model.addAttribute("reviewerTopics", reviewerTopics);
         model.addAttribute("councils", councils);
         model.addAttribute("groups", groups);
+        model.addAttribute("studentGroups", groups);
+        model.addAttribute("pendingGroups", pendingGroups);
+        model.addAttribute("ungradedSubmissions", ungradedSubmissions);
+        model.addAttribute("rejectedTopics", rejectedTopics);
         model.addAttribute("submissions", submissions);
+        model.addAttribute("totalSubmissions", submissions.size());
         model.addAttribute("announcements", announcements.stream().limit(5).toList());
         model.addAttribute("totalTopics", topics.size());
         model.addAttribute("approvedTopics", approvedCount);
@@ -142,6 +157,74 @@ public class LecturerController {
         return "redirect:/lecturer/topics";
     }
 
+    @GetMapping("/topics/{id}/edit")
+    public String showEditTopicForm(@PathVariable("id") Long id, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Lecturer lecturer = lecturerService.getLecturerByUser(user);
+        Topic topic = lecturerService.getTopicById(id);
+        if (topic == null || !topic.isSupervisorOrCoSupervisor(lecturer)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy đề tài hoặc bạn không có quyền chỉnh sửa!");
+            return "redirect:/lecturer/topics";
+        }
+
+        List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
+        List<Lecturer> coSupervisors = lecturerService.getOtherLecturers(lecturer.getId());
+        List<Major> majors = lecturerService.getAllMajors();
+
+        model.addAttribute("user", user);
+        model.addAttribute("lecturer", lecturer);
+        model.addAttribute("topic", topic);
+        model.addAttribute("periods", periods);
+        model.addAttribute("coSupervisors", coSupervisors);
+        model.addAttribute("majors", majors);
+
+        return "lecturer/edit-topic";
+    }
+
+    @PostMapping("/topics/{id}/edit")
+    public String handleEditTopic(
+            @PathVariable("id") Long id,
+            @ModelAttribute Topic topic,
+            @RequestParam("majorId") Long majorId,
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            @RequestParam(value = "coSupervisorId", required = false) Long coSupervisorId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Lecturer lecturer = lecturerService.getLecturerByUser(user);
+        try {
+            Topic updated = lecturerService.updateTopic(lecturer, id, periodId, majorId, coSupervisorId, topic);
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật đề tài '" + updated.getTitle() + "' thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi cập nhật đề tài: " + e.getMessage());
+        }
+        return "redirect:/lecturer/topics";
+    }
+
+    @PostMapping("/topics/{id}/delete")
+    public String handleDeleteTopic(@PathVariable("id") Long id, HttpSession session, RedirectAttributes redirectAttributes) {
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Lecturer lecturer = lecturerService.getLecturerByUser(user);
+        try {
+            boolean success = lecturerService.deleteTopic(id, lecturer);
+            if (success) {
+                redirectAttributes.addFlashAttribute("successMessage", "Đã xóa đề tài thành công!");
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa đề tài này!");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa: " + e.getMessage());
+        }
+        return "redirect:/lecturer/topics";
+    }
+
     // ==================== GROUPS & APPROVAL ====================
 
     @GetMapping("/registrations")
@@ -189,6 +272,27 @@ public class LecturerController {
             redirectAttributes.addFlashAttribute("errorMessage", "Đã từ chối nhóm đăng ký.");
         } else {
             redirectAttributes.addFlashAttribute("errorMessage", "Không thể từ chối nhóm này!");
+        }
+        return "redirect:/lecturer/registrations";
+    }
+
+    @PostMapping("/topics/{topicId}/grade-advisor")
+    public String gradeAdvisor(
+            @PathVariable("topicId") Long topicId,
+            @RequestParam("score") Double score,
+            @RequestParam(value = "comments", required = false) String comments,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Lecturer lecturer = lecturerService.getLecturerByUser(user);
+        boolean ok = councilService.submitEvaluation(topicId, lecturer.getId(), "SUPERVISOR", score, comments);
+        if (ok) {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã nộp điểm và nhận xét hướng dẫn (quá trình) thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể nộp điểm hướng dẫn (bạn không phải GVHD hoặc đề tài chưa có nhóm sinh viên)!");
         }
         return "redirect:/lecturer/registrations";
     }

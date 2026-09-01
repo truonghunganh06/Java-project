@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "notebooklm": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\trant\\AppData\\Roaming\\npm\\node_modules\\notebooklm-mcp\\dist\\index.js"
+      ]
+    }
+  }
+}

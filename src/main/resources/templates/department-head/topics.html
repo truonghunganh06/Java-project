@@ -172,11 +172,13 @@
                                                         <label class="form-label text-xs font-semibold text-slate-700">Chọn Cán bộ Phản biện *</label>
                                                         <select name="reviewerId" class="form-select text-xs rounded-xl" required>
                                                             <option value="">-- Chọn Giảng viên Phản biện --</option>
-                                                            <option th:each="l : ${lecturers}" th:if="${t.supervisor == null || !l.id.equals(t.supervisor.id)}"
-                                                                    th:value="${l.id}" th:text="${(l.academicTitle != null ? l.academicTitle + ' ' : '') + (l.user != null ? l.user.fullName : '')}"
+                                                            <option th:each="l : ${lecturers}" 
+                                                                    th:if="${(t.supervisor == null || !l.id.equals(t.supervisor.id)) && (t.coSupervisor == null || !l.id.equals(t.coSupervisor.id))}"
+                                                                    th:value="${l.id}" 
+                                                                    th:text="${(l.academicTitle != null ? l.academicTitle + ' ' : '') + (l.user != null ? l.user.fullName : '')}"
                                                                     th:selected="${t.reviewer != null && t.reviewer.id.equals(l.id)}"></option>
                                                         </select>
-                                                        <span class="text-xs text-slate-400 mt-1.5 d-block italic">* Quy định: Giảng viên phản biện không được trùng với Giảng viên hướng dẫn.</span>
+                                                        <span class="text-xs text-slate-400 mt-1.5 d-block italic">* Hệ thống đã tự động loại bỏ Giảng viên hướng dẫn để tránh xung đột lợi ích.</span>
                                                     </div>
                                                     <div class="modal-footer border-t border-slate-100 p-3">
                                                         <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
@@ -199,12 +201,21 @@
                                                     <div class="modal-body p-4">
                                                         <div class="p-3 bg-slate-50 rounded-xl mb-3 border border-slate-100">
                                                             <div class="text-xs font-bold text-slate-900" th:text="${t.title}"></div>
+                                                            <div class="text-xs text-slate-500 mt-1">GVHD: <strong th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'N/A'}"></strong></div>
                                                         </div>
                                                         <label class="form-label text-xs font-semibold text-slate-700">Chọn Hội đồng bảo vệ *</label>
                                                         <select name="councilId" class="form-select text-xs rounded-xl" required>
                                                             <option value="">-- Chọn Hội đồng --</option>
-                                                            <option th:each="c : ${councils}" th:value="${c.id}" th:text="${c.name + ' (' + c.code + ')'}" th:selected="${t.council != null && t.council.id.equals(c.id)}"></option>
+                                                            <th:block th:each="c : ${councils}">
+                                                                <option th:with="memberIds=${councilLecturerIdsMap != null ? councilLecturerIdsMap.get(c.id) : null},
+                                                                                 isConflict=${memberIds != null && ((t.supervisor != null && memberIds.contains(t.supervisor.id)) || (t.coSupervisor != null && memberIds.contains(t.coSupervisor.id)))}"
+                                                                        th:if="${!isConflict}"
+                                                                        th:value="${c.id}" 
+                                                                        th:text="${c.name + ' (' + c.code + ')'}" 
+                                                                        th:selected="${t.council != null && t.council.id.equals(c.id)}"></option>
+                                                            </th:block>
                                                         </select>
+                                                        <span class="text-xs text-slate-400 mt-1.5 d-block italic">* Hệ thống đã tự động lọc bỏ các Hội đồng có chứa Giảng viên hướng dẫn.</span>
                                                     </div>
                                                     <div class="modal-footer border-t border-slate-100 p-3">
                                                         <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
@@ -229,12 +240,30 @@
                                     </span>
                                 </td>
 
-                                <!-- Cột 6: Thao tác mở Drawer [ > ] -->
+                                <!-- Cột 6: Thao tác -->
                                 <td class="text-end">
-                                    <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2.5 py-1 text-slate-700 hover:bg-slate-100 hover:text-blue-600 transition"
-                                            title="Xem chi tiết đề tài" onclick="openTopicDrawer(this.closest('tr'))">
-                                        <i class="fa-solid fa-chevron-right text-xs"></i>
-                                    </button>
+                                    <div class="d-inline-flex align-items-center gap-1.5">
+                                        <!-- Quick Approve Button for PENDING -->
+                                        <form th:if="${t.status == 'PENDING'}" th:action="@{/department-head/topics/{id}/approve(id=${t.id})}" method="post" class="d-inline" onsubmit="return confirm('Xác nhận PHÊ DUYỆT đề tài này?');">
+                                            <button type="submit" class="btn btn-sm bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-xl px-2 py-1 text-xs font-semibold transition" title="Phê duyệt đề tài">
+                                                <i class="fa-solid fa-check me-1 text-xs"></i> Duyệt
+                                            </button>
+                                        </form>
+
+                                        <!-- Quick Reject Button for PENDING -->
+                                        <button th:if="${t.status == 'PENDING'}" type="button" class="btn btn-sm bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-xl px-2 py-1 text-xs font-semibold transition" 
+                                                data-bs-toggle="modal" data-bs-target="#rejectModal" 
+                                                th:onclick="'prepareRejectModal(' + ${t.id} + ', \'' + ${#strings.replace(t.title, '\'', '\\\'')} + '\')'" 
+                                                title="Từ chối đề tài">
+                                            <i class="fa-solid fa-xmark me-1 text-xs"></i> Từ chối
+                                        </button>
+
+                                        <!-- Detail Drawer Button -->
+                                        <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2 py-1 text-slate-700 hover:bg-slate-100 hover:text-blue-600 transition"
+                                                title="Xem chi tiết đề tài" onclick="openTopicDrawer(this.closest('tr'))">
+                                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>

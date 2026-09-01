@@ -1,6 +1,7 @@
 package topic_management.service;
 
 import jakarta.annotation.PostConstruct;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import topic_management.entity.*;
@@ -11,6 +12,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@DependsOn("databaseMigrationService")
 public class CouncilService {
 
     private final CouncilRepository councilRepository;
@@ -67,7 +69,10 @@ public class CouncilService {
 
         for (Topic t : allTopics) {
             if (!topicsWithGroups.contains(t.getId())) {
-                if (t.getFinalScore() != null || Boolean.TRUE.equals(t.getIsFinalized())) {
+                if (t.getFinalScore() != null || t.getAdvisorScore() != null || t.getReviewerScore() != null || t.getCouncilScore() != null || Boolean.TRUE.equals(t.getIsFinalized())) {
+                    t.setAdvisorScore(null);
+                    t.setReviewerScore(null);
+                    t.setCouncilScore(null);
                     t.setFinalScore(null);
                     t.setIsFinalized(false);
                     topicRepository.save(t);
@@ -396,7 +401,7 @@ public class CouncilService {
         Topic topic = topicRepository.findById(topicId).orElse(null);
         Lecturer lecturer = lecturerRepository.findById(lecturerId).orElse(null);
 
-        if (topic == null || lecturer == null) return false;
+        if (topic == null || lecturer == null || evaluationType == null) return false;
 
         List<StudentGroup> groups = groupRepository.findByTopicId(topicId);
         if (groups.isEmpty()) {
@@ -404,31 +409,56 @@ public class CouncilService {
             return false;
         }
 
-        // BUG-E FIX: Kiểm tra xung đột lợi ích cho cả supervisor CHÍNH và supervisor PHỤ
-        boolean isReviewerOrCouncil = "REVIEWER".equalsIgnoreCase(evaluationType)
-                || "COUNCIL".equalsIgnoreCase(evaluationType);
+        String evalTypeUpper = evaluationType.trim().toUpperCase();
 
-        if (isReviewerOrCouncil) {
-            if (topic.getSupervisor() != null && lecturer.getId().equals(topic.getSupervisor().getId())) {
-                System.err.println("[DB-EVAL] Xung đột lợi ích! GVHD chính không được tự chấm điểm với tư cách Phản biện hoặc Hội đồng!");
+        // 1. Phân quyền và kiểm tra xung đột lợi ích nghiêm ngặt theo quy chế
+        boolean isSupervisor = topic.isSupervisorOrCoSupervisor(lecturer);
+
+        if ("COUNCIL".equals(evalTypeUpper)) {
+            // TUYỆT ĐỐI KHÔNG ĐỂ GVHD (chính hoặc phụ) CÓ QUYỀN CHẤM ĐIỂM TRONG HỘI ĐỒNG BẢO VỆ
+            if (isSupervisor) {
+                System.err.println("[DB-EVAL] Xung đột lợi ích nghiêm trọng! GVHD không được phép chấm điểm trong Hội đồng bảo vệ cho đề tài của mình!");
                 return false;
             }
-            // BUG-E FIX: Thêm kiểm tra cho coSupervisor
-            if (topic.getCoSupervisor() != null && lecturer.getId().equals(topic.getCoSupervisor().getId())) {
-                System.err.println("[DB-EVAL] Xung đột lợi ích! GVHD phụ không được tự chấm điểm với tư cách Phản biện hoặc Hội đồng!");
+            // Giảng viên chấm Hội đồng phải thuộc Hội đồng được phân công cho đề tài này
+            if (topic.getCouncil() == null) {
+                System.err.println("[DB-EVAL] Lỗi! Đề tài chưa được phân công vào Hội đồng bảo vệ nào!");
                 return false;
             }
+            List<CouncilMember> members = councilMemberRepository.findByCouncilId(topic.getCouncil().getId());
+            boolean isMember = members.stream()
+                    .anyMatch(m -> m.getLecturer() != null && m.getLecturer().getId().equals(lecturer.getId()));
+            if (!isMember) {
+                System.err.println("[DB-EVAL] Lỗi! Giảng viên không phải thành viên của Hội đồng ID=" + topic.getCouncil().getId());
+                return false;
+            }
+        } else if ("REVIEWER".equals(evalTypeUpper)) {
+            // Giảng viên phản biện tuyệt đối không được trùng với GVHD
+            if (isSupervisor) {
+                System.err.println("[DB-EVAL] Xung đột lợi ích! GVHD không được tự chấm phản biện cho đề tài của mình!");
+                return false;
+            }
+        } else if ("SUPERVISOR".equals(evalTypeUpper)) {
+            // Chỉ GVHD chính hoặc phụ mới có quyền nhập điểm quá trình (SUPERVISOR)
+            if (!isSupervisor) {
+                System.err.println("[DB-EVAL] Lỗi quyền hạn! Chỉ Giảng viên hướng dẫn của đề tài mới được chấm điểm quá trình (SUPERVISOR)!");
+                return false;
+            }
+        } else {
+            System.err.println("[DB-EVAL] Loại phiếu chấm không hợp lệ: " + evaluationType);
+            return false;
         }
 
-        Evaluation eval = evaluationRepository.findByTopicIdAndLecturerIdAndEvaluationType(topicId, lecturerId, evaluationType)
+        Evaluation eval = evaluationRepository.findByTopicIdAndLecturerIdAndEvaluationType(topicId, lecturerId, evalTypeUpper)
                 .orElse(new Evaluation());
 
         eval.setTopic(topic);
         eval.setLecturer(lecturer);
         eval.setGroup(!groups.isEmpty() ? groups.get(0) : null);
-        eval.setEvaluationType(evaluationType);
+        eval.setEvaluationType(evalTypeUpper);
         eval.setScore(score);
-        eval.setComments(comments);
+        eval.setComments(comments != null ? comments.trim() : null);
+        eval.setIsSubmitted(true);
         eval.setEvaluatedAt(OffsetDateTime.now());
 
         evaluationRepository.save(eval);
@@ -438,9 +468,15 @@ public class CouncilService {
     }
 
     /**
-     * Tính điểm tổng kết theo quy tắc nghiệp vụ:
-     * "Điểm tổng kết = Trung bình cộng các điểm thành phần" (không dùng trọng số).
-     * Mỗi Giảng viên chấm một phiếu, tất cả phiếu có giá trị ngang nhau.
+     * Tính điểm tổng kết theo chuẩn quy chế học thuật thực tế:
+     * - LOẠI BỎ HOÀN TOÀN ĐIỂM GVHD KHỎI ĐIỂM TỔNG KẾT KHÓA LUẬN (FinalScore).
+     * - Điểm GVHD (AdvisorScore) được lưu độc lập để theo dõi quá trình/điều kiện ra bảo vệ.
+     * - Điểm Tổng Kết (FinalScore) tính trên 2 thành phần độc lập:
+     *   1. ReviewerScore: Điểm phản biện từ Giảng viên Phản biện độc lập (Trọng số 40%)
+     *   2. CouncilScore: Điểm trung bình cộng từ các thành viên Hội đồng bảo vệ (Trọng số 60%)
+     * 
+     * Công thức chuẩn (Tổng 100%):
+     * FinalScore = (ReviewerScore * 0.40) + (CouncilScore * 0.60)
      */
     @Transactional
     public void calculateAndSetFinalScore(Topic topic) {
@@ -448,6 +484,9 @@ public class CouncilService {
 
         List<StudentGroup> groups = groupRepository.findByTopicId(topic.getId());
         if (groups.isEmpty()) {
+            topic.setAdvisorScore(null);
+            topic.setReviewerScore(null);
+            topic.setCouncilScore(null);
             topic.setFinalScore(null);
             topic.setIsFinalized(false);
             topicRepository.save(topic);
@@ -456,30 +495,61 @@ public class CouncilService {
 
         List<Evaluation> evals = evaluationRepository.findByTopicId(topic.getId());
         if (evals.isEmpty()) {
+            topic.setAdvisorScore(null);
+            topic.setReviewerScore(null);
+            topic.setCouncilScore(null);
             topic.setFinalScore(null);
             topicRepository.save(topic);
             return;
         }
 
-        // Lấy tất cả phiếu chấm có điểm hợp lệ (không phân biệt loại)
-        List<Evaluation> validEvals = evals.stream()
-                .filter(e -> e.getScore() != null)
+        // 1. Điểm quá trình từ Giảng viên Hướng dẫn (SUPERVISOR) - Lưu riêng để theo dõi tiến độ
+        List<Evaluation> supervisorEvals = evals.stream()
+                .filter(e -> "SUPERVISOR".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null)
                 .toList();
-
-        if (!validEvals.isEmpty()) {
-            // QUY TẪC NGHIỆP VỤ: Trung bình cộng đơn giản của tất cả phiếu chấm
-            double avg = validEvals.stream()
-                    .mapToDouble(Evaluation::getScore)
-                    .average()
-                    .orElse(0.0);
-
-            // Làm tròn 2 chữ số thập phân
-            double finalScore = Math.round(avg * 100.0) / 100.0;
-            topic.setFinalScore(finalScore);
-        } else {
-            topic.setFinalScore(null);
+        Double advisorScore = null;
+        if (!supervisorEvals.isEmpty()) {
+            double avg = supervisorEvals.stream().mapToDouble(Evaluation::getScore).average().orElse(0.0);
+            advisorScore = Math.round(avg * 100.0) / 100.0;
         }
 
+        // 2. Điểm phản biện từ Giảng viên Phản biện (REVIEWER) - Trọng số 40%
+        List<Evaluation> reviewerEvals = evals.stream()
+                .filter(e -> "REVIEWER".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null)
+                .toList();
+        Double reviewerScore = null;
+        if (!reviewerEvals.isEmpty()) {
+            double avg = reviewerEvals.stream().mapToDouble(Evaluation::getScore).average().orElse(0.0);
+            reviewerScore = Math.round(avg * 100.0) / 100.0;
+        }
+
+        // 3. Điểm trung bình từ các thành viên Hội đồng bảo vệ (COUNCIL) - Trọng số 60%
+        List<Evaluation> councilEvals = evals.stream()
+                .filter(e -> "COUNCIL".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null)
+                .toList();
+        Double councilScore = null;
+        if (!councilEvals.isEmpty()) {
+            double avg = councilEvals.stream().mapToDouble(Evaluation::getScore).average().orElse(0.0);
+            councilScore = Math.round(avg * 100.0) / 100.0;
+        }
+
+        topic.setAdvisorScore(advisorScore);
+        topic.setReviewerScore(reviewerScore);
+        topic.setCouncilScore(councilScore);
+
+        // 4. ÁP DỤNG CÔNG THỨC ĐIỂM TỔNG KẾT (FinalScore) - LOẠI BỎ HOÀN TOÀN ĐIỂM GVHD
+        Double finalScore = null;
+        if (reviewerScore != null && councilScore != null) {
+            // Có cả Phản biện (40%) và Hội đồng (60%)
+            double calc = (reviewerScore * 0.40) + (councilScore * 0.60);
+            finalScore = Math.round(calc * 100.0) / 100.0;
+        } else if (councilScore != null) {
+            finalScore = councilScore;
+        } else if (reviewerScore != null) {
+            finalScore = reviewerScore;
+        }
+
+        topic.setFinalScore(finalScore);
         topicRepository.save(topic);
     }
 

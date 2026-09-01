@@ -297,11 +297,21 @@ public class StudentService {
 
     // ==================== TOPIC REGISTRATION ====================
 
-    public List<Topic> getAvailableTopics(Long periodId, Long majorId, String keyword) {
+    /**
+     * Lấy danh sách đề tài APPROVED, ưu tiên lọc theo Khoa của sinh viên (departmentId).
+     * Nếu departmentId != null: chỉ trả về đề tài thuộc Khoa đó (major.department.id == departmentId).
+     * Kết hợp thêm bộ lọc periodId, majorId, keyword.
+     */
+    public List<Topic> getAvailableTopics(Long periodId, Long majorId, String keyword, Long departmentId) {
         List<Topic> list = (periodId != null)
                 ? topicRepository.findApprovedByPeriodId(periodId)
                 : topicRepository.findByStatus("APPROVED");
         return list.stream()
+                // Lọc theo Khoa của sinh viên (nếu có departmentId)
+                .filter(t -> departmentId == null
+                        || (t.getMajor() != null
+                            && t.getMajor().getDepartment() != null
+                            && departmentId.equals(t.getMajor().getDepartment().getId())))
                 .filter(t -> majorId == null || (t.getMajor() != null && majorId.equals(t.getMajor().getId())))
                 // BUG-02 FIX: Chỉ hiển thị đề tài trong đợt đang mở đăng ký cho sinh viên
                 .filter(t -> t.getPeriod() == null || t.getPeriod().isStudentRegistrationOpen())
@@ -497,5 +507,14 @@ public class StudentService {
 
     public List<Major> getAllMajors() {
         return majorRepository.findAll();
+    }
+
+    /**
+     * Lấy danh sách Chuyên ngành theo Khoa (dùng để populate dropdown filter
+     * chỉ hiện chuyên ngành thuộc Khoa của sinh viên đang đăng nhập).
+     */
+    public List<Major> getMajorsByDepartment(Long departmentId) {
+        if (departmentId == null) return majorRepository.findAll();
+        return majorRepository.findByDepartmentId(departmentId);
     }
 }

@@ -75,12 +75,12 @@
                     <table class="table table-saas mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 14%;">Mã đề tài</th>
-                                <th style="width: 36%;">Tên đề tài & Mô tả</th>
-                                <th style="width: 18%;">Chuyên ngành / Đợt</th>
-                                <th style="width: 12%;">Chỉ tiêu</th>
+                                <th style="width: 12%;">Mã đề tài</th>
+                                <th style="width: 32%;">Tên đề tài & Mô tả</th>
+                                <th style="width: 16%;">Chuyên ngành / Đợt</th>
+                                <th style="width: 10%;">Chỉ tiêu</th>
                                 <th style="width: 12%;">Trạng thái</th>
-                                <th style="width: 8%;" class="text-end">Chi tiết</th>
+                                <th style="width: 18%;" class="text-end">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -105,6 +105,7 @@
                                 th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
                                 th:data-topic-max-students="${t.maxStudents}"
                                 th:data-topic-status="${t.status}"
+                                th:data-topic-rejection-reason="${t.rejectionReason}"
                                 th:data-topic-description="${t.description}"
                                 th:data-topic-requirements="${t.requirements}"
                                 th:data-topic-role="LECTURER">
@@ -114,6 +115,10 @@
                                 <td>
                                     <div class="font-bold text-slate-900 text-xs line-clamp-1 hover:text-blue-600 transition cursor-pointer" th:text="${t.title}" onclick="openTopicDrawer(this.closest('tr'))">Xây dựng ứng dụng quản lý</div>
                                     <span class="text-xs text-slate-400 line-clamp-1 truncate-cell" th:text="${t.description}">Mô tả tóm tắt</span>
+                                    <!-- Rejection Reason mini tag -->
+                                    <div th:if="${t.status == 'REJECTED' && t.rejectionReason != null}" class="mt-1 text-xs text-rose-600 font-medium line-clamp-1">
+                                        <i class="fa-solid fa-triangle-exclamation me-1"></i> <span th:text="'Lý do: ' + ${t.rejectionReason}"></span>
+                                    </div>
                                 </td>
                                 <td>
                                     <div class="font-medium text-slate-800 text-xs truncate-cell" th:text="${t.major != null ? t.major.name : 'CNTT'}">Kỹ thuật phần mềm</div>
@@ -134,10 +139,31 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
-                                    <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2.5 py-1 text-slate-700 hover:bg-slate-100 hover:text-blue-600 transition"
-                                            title="Xem chi tiết đề tài" onclick="openTopicDrawer(this.closest('tr'))">
-                                        <i class="fa-solid fa-chevron-right text-xs"></i>
-                                    </button>
+                                    <div class="d-inline-flex align-items-center gap-1.5">
+                                        <!-- Edit Button -->
+                                        <a th:href="@{/lecturer/topics/{id}/edit(id=${t.id})}" 
+                                           class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2 py-1 text-slate-700 hover:bg-slate-100 hover:text-blue-600 transition text-xs font-semibold"
+                                           title="Chỉnh sửa đề tài">
+                                            <i class="fa-solid fa-pen-to-square text-xs me-1"></i> Sửa
+                                        </a>
+
+                                        <!-- Delete Button (for PENDING or REJECTED) -->
+                                        <form th:if="${t.status == 'PENDING' || t.status == 'REJECTED'}" 
+                                              th:action="@{/lecturer/topics/{id}/delete(id=${t.id})}" 
+                                              method="post" class="d-inline"
+                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa đề xuất đề tài này?');">
+                                            <button type="submit" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2 py-1 text-slate-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition text-xs"
+                                                    title="Xóa đề xuất">
+                                                <i class="fa-solid fa-trash-can text-xs"></i>
+                                            </button>
+                                        </form>
+
+                                        <!-- Detail Drawer Button -->
+                                        <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2 py-1 text-slate-700 hover:bg-slate-100 hover:text-blue-600 transition"
+                                                title="Xem chi tiết đề tài" onclick="openTopicDrawer(this.closest('tr'))">
+                                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>

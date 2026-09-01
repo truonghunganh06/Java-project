@@ -62,6 +62,7 @@ public class TopicApiController {
         // Business Rule: If no group assigned, finalScore MUST be null
         data.put("finalScore", hasGroup ? t.getFinalScore() : null);
         data.put("isFinalized", hasGroup ? t.getIsFinalized() : false);
+        data.put("rejectionReason", t.getRejectionReason());
 
         return ResponseEntity.ok(data);
     }

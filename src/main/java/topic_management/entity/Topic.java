@@ -64,8 +64,17 @@ public class Topic {
     @Column(name = "is_finalized")
     private Boolean isFinalized = false;
 
+    @Column(name = "advisor_score")
+    private Double advisorScore; // Điểm quá trình từ Giảng viên Hướng dẫn
+
+    @Column(name = "reviewer_score")
+    private Double reviewerScore; // Điểm phản biện từ Giảng viên Phản biện
+
+    @Column(name = "council_score")
+    private Double councilScore; // Điểm trung bình từ Hội đồng bảo vệ
+
     @Column(name = "final_score")
-    private Double finalScore;
+    private Double finalScore; // Điểm tổng kết theo trọng số học thuật
 
     @Column(name = "created_at")
     private OffsetDateTime createdAt = OffsetDateTime.now();
@@ -206,6 +215,30 @@ public class Topic {
 
     public void setIsFinalized(Boolean isFinalized) {
         this.isFinalized = isFinalized;
+    }
+
+    public Double getAdvisorScore() {
+        return advisorScore;
+    }
+
+    public void setAdvisorScore(Double advisorScore) {
+        this.advisorScore = advisorScore;
+    }
+
+    public Double getReviewerScore() {
+        return reviewerScore;
+    }
+
+    public void setReviewerScore(Double reviewerScore) {
+        this.reviewerScore = reviewerScore;
+    }
+
+    public Double getCouncilScore() {
+        return councilScore;
+    }
+
+    public void setCouncilScore(Double councilScore) {
+        this.councilScore = councilScore;
     }
 
     public Double getFinalScore() {

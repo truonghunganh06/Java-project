@@ -66,7 +66,8 @@ public class DepartmentHeadController {
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
         model.addAttribute("stats", stats);
-        model.addAttribute("pendingTopics", pendingTopics.stream().limit(5).toList());
+        model.addAttribute("pendingTopics", pendingTopics.stream().limit(8).toList());
+        model.addAttribute("totalPendingTopics", pendingTopics.size());
         model.addAttribute("periods", periods.stream().limit(4).toList());
         model.addAttribute("allPeriods", periods);
         model.addAttribute("councils", councils.stream().limit(4).toList());
@@ -168,6 +169,17 @@ public class DepartmentHeadController {
         List<Council> councils = councilService.getCouncilsByDepartment(dept.getId());
         Map<String, Object> stats = departmentHeadService.getDepartmentStats(dept.getId());
 
+        // Lập bản đồ thành viên từng hội đồng để tự động lọc bỏ hội đồng xung đột với GVHD
+        Map<Long, Set<Long>> councilLecturerIdsMap = new HashMap<>();
+        for (Council c : councils) {
+            List<CouncilMember> members = councilService.getCouncilMembers(c.getId());
+            Set<Long> lIds = members.stream()
+                    .filter(m -> m.getLecturer() != null)
+                    .map(m -> m.getLecturer().getId())
+                    .collect(Collectors.toSet());
+            councilLecturerIdsMap.put(c.getId(), lIds);
+        }
+
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
         model.addAttribute("topics", topics);
@@ -175,6 +187,7 @@ public class DepartmentHeadController {
         model.addAttribute("periods", periods);
         model.addAttribute("lecturers", lecturers);
         model.addAttribute("councils", councils);
+        model.addAttribute("councilLecturerIdsMap", councilLecturerIdsMap);
         model.addAttribute("selectedStatus", status);
         model.addAttribute("selectedMajorId", majorId);
         model.addAttribute("selectedPeriodId", periodId);

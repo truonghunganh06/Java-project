@@ -4,232 +4,639 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import topic_management.entity.*;
 import topic_management.repository.*;
 
 import java.time.OffsetDateTime;
-import java.util.List;
+import java.util.*;
 
 /**
- * DataSeederService — Seed dữ liệu đề tài mẫu đa khoa.
- * Chỉ thêm khi đề tài có code đó chưa tồn tại trong DB.
- * Mục đích: hỗ trợ test chức năng lọc đề tài theo khoa và phân quyền.
+ * DataSeederService — Khởi tạo tự động bộ dữ liệu mẫu (Seed Data) chuẩn
+ * bao gồm: Roles, Departments, Majors, Đợt đăng ký, Tài khoản các vai trò
+ * (Admin, Trưởng khoa đa khoa, Giảng viên đa khoa có đề tài, Sinh viên đa khoa),
+ * và các đề tài mẫu liên kết trực tiếp với giảng viên & đợt của từng khoa.
  */
 @Service
-@Order(10) // Chạy sau DataCleanupService
+@DependsOn("databaseMigrationService")
+@Order(5) // Chạy trước hoặc phối hợp với DataCleanupService
 public class DataSeederService {
 
-    private final TopicRepository topicRepository;
-    private final MajorRepository majorRepository;
+    private final RoleRepository roleRepository;
     private final DepartmentRepository departmentRepository;
-    private final RegistrationPeriodRepository periodRepository;
+    private final MajorRepository majorRepository;
+    private final UserRepository userRepository;
     private final LecturerRepository lecturerRepository;
+    private final StudentRepository studentRepository;
+    private final RegistrationPeriodRepository periodRepository;
+    private final TopicRepository topicRepository;
+
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public DataSeederService(
-            TopicRepository topicRepository,
-            MajorRepository majorRepository,
+            RoleRepository roleRepository,
             DepartmentRepository departmentRepository,
+            MajorRepository majorRepository,
+            UserRepository userRepository,
+            LecturerRepository lecturerRepository,
+            StudentRepository studentRepository,
             RegistrationPeriodRepository periodRepository,
-            LecturerRepository lecturerRepository) {
-        this.topicRepository = topicRepository;
-        this.majorRepository = majorRepository;
+            TopicRepository topicRepository) {
+        this.roleRepository = roleRepository;
         this.departmentRepository = departmentRepository;
-        this.periodRepository = periodRepository;
+        this.majorRepository = majorRepository;
+        this.userRepository = userRepository;
         this.lecturerRepository = lecturerRepository;
+        this.studentRepository = studentRepository;
+        this.periodRepository = periodRepository;
+        this.topicRepository = topicRepository;
     }
 
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
-    public void seedSampleTopics() {
+    public void seedAllTestData() {
         try {
-            List<Department> allDepts = departmentRepository.findAll();
-            if (allDepts.isEmpty()) {
-                System.out.println("[SEEDER] Chưa có khoa nào trong DB, bỏ qua seed đề tài.");
-                return;
-            }
+            System.out.println("\n================================================================================");
+            System.out.println("  [DATA-SEEDER] KHỞI TẠO BỘ DỮ LIỆU VÀ TÀI KHOẢN TEST ĐẦY ĐỦ CÁC VAI TRÒ");
+            System.out.println("================================================================================");
 
-            List<RegistrationPeriod> activePeriods = periodRepository.findByIsActiveTrueOrderByIdDesc();
-            if (activePeriods.isEmpty()) {
-                System.out.println("[SEEDER] Chưa có đợt đăng ký nào đang mở, bỏ qua seed đề tài.");
-                return;
-            }
+            // 1. Khởi tạo / Kiểm tra Roles
+            Map<String, Role> roleMap = seedRoles();
 
-            // Lấy danh sách giảng viên (dùng làm GVHD)
-            List<Lecturer> allLecturers = lecturerRepository.findAll();
-            Lecturer defaultLecturer = allLecturers.isEmpty() ? null : allLecturers.get(0);
+            // 2. Khởi tạo / Kiểm tra Khoa (Departments)
+            Map<String, Department> deptMap = seedDepartments();
 
-            int seededCount = 0;
+            // 3. Khởi tạo / Kiểm tra Chuyên ngành (Majors)
+            Map<String, Major> majorMap = seedMajors(deptMap);
 
-            // ======================================================================
-            // SEED ĐỀ TÀI CHO TỪNG KHOA
-            // ======================================================================
-            for (Department dept : allDepts) {
-                if (!Boolean.TRUE.equals(dept.getIsActive())) continue;
+            // 4. Khởi tạo / Kiểm tra Đợt đăng ký (Registration Periods) cho từng khoa
+            Map<String, RegistrationPeriod> periodMap = seedPeriods(deptMap);
 
-                // Tìm major thuộc khoa này
-                List<Major> deptMajors = majorRepository.findAll().stream()
-                        .filter(m -> m.getDepartment() != null && dept.getId().equals(m.getDepartment().getId()))
-                        .toList();
-                if (deptMajors.isEmpty()) continue;
+            // 5. Khởi tạo Tài khoản Quản trị viên (ADMIN)
+            seedAdminUser(roleMap.get("ADMIN"));
 
-                // Tìm đợt đăng ký phù hợp với khoa này
-                RegistrationPeriod period = activePeriods.stream()
-                        .filter(p -> p.getDepartment() != null && dept.getId().equals(p.getDepartment().getId()))
-                        .findFirst()
-                        .orElse(null);
-                // Nếu không có đợt riêng cho khoa, thử dùng đợt chung (không gán khoa)
-                if (period == null) {
-                    period = activePeriods.stream()
-                            .filter(p -> p.getDepartment() == null)
-                            .findFirst()
-                            .orElse(activePeriods.get(0));
-                }
+            // 6. Khởi tạo Tài khoản Trưởng khoa (DEPARTMENT_HEAD) cho CNTT và QTKD
+            seedDepartmentHeads(roleMap.get("DEPARTMENT_HEAD"), deptMap);
 
-                // Tìm giảng viên thuộc khoa này nếu có
-                final Department deptFinal = dept;
-                Lecturer deptLecturer = allLecturers.stream()
-                        .filter(l -> l.getDepartment() != null && deptFinal.getId().equals(l.getDepartment().getId()))
-                        .findFirst()
-                        .orElse(defaultLecturer);
+            // 7. Khởi tạo Tài khoản Giảng viên (LECTURER) cho CNTT và QTKD
+            Map<String, Lecturer> lecturerMap = seedLecturers(roleMap.get("LECTURER"), deptMap);
 
-                Major major = deptMajors.get(0);
-                String deptCode = dept.getCode() != null ? dept.getCode().toUpperCase() : "DEPT" + dept.getId();
+            // 8. Khởi tạo Tài khoản Sinh viên (STUDENT) cho CNTT và QTKD
+            seedStudents(roleMap.get("STUDENT"), majorMap);
 
-                // Danh sách đề tài mẫu theo loại khoa
-                String[][] sampleTopics = buildSampleTopics(deptCode, dept.getName());
+            // 9. Khởi tạo Đề tài mẫu gán cho Giảng viên và Đợt của từng khoa
+            seedSampleTopics(deptMap, majorMap, periodMap, lecturerMap);
 
-                for (String[] topicData : sampleTopics) {
-                    String code = topicData[0];
-                    String title = topicData[1];
-                    String description = topicData[2];
-                    String requirements = topicData[3];
-
-                    // Tránh seed trùng
-                    if (topicRepository.existsByCode(code)) continue;
-
-                    Topic t = new Topic();
-                    t.setCode(code);
-                    t.setTitle(title);
-                    t.setDescription(description);
-                    t.setRequirements(requirements);
-                    t.setMajor(major);
-                    t.setPeriod(period);
-                    t.setSupervisor(deptLecturer);
-                    t.setStatus("APPROVED");
-                    t.setMaxStudents(3);
-                    t.setAcademicYear("2026-2027");
-                    t.setSemester(1);
-                    t.setCreatedAt(OffsetDateTime.now());
-                    topicRepository.save(t);
-                    seededCount++;
-                }
-            }
-
-            if (seededCount > 0) {
-                System.out.println("[SEEDER] Đã seed thành công " + seededCount + " đề tài mẫu đa khoa vào database.");
-            } else {
-                System.out.println("[SEEDER] Không có đề tài mới cần seed (tất cả đã tồn tại hoặc chưa đủ điều kiện).");
-            }
+            // 10. In bảng danh sách tài khoản test ra console
+            printTestAccountsSummary();
 
         } catch (Exception e) {
-            System.err.println("[SEEDER-WARN] Lỗi khi seed dữ liệu đề tài: " + e.getMessage());
+            System.err.println("[DATA-SEEDER-ERROR] Đã xảy ra lỗi khi khởi tạo dữ liệu mẫu: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    /**
-     * Tạo danh sách đề tài mẫu tùy theo mã khoa.
-     * Trả về mảng [code, title, description, requirements].
-     */
-    private String[][] buildSampleTopics(String deptCode, String deptName) {
-        // Đề tài CNTT
-        if (deptCode.contains("CNTT") || deptCode.contains("IT") || deptCode.contains("CS")) {
-            return new String[][] {
-                {
-                    "CNTT-SEED-01",
-                    "Xây dựng hệ thống quản lý kho thông minh sử dụng IoT và Machine Learning",
-                    "Nghiên cứu và phát triển hệ thống quản lý kho hàng tích hợp cảm biến IoT để theo dõi hàng tồn kho theo thời gian thực, kết hợp thuật toán dự báo nhu cầu bằng Machine Learning nhằm tối ưu hóa quy trình nhập - xuất - lưu kho.",
-                    "Python / TensorFlow hoặc PyTorch cho ML module.\nRaspberry Pi hoặc ESP32 cho IoT.\nReact.js + Spring Boot cho giao diện web.\nCơ sở dữ liệu: PostgreSQL hoặc MongoDB."
-                },
-                {
-                    "CNTT-SEED-02",
-                    "Phát triển ứng dụng di động hỗ trợ học tiếng Anh theo phương pháp Spaced Repetition",
-                    "Xây dựng ứng dụng mobile (Android/iOS) áp dụng thuật toán Spaced Repetition System (SRS) kết hợp xử lý ngôn ngữ tự nhiên (NLP) để cá nhân hóa lộ trình học từ vựng và ngữ pháp tiếng Anh cho người dùng.",
-                    "Flutter hoặc React Native cho mobile.\nNode.js / Spring Boot cho backend API.\nThuật toán SRS (SM-2 hoặc tùy chỉnh).\nFirebase hoặc AWS cho cloud storage."
-                },
-                {
-                    "CNTT-SEED-03",
-                    "Nghiên cứu và triển khai hệ thống phát hiện xâm nhập mạng dùng Deep Learning",
-                    "Phân tích và xây dựng mô hình Deep Learning (LSTM, CNN hoặc Transformer) để phát hiện các hành vi xâm nhập và tấn công mạng trong thời gian thực, áp dụng trên bộ dữ liệu chuẩn NSL-KDD, CICIDS2017.",
-                    "Python: TensorFlow/Keras hoặc PyTorch.\nScapy, Wireshark để phân tích gói tin.\nELK Stack (Elasticsearch, Logstash, Kibana) để trực quan hóa.\nKiến thức về mạng máy tính và bảo mật."
-                },
-                {
-                    "CNTT-SEED-04",
-                    "Thiết kế và xây dựng nền tảng E-Learning hỗ trợ học tập cộng tác theo mô hình Microservices",
-                    "Xây dựng hệ thống E-Learning đa người dùng với kiến trúc Microservices, tích hợp tính năng học nhóm theo thời gian thực (collaborative learning), theo dõi tiến độ học tập và đánh giá tự động.",
-                    "Spring Boot / Spring Cloud cho Microservices.\nReact.js cho Frontend.\nWebSocket / Socket.IO cho tính năng real-time.\nDocker + Kubernetes để triển khai.\nMySQL / PostgreSQL + Redis."
-                },
-                {
-                    "CNTT-SEED-05",
-                    "Ứng dụng Computer Vision nhận dạng cảm xúc khuôn mặt trong lớp học trực tuyến",
-                    "Nghiên cứu và phát triển mô hình nhận dạng cảm xúc khuôn mặt (Facial Expression Recognition) áp dụng vào hệ thống học trực tuyến để theo dõi mức độ tập trung và cảm xúc của học viên, hỗ trợ giảng viên điều chỉnh phương pháp giảng dạy.",
-                    "OpenCV + MediaPipe cho xử lý hình ảnh.\nPyTorch / TensorFlow cho mô hình FER.\nFlask hoặc FastAPI cho REST API.\nReact.js cho dashboard theo dõi.\nWebRTC cho luồng video học trực tuyến."
-                }
-            };
-        }
-
-        // Đề tài Quản trị Kinh doanh / Kinh tế
-        if (deptCode.contains("QTKD") || deptCode.contains("KT") || deptCode.contains("KINH") || deptCode.contains("BUS")) {
-            return new String[][] {
-                {
-                    "QTKD-SEED-01",
-                    "Phân tích tác động của chiến lược Digital Marketing đến hành vi mua hàng trực tuyến của thế hệ Gen Z tại Việt Nam",
-                    "Nghiên cứu định lượng về ảnh hưởng của các kênh Digital Marketing (Social Media, Influencer Marketing, SEO/SEM) đến quyết định và hành vi mua hàng trực tuyến của người tiêu dùng thế hệ Gen Z (sinh năm 1997-2012) tại thị trường Việt Nam.",
-                    "Phương pháp nghiên cứu định lượng + định tính.\nKhảo sát 300+ mẫu, phân tích SPSS/SmartPLS.\nMô hình TAM (Technology Acceptance Model).\nPhỏng vấn sâu 10-15 chuyên gia và người tiêu dùng."
-                },
-                {
-                    "QTKD-SEED-02",
-                    "Xây dựng mô hình đánh giá rủi ro tín dụng cho doanh nghiệp vừa và nhỏ (SME) tại ngân hàng thương mại cổ phần",
-                    "Nghiên cứu và đề xuất mô hình đánh giá rủi ro tín dụng phù hợp với đặc thù của các doanh nghiệp vừa và nhỏ Việt Nam, kết hợp dữ liệu tài chính truyền thống và chỉ số phi tài chính, áp dụng các kỹ thuật phân tích thống kê và Machine Learning.",
-                    "Phân tích hồi quy logistic, Random Forest, XGBoost.\nDữ liệu tài chính doanh nghiệp (báo cáo tài chính 3 năm).\nPhần mềm R / Python + SPSS.\nNghiên cứu tình huống tại 2-3 ngân hàng cổ phần."
-                },
-                {
-                    "QTKD-SEED-03",
-                    "Nghiên cứu các nhân tố ảnh hưởng đến sự hài lòng và gắn kết của nhân viên trong doanh nghiệp công nghệ tại Việt Nam",
-                    "Phân tích và đánh giá các yếu tố tác động đến mức độ hài lòng (job satisfaction) và gắn kết tổ chức (organizational commitment) của nhân viên ngành công nghệ thông tin tại các doanh nghiệp Việt Nam, đề xuất chính sách nhân sự phù hợp.",
-                    "Khảo sát định lượng 250+ nhân viên IT.\nMô hình Herzberg + OCP (Organizational Culture Profile).\nPhân tích nhân tố khám phá (EFA) và SEM.\nPhỏng vấn sâu HR managers tại 5+ doanh nghiệp."
-                },
-                {
-                    "QTKD-SEED-04",
-                    "Chiến lược phát triển thương hiệu xanh (Green Brand) cho doanh nghiệp sản xuất đồ uống nước giải khát Việt Nam",
-                    "Đề xuất chiến lược xây dựng và phát triển thương hiệu xanh cho các doanh nghiệp sản xuất đồ uống Việt Nam trong bối cảnh người tiêu dùng ngày càng quan tâm đến bảo vệ môi trường và phát triển bền vững.",
-                    "Phân tích SWOT + PEST + Porter 5 Forces.\nNghiên cứu so sánh với 3-5 thương hiệu xanh quốc tế thành công.\nKhảo sát 200+ người tiêu dùng về thái độ với sản phẩm xanh.\nPhỏng vấn ban lãnh đạo 2-3 doanh nghiệp đồ uống Việt Nam."
-                },
-                {
-                    "QTKD-SEED-05",
-                    "Ứng dụng mô hình Balanced Scorecard trong đánh giá hiệu quả hoạt động của các đơn vị hành chính sự nghiệp",
-                    "Nghiên cứu khả năng ứng dụng và đề xuất khung BSC (Balanced Scorecard) được điều chỉnh phù hợp với đặc thù của các đơn vị hành chính sự nghiệp công lập tại Việt Nam, nhằm nâng cao hiệu quả quản lý và minh bạch trong hoạt động.",
-                    "Nghiên cứu tài liệu và tổng quan lý thuyết BSC.\nPhân tích tình huống 2-3 đơn vị thí điểm.\nPhỏng vấn 15-20 lãnh đạo và chuyên gia quản lý công.\nPhân tích thống kê so sánh trước-sau áp dụng."
-                }
-            };
-        }
-
-        // Đề tài chung cho các khoa khác (Kỹ thuật, Ngoại ngữ, v.v.)
-        return new String[][] {
-            {
-                "SEED-GEN-01-" + deptCode,
-                "[" + deptName + "] Nghiên cứu ứng dụng công nghệ mới trong lĩnh vực " + deptName,
-                "Đề tài nghiên cứu, khảo sát và đề xuất giải pháp ứng dụng công nghệ mới nhằm nâng cao hiệu quả hoạt động trong lĩnh vực " + deptName + " tại Việt Nam.",
-                "Phương pháp nghiên cứu định tính và định lượng.\nKhảo sát, phỏng vấn chuyên gia trong ngành.\nPhân tích dữ liệu thực tế tại các tổ chức điển hình."
-            },
-            {
-                "SEED-GEN-02-" + deptCode,
-                "[" + deptName + "] Đánh giá thực trạng và đề xuất giải pháp phát triển bền vững trong ngành " + deptName,
-                "Phân tích thực trạng phát triển, xác định điểm mạnh, điểm yếu và đề xuất các giải pháp phát triển bền vững cho lĩnh vực " + deptName + " trong bối cảnh hội nhập quốc tế.",
-                "Thu thập và phân tích dữ liệu thứ cấp từ các báo cáo ngành.\nKhảo sát 100-200 đối tượng liên quan.\nPhân tích SWOT và đề xuất chiến lược phát triển."
-            }
+    // =========================================================================
+    // 1. ROLES
+    // =========================================================================
+    private Map<String, Role> seedRoles() {
+        Map<String, Role> map = new HashMap<>();
+        String[][] rolesData = {
+                {"ADMIN", "Quản trị viên hệ thống"},
+                {"DEPARTMENT_HEAD", "Trưởng khoa / Phó khoa"},
+                {"LECTURER", "Giảng viên"},
+                {"STUDENT", "Sinh viên"}
         };
+
+        for (String[] r : rolesData) {
+            String code = r[0];
+            String name = r[1];
+            Role role = roleRepository.findByCode(code).orElseGet(() -> {
+                Role newRole = new Role();
+                newRole.setCode(code);
+                newRole.setName(name);
+                return roleRepository.save(newRole);
+            });
+            map.put(code, role);
+        }
+        return map;
+    }
+
+    // =========================================================================
+    // 2. DEPARTMENTS
+    // =========================================================================
+    private Map<String, Department> seedDepartments() {
+        Map<String, Department> map = new HashMap<>();
+        String[][] deptsData = {
+                {"CNTT", "Khoa Công nghệ Thông tin", "Khoa đào tạo các chuyên ngành Công nghệ Thông tin, Kỹ thuật Phần mềm, Khoa học Máy tính."},
+                {"QTKD", "Khoa Quản trị Kinh doanh", "Khoa đào tạo các chuyên ngành Quản trị Kinh doanh, Marketing, Kinh doanh Quốc tế."}
+        };
+
+        for (String[] d : deptsData) {
+            String code = d[0];
+            String name = d[1];
+            String desc = d[2];
+            Department dept = departmentRepository.findByCode(code).orElseGet(() -> {
+                Department newDept = new Department();
+                newDept.setCode(code);
+                newDept.setName(name);
+                newDept.setDescription(desc);
+                newDept.setIsActive(true);
+                return departmentRepository.save(newDept);
+            });
+            map.put(code, dept);
+        }
+
+        // Lấy thêm các khoa khác nếu có sẵn trong DB
+        for (Department existing : departmentRepository.findAll()) {
+            if (existing.getCode() != null && !map.containsKey(existing.getCode())) {
+                map.put(existing.getCode(), existing);
+            }
+        }
+        return map;
+    }
+
+    // =========================================================================
+    // 3. MAJORS
+    // =========================================================================
+    private Map<String, Major> seedMajors(Map<String, Department> deptMap) {
+        Map<String, Major> map = new HashMap<>();
+
+        Department cnttDept = deptMap.get("CNTT");
+        if (cnttDept != null) {
+            createMajorIfNotExist(map, "CNTT", "Công nghệ Thông tin", cnttDept);
+            createMajorIfNotExist(map, "KTPM", "Kỹ thuật Phần mềm", cnttDept);
+        }
+
+        Department qtkdDept = deptMap.get("QTKD");
+        if (qtkdDept != null) {
+            createMajorIfNotExist(map, "QTKD", "Quản trị Kinh doanh", qtkdDept);
+            createMajorIfNotExist(map, "MKT", "Marketing & Truyền thông", qtkdDept);
+        }
+
+        for (Major existing : majorRepository.findAll()) {
+            if (existing.getCode() != null && !map.containsKey(existing.getCode())) {
+                map.put(existing.getCode(), existing);
+            }
+        }
+        return map;
+    }
+
+    private void createMajorIfNotExist(Map<String, Major> map, String code, String name, Department dept) {
+        Major major = majorRepository.findByCode(code).orElseGet(() -> {
+            Major m = new Major();
+            m.setCode(code);
+            m.setName(name);
+            m.setDepartment(dept);
+            m.setIsActive(true);
+            return majorRepository.save(m);
+        });
+        map.put(code, major);
+    }
+
+    // =========================================================================
+    // 4. REGISTRATION PERIODS
+    // =========================================================================
+    private Map<String, RegistrationPeriod> seedPeriods(Map<String, Department> deptMap) {
+        Map<String, RegistrationPeriod> map = new HashMap<>();
+        OffsetDateTime now = OffsetDateTime.now();
+
+        // 1. Đợt Khóa luận CNTT
+        Department cnttDept = deptMap.get("CNTT");
+        if (cnttDept != null) {
+            RegistrationPeriod pCntt = findOrCreatePeriod(
+                    "Đợt Khóa luận Tốt nghiệp CNTT 2026-2027",
+                    "KLTN",
+                    cnttDept,
+                    now.minusDays(15),
+                    now.plusDays(30),
+                    now.minusDays(10),
+                    now.plusDays(30)
+            );
+            map.put("CNTT_KLTN", pCntt);
+        }
+
+        // 2. Đợt Khóa luận QTKD
+        Department qtkdDept = deptMap.get("QTKD");
+        if (qtkdDept != null) {
+            RegistrationPeriod pQtkd = findOrCreatePeriod(
+                    "Đợt Khóa luận Tốt nghiệp QTKD 2026-2027",
+                    "KLTN",
+                    qtkdDept,
+                    now.minusDays(15),
+                    now.plusDays(30),
+                    now.minusDays(10),
+                    now.plusDays(30)
+            );
+            map.put("QTKD_KLTN", pQtkd);
+        }
+
+        return map;
+    }
+
+    private RegistrationPeriod findOrCreatePeriod(
+            String name, String type, Department dept,
+            OffsetDateTime propStart, OffsetDateTime propEnd,
+            OffsetDateTime regStart, OffsetDateTime regEnd) {
+
+        List<RegistrationPeriod> existing = periodRepository.findByDepartmentId(dept.getId());
+        for (RegistrationPeriod p : existing) {
+            if (type.equalsIgnoreCase(p.getPeriodType()) && Boolean.TRUE.equals(p.getIsActive())) {
+                // Đảm bảo thời gian mở hợp lệ để test ngay
+                p.setStatus("OPEN");
+                p.setLecturerProposalStart(propStart);
+                p.setLecturerProposalEnd(propEnd);
+                p.setStudentRegistrationStart(regStart);
+                p.setStudentRegistrationEnd(regEnd);
+                return periodRepository.save(p);
+            }
+        }
+
+        RegistrationPeriod p = new RegistrationPeriod();
+        p.setName(name);
+        p.setPeriodType(type);
+        p.setDepartment(dept);
+        p.setAcademicYear("2026-2027");
+        p.setSemester(1);
+        p.setStatus("OPEN");
+        p.setIsActive(true);
+        p.setLecturerProposalStart(propStart);
+        p.setLecturerProposalEnd(propEnd);
+        p.setStudentRegistrationStart(regStart);
+        p.setStudentRegistrationEnd(regEnd);
+        p.setReviewerDeadline(regEnd.plusDays(10));
+        p.setCouncilDefenseDate(regEnd.plusDays(20));
+        p.setCreatedAt(OffsetDateTime.now());
+        return periodRepository.save(p);
+    }
+
+    // =========================================================================
+    // 5. ADMIN USER
+    // =========================================================================
+    private void seedAdminUser(Role adminRole) {
+        if (adminRole == null) return;
+        findOrCreateUser(
+                "admin",
+                "admin123",
+                "admin@system.edu.vn",
+                "Quản Trị Viên Hệ Thống",
+                "0901234567",
+                adminRole
+        );
+    }
+
+    // =========================================================================
+    // 6. DEPARTMENT HEADS (CNTT & QTKD)
+    // =========================================================================
+    private void seedDepartmentHeads(Role headRole, Map<String, Department> deptMap) {
+        if (headRole == null) return;
+
+        // Trưởng khoa CNTT
+        Department cnttDept = deptMap.get("CNTT");
+        if (cnttDept != null) {
+            AppUser headCnttUser = findOrCreateUser(
+                    "head_cntt",
+                    "123456",
+                    "head.cntt@university.edu.vn",
+                    "TS. Nguyễn Văn Thắng",
+                    "0912345601",
+                    headRole
+            );
+            findOrCreateLecturer(headCnttUser, cnttDept, "GV_HEAD_CNTT", "TS", "Tiến sĩ");
+        }
+
+        // Trưởng khoa QTKD (Khoa khác)
+        Department qtkdDept = deptMap.get("QTKD");
+        if (qtkdDept != null) {
+            AppUser headQtkdUser = findOrCreateUser(
+                    "head_qtkd",
+                    "123456",
+                    "head.qtkd@university.edu.vn",
+                    "PGS.TS. Trần Thị Mai",
+                    "0912345602",
+                    headRole
+            );
+            findOrCreateLecturer(headQtkdUser, qtkdDept, "GV_HEAD_QTKD", "PGS.TS", "Tiến sĩ");
+        }
+    }
+
+    // =========================================================================
+    // 7. LECTURERS (CNTT & QTKD)
+    // =========================================================================
+    private Map<String, Lecturer> seedLecturers(Role lecturerRole, Map<String, Department> deptMap) {
+        Map<String, Lecturer> map = new HashMap<>();
+        if (lecturerRole == null) return map;
+
+        Department cnttDept = deptMap.get("CNTT");
+        if (cnttDept != null) {
+            // Giảng viên CNTT 1
+            AppUser gv1User = findOrCreateUser(
+                    "gv_cntt01",
+                    "123456",
+                    "long.lh@university.edu.vn",
+                    "ThS. Lê Hoàng Long",
+                    "0912345611",
+                    lecturerRole
+            );
+            Lecturer lec1 = findOrCreateLecturer(gv1User, cnttDept, "GV_IT_01", "ThS", "Thạc sĩ");
+            map.put("gv_cntt01", lec1);
+
+            // Giảng viên CNTT 2
+            AppUser gv2User = findOrCreateUser(
+                    "gv_cntt02",
+                    "123456",
+                    "tuan.pm@university.edu.vn",
+                    "TS. Phạm Minh Tuấn",
+                    "0912345612",
+                    lecturerRole
+            );
+            Lecturer lec2 = findOrCreateLecturer(gv2User, cnttDept, "GV_IT_02", "TS", "Tiến sĩ");
+            map.put("gv_cntt02", lec2);
+        }
+
+        Department qtkdDept = deptMap.get("QTKD");
+        if (qtkdDept != null) {
+            // Giảng viên QTKD (Khoa khác)
+            AppUser gvQtkdUser = findOrCreateUser(
+                    "gv_qtkd01",
+                    "123456",
+                    "thao.ht@university.edu.vn",
+                    "ThS. Hoàng Thu Thảo",
+                    "0912345621",
+                    lecturerRole
+            );
+            Lecturer lecQtkd = findOrCreateLecturer(gvQtkdUser, qtkdDept, "GV_BA_01", "ThS", "Thạc sĩ");
+            map.put("gv_qtkd01", lecQtkd);
+        }
+
+        return map;
+    }
+
+    // =========================================================================
+    // 8. STUDENTS (CNTT & QTKD)
+    // =========================================================================
+    private void seedStudents(Role studentRole, Map<String, Major> majorMap) {
+        if (studentRole == null) return;
+
+        Major cnttMajor = majorMap.get("CNTT");
+        if (cnttMajor != null) {
+            // Sinh viên CNTT 1 (Sinh viên đúng khoa - dùng để test quy trình chuẩn)
+            AppUser sv1User = findOrCreateUser(
+                    "sv_cntt01",
+                    "123456",
+                    "sv.cntt01@student.edu.vn",
+                    "Nguyễn Văn An",
+                    "0987654301",
+                    studentRole
+            );
+            findOrCreateStudent(sv1User, cnttMajor, "20110001", "20T1-CNTT", "2021-2025", 3.65);
+
+            // Sinh viên CNTT 2 (Sinh viên đúng khoa - dùng để test ghép nhóm)
+            AppUser sv2User = findOrCreateUser(
+                    "sv_cntt02",
+                    "123456",
+                    "sv.cntt02@student.edu.vn",
+                    "Trần Thị Bình",
+                    "0987654302",
+                    studentRole
+            );
+            findOrCreateStudent(sv2User, cnttMajor, "20110002", "20T1-CNTT", "2021-2025", 3.42);
+        }
+
+        Major qtkdMajor = majorMap.get("QTKD");
+        if (qtkdMajor != null) {
+            // Sinh viên QTKD (Sinh viên khác khoa - dùng để test tính năng chặn khoa)
+            AppUser svQtkdUser = findOrCreateUser(
+                    "sv_qtkd01",
+                    "123456",
+                    "sv.qtkd01@student.edu.vn",
+                    "Phạm Quốc Cường",
+                    "0987654321",
+                    studentRole
+            );
+            findOrCreateStudent(svQtkdUser, qtkdMajor, "20120001", "20KD1", "2021-2025", 3.50);
+        }
+    }
+
+    // =========================================================================
+    // 9. TOPICS (Gán trực tiếp cho từng Giảng viên & Khoa)
+    // =========================================================================
+    private void seedSampleTopics(
+            Map<String, Department> deptMap,
+            Map<String, Major> majorMap,
+            Map<String, RegistrationPeriod> periodMap,
+            Map<String, Lecturer> lecturerMap) {
+
+        Major cnttMajor = majorMap.get("CNTT");
+        RegistrationPeriod cnttPeriod = periodMap.get("CNTT_KLTN");
+        Lecturer gvCntt1 = lecturerMap.get("gv_cntt01");
+        Lecturer gvCntt2 = lecturerMap.get("gv_cntt02");
+
+        if (cnttMajor != null && cnttPeriod != null) {
+            if (gvCntt1 != null) {
+                createTopicIfNotExist(
+                        "CNTT-SEED-01",
+                        "Xây dựng hệ thống quản lý kho thông minh sử dụng IoT và Machine Learning",
+                        "Nghiên cứu và phát triển hệ thống quản lý kho hàng tích hợp cảm biến IoT để theo dõi hàng tồn kho theo thời gian thực, kết hợp thuật toán dự báo nhu cầu bằng Machine Learning.",
+                        "Python / TensorFlow cho ML module.\nESP32 cho IoT.\nReact.js + Spring Boot.\nCơ sở dữ liệu PostgreSQL.",
+                        cnttMajor, cnttPeriod, gvCntt1, 3
+                );
+                createTopicIfNotExist(
+                        "CNTT-SEED-02",
+                        "Phát triển ứng dụng di động hỗ trợ học tiếng Anh theo phương pháp Spaced Repetition",
+                        "Xây dựng ứng dụng mobile áp dụng thuật toán Spaced Repetition System (SRS) kết hợp NLP để cá nhân hóa lộ trình học từ vựng cho người dùng.",
+                        "Flutter / React Native cho mobile.\nSpring Boot API backend.\nPostgreSQL Database.",
+                        cnttMajor, cnttPeriod, gvCntt1, 2
+                );
+            }
+
+            if (gvCntt2 != null) {
+                createTopicIfNotExist(
+                        "CNTT-SEED-03",
+                        "Nghiên cứu và triển khai hệ thống phát hiện xâm nhập mạng dùng Deep Learning",
+                        "Phân tích và xây dựng mô hình Deep Learning để phát hiện các hành vi xâm nhập và tấn công mạng trong thời gian thực trên tập dữ liệu CICIDS2017.",
+                        "Python: PyTorch / TensorFlow.\nWireshark / Scapy phân tích gói tin.\nSpring Boot REST Dashboard.",
+                        cnttMajor, cnttPeriod, gvCntt2, 2
+                );
+                createTopicIfNotExist(
+                        "CNTT-SEED-04",
+                        "Thiết kế nền tảng E-Learning hỗ trợ học tập cộng tác theo kiến trúc Microservices",
+                        "Xây dựng hệ thống E-Learning đa người dùng hỗ trợ phòng học cộng tác real-time với WebSocket và Microservices.",
+                        "Spring Boot / Cloud Microservices.\nReact.js Frontend.\nDocker + Kubernetes.",
+                        cnttMajor, cnttPeriod, gvCntt2, 3
+                );
+            }
+        }
+
+        Major qtkdMajor = majorMap.get("QTKD");
+        RegistrationPeriod qtkdPeriod = periodMap.get("QTKD_KLTN");
+        Lecturer gvQtkd1 = lecturerMap.get("gv_qtkd01");
+
+        if (qtkdMajor != null && qtkdPeriod != null && gvQtkd1 != null) {
+            createTopicIfNotExist(
+                    "QTKD-SEED-01",
+                    "Phân tích tác động của Digital Marketing đến hành vi mua sắm trực tuyến của Gen Z",
+                    "Nghiên cứu định lượng về ảnh hưởng của Social Media và KOL Marketing đến quyết định mua hàng trên sàn TMĐT của giới trẻ tại Việt Nam.",
+                    "Phương pháp nghiên cứu định lượng (SPSS, SmartPLS).\nKhảo sát 300+ đối tượng Gen Z.",
+                    qtkdMajor, qtkdPeriod, gvQtkd1, 3
+            );
+            createTopicIfNotExist(
+                    "QTKD-SEED-02",
+                    "Xây dựng mô hình đánh giá rủi ro tín dụng cho doanh nghiệp SME tại Ngân hàng Thương mại",
+                    "Ứng dụng phân tích dữ liệu tài chính và mô hình Logistic Regression để tối ưu hóa phê duyệt tín dụng doanh nghiệp vừa và nhỏ.",
+                    "Phân tích tài chính doanh nghiệp.\nPhần mềm R / Python + SPSS.",
+                    qtkdMajor, qtkdPeriod, gvQtkd1, 2
+            );
+        }
+    }
+
+    private void createTopicIfNotExist(
+            String code, String title, String desc, String reqs,
+            Major major, RegistrationPeriod period, Lecturer supervisor, int maxStudents) {
+
+        if (topicRepository.existsByCode(code)) {
+            // Đảm bảo topic đã liên kết đúng gvhd và period
+            Topic existing = topicRepository.findAll().stream()
+                    .filter(t -> code.equalsIgnoreCase(t.getCode()))
+                    .findFirst()
+                    .orElse(null);
+            if (existing != null) {
+                boolean changed = false;
+                if (existing.getSupervisor() == null && supervisor != null) {
+                    existing.setSupervisor(supervisor);
+                    changed = true;
+                }
+                if (existing.getPeriod() == null && period != null) {
+                    existing.setPeriod(period);
+                    changed = true;
+                }
+                if (changed) {
+                    topicRepository.save(existing);
+                }
+            }
+            return;
+        }
+
+        Topic t = new Topic();
+        t.setCode(code);
+        t.setTitle(title);
+        t.setDescription(desc);
+        t.setRequirements(reqs);
+        t.setMajor(major);
+        t.setPeriod(period);
+        t.setSupervisor(supervisor);
+        t.setStatus("APPROVED");
+        t.setMaxStudents(maxStudents);
+        t.setAcademicYear("2026-2027");
+        t.setSemester(1);
+        t.setCreatedAt(OffsetDateTime.now());
+        topicRepository.save(t);
+    }
+
+    // =========================================================================
+    // HELPER CREATORS
+    // =========================================================================
+    private AppUser findOrCreateUser(
+            String username, String password, String email,
+            String fullName, String phone, Role role) {
+
+        Optional<AppUser> userOpt = userRepository.findByUsernameIgnoreCase(username);
+        AppUser user;
+        if (userOpt.isPresent()) {
+            user = userOpt.get();
+            // Cập nhật lại role, mật khẩu chuẩn và active nếu cần
+            user.setRole(role);
+            user.setIsActive(true);
+            user.setFullName(fullName);
+            user.setPasswordHash(passwordEncoder.encode(password));
+            user.setUpdatedAt(OffsetDateTime.now());
+            return userRepository.save(user);
+        }
+
+        user = new AppUser();
+        user.setUsername(username);
+        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setEmail(email);
+        user.setFullName(fullName);
+        user.setPhone(phone);
+        user.setRole(role);
+        user.setIsActive(true);
+        user.setCreatedAt(OffsetDateTime.now());
+        user.setUpdatedAt(OffsetDateTime.now());
+        return userRepository.save(user);
+    }
+
+    private Lecturer findOrCreateLecturer(
+            AppUser user, Department dept, String code, String title, String degree) {
+
+        Optional<Lecturer> opt = lecturerRepository.findByUserId(user.getId());
+        if (opt.isPresent()) {
+            Lecturer lec = opt.get();
+            lec.setDepartment(dept);
+            lec.setLecturerCode(code);
+            lec.setAcademicTitle(title);
+            lec.setDegree(degree);
+            return lecturerRepository.save(lec);
+        }
+
+        Lecturer lec = new Lecturer();
+        lec.setUser(user);
+        lec.setDepartment(dept);
+        lec.setLecturerCode(code);
+        lec.setAcademicTitle(title);
+        lec.setDegree(degree);
+        lec.setMaxTopicsQuota(5);
+        return lecturerRepository.save(lec);
+    }
+
+    private Student findOrCreateStudent(
+            AppUser user, Major major, String code, String className, String academicYear, Double gpa) {
+
+        Optional<Student> opt = studentRepository.findByUserId(user.getId());
+        if (opt.isPresent()) {
+            Student s = opt.get();
+            s.setMajor(major);
+            s.setStudentCode(code);
+            s.setClassName(className);
+            s.setAcademicYear(academicYear);
+            s.setGpa(gpa);
+            return studentRepository.save(s);
+        }
+
+        Student s = new Student();
+        s.setUser(user);
+        s.setMajor(major);
+        s.setStudentCode(code);
+        s.setClassName(className);
+        s.setAcademicYear(academicYear);
+        s.setGpa(gpa);
+        return studentRepository.save(s);
+    }
+
+    // =========================================================================
+    // 10. IN DANH SÁCH TÀI KHOẢN TEST RA CONSOLE
+    // =========================================================================
+    private void printTestAccountsSummary() {
+        System.out.println("\n+---------------------------------------------------------------------------------------------------------------+");
+        System.out.println("|                                    BẢNG TÀI KHOẢN KIỂM THỬ HỆ THỐNG (TEST ACCOUNTS)                           |");
+        System.out.println("+-------------------+---------------+------------------+------------------------------+-------------------------+");
+        System.out.println("| VAI TRÒ (ROLE)    | TÀI KHOẢN     | MẬT KHẨU         | HỌ VÀ TÊN                    | KHOA / GHI CHÚ          |");
+        System.out.println("+-------------------+---------------+------------------+------------------------------+-------------------------+");
+        System.out.println("| QUẢN TRỊ VIÊN     | admin         | admin123         | Quản Trị Viên Hệ Thống       | Toàn quyền hệ thống     |");
+        System.out.println("+-------------------+---------------+------------------+------------------------------+-------------------------+");
+        System.out.println("| TRƯỞNG KHOA       | head_cntt     | 123456           | TS. Nguyễn Văn Thắng         | Khoa CNTT               |");
+        System.out.println("| TRƯỞNG KHOA (KHÁC)| head_qtkd     | 123456           | PGS.TS. Trần Thị Mai         | Khoa QTKD               |");
+        System.out.println("+-------------------+---------------+------------------+------------------------------+-------------------------+");
+        System.out.println("| GIẢNG VIÊN (1)    | gv_cntt01     | 123456           | ThS. Lê Hoàng Long           | Khoa CNTT (Có đề tài)   |");
+        System.out.println("| GIẢNG VIÊN (2)    | gv_cntt02     | 123456           | TS. Phạm Minh Tuấn           | Khoa CNTT (Có đề tài)   |");
+        System.out.println("| GIẢNG VIÊN (KHÁC) | gv_qtkd01     | 123456           | ThS. Hoàng Thu Thảo          | Khoa QTKD (Có đề tài)   |");
+        System.out.println("+-------------------+---------------+------------------+------------------------------+-------------------------+");
+        System.out.println("| SINH VIÊN (1)     | sv_cntt01     | 123456           | Nguyễn Văn An (20110001)     | Khoa CNTT (Đúng khoa)   |");
+        System.out.println("| SINH VIÊN (2)     | sv_cntt02     | 123456           | Trần Thị Bình (20110002)     | Khoa CNTT (Mời nhóm)    |");
+        System.out.println("| SINH VIÊN (KHÁC)  | sv_qtkd01     | 123456           | Phạm Quốc Cường (20120001)   | Khoa QTKD (Test chặn)   |");
+        System.out.println("+-------------------+---------------+------------------+------------------------------+-------------------------+\n");
     }
 }

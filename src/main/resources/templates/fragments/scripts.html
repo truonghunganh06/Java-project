@@ -98,6 +98,7 @@
                         leaderName: source.dataset.topicLeaderName || source.dataset.leaderName,
                         leaderCode: source.dataset.topicLeaderCode || source.dataset.leaderCode,
                         role: source.dataset.topicRole || source.dataset.role,
+                        department: source.dataset.topicDepartment || source.dataset.department || '',
                         hasGroupTopic: source.dataset.topicHasGroup === 'true'
                     };
                 } else {
@@ -140,6 +141,13 @@
                 if (document.getElementById('drawerTopicMajor')) {
                     document.getElementById('drawerTopicMajor').textContent = major;
                 }
+                if (document.getElementById('drawerTopicDepartment')) {
+                    const dept = decodeUnicode(data.department) || '';
+                    const deptEl = document.getElementById('drawerTopicDepartment');
+                    deptEl.textContent = dept || '—';
+                    // Làm nổi bật màu xanh nếu có tên Khoa
+                    deptEl.style.color = dept ? '#1d4ed8' : '#94a3b8';
+                }
                 if (document.getElementById('drawerTopicSupervisor')) {
                     document.getElementById('drawerTopicSupervisor').textContent = supervisor;
                 }
@@ -178,6 +186,30 @@
                     }
                 }
 
+                // Rejection Alert Box
+                let rejAlert = document.getElementById('drawerTopicRejectionAlert');
+                const rejReason = data.rejectionReason || (element ? element.dataset.topicRejectionReason : null);
+                if (data.status === 'REJECTED' && rejReason) {
+                    if (!rejAlert) {
+                        const drawerBody = document.querySelector('.drawer-body');
+                        if (drawerBody) {
+                            rejAlert = document.createElement('div');
+                            rejAlert.id = 'drawerTopicRejectionAlert';
+                            rejAlert.className = 'alert alert-danger p-3 rounded-2xl mb-3 border border-rose-200 shadow-sm';
+                            drawerBody.insertBefore(rejAlert, drawerBody.firstChild);
+                        }
+                    }
+                    if (rejAlert) {
+                        rejAlert.style.display = 'block';
+                        rejAlert.innerHTML = `
+                            <div class="fw-bold text-rose-900 text-xs mb-1"><i class="fa-solid fa-triangle-exclamation text-rose-600 me-1"></i> Lý do Trưởng khoa từ chối:</div>
+                            <div class="text-rose-700 text-xs">${rejReason}</div>
+                        `;
+                    }
+                } else if (rejAlert) {
+                    rejAlert.style.display = 'none';
+                }
+
                 // Group Info
                 const groupInfo = document.getElementById('drawerTopicGroupInfo');
                 if (groupInfo) {
@@ -207,6 +239,12 @@
                             <button type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3 text-xs font-semibold" data-bs-toggle="modal" data-bs-target="#rejectModal" onclick="prepareRejectModal(${data.id}, '${title.replace(/'/g, "\\'")}')">
                                 <i class="fa-solid fa-xmark me-1"></i> Từ chối
                             </button>
+                        `;
+                    } else if (data.role === 'LECTURER' && (data.status === 'PENDING' || data.status === 'REJECTED')) {
+                        actionContainer.innerHTML = `
+                            <a href="/lecturer/topics/${data.id}/edit" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">
+                                <i class="fa-solid fa-pen-to-square me-1"></i> Chỉnh sửa đề tài
+                            </a>
                         `;
                     } else if (data.role === 'STUDENT' && data.status === 'APPROVED' && !data.hasGroupTopic) {
                         actionContainer.innerHTML = `

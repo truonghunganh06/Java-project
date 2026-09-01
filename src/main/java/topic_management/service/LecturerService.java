@@ -130,6 +130,89 @@ public class LecturerService {
         return saved;
     }
 
+    @Transactional
+    public Topic updateTopic(Lecturer currentLecturer, Long topicId, Long periodId, Long majorId, Long coSupervisorId, Topic topicData) {
+        if (topicId == null || currentLecturer == null) {
+            throw new IllegalArgumentException("Thông tin không hợp lệ.");
+        }
+        Topic topic = topicRepository.findById(topicId).orElse(null);
+        if (topic == null) {
+            throw new IllegalArgumentException("Không tìm thấy đề tài ID=" + topicId);
+        }
+
+        // Security check: Only supervisor or co-supervisor can edit
+        if (!topic.isSupervisorOrCoSupervisor(currentLecturer)) {
+            throw new IllegalStateException("Bạn không có quyền chỉnh sửa đề tài này (không phải GVHD)!");
+        }
+
+        // Check if student group already assigned and active
+        List<StudentGroup> groups = studentGroupRepository.findByTopicId(topicId);
+        boolean hasActiveGroup = groups.stream().anyMatch(g -> g.getStatus() != null && !"REJECTED".equalsIgnoreCase(g.getStatus()) && !"DRAFT".equalsIgnoreCase(g.getStatus()));
+        
+        if (hasActiveGroup && "APPROVED".equalsIgnoreCase(topic.getStatus())) {
+            // If already approved with active group, allow updating description and requirements
+            topic.setDescription(topicData.getDescription());
+            topic.setRequirements(topicData.getRequirements());
+        } else {
+            // Fully updateable
+            if (topicData.getTitle() != null && !topicData.getTitle().trim().isEmpty()) {
+                topic.setTitle(topicData.getTitle().trim());
+            }
+            if (topicData.getCode() != null && !topicData.getCode().trim().isEmpty()) {
+                topic.setCode(topicData.getCode().trim());
+            }
+            if (majorId != null) {
+                Major major = majorRepository.findById(majorId).orElse(null);
+                topic.setMajor(major);
+            }
+            if (periodId != null) {
+                RegistrationPeriod period = periodRepository.findById(periodId).orElse(null);
+                topic.setPeriod(period);
+            }
+            if (coSupervisorId != null && !coSupervisorId.equals(currentLecturer.getId())) {
+                topic.setCoSupervisor(lecturerRepository.findById(coSupervisorId).orElse(null));
+            } else if (coSupervisorId == null) {
+                topic.setCoSupervisor(null);
+            }
+            if (topicData.getMaxStudents() != null && topicData.getMaxStudents() > 0) {
+                topic.setMaxStudents(Math.min(3, topicData.getMaxStudents()));
+            }
+            topic.setDescription(topicData.getDescription());
+            topic.setRequirements(topicData.getRequirements());
+
+            // If it was REJECTED, resubmitting sets it back to PENDING and clears rejection reason
+            if ("REJECTED".equalsIgnoreCase(topic.getStatus())) {
+                topic.setStatus("PENDING");
+                topic.setRejectionReason(null);
+            }
+        }
+
+        Topic saved = topicRepository.save(topic);
+        System.out.println("[DB-LECTURER] Đã cập nhật đề tài ID=" + saved.getId() + " (Status=" + saved.getStatus() + ")");
+        return saved;
+    }
+
+    @Transactional
+    public boolean deleteTopic(Long topicId, Lecturer currentLecturer) {
+        if (topicId == null || currentLecturer == null) return false;
+        Topic topic = topicRepository.findById(topicId).orElse(null);
+        if (topic == null) return false;
+
+        if (!topic.isSupervisorOrCoSupervisor(currentLecturer)) {
+            System.err.println("[SECURITY] GV ID=" + currentLecturer.getId() + " cố xóa đề tài không phải của mình!");
+            return false;
+        }
+
+        List<StudentGroup> groups = studentGroupRepository.findByTopicId(topicId);
+        if (!groups.isEmpty()) {
+            throw new IllegalStateException("Không thể xóa đề tài đã có nhóm sinh viên đăng ký!");
+        }
+
+        topicRepository.delete(topic);
+        System.out.println("[DB-LECTURER] Đã xóa đề tài ID=" + topicId);
+        return true;
+    }
+
     public List<StudentGroup> getGroupsForLecturerTopics(Lecturer lecturer) {
         if (lecturer == null || lecturer.getId() == null) return Collections.emptyList();
         List<Topic> myTopics = getTopicsByLecturer(lecturer);
