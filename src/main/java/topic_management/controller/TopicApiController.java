@@ -59,6 +59,9 @@ public class TopicApiController {
         data.put("groupName", group != null ? group.getGroupName() : null);
         data.put("leaderName", group != null && group.getLeader() != null && group.getLeader().getUser() != null ? group.getLeader().getUser().getFullName() : null);
         data.put("leaderCode", group != null && group.getLeader() != null ? group.getLeader().getStudentCode() : null);
+        data.put("divisionId", t.getDivision() != null ? t.getDivision().getId() : null);
+        data.put("divisionName", t.getDivision() != null ? t.getDivision().getName() : (t.getMajor() != null && t.getMajor().getDivision() != null ? t.getMajor().getDivision().getName() : "Bộ môn Kỹ thuật Phần mềm"));
+        data.put("departmentName", t.getDepartment() != null ? t.getDepartment().getName() : null);
         // Business Rule: If no group assigned, finalScore MUST be null
         data.put("finalScore", hasGroup ? t.getFinalScore() : null);
         data.put("isFinalized", hasGroup ? t.getIsFinalized() : false);

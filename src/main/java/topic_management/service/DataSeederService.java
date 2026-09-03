@@ -15,18 +15,20 @@ import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
- * DataSeederService — Khởi tạo tự động bộ dữ liệu mẫu (Seed Data) chuẩn
- * bao gồm: Roles, Departments, Majors, Đợt đăng ký, Tài khoản các vai trò
- * (Admin, Trưởng khoa đa khoa, Giảng viên đa khoa có đề tài, Sinh viên đa khoa),
- * và các đề tài mẫu liên kết trực tiếp với giảng viên & đợt của từng khoa.
+ * DataSeederService — Khởi tạo tự động bộ dữ liệu mẫu (Seed Data) chuẩn V2.0
+ * bao gồm: Roles (có DIVISION_HEAD), Khoa (Departments), Bộ môn (Divisions),
+ * Chuyên ngành (Majors), Đợt đăng ký, Tài khoản các vai trò
+ * (Admin, Trưởng bộ môn, Giảng viên theo bộ môn, Sinh viên theo bộ môn),
+ * và các đề tài mẫu liên kết trực tiếp với Giảng viên & Bộ môn.
  */
 @Service
 @DependsOn("databaseMigrationService")
-@Order(5) // Chạy trước hoặc phối hợp với DataCleanupService
+@Order(5)
 public class DataSeederService {
 
     private final RoleRepository roleRepository;
     private final DepartmentRepository departmentRepository;
+    private final DivisionRepository divisionRepository;
     private final MajorRepository majorRepository;
     private final UserRepository userRepository;
     private final LecturerRepository lecturerRepository;
@@ -39,6 +41,7 @@ public class DataSeederService {
     public DataSeederService(
             RoleRepository roleRepository,
             DepartmentRepository departmentRepository,
+            DivisionRepository divisionRepository,
             MajorRepository majorRepository,
             UserRepository userRepository,
             LecturerRepository lecturerRepository,
@@ -47,6 +50,7 @@ public class DataSeederService {
             TopicRepository topicRepository) {
         this.roleRepository = roleRepository;
         this.departmentRepository = departmentRepository;
+        this.divisionRepository = divisionRepository;
         this.majorRepository = majorRepository;
         this.userRepository = userRepository;
         this.lecturerRepository = lecturerRepository;
@@ -56,11 +60,10 @@ public class DataSeederService {
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    @Transactional
     public void seedAllTestData() {
         try {
             System.out.println("\n================================================================================");
-            System.out.println("  [DATA-SEEDER] KHỞI TẠO BỘ DỮ LIỆU VÀ TÀI KHOẢN TEST ĐẦY ĐỦ CÁC VAI TRÒ");
+            System.out.println("  [DATA-SEEDER] KHỞI TẠO BỘ DỮ LIỆU VÀ TÀI KHOẢN TEST ĐẦY ĐỦ CÁC VAI TRÒ (V2.0)");
             System.out.println("================================================================================");
 
             // 1. Khởi tạo / Kiểm tra Roles
@@ -69,28 +72,32 @@ public class DataSeederService {
             // 2. Khởi tạo / Kiểm tra Khoa (Departments)
             Map<String, Department> deptMap = seedDepartments();
 
-            // 3. Khởi tạo / Kiểm tra Chuyên ngành (Majors)
-            Map<String, Major> majorMap = seedMajors(deptMap);
+            // 3. Khởi tạo / Kiểm tra Bộ môn (Divisions)
+            Map<String, Division> divMap = seedDivisions(deptMap);
 
-            // 4. Khởi tạo / Kiểm tra Đợt đăng ký (Registration Periods) cho từng khoa
+            // 4. Khởi tạo / Kiểm tra Chuyên ngành (Majors)
+            Map<String, Major> majorMap = seedMajors(deptMap, divMap);
+
+            // 5. Khởi tạo / Kiểm tra Đợt đăng ký (Registration Periods) cho từng khoa
             Map<String, RegistrationPeriod> periodMap = seedPeriods(deptMap);
 
-            // 5. Khởi tạo Tài khoản Quản trị viên (ADMIN)
+            // 6. Khởi tạo Tài khoản Quản trị viên (ADMIN)
             seedAdminUser(roleMap.get("ADMIN"));
 
-            // 6. Khởi tạo Tài khoản Trưởng khoa (DEPARTMENT_HEAD) cho CNTT và QTKD
-            seedDepartmentHeads(roleMap.get("DEPARTMENT_HEAD"), deptMap);
+            // 7. Khởi tạo Tài khoản Trưởng bộ môn / Trưởng khoa (DIVISION_HEAD & DEPARTMENT_HEAD)
+            Role headRole = roleMap.get("DIVISION_HEAD") != null ? roleMap.get("DIVISION_HEAD") : roleMap.get("DEPARTMENT_HEAD");
+            seedDepartmentHeads(headRole, deptMap, divMap);
 
-            // 7. Khởi tạo Tài khoản Giảng viên (LECTURER) cho CNTT và QTKD
-            Map<String, Lecturer> lecturerMap = seedLecturers(roleMap.get("LECTURER"), deptMap);
+            // 8. Khởi tạo Tài khoản Giảng viên (LECTURER) theo từng Bộ môn
+            Map<String, Lecturer> lecturerMap = seedLecturers(roleMap.get("LECTURER"), deptMap, divMap);
 
-            // 8. Khởi tạo Tài khoản Sinh viên (STUDENT) cho CNTT và QTKD
-            seedStudents(roleMap.get("STUDENT"), majorMap);
+            // 9. Khởi tạo Tài khoản Sinh viên (STUDENT) theo từng Bộ môn & Chuyên ngành
+            seedStudents(roleMap.get("STUDENT"), majorMap, divMap);
 
-            // 9. Khởi tạo Đề tài mẫu gán cho Giảng viên và Đợt của từng khoa
-            seedSampleTopics(deptMap, majorMap, periodMap, lecturerMap);
+            // 10. Khởi tạo Đề tài mẫu gán cho Giảng viên, Bộ môn và Đợt
+            seedSampleTopics(deptMap, divMap, majorMap, periodMap, lecturerMap);
 
-            // 10. In bảng danh sách tài khoản test ra console
+            // 11. In bảng danh sách tài khoản test ra console
             printTestAccountsSummary();
 
         } catch (Exception e) {
@@ -106,7 +113,8 @@ public class DataSeederService {
         Map<String, Role> map = new HashMap<>();
         String[][] rolesData = {
                 {"ADMIN", "Quản trị viên hệ thống"},
-                {"DEPARTMENT_HEAD", "Trưởng khoa / Phó khoa"},
+                {"DEPARTMENT_HEAD", "Trưởng khoa / Trưởng bộ môn"},
+                {"DIVISION_HEAD", "Trưởng bộ môn"},
                 {"LECTURER", "Giảng viên"},
                 {"STUDENT", "Sinh viên"}
         };
@@ -150,7 +158,6 @@ public class DataSeederService {
             map.put(code, dept);
         }
 
-        // Lấy thêm các khoa khác nếu có sẵn trong DB
         for (Department existing : departmentRepository.findAll()) {
             if (existing.getCode() != null && !map.containsKey(existing.getCode())) {
                 map.put(existing.getCode(), existing);
@@ -160,21 +167,70 @@ public class DataSeederService {
     }
 
     // =========================================================================
-    // 3. MAJORS
+    // 3. DIVISIONS (BỘ MÔN)
     // =========================================================================
-    private Map<String, Major> seedMajors(Map<String, Department> deptMap) {
-        Map<String, Major> map = new HashMap<>();
+    private Map<String, Division> seedDivisions(Map<String, Department> deptMap) {
+        Map<String, Division> map = new HashMap<>();
 
         Department cnttDept = deptMap.get("CNTT");
         if (cnttDept != null) {
-            createMajorIfNotExist(map, "CNTT", "Công nghệ Thông tin", cnttDept);
-            createMajorIfNotExist(map, "KTPM", "Kỹ thuật Phần mềm", cnttDept);
+            createDivisionIfNotExist(map, "KTPM", "Bộ môn Kỹ thuật Phần mềm", "Bộ môn phụ trách đào tạo và nghiên cứu chuyên sâu về Kỹ thuật Phần mềm và Hệ thống.", cnttDept);
+            createDivisionIfNotExist(map, "KHMT_HTTT", "Bộ môn Khoa học Máy tính & HTTT", "Bộ môn phụ trách đào tạo về AI, Khoa học dữ liệu, Hệ thống Thông tin và Mạng.", cnttDept);
         }
 
         Department qtkdDept = deptMap.get("QTKD");
         if (qtkdDept != null) {
-            createMajorIfNotExist(map, "QTKD", "Quản trị Kinh doanh", qtkdDept);
-            createMajorIfNotExist(map, "MKT", "Marketing & Truyền thông", qtkdDept);
+            createDivisionIfNotExist(map, "QTKD_DN", "Bộ môn Quản trị Doanh nghiệp", "Bộ môn phụ trách đào tạo Quản trị Kinh doanh và Tài chính Doanh nghiệp.", qtkdDept);
+            createDivisionIfNotExist(map, "MKT_TMDT", "Bộ môn Marketing & TMĐT", "Bộ môn phụ trách Marketing số và Thương mại Điện tử.", qtkdDept);
+        }
+
+        for (Division existing : divisionRepository.findAll()) {
+            if (existing.getCode() != null && !map.containsKey(existing.getCode())) {
+                map.put(existing.getCode(), existing);
+            }
+        }
+        return map;
+    }
+
+    private void createDivisionIfNotExist(Map<String, Division> map, String code, String name, String desc, Department dept) {
+        Division div = divisionRepository.findByCode(code).orElseGet(() -> {
+            Division d = new Division();
+            d.setCode(code);
+            d.setName(name);
+            d.setDescription(desc);
+            d.setDepartment(dept);
+            d.setIsActive(true);
+            return divisionRepository.save(d);
+        });
+        if (div.getDepartment() == null && dept != null) {
+            div.setDepartment(dept);
+            div = divisionRepository.save(div);
+        }
+        map.put(code, div);
+    }
+
+    // =========================================================================
+    // 4. MAJORS
+    // =========================================================================
+    private Map<String, Major> seedMajors(Map<String, Department> deptMap, Map<String, Division> divMap) {
+        Map<String, Major> map = new HashMap<>();
+
+        Department cnttDept = deptMap.get("CNTT");
+        Division divKtpm = divMap.get("KTPM");
+        Division divKhmt = divMap.get("KHMT_HTTT");
+
+        if (cnttDept != null) {
+            createMajorIfNotExist(map, "KTPM", "Kỹ thuật Phần mềm", cnttDept, divKtpm);
+            createMajorIfNotExist(map, "CNTT", "Công nghệ Thông tin", cnttDept, divKhmt);
+        }
+
+        Department qtkdDept = deptMap.get("QTKD");
+        Division divQtkd = divMap.get("QTKD_DN");
+        Division divMkt = divMap.get("MKT_TMDT");
+
+        if (qtkdDept != null) {
+            createMajorIfNotExist(map, "QTKD", "Quản trị Kinh doanh", qtkdDept, divQtkd);
+            createMajorIfNotExist(map, "MKT", "Marketing & Truyền thông", qtkdDept, divMkt);
         }
 
         for (Major existing : majorRepository.findAll()) {
@@ -185,26 +241,30 @@ public class DataSeederService {
         return map;
     }
 
-    private void createMajorIfNotExist(Map<String, Major> map, String code, String name, Department dept) {
+    private void createMajorIfNotExist(Map<String, Major> map, String code, String name, Department dept, Division div) {
         Major major = majorRepository.findByCode(code).orElseGet(() -> {
             Major m = new Major();
             m.setCode(code);
             m.setName(name);
             m.setDepartment(dept);
+            m.setDivision(div);
             m.setIsActive(true);
             return majorRepository.save(m);
         });
+        if (major.getDivision() == null && div != null) {
+            major.setDivision(div);
+            major = majorRepository.save(major);
+        }
         map.put(code, major);
     }
 
     // =========================================================================
-    // 4. REGISTRATION PERIODS
+    // 5. REGISTRATION PERIODS
     // =========================================================================
     private Map<String, RegistrationPeriod> seedPeriods(Map<String, Department> deptMap) {
         Map<String, RegistrationPeriod> map = new HashMap<>();
         OffsetDateTime now = OffsetDateTime.now();
 
-        // 1. Đợt Khóa luận CNTT
         Department cnttDept = deptMap.get("CNTT");
         if (cnttDept != null) {
             RegistrationPeriod pCntt = findOrCreatePeriod(
@@ -219,7 +279,6 @@ public class DataSeederService {
             map.put("CNTT_KLTN", pCntt);
         }
 
-        // 2. Đợt Khóa luận QTKD
         Department qtkdDept = deptMap.get("QTKD");
         if (qtkdDept != null) {
             RegistrationPeriod pQtkd = findOrCreatePeriod(
@@ -245,7 +304,6 @@ public class DataSeederService {
         List<RegistrationPeriod> existing = periodRepository.findByDepartmentId(dept.getId());
         for (RegistrationPeriod p : existing) {
             if (type.equalsIgnoreCase(p.getPeriodType()) && Boolean.TRUE.equals(p.getIsActive())) {
-                // Đảm bảo thời gian mở hợp lệ để test ngay
                 p.setStatus("OPEN");
                 p.setLecturerProposalStart(propStart);
                 p.setLecturerProposalEnd(propEnd);
@@ -274,7 +332,7 @@ public class DataSeederService {
     }
 
     // =========================================================================
-    // 5. ADMIN USER
+    // 6. ADMIN USER
     // =========================================================================
     private void seedAdminUser(Role adminRole) {
         if (adminRole == null) return;
@@ -289,13 +347,13 @@ public class DataSeederService {
     }
 
     // =========================================================================
-    // 6. DEPARTMENT HEADS (CNTT & QTKD)
+    // 7. DIVISION / DEPARTMENT HEADS (CNTT & QTKD)
     // =========================================================================
-    private void seedDepartmentHeads(Role headRole, Map<String, Department> deptMap) {
+    private void seedDepartmentHeads(Role headRole, Map<String, Department> deptMap, Map<String, Division> divMap) {
         if (headRole == null) return;
 
-        // Trưởng khoa CNTT
         Department cnttDept = deptMap.get("CNTT");
+        Division divKtpm = divMap.get("KTPM");
         if (cnttDept != null) {
             AppUser headCnttUser = findOrCreateUser(
                     "head_cntt",
@@ -305,11 +363,15 @@ public class DataSeederService {
                     "0912345601",
                     headRole
             );
-            findOrCreateLecturer(headCnttUser, cnttDept, "GV_HEAD_CNTT", "TS", "Tiến sĩ");
+            Lecturer headLecturer = findOrCreateLecturer(headCnttUser, cnttDept, divKtpm, "GV_HEAD_CNTT", "TS", "Tiến sĩ");
+            if (divKtpm != null && divKtpm.getHeadLecturer() == null) {
+                divKtpm.setHeadLecturer(headLecturer);
+                divisionRepository.save(divKtpm);
+            }
         }
 
-        // Trưởng khoa QTKD (Khoa khác)
         Department qtkdDept = deptMap.get("QTKD");
+        Division divQtkd = divMap.get("QTKD_DN");
         if (qtkdDept != null) {
             AppUser headQtkdUser = findOrCreateUser(
                     "head_qtkd",
@@ -319,20 +381,27 @@ public class DataSeederService {
                     "0912345602",
                     headRole
             );
-            findOrCreateLecturer(headQtkdUser, qtkdDept, "GV_HEAD_QTKD", "PGS.TS", "Tiến sĩ");
+            Lecturer headLecturer = findOrCreateLecturer(headQtkdUser, qtkdDept, divQtkd, "GV_HEAD_QTKD", "PGS.TS", "Tiến sĩ");
+            if (divQtkd != null && divQtkd.getHeadLecturer() == null) {
+                divQtkd.setHeadLecturer(headLecturer);
+                divisionRepository.save(divQtkd);
+            }
         }
     }
 
     // =========================================================================
-    // 7. LECTURERS (CNTT & QTKD)
+    // 8. LECTURERS (CNTT & QTKD)
     // =========================================================================
-    private Map<String, Lecturer> seedLecturers(Role lecturerRole, Map<String, Department> deptMap) {
+    private Map<String, Lecturer> seedLecturers(Role lecturerRole, Map<String, Department> deptMap, Map<String, Division> divMap) {
         Map<String, Lecturer> map = new HashMap<>();
         if (lecturerRole == null) return map;
 
         Department cnttDept = deptMap.get("CNTT");
+        Division divKtpm = divMap.get("KTPM");
+        Division divKhmt = divMap.get("KHMT_HTTT");
+
         if (cnttDept != null) {
-            // Giảng viên CNTT 1
+            // Giảng viên CNTT 1 (Bộ môn KTPM)
             AppUser gv1User = findOrCreateUser(
                     "gv_cntt01",
                     "123456",
@@ -341,10 +410,10 @@ public class DataSeederService {
                     "0912345611",
                     lecturerRole
             );
-            Lecturer lec1 = findOrCreateLecturer(gv1User, cnttDept, "GV_IT_01", "ThS", "Thạc sĩ");
+            Lecturer lec1 = findOrCreateLecturer(gv1User, cnttDept, divKtpm, "GV_IT_01", "ThS", "Thạc sĩ");
             map.put("gv_cntt01", lec1);
 
-            // Giảng viên CNTT 2
+            // Giảng viên CNTT 2 (Bộ môn KHMT & HTTT)
             AppUser gv2User = findOrCreateUser(
                     "gv_cntt02",
                     "123456",
@@ -353,13 +422,14 @@ public class DataSeederService {
                     "0912345612",
                     lecturerRole
             );
-            Lecturer lec2 = findOrCreateLecturer(gv2User, cnttDept, "GV_IT_02", "TS", "Tiến sĩ");
+            Lecturer lec2 = findOrCreateLecturer(gv2User, cnttDept, divKhmt, "GV_IT_02", "TS", "Tiến sĩ");
             map.put("gv_cntt02", lec2);
         }
 
         Department qtkdDept = deptMap.get("QTKD");
+        Division divQtkd = divMap.get("QTKD_DN");
         if (qtkdDept != null) {
-            // Giảng viên QTKD (Khoa khác)
+            // Giảng viên QTKD (Bộ môn QTKD Doanh nghiệp)
             AppUser gvQtkdUser = findOrCreateUser(
                     "gv_qtkd01",
                     "123456",
@@ -368,7 +438,7 @@ public class DataSeederService {
                     "0912345621",
                     lecturerRole
             );
-            Lecturer lecQtkd = findOrCreateLecturer(gvQtkdUser, qtkdDept, "GV_BA_01", "ThS", "Thạc sĩ");
+            Lecturer lecQtkd = findOrCreateLecturer(gvQtkdUser, qtkdDept, divQtkd, "GV_BA_01", "ThS", "Thạc sĩ");
             map.put("gv_qtkd01", lecQtkd);
         }
 
@@ -376,14 +446,16 @@ public class DataSeederService {
     }
 
     // =========================================================================
-    // 8. STUDENTS (CNTT & QTKD)
+    // 9. STUDENTS (CNTT & QTKD)
     // =========================================================================
-    private void seedStudents(Role studentRole, Map<String, Major> majorMap) {
+    private void seedStudents(Role studentRole, Map<String, Major> majorMap, Map<String, Division> divMap) {
         if (studentRole == null) return;
 
-        Major cnttMajor = majorMap.get("CNTT");
+        Major cnttMajor = majorMap.get("KTPM") != null ? majorMap.get("KTPM") : majorMap.get("CNTT");
+        Division divKtpm = divMap.get("KTPM");
+
         if (cnttMajor != null) {
-            // Sinh viên CNTT 1 (Sinh viên đúng khoa - dùng để test quy trình chuẩn)
+            // Sinh viên CNTT 1
             AppUser sv1User = findOrCreateUser(
                     "sv_cntt01",
                     "123456",
@@ -392,9 +464,9 @@ public class DataSeederService {
                     "0987654301",
                     studentRole
             );
-            findOrCreateStudent(sv1User, cnttMajor, "20110001", "20T1-CNTT", "2021-2025", 3.65);
+            findOrCreateStudent(sv1User, cnttMajor, divKtpm, "20110001", "20T1-CNTT", "2021-2025", 3.65);
 
-            // Sinh viên CNTT 2 (Sinh viên đúng khoa - dùng để test ghép nhóm)
+            // Sinh viên CNTT 2
             AppUser sv2User = findOrCreateUser(
                     "sv_cntt02",
                     "123456",
@@ -403,12 +475,13 @@ public class DataSeederService {
                     "0987654302",
                     studentRole
             );
-            findOrCreateStudent(sv2User, cnttMajor, "20110002", "20T1-CNTT", "2021-2025", 3.42);
+            findOrCreateStudent(sv2User, cnttMajor, divKtpm, "20110002", "20T1-CNTT", "2021-2025", 3.42);
         }
 
         Major qtkdMajor = majorMap.get("QTKD");
+        Division divQtkd = divMap.get("QTKD_DN");
         if (qtkdMajor != null) {
-            // Sinh viên QTKD (Sinh viên khác khoa - dùng để test tính năng chặn khoa)
+            // Sinh viên QTKD
             AppUser svQtkdUser = findOrCreateUser(
                     "sv_qtkd01",
                     "123456",
@@ -417,39 +490,42 @@ public class DataSeederService {
                     "0987654321",
                     studentRole
             );
-            findOrCreateStudent(svQtkdUser, qtkdMajor, "20120001", "20KD1", "2021-2025", 3.50);
+            findOrCreateStudent(svQtkdUser, qtkdMajor, divQtkd, "20120001", "20KD1", "2021-2025", 3.50);
         }
     }
 
     // =========================================================================
-    // 9. TOPICS (Gán trực tiếp cho từng Giảng viên & Khoa)
+    // 10. TOPICS (Gán trực tiếp cho từng Giảng viên & Bộ môn)
     // =========================================================================
     private void seedSampleTopics(
             Map<String, Department> deptMap,
+            Map<String, Division> divMap,
             Map<String, Major> majorMap,
             Map<String, RegistrationPeriod> periodMap,
             Map<String, Lecturer> lecturerMap) {
 
-        Major cnttMajor = majorMap.get("CNTT");
+        Major cnttMajor = majorMap.get("KTPM") != null ? majorMap.get("KTPM") : majorMap.get("CNTT");
         RegistrationPeriod cnttPeriod = periodMap.get("CNTT_KLTN");
+        Division divKtpm = divMap.get("KTPM");
+        Division divKhmt = divMap.get("KHMT_HTTT");
         Lecturer gvCntt1 = lecturerMap.get("gv_cntt01");
         Lecturer gvCntt2 = lecturerMap.get("gv_cntt02");
 
-        if (cnttMajor != null && cnttPeriod != null) {
+        if (cnttPeriod != null) {
             if (gvCntt1 != null) {
                 createTopicIfNotExist(
                         "CNTT-SEED-01",
                         "Xây dựng hệ thống quản lý kho thông minh sử dụng IoT và Machine Learning",
                         "Nghiên cứu và phát triển hệ thống quản lý kho hàng tích hợp cảm biến IoT để theo dõi hàng tồn kho theo thời gian thực, kết hợp thuật toán dự báo nhu cầu bằng Machine Learning.",
                         "Python / TensorFlow cho ML module.\nESP32 cho IoT.\nReact.js + Spring Boot.\nCơ sở dữ liệu PostgreSQL.",
-                        cnttMajor, cnttPeriod, gvCntt1, 3
+                        cnttMajor, divKtpm, cnttPeriod, gvCntt1, 3
                 );
                 createTopicIfNotExist(
                         "CNTT-SEED-02",
                         "Phát triển ứng dụng di động hỗ trợ học tiếng Anh theo phương pháp Spaced Repetition",
                         "Xây dựng ứng dụng mobile áp dụng thuật toán Spaced Repetition System (SRS) kết hợp NLP để cá nhân hóa lộ trình học từ vựng cho người dùng.",
                         "Flutter / React Native cho mobile.\nSpring Boot API backend.\nPostgreSQL Database.",
-                        cnttMajor, cnttPeriod, gvCntt1, 2
+                        cnttMajor, divKtpm, cnttPeriod, gvCntt1, 2
                 );
             }
 
@@ -459,52 +535,56 @@ public class DataSeederService {
                         "Nghiên cứu và triển khai hệ thống phát hiện xâm nhập mạng dùng Deep Learning",
                         "Phân tích và xây dựng mô hình Deep Learning để phát hiện các hành vi xâm nhập và tấn công mạng trong thời gian thực trên tập dữ liệu CICIDS2017.",
                         "Python: PyTorch / TensorFlow.\nWireshark / Scapy phân tích gói tin.\nSpring Boot REST Dashboard.",
-                        cnttMajor, cnttPeriod, gvCntt2, 2
+                        cnttMajor, divKhmt, cnttPeriod, gvCntt2, 2
                 );
                 createTopicIfNotExist(
                         "CNTT-SEED-04",
                         "Thiết kế nền tảng E-Learning hỗ trợ học tập cộng tác theo kiến trúc Microservices",
                         "Xây dựng hệ thống E-Learning đa người dùng hỗ trợ phòng học cộng tác real-time với WebSocket và Microservices.",
                         "Spring Boot / Cloud Microservices.\nReact.js Frontend.\nDocker + Kubernetes.",
-                        cnttMajor, cnttPeriod, gvCntt2, 3
+                        cnttMajor, divKhmt, cnttPeriod, gvCntt2, 3
                 );
             }
         }
 
         Major qtkdMajor = majorMap.get("QTKD");
         RegistrationPeriod qtkdPeriod = periodMap.get("QTKD_KLTN");
+        Division divQtkd = divMap.get("QTKD_DN");
         Lecturer gvQtkd1 = lecturerMap.get("gv_qtkd01");
 
-        if (qtkdMajor != null && qtkdPeriod != null && gvQtkd1 != null) {
+        if (qtkdPeriod != null && gvQtkd1 != null) {
             createTopicIfNotExist(
                     "QTKD-SEED-01",
                     "Phân tích tác động của Digital Marketing đến hành vi mua sắm trực tuyến của Gen Z",
                     "Nghiên cứu định lượng về ảnh hưởng của Social Media và KOL Marketing đến quyết định mua hàng trên sàn TMĐT của giới trẻ tại Việt Nam.",
                     "Phương pháp nghiên cứu định lượng (SPSS, SmartPLS).\nKhảo sát 300+ đối tượng Gen Z.",
-                    qtkdMajor, qtkdPeriod, gvQtkd1, 3
+                    qtkdMajor, divQtkd, qtkdPeriod, gvQtkd1, 3
             );
             createTopicIfNotExist(
                     "QTKD-SEED-02",
                     "Xây dựng mô hình đánh giá rủi ro tín dụng cho doanh nghiệp SME tại Ngân hàng Thương mại",
                     "Ứng dụng phân tích dữ liệu tài chính và mô hình Logistic Regression để tối ưu hóa phê duyệt tín dụng doanh nghiệp vừa và nhỏ.",
                     "Phân tích tài chính doanh nghiệp.\nPhần mềm R / Python + SPSS.",
-                    qtkdMajor, qtkdPeriod, gvQtkd1, 2
+                    qtkdMajor, divQtkd, qtkdPeriod, gvQtkd1, 2
             );
         }
     }
 
     private void createTopicIfNotExist(
             String code, String title, String desc, String reqs,
-            Major major, RegistrationPeriod period, Lecturer supervisor, int maxStudents) {
+            Major major, Division division, RegistrationPeriod period, Lecturer supervisor, int maxStudents) {
 
         if (topicRepository.existsByCode(code)) {
-            // Đảm bảo topic đã liên kết đúng gvhd và period
             Topic existing = topicRepository.findAll().stream()
                     .filter(t -> code.equalsIgnoreCase(t.getCode()))
                     .findFirst()
                     .orElse(null);
             if (existing != null) {
                 boolean changed = false;
+                if (existing.getDivision() == null && division != null) {
+                    existing.setDivision(division);
+                    changed = true;
+                }
                 if (existing.getSupervisor() == null && supervisor != null) {
                     existing.setSupervisor(supervisor);
                     changed = true;
@@ -526,6 +606,7 @@ public class DataSeederService {
         t.setDescription(desc);
         t.setRequirements(reqs);
         t.setMajor(major);
+        t.setDivision(division);
         t.setPeriod(period);
         t.setSupervisor(supervisor);
         t.setStatus("APPROVED");
@@ -547,7 +628,6 @@ public class DataSeederService {
         AppUser user;
         if (userOpt.isPresent()) {
             user = userOpt.get();
-            // Cập nhật lại role, mật khẩu chuẩn và active nếu cần
             user.setRole(role);
             user.setIsActive(true);
             user.setFullName(fullName);
@@ -570,12 +650,13 @@ public class DataSeederService {
     }
 
     private Lecturer findOrCreateLecturer(
-            AppUser user, Department dept, String code, String title, String degree) {
+            AppUser user, Department dept, Division div, String code, String title, String degree) {
 
         Optional<Lecturer> opt = lecturerRepository.findByUserId(user.getId());
         if (opt.isPresent()) {
             Lecturer lec = opt.get();
             lec.setDepartment(dept);
+            lec.setDivision(div);
             lec.setLecturerCode(code);
             lec.setAcademicTitle(title);
             lec.setDegree(degree);
@@ -585,6 +666,7 @@ public class DataSeederService {
         Lecturer lec = new Lecturer();
         lec.setUser(user);
         lec.setDepartment(dept);
+        lec.setDivision(div);
         lec.setLecturerCode(code);
         lec.setAcademicTitle(title);
         lec.setDegree(degree);
@@ -593,12 +675,13 @@ public class DataSeederService {
     }
 
     private Student findOrCreateStudent(
-            AppUser user, Major major, String code, String className, String academicYear, Double gpa) {
+            AppUser user, Major major, Division div, String code, String className, String academicYear, Double gpa) {
 
         Optional<Student> opt = studentRepository.findByUserId(user.getId());
         if (opt.isPresent()) {
             Student s = opt.get();
             s.setMajor(major);
+            s.setDivision(div);
             s.setStudentCode(code);
             s.setClassName(className);
             s.setAcademicYear(academicYear);
@@ -609,6 +692,7 @@ public class DataSeederService {
         Student s = new Student();
         s.setUser(user);
         s.setMajor(major);
+        s.setDivision(div);
         s.setStudentCode(code);
         s.setClassName(className);
         s.setAcademicYear(academicYear);
@@ -617,26 +701,26 @@ public class DataSeederService {
     }
 
     // =========================================================================
-    // 10. IN DANH SÁCH TÀI KHOẢN TEST RA CONSOLE
+    // 11. IN DANH SÁCH TÀI KHOẢN TEST RA CONSOLE
     // =========================================================================
     private void printTestAccountsSummary() {
-        System.out.println("\n+---------------------------------------------------------------------------------------------------------------+");
-        System.out.println("|                                    BẢNG TÀI KHOẢN KIỂM THỬ HỆ THỐNG (TEST ACCOUNTS)                           |");
-        System.out.println("+-------------------+---------------+------------------+------------------------------+-------------------------+");
-        System.out.println("| VAI TRÒ (ROLE)    | TÀI KHOẢN     | MẬT KHẨU         | HỌ VÀ TÊN                    | KHOA / GHI CHÚ          |");
-        System.out.println("+-------------------+---------------+------------------+------------------------------+-------------------------+");
-        System.out.println("| QUẢN TRỊ VIÊN     | admin         | admin123         | Quản Trị Viên Hệ Thống       | Toàn quyền hệ thống     |");
-        System.out.println("+-------------------+---------------+------------------+------------------------------+-------------------------+");
-        System.out.println("| TRƯỞNG KHOA       | head_cntt     | 123456           | TS. Nguyễn Văn Thắng         | Khoa CNTT               |");
-        System.out.println("| TRƯỞNG KHOA (KHÁC)| head_qtkd     | 123456           | PGS.TS. Trần Thị Mai         | Khoa QTKD               |");
-        System.out.println("+-------------------+---------------+------------------+------------------------------+-------------------------+");
-        System.out.println("| GIẢNG VIÊN (1)    | gv_cntt01     | 123456           | ThS. Lê Hoàng Long           | Khoa CNTT (Có đề tài)   |");
-        System.out.println("| GIẢNG VIÊN (2)    | gv_cntt02     | 123456           | TS. Phạm Minh Tuấn           | Khoa CNTT (Có đề tài)   |");
-        System.out.println("| GIẢNG VIÊN (KHÁC) | gv_qtkd01     | 123456           | ThS. Hoàng Thu Thảo          | Khoa QTKD (Có đề tài)   |");
-        System.out.println("+-------------------+---------------+------------------+------------------------------+-------------------------+");
-        System.out.println("| SINH VIÊN (1)     | sv_cntt01     | 123456           | Nguyễn Văn An (20110001)     | Khoa CNTT (Đúng khoa)   |");
-        System.out.println("| SINH VIÊN (2)     | sv_cntt02     | 123456           | Trần Thị Bình (20110002)     | Khoa CNTT (Mời nhóm)    |");
-        System.out.println("| SINH VIÊN (KHÁC)  | sv_qtkd01     | 123456           | Phạm Quốc Cường (20120001)   | Khoa QTKD (Test chặn)   |");
-        System.out.println("+-------------------+---------------+------------------+------------------------------+-------------------------+\n");
+        System.out.println("\n+-------------------------------------------------------------------------------------------------------------------------------+");
+        System.out.println("|                                           BẢNG TÀI KHOẢN KIỂM THỬ HỆ THỐNG (V2.0 DIVISION SCOPING)                             |");
+        System.out.println("+--------------------+---------------+------------------+------------------------------+----------------------------------------+");
+        System.out.println("| VAI TRÒ (ROLE)     | TÀI KHOẢN     | MẬT KHẨU         | HỌ VÀ TÊN                    | BỘ MÔN / KHOA                          |");
+        System.out.println("+--------------------+---------------+------------------+------------------------------+----------------------------------------+");
+        System.out.println("| QUẢN TRỊ VIÊN      | admin         | admin123         | Quản Trị Viên Hệ Thống       | Quản trị toàn trường                   |");
+        System.out.println("+--------------------+---------------+------------------+------------------------------+----------------------------------------+");
+        System.out.println("| TRƯỞNG BỘ MÔN KTPM | head_cntt     | 123456           | TS. Nguyễn Văn Thắng         | Bộ môn Kỹ thuật Phần mềm (Khoa CNTT)   |");
+        System.out.println("| TRƯỞNG BỘ MÔN QTKD | head_qtkd     | 123456           | PGS.TS. Trần Thị Mai         | Bộ môn QTKD Doanh nghiệp (Khoa QTKD)   |");
+        System.out.println("+--------------------+---------------+------------------+------------------------------+----------------------------------------+");
+        System.out.println("| GIẢNG VIÊN (KTPM)  | gv_cntt01     | 123456           | ThS. Lê Hoàng Long           | BM Kỹ thuật Phần mềm (Khoa CNTT)       |");
+        System.out.println("| GIẢNG VIÊN (KHMT)  | gv_cntt02     | 123456           | TS. Phạm Minh Tuấn           | BM KHMT & HTTT (Khoa CNTT)             |");
+        System.out.println("| GIẢNG VIÊN (QTKD)  | gv_qtkd01     | 123456           | ThS. Hoàng Thu Thảo          | BM QTKD Doanh nghiệp (Khoa QTKD)       |");
+        System.out.println("+--------------------+---------------+------------------+------------------------------+----------------------------------------+");
+        System.out.println("| SINH VIÊN (KTPM)   | sv_cntt01     | 123456           | Nguyễn Văn An (20110001)     | BM Kỹ thuật Phần mềm (Khoa CNTT)       |");
+        System.out.println("| SINH VIÊN (KTPM)   | sv_cntt02     | 123456           | Trần Thị Bình (20110002)     | BM Kỹ thuật Phần mềm (Khoa CNTT)       |");
+        System.out.println("| SINH VIÊN (QTKD)   | sv_qtkd01     | 123456           | Phạm Quốc Cường (20120001)   | BM QTKD Doanh nghiệp (Khoa QTKD)       |");
+        System.out.println("+--------------------+---------------+------------------+------------------------------+----------------------------------------+\n");
     }
 }

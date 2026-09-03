@@ -1,5 +1,6 @@
 package topic_management.service;
 
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -429,12 +430,16 @@ public class StudentService {
             }
         }
 
-        group.setTopic(topic);
-        group.setStatus("REGISTERED");
-        groupRepository.save(group);
-
-        System.out.println("[DB-STUDENT] Nhom '" + group.getGroupName() + "' da dang ky de tai '" + topic.getTitle() + "'");
-        return null; // success
+        try {
+            group.setTopic(topic);
+            group.setStatus("REGISTERED");
+            groupRepository.save(group);
+            System.out.println("[DB-STUDENT] Nhom '" + group.getGroupName() + "' da dang ky de tai '" + topic.getTitle() + "'");
+            return null; // success
+        } catch (OptimisticLockingFailureException e) {
+            System.err.println("[CONCURRENCY] Tranh chấp đồng thời khi đăng ký đề tài ID=" + topicId + ": " + e.getMessage());
+            return "Đề tài vừa được một nhóm khác đăng ký trước đó. Vui lòng làm mới trang và chọn đề tài khác!";
+        }
     }
 
     // ==================== SUBMISSIONS (LEADER ONLY) ====================

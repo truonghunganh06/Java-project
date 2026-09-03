@@ -21,7 +21,7 @@ public class DashboardController {
             if ("ADMIN".equalsIgnoreCase(roleCode)) {
                 return "redirect:/admin/dashboard";
             }
-            if ("DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)) {
+            if ("DEPARTMENT_HEAD".equalsIgnoreCase(roleCode) || "DIVISION_HEAD".equalsIgnoreCase(roleCode)) {
                 return "redirect:/department-head/dashboard";
             }
             if ("LECTURER".equalsIgnoreCase(roleCode)) {

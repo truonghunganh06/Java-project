@@ -3,7 +3,7 @@
 <body>
     <aside class="saas-sidebar" id="saasSidebar" th:fragment="sidebar(activePage, user)">
         <!-- Brand Header -->
-        <a class="sidebar-brand" th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
+        <a class="sidebar-brand" th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
             <div class="sidebar-brand-logo me-2">
                 <i class="fa-solid fa-graduation-cap"></i>
             </div>
@@ -35,8 +35,8 @@
                 </a>
             </div>
 
-            <!-- ================= DEPARTMENT HEAD MENU ================= -->
-            <div th:if="${user != null && user.role != null && user.role.code == 'DEPARTMENT_HEAD'}">
+            <!-- ================= DEPARTMENT HEAD / DIVISION HEAD MENU ================= -->
+            <div th:if="${user != null && user.role != null && (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD')}">
                 <div class="sidebar-section-title">Tổng quan</div>
                 <a th:href="@{/department-head/dashboard}" class="saas-nav-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
                     <i class="fa-solid fa-chart-pie"></i>

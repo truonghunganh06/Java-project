@@ -191,9 +191,10 @@ public class StudentController {
         if (user == null) return "redirect:/login";
 
         Student student = studentService.getStudentByUser(user);
-        // Xác định Khoa của sinh viên để lọc đề tài theo đúng phân quyền đào tạo
+        // Xác định Khoa & Bộ môn của sinh viên để lọc đề tài theo đúng phân quyền đào tạo
         Long departmentId = student != null ? student.getDepartmentId() : null;
         Department studentDepartment = student != null ? student.getDepartment() : null;
+        Division studentDivision = student != null ? student.getDivision() : null;
 
         StudentGroup group = studentService.getMyActiveGroup(student, periodId);
         // Lọc đề tài theo Khoa của sinh viên (departmentId) + periodId + majorId + keyword
@@ -208,6 +209,7 @@ public class StudentController {
         model.addAttribute("user", user);
         model.addAttribute("student", student);
         model.addAttribute("studentDepartment", studentDepartment);
+        model.addAttribute("studentDivision", studentDivision);
         model.addAttribute("group", group);
         model.addAttribute("topics", topics);
         model.addAttribute("takenTopicIds", takenTopicIds);

@@ -104,6 +104,14 @@ public class LecturerService {
         topic.setMajor(major);
         topic.setSupervisor(supervisor);
 
+        if (topic.getDivision() == null) {
+            if (supervisor != null && supervisor.getDivision() != null) {
+                topic.setDivision(supervisor.getDivision());
+            } else if (major != null && major.getDivision() != null) {
+                topic.setDivision(major.getDivision());
+            }
+        }
+
         // BUG-01 FIX: Kiểm tra đợt đăng ký có đang mở cho giảng viên đề xuất không
         if (periodId != null) {
             RegistrationPeriod period = periodRepository.findById(periodId).orElse(null);

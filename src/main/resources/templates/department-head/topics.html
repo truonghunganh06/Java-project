@@ -9,7 +9,7 @@
     <!-- Main Wrapper -->
     <div class="saas-main-wrapper">
         <!-- Topbar -->
-        <header th:replace="~{fragments/topbar :: topbar('Duyệt Đề tài Khoa', 'Trưởng Khoa', '/department-head/dashboard', ${user})}"></header>
+        <header th:replace="~{fragments/topbar :: topbar('Duyệt Đề tài', ${user != null && user.role != null ? user.role.name : 'Trưởng Bộ Môn'}, '/department-head/dashboard', ${user})}"></header>
 
         <!-- Main Content View -->
         <main class="saas-content">
@@ -128,7 +128,7 @@
 
                                 <!-- Cột 2: Bộ môn / Đợt -->
                                 <td>
-                                    <div class="font-medium text-slate-800 text-xs truncate-cell" th:text="${t.major != null ? t.major.name : 'CNTT'}">CNTT</div>
+                                    <div class="font-medium text-slate-800 text-xs truncate-cell" th:text="${t.division != null ? t.division.name : (t.major != null ? t.major.name : 'Bộ môn KTPM')}">Bộ môn Kỹ thuật Phần mềm</div>
                                     <span class="text-xs text-slate-400 d-block truncate-cell" th:text="${t.period != null ? t.period.name : 'Chung'}">KLTN</span>
                                 </td>
 

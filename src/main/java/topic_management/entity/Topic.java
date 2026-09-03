@@ -11,6 +11,9 @@ public class Topic {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Long version;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "period_id")
     private RegistrationPeriod period;
@@ -18,6 +21,10 @@ public class Topic {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "major_id")
     private Major major;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "division_id")
+    private Division division;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "supervisor_id")
@@ -29,7 +36,7 @@ public class Topic {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "reviewer_id")
-    private Lecturer reviewer; // GVPB (Giảng viên phản biện do Trưởng khoa phân công)
+    private Lecturer reviewer; // GVPB (Giảng viên phản biện do Trưởng bộ môn phân công)
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "council_id")
@@ -89,6 +96,14 @@ public class Topic {
         this.id = id;
     }
 
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
     public RegistrationPeriod getPeriod() {
         return period;
     }
@@ -103,6 +118,20 @@ public class Topic {
 
     public void setMajor(Major major) {
         this.major = major;
+        if (major != null && major.getDivision() != null && this.division == null) {
+            this.division = major.getDivision();
+        }
+    }
+
+    public Division getDivision() {
+        if (division != null) return division;
+        if (major != null && major.getDivision() != null) return major.getDivision();
+        if (supervisor != null && supervisor.getDivision() != null) return supervisor.getDivision();
+        return null;
+    }
+
+    public void setDivision(Division division) {
+        this.division = division;
     }
 
     public Lecturer getSupervisor() {
@@ -111,6 +140,9 @@ public class Topic {
 
     public void setSupervisor(Lecturer supervisor) {
         this.supervisor = supervisor;
+        if (supervisor != null && supervisor.getDivision() != null && this.division == null) {
+            this.division = supervisor.getDivision();
+        }
     }
 
     public Lecturer getCoSupervisor() {
@@ -261,5 +293,19 @@ public class Topic {
         if (lecturer == null || lecturer.getId() == null) return false;
         if (supervisor != null && lecturer.getId().equals(supervisor.getId())) return true;
         return coSupervisor != null && lecturer.getId().equals(coSupervisor.getId());
+    }
+
+    @Transient
+    public Department getDepartment() {
+        if (division != null && division.getDepartment() != null) {
+            return division.getDepartment();
+        }
+        if (major != null && major.getDepartment() != null) {
+            return major.getDepartment();
+        }
+        if (period != null && period.getDepartment() != null) {
+            return period.getDepartment();
+        }
+        return null;
     }
 }

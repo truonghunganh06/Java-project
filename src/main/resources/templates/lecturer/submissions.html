@@ -88,7 +88,10 @@
                                     <span class="text-slate-400 text-xs" th:text="${s.topic != null ? s.topic.title : ''}">Tên đề tài</span>
                                 </td>
                                 <td>
-                                    <span class="badge-pill-neutral font-semibold" th:text="'Đợt ' + ${s.submissionRound}">Đợt 1</span>
+                                    <span class="badge-pill-neutral font-semibold" th:text="'Vòng ' + ${s.submissionRound}">Vòng 1</span>
+                                    <div class="text-slate-400 text-xs mt-0.5" th:if="${s.submittedAt != null}">
+                                        <i class="fa-regular fa-clock me-1 text-[10px]"></i><span th:text="${#temporals.format(s.submittedAt, 'dd/MM/yyyy HH:mm')}"></span>
+                                    </div>
                                 </td>
                                 <td>
                                     <a href="#" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2.5 py-1 text-xs text-blue-600 font-medium hover:bg-slate-100" title="Tải về tệp">

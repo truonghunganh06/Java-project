@@ -9,7 +9,7 @@
     <!-- Main Wrapper -->
     <div class="saas-main-wrapper">
         <!-- Topbar -->
-        <header th:replace="~{fragments/topbar :: topbar('Bảng điều khiển', 'Trưởng Khoa', '/department-head/dashboard', ${user})}"></header>
+        <header th:replace="~{fragments/topbar :: topbar('Bảng điều khiển', ${user != null && user.role != null ? user.role.name : 'Trưởng Bộ Môn'}, '/department-head/dashboard', ${user})}"></header>
 
         <!-- Main Content View -->
         <main class="saas-content">
@@ -28,10 +28,10 @@
             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
                 <div>
                     <div class="d-flex align-items-center gap-2">
-                        <h1 class="text-xl font-bold text-slate-900 mb-0">Bảng điều khiển Trưởng Khoa / Bộ Môn</h1>
-                        <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200" th:text="${department != null ? department.name : 'Khoa CNTT'}">Khoa CNTT</span>
+                        <h1 class="text-xl font-bold text-slate-900 mb-0">Bảng điều khiển Trưởng Bộ Môn / Khoa</h1>
+                        <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200" th:text="${division != null ? division.name + ' - ' + department.name : (department != null ? department.name : 'Khoa CNTT')}">Bộ môn Kỹ thuật Phần mềm</span>
                     </div>
-                    <p class="text-xs text-slate-500 mb-0 mt-1">Giám sát quy trình đề xuất đề tài, tiến độ hội đồng bảo vệ và các đợt đăng ký trong khoa.</p>
+                    <p class="text-xs text-slate-500 mb-0 mt-1">Giám sát quy trình duyệt đề tài, phân công phản biện, hội đồng bảo vệ và các đợt đăng ký theo bộ môn.</p>
                 </div>
                 <div class="d-flex align-items-center gap-2.5">
                     <!-- Action Button 1: Duyệt đề tài (Ghost button with subtle badge) -->
@@ -344,6 +344,7 @@
                             <div class="p-3 rounded-xl border border-slate-100 bg-white hover:border-slate-300 hover:shadow-xs transition cursor-pointer" 
                                  th:each="a, aStat : ${announcements}" th:if="${aStat.index < 3}"
                                  onclick="showAnnouncementDetail(this)"
+                                 th:data-announcement-id="${a.id}"
                                  th:data-title="${a.title}"
                                  th:data-category="${a.category != null ? a.category : 'THÔNG BÁO'}"
                                  th:data-author="${a.author != null ? a.author.fullName : 'Ban chủ nhiệm Khoa'}"
