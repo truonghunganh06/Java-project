@@ -318,18 +318,18 @@ public class AdminService {
     // ==================== SYSTEM STATS ====================
 
     public Map<String, Object> getSystemStats() {
-        List<AppUser> users = getAllUsers();
+        long totalUsers = userRepository.count();
+        long activeUsers = userRepository.countActiveUsers();
+        long adminCount = userRepository.countByRoleCode("ADMIN");
+        long deptHeadCount = userRepository.countByRoleCode("DEPARTMENT_HEAD");
+        long lecturerCount = userRepository.countByRoleCode("LECTURER");
+        long studentCount = userRepository.countByRoleCode("STUDENT");
+        
         List<Department> depts = getAllDepartments();
         List<Major> majors = getAllMajors();
 
-        long activeUsers = users.stream().filter(u -> Boolean.TRUE.equals(u.getIsActive())).count();
-        long adminCount = users.stream().filter(u -> u.getRole() != null && "ADMIN".equalsIgnoreCase(u.getRole().getCode())).count();
-        long deptHeadCount = users.stream().filter(u -> u.getRole() != null && "DEPARTMENT_HEAD".equalsIgnoreCase(u.getRole().getCode())).count();
-        long lecturerCount = users.stream().filter(u -> u.getRole() != null && "LECTURER".equalsIgnoreCase(u.getRole().getCode())).count();
-        long studentCount = users.stream().filter(u -> u.getRole() != null && "STUDENT".equalsIgnoreCase(u.getRole().getCode())).count();
-
         Map<String, Object> stats = new HashMap<>();
-        stats.put("totalUsers", users.size());
+        stats.put("totalUsers", totalUsers);
         stats.put("activeUsers", activeUsers);
         stats.put("totalDepartments", depts.size());
         stats.put("totalMajors", majors.size());
@@ -338,7 +338,7 @@ public class AdminService {
         stats.put("lecturerCount", lecturerCount);
         stats.put("studentCount", studentCount);
 
-        System.out.println("[DB-ADMIN] getSystemStats: Thống kê DB -> Tổng user: " + users.size() + ", Khoa: " + depts.size() + ", Ngành: " + majors.size());
+        System.out.println("[DB-ADMIN] getSystemStats: Thống kê DB -> Tổng user: " + totalUsers + ", Active: " + activeUsers + ", Khoa: " + depts.size() + ", Ngành: " + majors.size());
         return stats;
     }
 }

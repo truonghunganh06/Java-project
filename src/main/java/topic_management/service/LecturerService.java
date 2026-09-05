@@ -7,6 +7,7 @@ import topic_management.repository.*;
 
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class LecturerService {
@@ -47,7 +48,8 @@ public class LecturerService {
 
     @Transactional
     public Lecturer getLecturerByUser(AppUser user) {
-        if (user == null || user.getId() == null) return null;
+        if (user == null || user.getId() == null)
+            return null;
         Optional<Lecturer> opt = lecturerRepository.findByUserId(user.getId());
         if (opt.isPresent()) {
             return opt.get();
@@ -79,22 +81,32 @@ public class LecturerService {
     }
 
     public List<Topic> getTopicsByLecturer(Lecturer lecturer) {
-        if (lecturer == null || lecturer.getId() == null) return Collections.emptyList();
-        return topicRepository.findBySupervisorOrCoSupervisorId(lecturer.getId());
+        if (lecturer == null || lecturer.getId() == null)
+            return Collections.emptyList();
+        List<Topic> topics = topicRepository.findBySupervisorOrCoSupervisorId(lecturer.getId());
+        return topics.stream()
+                .sorted(Comparator
+                        .comparing((Topic t) -> "PENDING".equalsIgnoreCase(t.getStatus()) ? 0 : 1)
+                        .thenComparing(Topic::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(Topic::getId, Comparator.nullsLast(Comparator.reverseOrder())))
+                .collect(Collectors.toList());
     }
 
     public List<Topic> getReviewerTopics(Lecturer lecturer) {
-        if (lecturer == null || lecturer.getId() == null) return Collections.emptyList();
+        if (lecturer == null || lecturer.getId() == null)
+            return Collections.emptyList();
         return topicRepository.findByReviewerId(lecturer.getId());
     }
 
     public List<Council> getCouncilsForLecturer(Lecturer lecturer) {
-        if (lecturer == null || lecturer.getId() == null) return Collections.emptyList();
+        if (lecturer == null || lecturer.getId() == null)
+            return Collections.emptyList();
         return councilRepository.findByLecturerId(lecturer.getId());
     }
 
     public Topic getTopicById(Long id) {
-        if (id == null) return null;
+        if (id == null)
+            return null;
         return topicRepository.findById(id).orElse(null);
     }
 
@@ -134,7 +146,8 @@ public class LecturerService {
         topic.setCreatedAt(OffsetDateTime.now());
 
         Topic saved = topicRepository.save(topic);
-        System.out.println("[DB-LECTURER] Đã lưu đề tài đề xuất mới: '" + saved.getTitle() + "' (ID=" + saved.getId() + ")");
+        System.out.println(
+                "[DB-LECTURER] Đã lưu đề tài đề xuất mới: '" + saved.getTitle() + "' (ID=" + saved.getId() + ")");
         return saved;
     }
 
@@ -222,7 +235,8 @@ public class LecturerService {
     }
 
     public List<StudentGroup> getGroupsForLecturerTopics(Lecturer lecturer) {
-        if (lecturer == null || lecturer.getId() == null) return Collections.emptyList();
+        if (lecturer == null || lecturer.getId() == null)
+            return Collections.emptyList();
         List<Topic> myTopics = getTopicsByLecturer(lecturer);
         List<StudentGroup> groups = new ArrayList<>();
         for (Topic t : myTopics) {
@@ -232,16 +246,19 @@ public class LecturerService {
     }
 
     /**
-     * BUG-07 FIX: Kiểm tra nhóm SV thuộc đề tài của GV hiện tại trước khi duyệt/từ chối
+     * BUG-07 FIX: Kiểm tra nhóm SV thuộc đề tài của GV hiện tại trước khi duyệt/từ
+     * chối
      */
     @Transactional
     public boolean approveGroupTopic(Long groupId, String status, Lecturer currentLecturer) {
         StudentGroup group = studentGroupRepository.findById(groupId).orElse(null);
-        if (group == null) return false;
+        if (group == null)
+            return false;
         // Guard: Chỉ GVHD/GVHD phụ mới được duyệt
         if (group.getTopic() != null && currentLecturer != null
                 && !group.getTopic().isSupervisorOrCoSupervisor(currentLecturer)) {
-            System.err.println("[SECURITY] GV ID=" + currentLecturer.getId() + " cố duyệt nhóm của đề tài không phải mình hướng dẫn!");
+            System.err.println("[SECURITY] GV ID=" + currentLecturer.getId()
+                    + " cố duyệt nhóm của đề tài không phải mình hướng dẫn!");
             return false;
         }
         group.setStatus(status);
@@ -251,7 +268,8 @@ public class LecturerService {
     }
 
     public List<Submission> getSubmissionsByLecturer(Lecturer lecturer) {
-        if (lecturer == null || lecturer.getId() == null) return Collections.emptyList();
+        if (lecturer == null || lecturer.getId() == null)
+            return Collections.emptyList();
         return submissionRepository.findBySupervisorOrCoSupervisorId(lecturer.getId());
     }
 
@@ -260,14 +278,16 @@ public class LecturerService {
      */
     @Transactional
     public boolean gradeSubmission(Long submissionId, Double grade, String feedback, Lecturer currentLecturer) {
-        if (submissionId == null) return false;
+        if (submissionId == null)
+            return false;
         Optional<Submission> opt = submissionRepository.findById(submissionId);
         if (opt.isPresent()) {
             Submission sub = opt.get();
             // Guard: Chỉ GVHD/GVHD phụ mới được chấm bài nộp
             if (sub.getTopic() != null && currentLecturer != null
                     && !sub.getTopic().isSupervisorOrCoSupervisor(currentLecturer)) {
-                System.err.println("[SECURITY] GV ID=" + currentLecturer.getId() + " cố chấm bài nộp của đề tài không phải mình hướng dẫn!");
+                System.err.println("[SECURITY] GV ID=" + currentLecturer.getId()
+                        + " cố chấm bài nộp của đề tài không phải mình hướng dẫn!");
                 return false;
             }
             sub.setGrade(grade);

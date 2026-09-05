@@ -46,7 +46,7 @@
                 <form th:action="@{/department-head/students}" method="get" class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                     <div class="relative flex-grow-1 max-w-lg">
                         <input type="text" class="form-control form-control-sm rounded-xl pl-8 text-xs" placeholder="Tìm kiếm theo mã nhóm, tên nhóm, sinh viên, đề tài..." onkeyup="filterTableByKeyword(this.value)">
-                        <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-2.5 text-xs"></i>
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
                     </div>
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <select name="periodId" class="form-select form-select-sm rounded-xl text-xs" style="width: 240px;" onchange="this.form.submit()">

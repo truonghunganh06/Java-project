@@ -83,7 +83,8 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
            "AND (:status IS NULL OR :status = '' OR :status = 'ALL' OR t.status = :status) " +
            "AND (:majorId IS NULL OR t.major.id = :majorId) " +
            "AND (:periodId IS NULL OR t.period.id = :periodId) " +
-           "AND (:keyword IS NULL OR :keyword = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(t.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR (t.supervisor.user.fullName IS NOT NULL AND LOWER(t.supervisor.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))))")
+           "AND (:keyword IS NULL OR :keyword = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(t.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR (t.supervisor.user.fullName IS NOT NULL AND LOWER(t.supervisor.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')))) " +
+           "ORDER BY CASE WHEN t.status = 'PENDING' THEN 0 ELSE 1 END, t.createdAt DESC")
     Page<Topic> findDepartmentTopicsPaged(
             @Param("departmentId") Long departmentId,
             @Param("divisionId") Long divisionId,

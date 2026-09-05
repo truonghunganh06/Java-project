@@ -23,7 +23,7 @@ public class TopicRegistration {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "topic_id", nullable = false)
     private Topic topic;
 
@@ -31,14 +31,14 @@ public class TopicRegistration {
      * BUG-J FIX: Đổi từ student_id → group_id.
      * Đăng ký đề tài là hành động của NHÓM, không phải cá nhân sinh viên.
      */
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
     private StudentGroup group;
 
     /**
      * Nhóm trưởng thực hiện hành động đăng ký (để audit).
      */
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "registered_by_student_id")
     private Student registeredBy;
 

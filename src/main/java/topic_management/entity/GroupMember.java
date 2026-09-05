@@ -20,7 +20,7 @@ public class GroupMember {
     @JoinColumn(name = "group_id", nullable = false)
     private StudentGroup group;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
