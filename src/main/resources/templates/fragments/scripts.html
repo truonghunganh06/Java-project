@@ -98,6 +98,7 @@
                         leaderName: source.dataset.topicLeaderName || source.dataset.leaderName,
                         leaderCode: source.dataset.topicLeaderCode || source.dataset.leaderCode,
                         role: source.dataset.topicRole || source.dataset.role,
+                        department: source.dataset.topicDepartment || source.dataset.department || '',
                         hasGroupTopic: source.dataset.topicHasGroup === 'true'
                     };
                 } else {
@@ -140,6 +141,13 @@
                 if (document.getElementById('drawerTopicMajor')) {
                     document.getElementById('drawerTopicMajor').textContent = major;
                 }
+                if (document.getElementById('drawerTopicDepartment')) {
+                    const dept = decodeUnicode(data.department) || '';
+                    const deptEl = document.getElementById('drawerTopicDepartment');
+                    deptEl.textContent = dept || '—';
+                    // Làm nổi bật màu xanh nếu có tên Khoa
+                    deptEl.style.color = dept ? '#1d4ed8' : '#94a3b8';
+                }
                 if (document.getElementById('drawerTopicSupervisor')) {
                     document.getElementById('drawerTopicSupervisor').textContent = supervisor;
                 }
@@ -178,6 +186,30 @@
                     }
                 }
 
+                // Rejection Alert Box
+                let rejAlert = document.getElementById('drawerTopicRejectionAlert');
+                const rejReason = data.rejectionReason || (element ? element.dataset.topicRejectionReason : null);
+                if (data.status === 'REJECTED' && rejReason) {
+                    if (!rejAlert) {
+                        const drawerBody = document.querySelector('.drawer-body');
+                        if (drawerBody) {
+                            rejAlert = document.createElement('div');
+                            rejAlert.id = 'drawerTopicRejectionAlert';
+                            rejAlert.className = 'alert alert-danger p-3 rounded-2xl mb-3 border border-rose-200 shadow-sm';
+                            drawerBody.insertBefore(rejAlert, drawerBody.firstChild);
+                        }
+                    }
+                    if (rejAlert) {
+                        rejAlert.style.display = 'block';
+                        rejAlert.innerHTML = `
+                            <div class="fw-bold text-rose-900 text-xs mb-1"><i class="fa-solid fa-triangle-exclamation text-rose-600 me-1"></i> Lý do Trưởng khoa từ chối:</div>
+                            <div class="text-rose-700 text-xs">${rejReason}</div>
+                        `;
+                    }
+                } else if (rejAlert) {
+                    rejAlert.style.display = 'none';
+                }
+
                 // Group Info
                 const groupInfo = document.getElementById('drawerTopicGroupInfo');
                 if (groupInfo) {
@@ -197,7 +229,7 @@
                 const actionContainer = document.getElementById('drawerActionButtons');
                 if (actionContainer) {
                     actionContainer.innerHTML = '';
-                    if (data.role === 'DEPARTMENT_HEAD' && data.status === 'PENDING') {
+                    if ((data.role === 'DEPARTMENT_HEAD' || data.role === 'DIVISION_HEAD') && data.status === 'PENDING') {
                         actionContainer.innerHTML = `
                             <form action="/department-head/topics/${data.id}/approve" method="post" class="d-inline" onsubmit="return confirm('Xác nhận PHÊ DUYỆT đề tài này?');">
                                 <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">
@@ -207,6 +239,12 @@
                             <button type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3 text-xs font-semibold" data-bs-toggle="modal" data-bs-target="#rejectModal" onclick="prepareRejectModal(${data.id}, '${title.replace(/'/g, "\\'")}')">
                                 <i class="fa-solid fa-xmark me-1"></i> Từ chối
                             </button>
+                        `;
+                    } else if (data.role === 'LECTURER' && (data.status === 'PENDING' || data.status === 'REJECTED')) {
+                        actionContainer.innerHTML = `
+                            <a href="/lecturer/topics/${data.id}/edit" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">
+                                <i class="fa-solid fa-pen-to-square me-1"></i> Chỉnh sửa đề tài
+                            </a>
                         `;
                     } else if (data.role === 'STUDENT' && data.status === 'APPROVED' && !data.hasGroupTopic) {
                         actionContainer.innerHTML = `
@@ -238,9 +276,104 @@
                 if (event.key === 'Escape') closeTopicDrawer();
             });
 
+            // Announcement Unread / Read State Management via localStorage
+            function getReadAnnouncements() {
+                try {
+                    const stored = localStorage.getItem('topic_hub_read_announcements');
+                    return stored ? JSON.parse(stored) : [];
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function markAnnouncementAsRead(id) {
+                if (!id) return;
+                const readList = getReadAnnouncements();
+                const strId = String(id);
+                if (!readList.includes(strId)) {
+                    readList.push(strId);
+                    try {
+                        localStorage.setItem('topic_hub_read_announcements', JSON.stringify(readList));
+                    } catch (e) {}
+                }
+                updateNotificationBadges();
+            }
+
+            function markAllAnnouncementsAsRead() {
+                const items = document.querySelectorAll('[data-announcement-id]');
+                const readList = getReadAnnouncements();
+                items.forEach(el => {
+                    const id = el.dataset.announcementId;
+                    if (id && !readList.includes(String(id))) {
+                        readList.push(String(id));
+                    }
+                });
+                try {
+                    localStorage.setItem('topic_hub_read_announcements', JSON.stringify(readList));
+                } catch (e) {}
+                updateNotificationBadges();
+            }
+
+            function updateNotificationBadges() {
+                const items = document.querySelectorAll('[data-announcement-id]');
+                const readList = getReadAnnouncements();
+                const uniqueAnnouncements = new Set();
+                const unreadAnnouncements = new Set();
+
+                items.forEach(el => {
+                    const id = el.dataset.announcementId;
+                    if (id) {
+                        uniqueAnnouncements.add(String(id));
+                        if (readList.includes(String(id))) {
+                            if (el.classList.contains('notification-item-track')) {
+                                el.classList.add('opacity-60');
+                                const dot = el.querySelector('.unread-dot');
+                                if (dot) dot.classList.add('d-none');
+                            }
+                        } else {
+                            unreadAnnouncements.add(String(id));
+                            if (el.classList.contains('notification-item-track')) {
+                                el.classList.remove('opacity-60');
+                                const dot = el.querySelector('.unread-dot');
+                                if (dot) dot.classList.remove('d-none');
+                            }
+                        }
+                    }
+                });
+
+                const unreadCount = unreadAnnouncements.size;
+                const badge = document.getElementById('topbarNotificationCount');
+                const headerCount = document.getElementById('topbarNotificationHeaderCount');
+
+                if (badge) {
+                    if (unreadCount > 0) {
+                        badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                        badge.classList.remove('d-none');
+                    } else {
+                        badge.classList.add('d-none');
+                    }
+                }
+
+                if (headerCount) {
+                    if (unreadCount > 0) {
+                        headerCount.textContent = unreadCount + ' chưa đọc';
+                        headerCount.className = 'badge bg-blue-100 text-blue-700 font-semibold rounded-pill px-2 py-0.5 text-xs';
+                        headerCount.classList.remove('d-none');
+                    } else if (uniqueAnnouncements.size > 0) {
+                        headerCount.textContent = 'Đã đọc hết';
+                        headerCount.className = 'badge bg-slate-100 text-slate-500 font-medium rounded-pill px-2 py-0.5 text-xs';
+                    }
+                }
+            }
+
             // Global Announcement Detail Modal Opener
             function showAnnouncementDetail(element) {
                 if (!element) return;
+                const annId = element.dataset.announcementId;
+                if (annId) {
+                    markAnnouncementAsRead(annId);
+                }
+
                 const title = decodeUnicode(element.dataset.title) || 'Thông báo';
                 const category = decodeUnicode(element.dataset.category) || 'Thông báo chung';
                 const author = decodeUnicode(element.dataset.author) || 'Ban chủ nhiệm Khoa';
@@ -277,6 +410,10 @@
                     bsModal.show();
                 }
             }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                updateNotificationBadges();
+            });
 
             // Segmented Control Tabs Filtering
             function filterTableByStatus(status, tabElement) {

@@ -344,10 +344,30 @@ public class ThesisWorkflowIntegrationTest {
 
     @Test
     @Order(4)
-    @DisplayName("Bước 4: Trưởng khoa phê duyệt đề tài (Chuyển sang APPROVED)")
+    @DisplayName("Bước 4: Trưởng khoa từ chối, Giảng viên chỉnh sửa gửi lại và Trưởng khoa phê duyệt (Chuyển sang APPROVED)")
     void step4_departmentHeadApproveTopic() {
-        System.out.println("\n[TEST-4] BƯỚC 4: Trưởng khoa phê duyệt đề tài");
+        System.out.println("\n[TEST-4] BƯỚC 4: Kiểm tra luồng Trưởng khoa từ chối -> GV sửa đề tài gửi lại -> Trưởng khoa duyệt");
 
+        // 1. Trưởng khoa từ chối đề tài
+        boolean rejected = departmentHeadService.rejectTopic(testTopic.getId(), "Cần bổ sung chi tiết công nghệ AI sử dụng", testDept.getId());
+        assertTrue(rejected, "Từ chối đề tài phải thành công");
+        Topic rejTopic = lecturerService.getTopicById(testTopic.getId());
+        assertEquals("REJECTED", rejTopic.getStatus());
+        assertEquals("Cần bổ sung chi tiết công nghệ AI sử dụng", rejTopic.getRejectionReason());
+
+        // 2. Giảng viên chỉnh sửa đề tài theo góp ý và gửi lại
+        Topic editData = new Topic();
+        editData.setTitle("Nghiên cứu ứng dụng Deep Learning (YOLOv8 & PyTorch) phát hiện gian lận thi cử");
+        editData.setDescription("Phát triển mô hình thị giác máy tính và học sâu trên camera phòng thi với độ chính xác cao.");
+        editData.setRequirements("Thành thạo Python, PyTorch, YOLOv8, Spring Boot");
+        editData.setMaxStudents(3);
+
+        Topic resubmittedTopic = lecturerService.updateTopic(gv1, testTopic.getId(), testPeriod.getId(), testMajor.getId(), gv2.getId(), editData);
+        assertEquals("PENDING", resubmittedTopic.getStatus(), "Sau khi GV sửa và gửi lại, trạng thái phải là PENDING");
+        assertNull(resubmittedTopic.getRejectionReason(), "Lý do từ chối trước đó phải được xóa khi gửi lại");
+        assertTrue(resubmittedTopic.getTitle().contains("YOLOv8"), "Tiêu đề phải được cập nhật");
+
+        // 3. Trưởng khoa phê duyệt đề tài
         boolean approved = departmentHeadService.approveTopic(testTopic.getId(), testDept.getId());
         assertTrue(approved, "Phê duyệt đề tài phải thành công");
 
@@ -604,24 +624,25 @@ public class ThesisWorkflowIntegrationTest {
         assertFalse(gv1ConflictReviewer, "GVHD không được phép chấm điểm đề tài của mình ở vai trò REVIEWER");
         System.out.println("-> [ĐẠT CHUẨN BẢO VỆ] Chặn thành công GVHD tự chấm điểm ở vai trò COUNCIL và REVIEWER!");
 
-        // 2. GVHD (GV1) chấm điểm hướng dẫn (SUPERVISOR) hợp lệ: 9.0 (Trọng số 40%)
+        // 2. GVHD (GV1) chấm điểm hướng dẫn (SUPERVISOR) quá trình: 9.0 (Lưu độc lập theo dõi tiến độ)
         boolean evalSupervisor = councilService.submitEvaluation(testTopic.getId(), gv1.getId(), "SUPERVISOR", 9.0, "Sinh viên chủ động, hoàn thành tốt các mục tiêu nghiên cứu.");
         assertTrue(evalSupervisor, "GVHD chấm điểm hướng dẫn phải thành công");
 
-        // 3. GVPB (GV3) chấm điểm phản biện (REVIEWER) hợp lệ: 8.5 (Trọng số 30%)
+        // 3. GVPB (GV3) chấm điểm phản biện (REVIEWER) hợp lệ: 8.5 (Trọng số 40%)
         boolean evalReviewer = councilService.submitEvaluation(testTopic.getId(), gv3.getId(), "REVIEWER", 8.5, "Đề tài có tính ứng dụng cao, mô hình AI đạt độ chính xác tốt.");
         assertTrue(evalReviewer, "GVPB chấm điểm phản biện phải thành công");
 
-        // 4. Thành viên Hội đồng độc lập (gvCouncil1) chấm điểm bảo vệ (COUNCIL) hợp lệ: 9.0 (Trọng số 30%)
+        // 4. Thành viên Hội đồng độc lập (gvCouncil1) chấm điểm bảo vệ (COUNCIL) hợp lệ: 9.0 (Trọng số 60%)
         boolean evalCouncil = councilService.submitEvaluation(testTopic.getId(), gvCouncil1.getId(), "COUNCIL", 9.0, "Bảo vệ tự tin, trả lời xuất sắc các câu hỏi chuyên sâu.");
         assertTrue(evalCouncil, "Thành viên Hội đồng chấm điểm bảo vệ phải thành công");
 
-        // 5. Kiểm tra tính toán điểm trung bình có trọng số tự động:
-        // Weighted Avg = 9.0 * 0.40 + 8.5 * 0.30 + 9.0 * 0.30 = 3.60 + 2.55 + 2.70 = 8.85
+        // 5. Kiểm tra tính toán điểm tổng kết tự động (LOẠI BỎ HOÀN TOÀN ĐIỂM GVHD):
+        // Weighted Avg = Reviewer (8.5 * 0.40) + Council (9.0 * 0.60) = 3.40 + 5.40 = 8.80
         Topic topicWithScore = lecturerService.getTopicById(testTopic.getId());
         assertNotNull(topicWithScore.getFinalScore(), "Điểm tổng kết finalScore phải được tự động tính");
-        assertEquals(8.85, topicWithScore.getFinalScore(), 0.05, "Điểm trung bình có trọng số phải xấp xỉ 8.85");
-        System.out.println("-> [ĐẠT CHUẨN] Điểm trung bình có trọng số tự động tính: " + topicWithScore.getFinalScore() + " / 10.0 (3 phiếu chấm hợp lệ)");
+        assertEquals(8.80, topicWithScore.getFinalScore(), 0.05, "Điểm tổng kết phải đúng chuẩn 40% Phản biện + 60% Hội đồng (8.80)");
+        assertEquals(9.0, topicWithScore.getAdvisorScore(), 0.05, "Điểm quá trình GVHD phải được lưu độc lập ở advisorScore");
+        System.out.println("-> [ĐẠT CHUẨN] Điểm tổng kết bảo vệ (40% GVPB + 60% HĐ): " + topicWithScore.getFinalScore() + " / 10.0 (Điểm GVHD lưu độc lập: " + topicWithScore.getAdvisorScore() + ")");
     }
 
     @Test

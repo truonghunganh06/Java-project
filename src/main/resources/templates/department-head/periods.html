@@ -9,7 +9,7 @@
     <!-- Main Wrapper -->
     <div class="saas-main-wrapper">
         <!-- Topbar -->
-        <header th:replace="~{fragments/topbar :: topbar('Quản lý Đợt Đăng ký', 'Trưởng Khoa', '/department-head/dashboard', ${user})}"></header>
+        <header th:replace="~{fragments/topbar :: topbar('Quản lý Đợt Đăng ký', ${user != null && user.role != null ? user.role.name : 'Trưởng Bộ Môn'}, '/department-head/dashboard', ${user})}"></header>
 
         <!-- Main Content View -->
         <main class="saas-content">
@@ -159,7 +159,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Loại đợt đào tạo *</label>
-                                <select name="periodType" class="form-select text-xs rounded-xl" required>
+                                <select id="createPeriodTypeSelect" name="periodType" class="form-select text-xs rounded-xl" required onchange="handlePeriodTypeChange(this.value)">
                                     <option value="KLTN">Khóa luận tốt nghiệp</option>
                                     <option value="TLCN">Tiểu luận chuyên ngành</option>
                                     <option value="NCKH">Nghiên cứu khoa học sinh viên</option>
@@ -199,13 +199,20 @@
                                 <input type="date" name="regEnd" class="form-control text-xs rounded-xl">
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Hạn nộp điểm phản biện (GVPB)</label>
-                                <input type="date" name="revDead" class="form-control text-xs rounded-xl">
+                            <!-- Conditional Fields according to Assignment Spec -->
+                            <div class="col-md-6" id="fieldReviewerDeadline">
+                                <label class="form-label text-xs font-semibold text-slate-700">
+                                    Hạn nộp điểm GVPB <span class="badge bg-blue-50 text-blue-700 border border-blue-200 text-[10px] px-1 py-0.2 rounded font-normal">KLTN / TLCN</span>
+                                </label>
+                                <input type="date" name="revDead" id="inputRevDead" class="form-control text-xs rounded-xl">
+                                <span class="text-[11px] text-slate-400 mt-1 d-block italic">* Hạn chót GVPB nộp điểm về Khoa</span>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Ngày bảo vệ Hội đồng</label>
-                                <input type="date" name="defenseDate" class="form-control text-xs rounded-xl">
+                            <div class="col-md-6" id="fieldCouncilDefenseDate">
+                                <label class="form-label text-xs font-semibold text-slate-700">
+                                    Ngày báo cáo Hội đồng <span class="badge bg-purple-50 text-purple-700 border border-purple-200 text-[10px] px-1 py-0.2 rounded font-normal">Chỉ KLTN</span>
+                                </label>
+                                <input type="date" name="defenseDate" id="inputDefenseDate" class="form-control text-xs rounded-xl">
+                                <span class="text-[11px] text-slate-400 mt-1 d-block italic">* Ngày bảo vệ trước Hội đồng chấm KLTN</span>
                             </div>
                         </div>
                     </div>
@@ -220,5 +227,74 @@
 
     <!-- Scripts Fragment -->
     <div th:replace="~{fragments/scripts :: scripts}"></div>
+
+    <script>
+        function handlePeriodTypeChange(type) {
+            const revField = document.getElementById('fieldReviewerDeadline');
+            const defField = document.getElementById('fieldCouncilDefenseDate');
+            const revInput = document.getElementById('inputRevDead');
+            const defInput = document.getElementById('inputDefenseDate');
+
+            if (type === 'KLTN') {
+                if (revField) revField.style.display = 'block';
+                if (defField) defField.style.display = 'block';
+                if (revInput) revInput.disabled = false;
+                if (defInput) defInput.disabled = false;
+            } else if (type === 'TLCN') {
+                if (revField) revField.style.display = 'block';
+                if (defField) defField.style.display = 'none';
+                if (revInput) revInput.disabled = false;
+                if (defInput) { defInput.disabled = true; defInput.value = ''; }
+            } else {
+                // NCKH, MON_HOC
+                if (revField) revField.style.display = 'none';
+                if (defField) defField.style.display = 'none';
+                if (revInput) { revInput.disabled = true; revInput.value = ''; }
+                if (defInput) { defInput.disabled = true; defInput.value = ''; }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const sel = document.getElementById('createPeriodTypeSelect');
+            if (sel) handlePeriodTypeChange(sel.value);
+
+            const form = document.querySelector('#createPeriodModal form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const pStart = form.querySelector('[name="propStart"]')?.value;
+                    const pEnd = form.querySelector('[name="propEnd"]')?.value;
+                    const rStart = form.querySelector('[name="regStart"]')?.value;
+                    const rEnd = form.querySelector('[name="regEnd"]')?.value;
+                    const revDead = form.querySelector('[name="revDead"]')?.value;
+                    const defenseDate = form.querySelector('[name="defenseDate"]')?.value;
+
+                    if (pStart && pEnd && pEnd < pStart) {
+                        alert('Lỗi: Hạn chót GV đề xuất phải sau ngày bắt đầu đề xuất!');
+                        e.preventDefault();
+                        return;
+                    }
+                    if (rStart && rEnd && rEnd < rStart) {
+                        alert('Lỗi: Hạn chót SV đăng ký phải sau ngày bắt đầu đăng ký!');
+                        e.preventDefault();
+                        return;
+                    }
+                    if (pStart && rStart && rStart < pStart) {
+                        alert('Lỗi: Thời gian SV đăng ký không được diễn ra trước thời gian GV đề xuất!');
+                        e.preventDefault();
+                        return;
+                    }
+                    if (rEnd && revDead && revDead < rEnd) {
+                        alert('Lỗi: Hạn nộp điểm GVPB phải sau hạn chót SV đăng ký đề tài!');
+                        e.preventDefault();
+                        return;
+                    }
+                    if (revDead && defenseDate && defenseDate < revDead) {
+                        alert('Lỗi: Ngày báo cáo Hội đồng phải diễn ra sau hạn nộp điểm GVPB!');
+                        e.preventDefault();
+                        return;
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

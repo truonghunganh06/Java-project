@@ -9,7 +9,7 @@
     <!-- Main Wrapper -->
     <div class="saas-main-wrapper">
         <!-- Topbar -->
-        <header th:replace="~{fragments/topbar :: topbar('Danh sách Giảng viên', 'Trưởng Khoa', '/department-head/dashboard', ${user})}"></header>
+        <header th:replace="~{fragments/topbar :: topbar('Danh sách Giảng viên', ${user != null && user.role != null ? user.role.name : 'Trưởng Bộ Môn'}, '/department-head/dashboard', ${user})}"></header>
 
         <!-- Main Content View -->
         <main class="saas-content">
@@ -75,7 +75,7 @@
                                         <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-xs flex-shrink-0" th:text="${l.user != null and l.user.fullName != null and !l.user.fullName.isEmpty() ? l.user.fullName.substring(0, 1) : 'G'}">G</div>
                                         <div>
                                             <div class="font-bold text-slate-900 text-xs line-clamp-1" th:text="${l.user != null ? l.user.fullName : 'Giảng viên'}">TS. Nguyễn Văn A</div>
-                                            <span class="text-slate-400 text-xs truncate-cell" th:text="${l.department != null ? l.department.name : 'Khoa CNTT'}">Khoa CNTT</span>
+                                            <span class="text-slate-400 text-xs truncate-cell" th:text="${l.division != null ? l.division.name : (l.department != null ? l.department.name : 'Khoa CNTT')}">Khoa CNTT</span>
                                         </div>
                                     </div>
                                 </td>

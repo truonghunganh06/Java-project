@@ -63,6 +63,17 @@ public interface StudentGroupRepository extends JpaRepository<StudentGroup, Long
     @Query("SELECT g FROM StudentGroup g WHERE g.period.department.id = :departmentId AND g.period.id = :periodId")
     Page<StudentGroup> findByPeriodDepartmentIdAndPeriodId(@Param("departmentId") Long departmentId, @Param("periodId") Long periodId, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    Page<StudentGroup> findByPeriodId(Long periodId, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @Query("SELECT g FROM StudentGroup g WHERE (:departmentId IS NULL OR g.period.department.id = :departmentId) " +
+           "AND (:periodId IS NULL OR g.period.id = :periodId)")
+    Page<StudentGroup> findDepartmentGroupsPaged(
+            @Param("departmentId") Long departmentId,
+            @Param("periodId") Long periodId,
+            Pageable pageable);
+
     /**
      * BUG-K FIX: Đếm số nhóm (không bị REJECTED/DRAFT) đang hướng dẫn bởi GV chính
      * trong một đợt cụ thể — dùng để kiểm tra maxTopicsQuota.

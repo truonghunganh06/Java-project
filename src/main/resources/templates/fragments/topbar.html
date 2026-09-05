@@ -12,7 +12,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb topbar-breadcrumb mb-0">
                     <li class="breadcrumb-item">
-                        <a th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
+                        <a th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
                             <i class="fa-solid fa-house-chimney text-muted me-1"></i> Trang chủ
                         </a>
                     </li>
@@ -38,37 +38,57 @@
             <div class="dropdown">
                 <button class="btn btn-sm btn-light border border-slate-200 rounded-full p-2 position-relative d-flex align-items-center justify-content-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 38px; height: 38px;" title="Thông báo hệ thống">
                     <i class="fa-regular fa-bell text-secondary"></i>
-                    <span class="position-absolute top-1 end-1 p-1 bg-red-500 border-2 border-white rounded-full">
-                        <span class="visually-hidden">Thông báo mới</span>
-                    </span>
+                    <!-- Notification Counter Badge -->
+                    <span th:if="${announcements != null && !announcements.isEmpty()}" 
+                          class="position-absolute -top-1 -end-1 badge rounded-pill bg-rose-600 text-white d-flex align-items-center justify-content-center shadow-sm" 
+                          id="topbarNotificationCount"
+                          style="font-size: 0.65rem; min-width: 18px; height: 18px; padding: 0 4px; border: 2px solid #ffffff; z-index: 2;"
+                          th:text="${#lists.size(announcements) > 9 ? '9+' : #lists.size(announcements)}">1</span>
                 </button>
                 <div class="dropdown-menu dropdown-menu-end shadow-xl border border-slate-200 rounded-2xl p-0 mt-2" style="width: 320px; z-index: 1050;">
                     <div class="p-3 border-b border-slate-100 bg-slate-50 rounded-t-2xl d-flex align-items-center justify-content-between">
-                        <span class="fw-bold text-dark text-sm">Thông báo hệ thống</span>
-                        <span class="badge-pill-approved" style="font-size: 0.7rem; padding: 2px 8px;">Mới</span>
-                    </div>
-                    <div class="p-2 divide-y divide-slate-100" style="max-height: 280px; overflow-y: auto;">
-                        <div class="p-2.5 rounded-xl hover:bg-slate-50 transition cursor-pointer d-flex gap-2.5 align-items-start">
-                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <i class="fa-solid fa-bullhorn text-xs"></i>
-                            </div>
-                            <div class="text-xs">
-                                <p class="mb-0.5 fw-semibold text-dark">Đợt đăng ký KLTN 2026-2027 đang mở</p>
-                                <span class="text-muted">Hạn chót đề xuất: 15/09/2026</span>
-                            </div>
+                        <div class="d-flex align-items-center gap-1.5">
+                            <span class="fw-bold text-dark text-sm">Thông báo hệ thống</span>
+                            <span class="badge bg-blue-100 text-blue-700 font-semibold rounded-pill px-2 py-0.5 text-xs" 
+                                  id="topbarNotificationHeaderCount"
+                                  th:if="${announcements != null && !announcements.isEmpty()}"
+                                  th:text="${#lists.size(announcements)} + ' mới'">1 mới</span>
                         </div>
-                        <div class="p-2.5 rounded-xl hover:bg-slate-50 transition cursor-pointer d-flex gap-2.5 align-items-start">
-                            <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <i class="fa-solid fa-triangle-exclamation text-xs"></i>
+                        <button type="button" class="btn btn-link p-0 text-xs text-blue-600 text-decoration-none hover:underline" 
+                                onclick="markAllAnnouncementsAsRead()" 
+                                th:if="${announcements != null && !announcements.isEmpty()}">
+                            Đã đọc tất cả
+                        </button>
+                    </div>
+                    <div class="p-2 divide-y divide-slate-100" style="max-height: 300px; overflow-y: auto;">
+                        <th:block th:if="${announcements != null && !announcements.isEmpty()}">
+                            <div class="p-2.5 rounded-xl hover:bg-slate-50 transition cursor-pointer d-flex gap-2.5 align-items-start position-relative notification-item-track"
+                                 th:each="a, aStat : ${announcements}" th:if="${aStat.index < 6}"
+                                 onclick="showAnnouncementDetail(this)"
+                                 th:data-announcement-id="${a.id}"
+                                 th:data-title="${a.title}"
+                                 th:data-category="${a.category != null ? a.category : 'THÔNG BÁO'}"
+                                 th:data-author="${a.author != null ? a.author.fullName : 'Ban chủ nhiệm Khoa'}"
+                                 th:data-created-at="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm') : ''}"
+                                 th:data-period="${a.period != null ? a.period.name : ''}"
+                                 th:data-content="${a.content}">
+                                <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <i class="fa-solid fa-bullhorn text-xs"></i>
+                                </div>
+                                <div class="text-xs overflow-hidden flex-grow-1">
+                                    <p class="mb-0.5 fw-semibold text-dark text-truncate" th:text="${a.title}">Tiêu đề thông báo</p>
+                                    <span class="text-muted" th:text="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy') : 'Hôm nay'}">Hôm nay</span>
+                                </div>
+                                <span class="unread-dot w-2 h-2 rounded-full bg-rose-500 flex-shrink-0 mt-1.5" title="Chưa đọc"></span>
                             </div>
-                            <div class="text-xs">
-                                <p class="mb-0.5 fw-semibold text-dark">Quy định phân công Giảng viên phản biện</p>
-                                <span class="text-muted">GVPB không được trùng GVHD</span>
-                            </div>
+                        </th:block>
+                        <div th:if="${announcements == null || announcements.isEmpty()}" class="p-4 text-center text-muted text-xs">
+                            <i class="fa-regular fa-bell-slash text-xl mb-1 d-block opacity-40"></i>
+                            Chưa có thông báo mới nào.
                         </div>
                     </div>
                     <div class="p-2 border-t border-slate-100 text-center bg-slate-50/50 rounded-b-2xl">
-                        <span class="text-xs text-muted">Hệ thống Quản lý Đề tài Khoa CNTT</span>
+                        <span class="text-xs text-muted">TopicHub Notification Center</span>
                     </div>
                 </div>
             </div>
@@ -91,7 +111,7 @@
                         <p class="mb-0 text-muted" style="font-size: 0.75rem;" th:text="${user != null ? user.email : 'email@cntt.edu.vn'}">email@cntt.edu.vn</p>
                     </li>
                     <li>
-                        <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-2.5 rounded-xl text-xs font-medium" th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
+                        <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-2.5 rounded-xl text-xs font-medium" th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
                             <i class="fa-solid fa-chart-pie text-muted"></i>
                             <span>Bảng điều khiển</span>
                         </a>

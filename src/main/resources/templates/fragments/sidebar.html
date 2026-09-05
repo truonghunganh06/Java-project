@@ -3,7 +3,7 @@
 <body>
     <aside class="saas-sidebar" id="saasSidebar" th:fragment="sidebar(activePage, user)">
         <!-- Brand Header -->
-        <a class="sidebar-brand" th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
+        <a class="sidebar-brand" th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
             <div class="sidebar-brand-logo me-2">
                 <i class="fa-solid fa-graduation-cap"></i>
             </div>
@@ -35,18 +35,18 @@
                 </a>
             </div>
 
-            <!-- ================= DEPARTMENT HEAD MENU ================= -->
-            <div th:if="${user != null && user.role != null && user.role.code == 'DEPARTMENT_HEAD'}">
+            <!-- ================= DEPARTMENT HEAD / DIVISION HEAD MENU ================= -->
+            <div th:if="${user != null && user.role != null && (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD')}">
                 <div class="sidebar-section-title">Tổng quan</div>
                 <a th:href="@{/department-head/dashboard}" class="saas-nav-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
                     <i class="fa-solid fa-chart-pie"></i>
                     <span>Bảng điều khiển</span>
                 </a>
 
-                <div class="sidebar-section-title mt-2">Quản lý Đề tài & Đợt</div>
+                <div class="sidebar-section-title mt-2">Đề tài & Đợt</div>
                 <a th:href="@{/department-head/topics}" class="saas-nav-link" th:classappend="${activePage == 'topics' ? 'active' : ''}">
                     <i class="fa-solid fa-book-open-reader"></i>
-                    <span>Duyệt đề tài Khoa</span>
+                    <span>Quản lý Đề tài</span>
                 </a>
                 <a th:href="@{/department-head/periods}" class="saas-nav-link" th:classappend="${activePage == 'periods' ? 'active' : ''}">
                     <i class="fa-solid fa-calendar-days"></i>
@@ -54,7 +54,7 @@
                 </a>
                 <a th:href="@{/department-head/councils}" class="saas-nav-link" th:classappend="${activePage == 'councils' ? 'active' : ''}">
                     <i class="fa-solid fa-scale-balanced"></i>
-                    <span>Hội đồng bảo vệ</span>
+                    <span>Hội đồng chấm</span>
                 </a>
                 <a th:href="@{/department-head/results}" class="saas-nav-link" th:classappend="${activePage == 'results' ? 'active' : ''}">
                     <i class="fa-solid fa-square-poll-vertical"></i>
@@ -62,17 +62,13 @@
                 </a>
 
                 <div class="sidebar-section-title mt-2">Nhân sự & Bảng tin</div>
+                <a th:href="@{/department-head/personnel}" class="saas-nav-link" th:classappend="${activePage == 'personnel' || activePage == 'lecturers' || activePage == 'students' ? 'active' : ''}">
+                    <i class="fa-solid fa-user-group"></i>
+                    <span>Quản lý Nhân sự</span>
+                </a>
                 <a th:href="@{/department-head/announcements}" class="saas-nav-link" th:classappend="${activePage == 'announcements' ? 'active' : ''}">
                     <i class="fa-solid fa-bullhorn"></i>
                     <span>Bảng tin thông báo</span>
-                </a>
-                <a th:href="@{/department-head/lecturers}" class="saas-nav-link" th:classappend="${activePage == 'lecturers' ? 'active' : ''}">
-                    <i class="fa-solid fa-chalkboard-user"></i>
-                    <span>Giảng viên Khoa</span>
-                </a>
-                <a th:href="@{/department-head/students}" class="saas-nav-link" th:classappend="${activePage == 'students' ? 'active' : ''}">
-                    <i class="fa-solid fa-user-group"></i>
-                    <span>Sinh viên & Nhóm</span>
                 </a>
             </div>
 
@@ -85,13 +81,9 @@
                 </a>
 
                 <div class="sidebar-section-title mt-2">Hướng dẫn Đề tài</div>
-                <a th:href="@{/lecturer/topics}" class="saas-nav-link" th:classappend="${activePage == 'topics' ? 'active' : ''}">
+                <a th:href="@{/lecturer/topics}" class="saas-nav-link" th:classappend="${activePage == 'topics' || activePage == 'create-topic' ? 'active' : ''}">
                     <i class="fa-solid fa-book-bookmark"></i>
                     <span>Đề tài của tôi</span>
-                </a>
-                <a th:href="@{/lecturer/topics/create}" class="saas-nav-link" th:classappend="${activePage == 'create-topic' ? 'active' : ''}">
-                    <i class="fa-solid fa-circle-plus"></i>
-                    <span>Đề xuất đề tài</span>
                 </a>
                 <a th:href="@{/lecturer/registrations}" class="saas-nav-link" th:classappend="${activePage == 'registrations' ? 'active' : ''}">
                     <i class="fa-solid fa-users"></i>
@@ -128,7 +120,7 @@
                 </a>
                 <a th:href="@{/student/topics}" class="saas-nav-link" th:classappend="${activePage == 'topics' ? 'active' : ''}">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <span>Tra cứu đề tài mở</span>
+                    <span>Tra cứu đề tài</span>
                 </a>
                 <a th:href="@{/student/my-topic}" class="saas-nav-link" th:classappend="${activePage == 'my-topic' ? 'active' : ''}">
                     <i class="fa-solid fa-book-open"></i>

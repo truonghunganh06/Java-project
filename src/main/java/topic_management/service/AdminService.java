@@ -16,6 +16,7 @@ public class AdminService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final DepartmentRepository departmentRepository;
+    private final DivisionRepository divisionRepository;
     private final MajorRepository majorRepository;
     private final StudentRepository studentRepository;
     private final LecturerRepository lecturerRepository;
@@ -25,12 +26,14 @@ public class AdminService {
             UserRepository userRepository,
             RoleRepository roleRepository,
             DepartmentRepository departmentRepository,
+            DivisionRepository divisionRepository,
             MajorRepository majorRepository,
             StudentRepository studentRepository,
             LecturerRepository lecturerRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.departmentRepository = departmentRepository;
+        this.divisionRepository = divisionRepository;
         this.majorRepository = majorRepository;
         this.studentRepository = studentRepository;
         this.lecturerRepository = lecturerRepository;
@@ -101,10 +104,13 @@ public class AdminService {
                 List<Major> majors = majorRepository.findAll();
                 if (!majors.isEmpty()) {
                     student.setMajor(majors.get(0));
+                    if (majors.get(0).getDivision() != null) {
+                        student.setDivision(majors.get(0).getDivision());
+                    }
                 }
                 studentRepository.save(student);
             }
-        } else if ("LECTURER".equalsIgnoreCase(role.getCode()) || "DEPARTMENT_HEAD".equalsIgnoreCase(role.getCode())) {
+        } else if ("LECTURER".equalsIgnoreCase(role.getCode()) || "DEPARTMENT_HEAD".equalsIgnoreCase(role.getCode()) || "DIVISION_HEAD".equalsIgnoreCase(role.getCode())) {
             if (lecturerRepository.findByUserId(saved.getId()).isEmpty()) {
                 Lecturer lecturer = new Lecturer();
                 lecturer.setUser(saved);
@@ -112,9 +118,15 @@ public class AdminService {
                 lecturer.setAcademicTitle("TS");
                 lecturer.setDegree("Tiến sĩ");
                 lecturer.setMaxTopicsQuota(5);
-                List<Department> depts = departmentRepository.findAll();
-                if (!depts.isEmpty()) {
-                    lecturer.setDepartment(depts.get(0));
+                List<Division> divs = divisionRepository.findAll();
+                if (!divs.isEmpty()) {
+                    lecturer.setDivision(divs.get(0));
+                    lecturer.setDepartment(divs.get(0).getDepartment());
+                } else {
+                    List<Department> depts = departmentRepository.findAll();
+                    if (!depts.isEmpty()) {
+                        lecturer.setDepartment(depts.get(0));
+                    }
                 }
                 lecturerRepository.save(lecturer);
             }

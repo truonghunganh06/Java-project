@@ -9,7 +9,7 @@
     <!-- Main Wrapper -->
     <div class="saas-main-wrapper">
         <!-- Topbar -->
-        <header th:replace="~{fragments/topbar :: topbar('Hội Đồng Bảo Vệ', 'Trưởng Khoa', '/department-head/dashboard', ${user})}"></header>
+        <header th:replace="~{fragments/topbar :: topbar('Hội Đồng Bảo Vệ', ${user != null && user.role != null ? user.role.name : 'Trưởng Bộ Môn'}, '/department-head/dashboard', ${user})}"></header>
 
         <!-- Main Content View -->
         <main class="saas-content">

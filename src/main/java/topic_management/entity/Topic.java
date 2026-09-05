@@ -11,27 +11,34 @@ public class Topic {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Version
+    private Long version;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "period_id")
     private RegistrationPeriod period;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "major_id")
     private Major major;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "division_id")
+    private Division division;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "supervisor_id")
     private Lecturer supervisor; // GVHD chính
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "co_supervisor_id")
     private Lecturer coSupervisor; // GVHD phụ (nếu có)
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "reviewer_id")
-    private Lecturer reviewer; // GVPB (Giảng viên phản biện do Trưởng khoa phân công)
+    private Lecturer reviewer; // GVPB (Giảng viên phản biện do Trưởng bộ môn phân công)
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "council_id")
     private Council council; // Hội đồng bảo vệ (nếu là KLTN / TLCN)
 
@@ -64,8 +71,17 @@ public class Topic {
     @Column(name = "is_finalized")
     private Boolean isFinalized = false;
 
+    @Column(name = "advisor_score")
+    private Double advisorScore; // Điểm quá trình từ Giảng viên Hướng dẫn
+
+    @Column(name = "reviewer_score")
+    private Double reviewerScore; // Điểm phản biện từ Giảng viên Phản biện
+
+    @Column(name = "council_score")
+    private Double councilScore; // Điểm trung bình từ Hội đồng bảo vệ
+
     @Column(name = "final_score")
-    private Double finalScore;
+    private Double finalScore; // Điểm tổng kết theo trọng số học thuật
 
     @Column(name = "created_at")
     private OffsetDateTime createdAt = OffsetDateTime.now();
@@ -78,6 +94,14 @@ public class Topic {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     public RegistrationPeriod getPeriod() {
@@ -94,6 +118,20 @@ public class Topic {
 
     public void setMajor(Major major) {
         this.major = major;
+        if (major != null && major.getDivision() != null && this.division == null) {
+            this.division = major.getDivision();
+        }
+    }
+
+    public Division getDivision() {
+        if (division != null) return division;
+        if (major != null && major.getDivision() != null) return major.getDivision();
+        if (supervisor != null && supervisor.getDivision() != null) return supervisor.getDivision();
+        return null;
+    }
+
+    public void setDivision(Division division) {
+        this.division = division;
     }
 
     public Lecturer getSupervisor() {
@@ -102,6 +140,9 @@ public class Topic {
 
     public void setSupervisor(Lecturer supervisor) {
         this.supervisor = supervisor;
+        if (supervisor != null && supervisor.getDivision() != null && this.division == null) {
+            this.division = supervisor.getDivision();
+        }
     }
 
     public Lecturer getCoSupervisor() {
@@ -208,6 +249,30 @@ public class Topic {
         this.isFinalized = isFinalized;
     }
 
+    public Double getAdvisorScore() {
+        return advisorScore;
+    }
+
+    public void setAdvisorScore(Double advisorScore) {
+        this.advisorScore = advisorScore;
+    }
+
+    public Double getReviewerScore() {
+        return reviewerScore;
+    }
+
+    public void setReviewerScore(Double reviewerScore) {
+        this.reviewerScore = reviewerScore;
+    }
+
+    public Double getCouncilScore() {
+        return councilScore;
+    }
+
+    public void setCouncilScore(Double councilScore) {
+        this.councilScore = councilScore;
+    }
+
     public Double getFinalScore() {
         return finalScore;
     }
@@ -228,5 +293,19 @@ public class Topic {
         if (lecturer == null || lecturer.getId() == null) return false;
         if (supervisor != null && lecturer.getId().equals(supervisor.getId())) return true;
         return coSupervisor != null && lecturer.getId().equals(coSupervisor.getId());
+    }
+
+    @Transient
+    public Department getDepartment() {
+        if (division != null && division.getDepartment() != null) {
+            return division.getDepartment();
+        }
+        if (major != null && major.getDepartment() != null) {
+            return major.getDepartment();
+        }
+        if (period != null && period.getDepartment() != null) {
+            return period.getDepartment();
+        }
+        return null;
     }
 }

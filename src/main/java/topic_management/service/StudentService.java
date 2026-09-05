@@ -1,5 +1,6 @@
 package topic_management.service;
 
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ public class StudentService {
     private final MajorRepository majorRepository;
     private final RegistrationPeriodRepository periodRepository;
     private final EvaluationRepository evaluationRepository;
+    private final FileStorageService fileStorageService;
 
     public StudentService(
             StudentRepository studentRepository,
@@ -31,7 +33,8 @@ public class StudentService {
             SubmissionRepository submissionRepository,
             MajorRepository majorRepository,
             RegistrationPeriodRepository periodRepository,
-            EvaluationRepository evaluationRepository) {
+            EvaluationRepository evaluationRepository,
+            FileStorageService fileStorageService) {
         this.studentRepository = studentRepository;
         this.topicRepository = topicRepository;
         this.groupRepository = groupRepository;
@@ -40,6 +43,7 @@ public class StudentService {
         this.majorRepository = majorRepository;
         this.periodRepository = periodRepository;
         this.evaluationRepository = evaluationRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     /**
@@ -297,11 +301,21 @@ public class StudentService {
 
     // ==================== TOPIC REGISTRATION ====================
 
-    public List<Topic> getAvailableTopics(Long periodId, Long majorId, String keyword) {
+    /**
+     * Lấy danh sách đề tài APPROVED, ưu tiên lọc theo Khoa của sinh viên (departmentId).
+     * Nếu departmentId != null: chỉ trả về đề tài thuộc Khoa đó (major.department.id == departmentId).
+     * Kết hợp thêm bộ lọc periodId, majorId, keyword.
+     */
+    public List<Topic> getAvailableTopics(Long periodId, Long majorId, String keyword, Long departmentId) {
         List<Topic> list = (periodId != null)
                 ? topicRepository.findApprovedByPeriodId(periodId)
                 : topicRepository.findByStatus("APPROVED");
         return list.stream()
+                // Lọc theo Khoa của sinh viên (nếu có departmentId)
+                .filter(t -> departmentId == null
+                        || (t.getMajor() != null
+                            && t.getMajor().getDepartment() != null
+                            && departmentId.equals(t.getMajor().getDepartment().getId())))
                 .filter(t -> majorId == null || (t.getMajor() != null && majorId.equals(t.getMajor().getId())))
                 // BUG-02 FIX: Chỉ hiển thị đề tài trong đợt đang mở đăng ký cho sinh viên
                 .filter(t -> t.getPeriod() == null || t.getPeriod().isStudentRegistrationOpen())
@@ -309,6 +323,26 @@ public class StudentService {
                         (t.getTitle() != null && t.getTitle().toLowerCase().contains(keyword.toLowerCase())) ||
                         (t.getCode() != null && t.getCode().toLowerCase().contains(keyword.toLowerCase())))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Trả về tập hợp các topicId đã có nhóm đăng ký (trạng thái != DRAFT, != REJECTED).
+     * Dùng để UI hiển thị trực quan đề tài nào còn trống / đã kín chỗ.
+     */
+    public java.util.Set<Long> getTakenTopicIds(List<Topic> topics) {
+        if (topics == null || topics.isEmpty()) return java.util.Collections.emptySet();
+        List<Long> topicIds = topics.stream().map(Topic::getId).collect(Collectors.toList());
+        List<StudentGroup> groups = groupRepository.findByTopicIdIn(topicIds);
+        java.util.Set<Long> takenIds = new java.util.HashSet<>();
+        for (StudentGroup g : groups) {
+            // Chỉ tính nhóm đang ACTIVE (không phải DRAFT hay REJECTED)
+            if (g.getTopic() != null && g.getStatus() != null
+                    && !"DRAFT".equalsIgnoreCase(g.getStatus())
+                    && !"REJECTED".equalsIgnoreCase(g.getStatus())) {
+                takenIds.add(g.getTopic().getId());
+            }
+        }
+        return takenIds;
     }
 
     public Topic getTopicById(Long id) {
@@ -399,12 +433,16 @@ public class StudentService {
             }
         }
 
-        group.setTopic(topic);
-        group.setStatus("REGISTERED");
-        groupRepository.save(group);
-
-        System.out.println("[DB-STUDENT] Nhom '" + group.getGroupName() + "' da dang ky de tai '" + topic.getTitle() + "'");
-        return null; // success
+        try {
+            group.setTopic(topic);
+            group.setStatus("REGISTERED");
+            groupRepository.save(group);
+            System.out.println("[DB-STUDENT] Nhom '" + group.getGroupName() + "' da dang ky de tai '" + topic.getTitle() + "'");
+            return null; // success
+        } catch (OptimisticLockingFailureException e) {
+            System.err.println("[CONCURRENCY] Tranh chấp đồng thời khi đăng ký đề tài ID=" + topicId + ": " + e.getMessage());
+            return "Đề tài vừa được một nhóm khác đăng ký trước đó. Vui lòng làm mới trang và chọn đề tài khác!";
+        }
     }
 
     // ==================== SUBMISSIONS (LEADER ONLY) ====================
@@ -415,6 +453,58 @@ public class StudentService {
         return list.stream()
                 .sorted(Comparator.comparing(Submission::getSubmittedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public String submitGroupReport(Student student, StudentGroup group, String title, Integer round, org.springframework.web.multipart.MultipartFile file) {
+        if (group == null) {
+            return "Bạn chưa thuộc nhóm nào!";
+        }
+
+        if (group.getId() != null) {
+            group = groupRepository.findById(group.getId()).orElse(group);
+        }
+
+        // BẮT BUỘC: CHỈ NHÓM TRƯỞNG MỚI ĐƯỢC NỘP BÁO CÁO ĐỀ TÀI
+        if (!group.isLeader(student)) {
+            return "QUYỀN HẠN BỊ TỪ CHỐI: Chỉ Nhóm trưởng mới có quyền nộp bài báo cáo đề tài!";
+        }
+
+        if (group.getTopic() == null) {
+            return "Nhóm của bạn chưa đăng ký đề tài nào!";
+        }
+
+        // Chỉ cho phép nộp báo cáo khi đề tài và đăng ký nhóm đã được GVHD phê duyệt (APPROVED)
+        if (!"APPROVED".equalsIgnoreCase(group.getStatus()) || !"APPROVED".equalsIgnoreCase(group.getTopic().getStatus())) {
+            return "Đề tài chưa được phê duyệt, không thể nộp báo cáo!";
+        }
+
+        if (file == null || file.isEmpty()) {
+            return "Vui lòng chọn file báo cáo cần nộp (PDF, Word, ZIP, PPTX)!";
+        }
+
+        try {
+            FileStorageService.StoredFile storedFile = fileStorageService.storeFile(file);
+
+            Submission sub = new Submission();
+            sub.setTopic(group.getTopic());
+            sub.setGroup(group);
+            sub.setSubmittedByStudent(student);
+            sub.setStudent(student);
+            sub.setTitle(title != null && !title.isBlank() ? title.trim() : ("Báo cáo đợt " + (round != null ? round : 1)));
+            sub.setSubmissionRound(round != null ? round : 1);
+            sub.setFilePath(storedFile.getFilePath());
+            sub.setOriginalFileName(storedFile.getOriginalFileName());
+            sub.setContentType(storedFile.getContentType());
+            sub.setFileSize(storedFile.getFileSize());
+            sub.setSubmittedAt(OffsetDateTime.now());
+
+            submissionRepository.save(sub);
+            System.out.println("[DB-STUDENT] Leader " + student.getStudentCode() + " đã nộp file báo cáo thực tế '" + storedFile.getOriginalFileName() + "' cho nhóm " + group.getGroupName());
+            return null; // success
+        } catch (Exception e) {
+            return "Lỗi nộp file: " + e.getMessage();
+        }
     }
 
     @Transactional
@@ -436,7 +526,6 @@ public class StudentService {
             return "Nhóm của bạn chưa đăng ký đề tài nào!";
         }
 
-        // LỖI 2 FIX: Chỉ cho phép nộp báo cáo khi đề tài và đăng ký nhóm đã được GVHD phê duyệt (APPROVED)
         if (!"APPROVED".equalsIgnoreCase(group.getStatus()) || !"APPROVED".equalsIgnoreCase(group.getTopic().getStatus())) {
             return "Đề tài chưa được phê duyệt, không thể nộp báo cáo!";
         }
@@ -446,9 +535,11 @@ public class StudentService {
         sub.setGroup(group);
         sub.setSubmittedByStudent(student);
         sub.setStudent(student);
-        sub.setTitle(title);
+        sub.setTitle(title != null && !title.isBlank() ? title.trim() : ("Báo cáo đợt " + (round != null ? round : 1)));
         sub.setSubmissionRound(round != null ? round : 1);
         sub.setFilePath("/uploads/submissions/" + (fileName != null ? fileName : "report.pdf"));
+        sub.setOriginalFileName(fileName != null ? fileName : "report.pdf");
+        sub.setContentType("application/pdf");
         sub.setFileSize(fileSize != null ? fileSize : 1048576L);
         sub.setSubmittedAt(OffsetDateTime.now());
 
@@ -477,5 +568,14 @@ public class StudentService {
 
     public List<Major> getAllMajors() {
         return majorRepository.findAll();
+    }
+
+    /**
+     * Lấy danh sách Chuyên ngành theo Khoa (dùng để populate dropdown filter
+     * chỉ hiện chuyên ngành thuộc Khoa của sinh viên đang đăng nhập).
+     */
+    public List<Major> getMajorsByDepartment(Long departmentId) {
+        if (departmentId == null) return majorRepository.findAll();
+        return majorRepository.findByDepartmentId(departmentId);
     }
 }

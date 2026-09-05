@@ -33,6 +33,12 @@ public class Submission {
     @Column(name = "file_path", length = 500)
     private String filePath;
 
+    @Column(name = "original_file_name", length = 255)
+    private String originalFileName;
+
+    @Column(name = "content_type", length = 100)
+    private String contentType;
+
     @Column(name = "file_size")
     private Long fileSize;
 
@@ -103,6 +109,22 @@ public class Submission {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public String getOriginalFileName() {
+        return originalFileName != null ? originalFileName : (filePath != null ? filePath.substring(filePath.lastIndexOf("/") + 1) : "report.pdf");
+    }
+
+    public void setOriginalFileName(String originalFileName) {
+        this.originalFileName = originalFileName;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 
     public Long getFileSize() {

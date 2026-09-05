@@ -111,8 +111,13 @@
                                     <tr th:each="s : ${submissions}">
                                         <td>
                                             <span class="badge-pill-neutral font-semibold mb-1 d-inline-block text-xs" th:text="'Vòng ' + ${s.submissionRound}"></span>
-                                            <div class="font-semibold text-slate-900 text-xs line-clamp-1" th:text="${s.title}">Tiêu đề bài nộp</div>
-                                            <span class="text-blue-600 text-xs font-medium"><i class="fa-solid fa-file-pdf me-1"></i>Tệp đính kèm</span>
+                                            <div class="font-semibold text-slate-900 text-xs line-clamp-1 mb-1" th:text="${s.title}">Tiêu đề bài nộp</div>
+                                            <div>
+                                                <a th:href="@{'/student/submissions/' + ${s.id} + '/download'}" class="btn btn-sm bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg px-2 py-0.5 text-xs font-medium d-inline-flex align-items-center gap-1" title="Tải xuống tệp báo cáo">
+                                                    <i class="fa-solid fa-file-arrow-down text-blue-600 text-[11px]"></i> 
+                                                    <span th:text="${s.originalFileName != null ? s.originalFileName : 'Tải tệp đính kèm'}">Tải file</span>
+                                                </a>
+                                            </div>
                                         </td>
                                         <td>
                                             <span class="font-medium text-slate-800 text-xs d-block" th:text="${s.submittedByStudent != null && s.submittedByStudent.user != null ? s.submittedByStudent.user.fullName : 'Leader'}"></span>

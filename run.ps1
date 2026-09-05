@@ -42,6 +42,13 @@ if ($javaHome -and (Test-Path "$javaHome\bin\javac.exe")) {
 
 $env:PATH = "$javaHome\bin;$env:PATH"
 
+# Giai phong port 8080 neu co tien trinh cu dang chay
+$oldPort = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue
+if ($oldPort) {
+    Write-Host "[*] Dang dong tien trinh cu PID $($oldPort.OwningProcess) dang chiem port 8080..." -ForegroundColor Yellow
+    Stop-Process -Id $oldPort.OwningProcess -Force -ErrorAction SilentlyContinue
+}
+
 Write-Host "[*] Dang bien dich va dong goi du an..." -ForegroundColor Yellow
 cmd.exe /c "mvnw.cmd package -DskipTests"
 
