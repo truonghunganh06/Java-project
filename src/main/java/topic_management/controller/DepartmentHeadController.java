@@ -25,6 +25,7 @@ public class DepartmentHeadController {
     private final LecturerService lecturerService;
     private final StudentGroupRepository studentGroupRepository;
     private final SubmissionRepository submissionRepository;
+    private final GroupRegistrationService groupRegistrationService;
 
     public DepartmentHeadController(
             DepartmentHeadService departmentHeadService,
@@ -32,13 +33,15 @@ public class DepartmentHeadController {
             AnnouncementService announcementService,
             LecturerService lecturerService,
             StudentGroupRepository studentGroupRepository,
-            SubmissionRepository submissionRepository) {
+            SubmissionRepository submissionRepository,
+            GroupRegistrationService groupRegistrationService) {
         this.departmentHeadService = departmentHeadService;
         this.councilService = councilService;
         this.announcementService = announcementService;
         this.lecturerService = lecturerService;
         this.studentGroupRepository = studentGroupRepository;
         this.submissionRepository = submissionRepository;
+        this.groupRegistrationService = groupRegistrationService;
     }
 
     private AppUser getAuthenticatedDeptHead(HttpSession session) {
@@ -133,6 +136,28 @@ public class DepartmentHeadController {
         OffsetDateTime rDead = parseDate(revDead, true);
         OffsetDateTime dDate = parseDate(defenseDate, false);
 
+        // Validation logic giữa các mốc thời gian
+        if (pStart != null && pEnd != null && pEnd.isBefore(pStart)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Hạn chót GV đề xuất phải sau ngày bắt đầu đề xuất!");
+            return "redirect:/department-head/periods";
+        }
+        if (rStart != null && rEnd != null && rEnd.isBefore(rStart)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Hạn chót SV đăng ký phải sau ngày bắt đầu đăng ký!");
+            return "redirect:/department-head/periods";
+        }
+        if (pStart != null && rStart != null && rStart.isBefore(pStart)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Thời gian SV đăng ký không được diễn ra trước thời gian GV đề xuất!");
+            return "redirect:/department-head/periods";
+        }
+        if (rEnd != null && rDead != null && rDead.isBefore(rEnd)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Hạn nộp điểm GVPB phải sau hạn chót SV đăng ký đề tài!");
+            return "redirect:/department-head/periods";
+        }
+        if (rDead != null && dDate != null && dDate.isBefore(rDead)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Ngày báo cáo Hội đồng phải diễn ra sau hạn nộp điểm GVPB!");
+            return "redirect:/department-head/periods";
+        }
+
         departmentHeadService.createPeriod(dept, name, periodType, academicYear, semester, pStart, pEnd, rStart, rEnd, rDead, dDate);
 
         redirectAttributes.addFlashAttribute("successMessage", "Tạo đợt đăng ký '" + name + "' thành công!");
@@ -168,6 +193,8 @@ public class DepartmentHeadController {
             @RequestParam(value = "majorId", required = false) Long majorId,
             @RequestParam(value = "periodId", required = false) Long periodId,
             @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
             HttpSession session,
             Model model) {
 
@@ -177,9 +204,14 @@ public class DepartmentHeadController {
         Department dept = departmentHeadService.getDepartmentForUser(user);
         Division division = departmentHeadService.getDivisionForUser(user);
 
-        List<Topic> topics = (division != null)
-                ? departmentHeadService.getDivisionTopics(division.getId(), status, majorId, periodId, keyword)
-                : departmentHeadService.getDepartmentTopics(dept.getId(), status, majorId, periodId, keyword);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                Math.max(0, page - 1), size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+
+        org.springframework.data.domain.Page<Topic> topicsPage = (division != null)
+                ? departmentHeadService.getDivisionTopicsPaged(division.getId(), status, majorId, periodId, keyword, pageable)
+                : departmentHeadService.getDepartmentTopicsPaged(dept.getId(), status, majorId, periodId, keyword, pageable);
+
+        List<Topic> topics = topicsPage.getContent();
 
         List<Major> majors = (division != null)
                 ? departmentHeadService.getDivisionMajors(division.getId())
@@ -213,6 +245,7 @@ public class DepartmentHeadController {
         model.addAttribute("department", dept);
         model.addAttribute("division", division);
         model.addAttribute("topics", topics);
+        model.addAttribute("topicsPage", topicsPage);
         model.addAttribute("majors", majors);
         model.addAttribute("periods", periods);
         model.addAttribute("lecturers", lecturers);
@@ -546,27 +579,14 @@ public class DepartmentHeadController {
         return "redirect:/department-head/announcements";
     }
 
-    // ==================== LECTURERS & STUDENTS ====================
+    // ==================== UNIFIED PERSONNEL HUB ====================
 
-    @GetMapping("/lecturers")
-    public String listLecturers(HttpSession session, Model model) {
-        AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
-
-        Department dept = departmentHeadService.getDepartmentForUser(user);
-        List<Lecturer> lecturers = departmentHeadService.getLecturersInDepartment(dept.getId());
-
-        model.addAttribute("user", user);
-        model.addAttribute("department", dept);
-        model.addAttribute("lecturers", lecturers);
-
-        return "department-head/lecturers";
-    }
-
-    @GetMapping("/students")
-    public String listStudents(
+    @GetMapping("/personnel")
+    public String showPersonnelHub(
+            @RequestParam(value = "tab", defaultValue = "lecturers") String tab,
             @RequestParam(value = "periodId", required = false) Long periodId,
             @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "8") int size,
             HttpSession session,
             Model model) {
 
@@ -574,6 +594,7 @@ public class DepartmentHeadController {
         if (user == null) return "redirect:/login";
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
+        List<Lecturer> lecturers = departmentHeadService.getLecturersInDepartment(dept.getId());
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
 
         // Default to first period if none selected
@@ -582,17 +603,11 @@ public class DepartmentHeadController {
             effectivePeriodId = periods.get(0).getId();
         }
 
-        List<StudentGroup> allGroups = departmentHeadService.getGroupsInDepartmentAndPeriod(dept.getId(), effectivePeriodId);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                Math.max(0, page - 1), size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
 
-        // Pagination: Limit to 8 groups per page
-        int pageSize = 8;
-        int totalGroups = allGroups.size();
-        int totalPages = totalGroups > 0 ? (int) Math.ceil((double) totalGroups / pageSize) : 1;
-        int currentPage = Math.max(1, Math.min(page, totalPages));
-        int fromIndex = (currentPage - 1) * pageSize;
-        int toIndex = Math.min(fromIndex + pageSize, totalGroups);
-
-        List<StudentGroup> pagedGroups = (fromIndex < totalGroups) ? allGroups.subList(fromIndex, toIndex) : Collections.emptyList();
+        org.springframework.data.domain.Page<StudentGroup> groupsPage = departmentHeadService.getGroupsInDepartmentAndPeriodPaged(dept.getId(), effectivePeriodId, pageable);
+        List<StudentGroup> pagedGroups = groupsPage.getContent();
 
         Map<Long, List<Submission>> groupSubmissionsMap = new HashMap<>();
         List<Topic> pagedTopics = new ArrayList<>();
@@ -604,21 +619,44 @@ public class DepartmentHeadController {
         }
         Map<Long, List<Evaluation>> topicEvaluationsMap = councilService.getEvaluationsMapForTopics(pagedTopics);
 
+        // Map topic count for each lecturer
+        Map<Long, Long> lecturerTopicCountMap = new HashMap<>();
+        for (Lecturer lec : lecturers) {
+            long count = lecturerService.getTopicsByLecturer(lec).stream()
+                    .filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus()))
+                    .count();
+            lecturerTopicCountMap.put(lec.getId(), count);
+        }
+
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
+        model.addAttribute("activeTab", tab);
+        model.addAttribute("lecturers", lecturers);
+        model.addAttribute("lecturerTopicCountMap", lecturerTopicCountMap);
         model.addAttribute("groups", pagedGroups);
+        model.addAttribute("groupsPage", groupsPage);
         model.addAttribute("periods", periods);
         model.addAttribute("selectedPeriodId", effectivePeriodId);
         model.addAttribute("groupSubmissionsMap", groupSubmissionsMap);
         model.addAttribute("topicEvaluationsMap", topicEvaluationsMap);
-        model.addAttribute("currentPage", currentPage);
-        model.addAttribute("totalPages", totalPages);
-        model.addAttribute("totalGroups", totalGroups);
-        model.addAttribute("pageSize", pageSize);
-        model.addAttribute("hasPrevious", currentPage > 1);
-        model.addAttribute("hasNext", currentPage < totalPages);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", groupsPage.getTotalPages());
+        model.addAttribute("totalGroups", groupsPage.getTotalElements());
+        model.addAttribute("pageSize", size);
+        model.addAttribute("hasPrevious", groupsPage.hasPrevious());
+        model.addAttribute("hasNext", groupsPage.hasNext());
 
-        return "department-head/students";
+        return "department-head/personnel";
+    }
+
+    @GetMapping("/lecturers")
+    public String listLecturers() {
+        return "redirect:/department-head/personnel?tab=lecturers";
+    }
+
+    @GetMapping("/students")
+    public String listStudents(@RequestParam(value = "periodId", required = false) Long periodId) {
+        return "redirect:/department-head/personnel?tab=students" + (periodId != null ? "&periodId=" + periodId : "");
     }
 
     @PostMapping("/students/groups/{id}/unassign-topic")
@@ -638,6 +676,27 @@ public class DepartmentHeadController {
             studentGroupRepository.save(group);
             redirectAttributes.addFlashAttribute("successMessage", "Đã hủy gán đề tài cho nhóm " + group.getGroupName() + "!");
         }
+        return "redirect:/department-head/students" + (periodId != null ? "?periodId=" + periodId : "");
+    }
+
+    @PostMapping("/groups/merge")
+    public String mergeGroups(
+            @RequestParam("sourceGroupId") Long sourceGroupId,
+            @RequestParam("targetGroupId") Long targetGroupId,
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) return "redirect:/login";
+
+        try {
+            topic_management.dto.RegistrationDtos.ApiResponse<?> res = groupRegistrationService.mergeGroups(user, sourceGroupId, targetGroupId);
+            redirectAttributes.addFlashAttribute("successMessage", res.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
         return "redirect:/department-head/students" + (periodId != null ? "?periodId=" + periodId : "");
     }
 

@@ -19,14 +19,23 @@ public class LecturerController {
     private final LecturerService lecturerService;
     private final CouncilService councilService;
     private final AnnouncementService announcementService;
+    private final FileStorageService fileStorageService;
+    private final topic_management.repository.SubmissionRepository submissionRepository;
+    private final GroupRegistrationService groupRegistrationService;
 
     public LecturerController(
             LecturerService lecturerService,
             CouncilService councilService,
-            AnnouncementService announcementService) {
+            AnnouncementService announcementService,
+            FileStorageService fileStorageService,
+            topic_management.repository.SubmissionRepository submissionRepository,
+            GroupRegistrationService groupRegistrationService) {
         this.lecturerService = lecturerService;
         this.councilService = councilService;
         this.announcementService = announcementService;
+        this.fileStorageService = fileStorageService;
+        this.submissionRepository = submissionRepository;
+        this.groupRegistrationService = groupRegistrationService;
     }
 
     /**
@@ -40,6 +49,7 @@ public class LecturerController {
         String roleCode = user.getRole().getCode();
         if (!"LECTURER".equalsIgnoreCase(roleCode)
                 && !"DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)
+                && !"DIVISION_HEAD".equalsIgnoreCase(roleCode)
                 && !"ADMIN".equalsIgnoreCase(roleCode)) {
             return null;
         }
@@ -57,10 +67,12 @@ public class LecturerController {
         List<Council> councils = lecturerService.getCouncilsForLecturer(lecturer);
         List<StudentGroup> groups = lecturerService.getGroupsForLecturerTopics(lecturer);
         List<Submission> submissions = lecturerService.getSubmissionsByLecturer(lecturer);
-        List<Announcement> announcements = announcementService.getAllAnnouncements();
+        List<topic_management.dto.RegistrationDtos.LeaveRequestDto> pendingLeaveRequests = lecturer != null ? groupRegistrationService.getPendingLeaveRequestsForLecturer(user) : List.of();
+        List<topic_management.dto.RegistrationDtos.DissolveRequestDto> pendingDissolveRequests = lecturer != null ? groupRegistrationService.getPendingDissolveRequestsForLecturer(user) : List.of();
 
         long approvedCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus())).count();
         long pendingCount = topics.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
+        List<Announcement> announcements = announcementService.getActiveAnnouncements();
 
         List<StudentGroup> pendingGroups = groups.stream()
                 .filter(g -> "DRAFT".equalsIgnoreCase(g.getStatus()) || "REGISTERED".equalsIgnoreCase(g.getStatus()) || "PENDING".equalsIgnoreCase(g.getStatus()))
@@ -90,6 +102,8 @@ public class LecturerController {
         model.addAttribute("pendingTopics", pendingCount);
         model.addAttribute("reviewerCount", reviewerTopics.size());
         model.addAttribute("councilCount", councils.size());
+        model.addAttribute("pendingLeaveRequests", pendingLeaveRequests);
+        model.addAttribute("pendingDissolveRequests", pendingDissolveRequests);
 
         return "lecturer/dashboard";
     }
@@ -426,5 +440,114 @@ public class LecturerController {
             redirectAttributes.addFlashAttribute("errorMessage", "Không thể chấm bài nộp này (không tìm thấy hoặc không phải đề tài bạn hướng dẫn)!");
         }
         return "redirect:/lecturer/submissions";
+    }
+
+    @GetMapping("/submissions/{id}/download")
+    public org.springframework.http.ResponseEntity<org.springframework.core.io.Resource> downloadSubmission(
+            @PathVariable("id") Long submissionId,
+            HttpSession session) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) {
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Submission submission = submissionRepository.findById(submissionId).orElse(null);
+        if (submission == null || submission.getFilePath() == null) {
+            return org.springframework.http.ResponseEntity.notFound().build();
+        }
+
+        try {
+            org.springframework.core.io.Resource resource = fileStorageService.loadFileAsResource(submission.getFilePath());
+            String contentType = submission.getContentType() != null ? submission.getContentType() : "application/octet-stream";
+            String downloadName = submission.getOriginalFileName() != null ? submission.getOriginalFileName() : "submission_" + submissionId + ".pdf";
+
+            return org.springframework.http.ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + downloadName + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.notFound().build();
+        }
+    }
+
+    // ==================== V2 GROUP REQUEST APPROVALS ====================
+
+    @PostMapping("/leave-requests/{id}/approve")
+    public String approveLeaveRequest(
+            @PathVariable("id") Long requestId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        try {
+            topic_management.dto.RegistrationDtos.ApiResponse<?> res = groupRegistrationService.approveLeaveRequest(user, requestId);
+            redirectAttributes.addFlashAttribute("successMessage", res.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/lecturer/dashboard";
+    }
+
+    @PostMapping("/leave-requests/{id}/reject")
+    public String rejectLeaveRequest(
+            @PathVariable("id") Long requestId,
+            @RequestParam(value = "rejectionReason", required = false) String rejectionReason,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        try {
+            groupRegistrationService.rejectLeaveRequest(user, requestId, rejectionReason);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã từ chối yêu cầu rút nhóm.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/lecturer/dashboard";
+    }
+
+    @PostMapping("/dissolve-requests/{id}/approve")
+    public String approveDissolveRequest(
+            @PathVariable("id") Long requestId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        try {
+            topic_management.dto.RegistrationDtos.ApiResponse<?> res = groupRegistrationService.approveDissolveRequest(user, requestId);
+            redirectAttributes.addFlashAttribute("successMessage", res.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/lecturer/dashboard";
+    }
+
+    @PostMapping("/dissolve-requests/{id}/reject")
+    public String rejectDissolveRequest(
+            @PathVariable("id") Long requestId,
+            @RequestParam(value = "rejectionReason", required = false) String rejectionReason,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        try {
+            groupRegistrationService.rejectDissolveRequest(user, requestId, rejectionReason);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã từ chối yêu cầu hủy nhóm và đề tài.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/lecturer/dashboard";
     }
 }

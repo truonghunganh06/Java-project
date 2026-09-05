@@ -29,7 +29,7 @@
                 <div>
                     <div class="d-flex align-items-center gap-2">
                         <h1 class="text-xl font-bold text-slate-900 mb-0">Bảng điều khiển Giảng viên</h1>
-                        <span class="badge-pill-neutral font-semibold text-xs" th:text="${lecturer != null ? (lecturer.academicTitle != null ? lecturer.academicTitle + ' ' : '') + lecturer.degree : 'Giảng viên'}">ThS</span>
+                        <span class="badge-pill-neutral font-semibold text-xs" th:text="${lecturer != null ? ((lecturer.academicTitle != null ? lecturer.academicTitle + ' ' : '') + (lecturer.degree != null ? lecturer.degree : 'Giảng viên')) : 'Giảng viên'}">ThS</span>
                     </div>
                     <p class="text-xs text-slate-500 mb-0 mt-1">Quản lý đề tài hướng dẫn, theo dõi tiến độ nhóm sinh viên và đánh giá phản biện.</p>
                 </div>
@@ -131,6 +131,81 @@
                            class="btn btn-sm btn-dark rounded-xl px-3 py-1.5 text-xs font-semibold shadow-xs">
                             <i class="fa-solid fa-pen-to-square me-1"></i> Sửa: <span th:text="${rt.code != null ? rt.code : rt.title}"></span>
                         </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: EC-02 & EC-03 REQUESTS FROM STUDENTS -->
+            <div th:if="${(pendingLeaveRequests != null && !pendingLeaveRequests.isEmpty()) || (pendingDissolveRequests != null && !pendingDissolveRequests.isEmpty())}" class="saas-card rounded-2xl bg-white border border-rose-200/80 shadow-sm overflow-hidden mb-4">
+                <div class="p-4 border-b border-rose-100 bg-rose-50/40 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                            <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 font-bold text-slate-900 text-sm">Yêu Cầu Thay Đổi Nhóm & Đề Tài Cần Giảng Viên Phê Duyệt</h6>
+                            <span class="text-slate-500 text-xs mt-0.5 d-block">Bao gồm yêu cầu xin rút nhóm của thành viên (EC-02) và yêu cầu xin hủy nhóm/đề tài của nhóm trưởng (EC-03).</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    <!-- EC-02 Leave Requests -->
+                    <div th:if="${pendingLeaveRequests != null && !pendingLeaveRequests.isEmpty()}" class="mb-4">
+                        <h6 class="text-xs font-bold text-rose-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-user-minus me-1"></i> Yêu cầu rút khỏi nhóm (EC-02):</h6>
+                        <div class="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden bg-white">
+                            <div th:each="lr : ${pendingLeaveRequests}" class="d-flex flex-column flex-md-row justify-content-between align-items-md-center p-3 gap-2">
+                                <div>
+                                    <div class="font-bold text-slate-900 text-xs">
+                                        Sinh viên: <span class="text-blue-700" th:text="${lr.studentName != null ? lr.studentName : 'Sinh viên'}"></span>
+                                        (<span th:text="${lr.studentCode != null ? lr.studentCode : ''}"></span>)
+                                        - Nhóm: <strong th:text="${lr.groupName != null ? lr.groupName : ''}"></strong>
+                                    </div>
+                                    <p class="text-xs text-slate-600 mb-0 mt-1">Lý do xin rút: <em class="text-slate-800" th:text="${lr.reason}"></em></p>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <form th:action="@{'/lecturer/leave-requests/' + ${lr.id} + '/approve'}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn phê duyệt cho sinh viên này rút khỏi nhóm? (Lưu ý: Nếu nhóm dưới sĩ số tối thiểu, trạng thái sẽ chuyển thành PENDING_MEMBER)');">
+                                        <button type="submit" class="btn btn-sm btn-success rounded-xl px-3 text-xs font-semibold">
+                                            <i class="fa-solid fa-check me-1"></i> Duyệt rút nhóm
+                                        </button>
+                                    </form>
+                                    <form th:action="@{'/lecturer/leave-requests/' + ${lr.id} + '/reject'}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn từ chối yêu cầu này?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-3 text-xs font-medium">
+                                            <i class="fa-solid fa-xmark me-1"></i> Từ chối
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EC-03 Dissolve Requests -->
+                    <div th:if="${pendingDissolveRequests != null && !pendingDissolveRequests.isEmpty()}">
+                        <h6 class="text-xs font-bold text-rose-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-ban me-1"></i> Yêu cầu hủy nhóm & đề tài (EC-03):</h6>
+                        <div class="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden bg-white">
+                            <div th:each="dr : ${pendingDissolveRequests}" class="d-flex flex-column flex-md-row justify-content-between align-items-md-center p-3 gap-2">
+                                <div>
+                                    <div class="font-bold text-slate-900 text-xs">
+                                        Nhóm trưởng: <span class="text-blue-700" th:text="${dr.requestedByName != null ? dr.requestedByName : 'Trưởng nhóm'}"></span>
+                                        (<span th:text="${dr.requestedByCode != null ? dr.requestedByCode : ''}"></span>)
+                                        - Đề tài: <strong class="text-slate-900" th:text="${(dr.topicCode != null ? dr.topicCode + ' - ' : '') + (dr.topicTitle != null ? dr.topicTitle : '')}"></strong>
+                                    </div>
+                                    <p class="text-xs text-slate-600 mb-0 mt-1">Lý do xin hủy: <em class="text-slate-800" th:text="${dr.reason}"></em></p>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <form th:action="@{'/lecturer/dissolve-requests/' + ${dr.id} + '/approve'}" method="post" class="d-inline" onsubmit="return confirm('CẢNH BÁO EC-03: Khi duyệt, nhóm sẽ bị giải tán và đề tài sẽ được giải phóng quay lại trạng thái APPROVED để nhóm khác đăng ký. Bạn có chắc chắn muốn duyệt?');">
+                                        <button type="submit" class="btn btn-sm btn-danger rounded-xl px-3 text-xs font-semibold">
+                                            <i class="fa-solid fa-check me-1"></i> Duyệt hủy & Giải phóng đề tài
+                                        </button>
+                                    </form>
+                                    <form th:action="@{'/lecturer/dissolve-requests/' + ${dr.id} + '/reject'}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn từ chối yêu cầu hủy nhóm này?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary rounded-xl px-3 text-xs font-medium">
+                                            <i class="fa-solid fa-xmark me-1"></i> Từ chối
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

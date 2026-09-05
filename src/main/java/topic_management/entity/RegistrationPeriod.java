@@ -45,6 +45,12 @@ public class RegistrationPeriod {
     @Column(name = "council_defense_date")
     private OffsetDateTime councilDefenseDate;
 
+    @Column(name = "min_students")
+    private Integer minStudents = 2;
+
+    @Column(name = "max_students")
+    private Integer maxStudents = 3;
+
     @Column(nullable = false, length = 50)
     private String status = "OPEN"; // DRAFT, OPEN, IN_PROGRESS, COMPLETED, CLOSED
 
@@ -166,6 +172,22 @@ public class RegistrationPeriod {
 
     public void setCouncilDefenseDate(OffsetDateTime councilDefenseDate) {
         this.councilDefenseDate = councilDefenseDate;
+    }
+
+    public Integer getMinStudents() {
+        return minStudents != null && minStudents > 0 ? minStudents : 2;
+    }
+
+    public void setMinStudents(Integer minStudents) {
+        this.minStudents = minStudents;
+    }
+
+    public Integer getMaxStudents() {
+        return maxStudents != null && maxStudents > 0 ? maxStudents : 3;
+    }
+
+    public void setMaxStudents(Integer maxStudents) {
+        this.maxStudents = maxStudents;
     }
 
     public String getStatus() {

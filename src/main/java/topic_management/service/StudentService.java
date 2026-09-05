@@ -23,6 +23,7 @@ public class StudentService {
     private final MajorRepository majorRepository;
     private final RegistrationPeriodRepository periodRepository;
     private final EvaluationRepository evaluationRepository;
+    private final FileStorageService fileStorageService;
 
     public StudentService(
             StudentRepository studentRepository,
@@ -32,7 +33,8 @@ public class StudentService {
             SubmissionRepository submissionRepository,
             MajorRepository majorRepository,
             RegistrationPeriodRepository periodRepository,
-            EvaluationRepository evaluationRepository) {
+            EvaluationRepository evaluationRepository,
+            FileStorageService fileStorageService) {
         this.studentRepository = studentRepository;
         this.topicRepository = topicRepository;
         this.groupRepository = groupRepository;
@@ -41,6 +43,7 @@ public class StudentService {
         this.majorRepository = majorRepository;
         this.periodRepository = periodRepository;
         this.evaluationRepository = evaluationRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     /**
@@ -453,6 +456,58 @@ public class StudentService {
     }
 
     @Transactional
+    public String submitGroupReport(Student student, StudentGroup group, String title, Integer round, org.springframework.web.multipart.MultipartFile file) {
+        if (group == null) {
+            return "Bạn chưa thuộc nhóm nào!";
+        }
+
+        if (group.getId() != null) {
+            group = groupRepository.findById(group.getId()).orElse(group);
+        }
+
+        // BẮT BUỘC: CHỈ NHÓM TRƯỞNG MỚI ĐƯỢC NỘP BÁO CÁO ĐỀ TÀI
+        if (!group.isLeader(student)) {
+            return "QUYỀN HẠN BỊ TỪ CHỐI: Chỉ Nhóm trưởng mới có quyền nộp bài báo cáo đề tài!";
+        }
+
+        if (group.getTopic() == null) {
+            return "Nhóm của bạn chưa đăng ký đề tài nào!";
+        }
+
+        // Chỉ cho phép nộp báo cáo khi đề tài và đăng ký nhóm đã được GVHD phê duyệt (APPROVED)
+        if (!"APPROVED".equalsIgnoreCase(group.getStatus()) || !"APPROVED".equalsIgnoreCase(group.getTopic().getStatus())) {
+            return "Đề tài chưa được phê duyệt, không thể nộp báo cáo!";
+        }
+
+        if (file == null || file.isEmpty()) {
+            return "Vui lòng chọn file báo cáo cần nộp (PDF, Word, ZIP, PPTX)!";
+        }
+
+        try {
+            FileStorageService.StoredFile storedFile = fileStorageService.storeFile(file);
+
+            Submission sub = new Submission();
+            sub.setTopic(group.getTopic());
+            sub.setGroup(group);
+            sub.setSubmittedByStudent(student);
+            sub.setStudent(student);
+            sub.setTitle(title != null && !title.isBlank() ? title.trim() : ("Báo cáo đợt " + (round != null ? round : 1)));
+            sub.setSubmissionRound(round != null ? round : 1);
+            sub.setFilePath(storedFile.getFilePath());
+            sub.setOriginalFileName(storedFile.getOriginalFileName());
+            sub.setContentType(storedFile.getContentType());
+            sub.setFileSize(storedFile.getFileSize());
+            sub.setSubmittedAt(OffsetDateTime.now());
+
+            submissionRepository.save(sub);
+            System.out.println("[DB-STUDENT] Leader " + student.getStudentCode() + " đã nộp file báo cáo thực tế '" + storedFile.getOriginalFileName() + "' cho nhóm " + group.getGroupName());
+            return null; // success
+        } catch (Exception e) {
+            return "Lỗi nộp file: " + e.getMessage();
+        }
+    }
+
+    @Transactional
     public String submitGroupReport(Student student, StudentGroup group, String title, Integer round, String fileName, Long fileSize) {
         if (group == null) {
             return "Bạn chưa thuộc nhóm nào!";
@@ -471,7 +526,6 @@ public class StudentService {
             return "Nhóm của bạn chưa đăng ký đề tài nào!";
         }
 
-        // LỖI 2 FIX: Chỉ cho phép nộp báo cáo khi đề tài và đăng ký nhóm đã được GVHD phê duyệt (APPROVED)
         if (!"APPROVED".equalsIgnoreCase(group.getStatus()) || !"APPROVED".equalsIgnoreCase(group.getTopic().getStatus())) {
             return "Đề tài chưa được phê duyệt, không thể nộp báo cáo!";
         }
@@ -481,9 +535,11 @@ public class StudentService {
         sub.setGroup(group);
         sub.setSubmittedByStudent(student);
         sub.setStudent(student);
-        sub.setTitle(title);
+        sub.setTitle(title != null && !title.isBlank() ? title.trim() : ("Báo cáo đợt " + (round != null ? round : 1)));
         sub.setSubmissionRound(round != null ? round : 1);
         sub.setFilePath("/uploads/submissions/" + (fileName != null ? fileName : "report.pdf"));
+        sub.setOriginalFileName(fileName != null ? fileName : "report.pdf");
+        sub.setContentType("application/pdf");
         sub.setFileSize(fileSize != null ? fileSize : 1048576L);
         sub.setSubmittedAt(OffsetDateTime.now());
 

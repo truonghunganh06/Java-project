@@ -355,6 +355,17 @@ public class DepartmentHeadService {
         return studentGroupRepository.findAll();
     }
 
+    public org.springframework.data.domain.Page<StudentGroup> getGroupsInDepartmentAndPeriodPaged(Long departmentId, Long periodId, org.springframework.data.domain.Pageable pageable) {
+        if (periodId != null && departmentId != null) {
+            return studentGroupRepository.findByPeriodDepartmentIdAndPeriodId(departmentId, periodId, pageable);
+        } else if (periodId != null) {
+            return studentGroupRepository.findByPeriodId(periodId, pageable);
+        } else if (departmentId != null) {
+            return studentGroupRepository.findByPeriodDepartmentId(departmentId, pageable);
+        }
+        return studentGroupRepository.findAll(pageable);
+    }
+
     public Map<String, Object> getDepartmentStats(Long departmentId) {
         List<Topic> topics = getDepartmentTopics(departmentId, "ALL", null, null, null);
         List<Lecturer> lecturers = getLecturersInDepartment(departmentId);

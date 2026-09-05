@@ -17,12 +17,21 @@ public class StudentController {
 
     private final StudentService studentService;
     private final AnnouncementService announcementService;
+    private final FileStorageService fileStorageService;
+    private final topic_management.repository.SubmissionRepository submissionRepository;
+    private final GroupRegistrationService groupRegistrationService;
 
     public StudentController(
             StudentService studentService,
-            AnnouncementService announcementService) {
+            AnnouncementService announcementService,
+            FileStorageService fileStorageService,
+            topic_management.repository.SubmissionRepository submissionRepository,
+            GroupRegistrationService groupRegistrationService) {
         this.studentService = studentService;
         this.announcementService = announcementService;
+        this.fileStorageService = fileStorageService;
+        this.submissionRepository = submissionRepository;
+        this.groupRegistrationService = groupRegistrationService;
     }
 
     /**
@@ -45,17 +54,15 @@ public class StudentController {
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
         List<Announcement> announcements = announcementService.getAllAnnouncements();
-        List<RegistrationPeriod> activePeriods = studentService.getAllActivePeriods();
         List<Submission> submissions = studentService.getGroupSubmissions(group);
-        List<Evaluation> evaluations = studentService.getGroupEvaluations(group);
+        List<topic_management.dto.RegistrationDtos.InvitationResponseDto> myInvitations = groupRegistrationService.getMyPendingInvitations(user);
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
         model.addAttribute("group", group);
         model.addAttribute("submissions", submissions);
-        model.addAttribute("evaluations", evaluations);
-        model.addAttribute("announcements", announcements.stream().limit(3).toList());
-        model.addAttribute("activePeriods", activePeriods);
+        model.addAttribute("announcements", announcements.stream().limit(5).toList());
+        model.addAttribute("myInvitations", myInvitations);
 
         return "student/dashboard";
     }
@@ -74,12 +81,16 @@ public class StudentController {
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, periodId);
         List<RegistrationPeriod> activePeriods = studentService.getAllActivePeriods();
+        List<topic_management.dto.RegistrationDtos.InvitationResponseDto> myInvitations = groupRegistrationService.getMyPendingInvitations(user);
+        List<topic_management.dto.RegistrationDtos.InvitationResponseDto> sentInvitations = group != null ? groupRegistrationService.getGroupInvitations(user, group.getId()) : List.of();
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
         model.addAttribute("group", group);
         model.addAttribute("activePeriods", activePeriods);
         model.addAttribute("selectedPeriodId", periodId);
+        model.addAttribute("myInvitations", myInvitations);
+        model.addAttribute("sentInvitations", sentInvitations);
 
         return "student/group";
     }
@@ -124,11 +135,167 @@ public class StudentController {
             return "redirect:/student/group";
         }
 
-        String err = studentService.inviteMemberByCode(group, studentCode);
-        if (err != null) {
-            redirectAttributes.addFlashAttribute("errorMessage", err);
-        } else {
-            redirectAttributes.addFlashAttribute("successMessage", "Đã thêm sinh viên " + studentCode + " vào nhóm thành công!");
+        try {
+            groupRegistrationService.sendInvitation(user, group.getId(), studentCode);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi lời mời tham gia nhóm tới sinh viên " + studentCode + "! Vui lòng chờ sinh viên chấp nhận.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/student/group";
+    }
+
+    @PostMapping("/group/invitations/{id}/accept")
+    public String acceptInvitation(
+            @PathVariable("id") Long invitationId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        try {
+            groupRegistrationService.acceptInvitation(user, invitationId);
+            redirectAttributes.addFlashAttribute("successMessage", "Bạn đã chấp nhận lời mời và gia nhập nhóm thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/student/group";
+    }
+
+    @PostMapping("/group/invitations/{id}/reject")
+    public String rejectInvitation(
+            @PathVariable("id") Long invitationId,
+            @RequestParam(value = "reason", required = false) String reason,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        try {
+            groupRegistrationService.rejectInvitation(user, invitationId, reason);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã từ chối lời mời vào nhóm.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/student/group";
+    }
+
+    @PostMapping("/group/invitations/{id}/cancel")
+    public String cancelInvitation(
+            @PathVariable("id") Long invitationId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        try {
+            groupRegistrationService.cancelInvitation(user, invitationId);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã thu hồi lời mời thành công.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/student/group";
+    }
+
+    @PostMapping("/group/draft-leave")
+    public String leaveDraftGroup(
+            @RequestParam("groupId") Long groupId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        try {
+            groupRegistrationService.leaveGroupDraft(user, groupId, null);
+            redirectAttributes.addFlashAttribute("successMessage", "Bạn đã rời nhóm thành công.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/student/group";
+    }
+
+    @PostMapping("/group/draft-dissolve")
+    public String dissolveDraftGroup(
+            @RequestParam("groupId") Long groupId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        try {
+            groupRegistrationService.dissolveGroupDraft(user, groupId);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã giải tán nhóm thành công.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/student/group";
+    }
+
+    @PostMapping("/group/transfer-leadership")
+    public String transferLeadership(
+            @RequestParam("groupId") Long groupId,
+            @RequestParam("newLeaderStudentId") Long newLeaderStudentId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        try {
+            groupRegistrationService.transferLeadership(user, groupId, newLeaderStudentId);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã chuyển giao quyền Nhóm trưởng thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/student/group";
+    }
+
+    @PostMapping("/group/leave-request")
+    public String submitLeaveRequest(
+            @RequestParam("groupId") Long groupId,
+            @RequestParam("reason") String reason,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        try {
+            groupRegistrationService.requestLeaveApprovedGroup(user, groupId, reason);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi yêu cầu rút khỏi nhóm lên GVHD! Vui lòng chờ GVHD phê duyệt.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/student/group";
+    }
+
+    @PostMapping("/group/dissolve-request")
+    public String submitDissolveRequest(
+            @RequestParam("groupId") Long groupId,
+            @RequestParam("reason") String reason,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        try {
+            groupRegistrationService.requestDissolveApprovedGroup(user, groupId, reason);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi yêu cầu hủy nhóm và đề tài lên GVHD! Vui lòng chờ GVHD phê duyệt.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
 
         return "redirect:/student/group";
@@ -296,7 +463,6 @@ public class StudentController {
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
 
-        // BUG-11 FIX: Defense-in-depth - Kiểm tra quyền Trưởng nhóm ngay tại Controller layer
         if (group == null) {
             redirectAttributes.addFlashAttribute("errorMessage", "Bạn chưa thuộc nhóm nào để nộp báo cáo!");
             return "redirect:/student/submissions";
@@ -306,17 +472,49 @@ public class StudentController {
             return "redirect:/student/submissions";
         }
 
-        String fileName = (file != null && !file.isEmpty()) ? file.getOriginalFilename() : "BaoCao_TienDo_Dot" + round + ".pdf";
-        Long fileSize = (file != null && !file.isEmpty()) ? file.getSize() : 2048576L;
+        String err;
+        if (file != null && !file.isEmpty()) {
+            err = studentService.submitGroupReport(student, group, title, round, file);
+        } else {
+            err = studentService.submitGroupReport(student, group, title, round, "BaoCao_TienDo_Dot" + round + ".pdf", 2048576L);
+        }
 
-        String err = studentService.submitGroupReport(student, group, title, round, fileName, fileSize);
         if (err != null) {
             redirectAttributes.addFlashAttribute("errorMessage", err);
             return "redirect:/student/submissions";
         }
 
-        redirectAttributes.addFlashAttribute("successMessage", "Nhóm trưởng đã nộp báo cáo tiến độ thành công!");
+        redirectAttributes.addFlashAttribute("successMessage", "Nhóm trưởng đã nộp file báo cáo tiến độ thành công!");
         return "redirect:/student/submissions";
+    }
+
+    @GetMapping("/submissions/{id}/download")
+    public org.springframework.http.ResponseEntity<org.springframework.core.io.Resource> downloadSubmission(
+            @PathVariable("id") Long submissionId,
+            HttpSession session) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) {
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Submission submission = submissionRepository.findById(submissionId).orElse(null);
+        if (submission == null || submission.getFilePath() == null) {
+            return org.springframework.http.ResponseEntity.notFound().build();
+        }
+
+        try {
+            org.springframework.core.io.Resource resource = fileStorageService.loadFileAsResource(submission.getFilePath());
+            String contentType = submission.getContentType() != null ? submission.getContentType() : "application/octet-stream";
+            String downloadName = submission.getOriginalFileName() != null ? submission.getOriginalFileName() : "submission_" + submissionId + ".pdf";
+
+            return org.springframework.http.ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + downloadName + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.notFound().build();
+        }
     }
 
     // ==================== RESULTS ====================

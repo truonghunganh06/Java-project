@@ -82,7 +82,7 @@
             </div>
 
             <!-- Topics Data Table with Overflow Protection -->
-            <div class="table-saas-container mb-4">
+            <div class="table-saas-container mb-2">
                 <div class="w-full overflow-x-auto">
                     <table class="table table-saas mb-0">
                         <thead>
@@ -96,13 +96,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:if="${topics == null || #lists.isEmpty(topics)}">
+                            <tr th:if="${topicsPage == null || #lists.isEmpty(topicsPage.content)}">
                                 <td colspan="6" class="text-center py-5 text-muted text-xs">
                                     <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
                                     Không tìm thấy đề tài nào phù hợp với bộ lọc.
                                 </td>
                             </tr>
-                            <tr th:each="t : ${topics}" class="filterable-row" th:data-status="${t.status}"
+                            <tr th:each="t : ${topicsPage.content}" class="filterable-row" th:data-status="${t.status}"
                                 th:data-topic-id="${t.id}"
                                 th:data-topic-code="${t.code}"
                                 th:data-topic-title="${t.title}"
@@ -140,19 +140,31 @@
 
                                 <!-- Cột 4: GVPB / Hội đồng -->
                                 <td>
-                                    <!-- Reviewer Assignment -->
-                                    <div class="mb-1">
-                                        <button class="btn btn-sm text-xs p-0 text-slate-700 font-medium hover:text-blue-600" data-bs-toggle="modal" th:data-bs-target="'#assignReviewerModal-' + ${t.id}">
-                                            <i class="fa-solid fa-user-check me-1 text-slate-400"></i>
-                                            <span th:text="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Gán GVPB...'}"></span>
-                                        </button>
-                                    </div>
-                                    <!-- Council Assignment -->
-                                    <div>
-                                        <button class="btn btn-sm text-xs p-0 text-slate-700 font-medium hover:text-purple-600" data-bs-toggle="modal" th:data-bs-target="'#assignCouncilModal-' + ${t.id}">
-                                            <i class="fa-solid fa-users-rectangle me-1 text-slate-400"></i>
-                                            <span th:text="${t.council != null ? t.council.name : 'Gán Hội đồng...'}"></span>
-                                        </button>
+                                    <div class="d-flex flex-column gap-1">
+                                        <!-- Reviewer Status -->
+                                        <div>
+                                            <span th:if="${t.reviewer != null && t.reviewer.user != null}" class="badge bg-blue-50 text-blue-700 border border-blue-200 text-xs font-medium truncate-cell d-inline-block max-w-xs" 
+                                                  th:title="'GVPB: ' + ${t.reviewer.user.fullName}" th:text="'GVPB: ' + ${t.reviewer.user.fullName}">
+                                                GVPB: ThS. Lê Văn C
+                                            </span>
+                                            <button th:if="${t.reviewer == null && t.status == 'APPROVED'}" type="button" class="btn btn-xs btn-outline-primary rounded-lg text-xs py-0.5 px-1.5" 
+                                                    data-bs-toggle="modal" th:data-bs-target="'#assignReviewerModal-' + ${t.id}">
+                                                <i class="fa-solid fa-user-plus text-xs"></i> Phân GVPB
+                                            </button>
+                                        </div>
+
+                                        <!-- Council Status -->
+                                        <div>
+                                            <span th:if="${t.council != null}" class="badge bg-purple-50 text-purple-700 border border-purple-200 text-xs font-medium truncate-cell d-inline-block max-w-xs" 
+                                                  th:title="'Hội đồng: ' + ${t.council.name}" th:text="'HĐ: ' + ${t.council.name}">
+                                                HĐ: Hội đồng KTPM 01
+                                            </span>
+                                            <button th:if="${t.council == null && t.status == 'APPROVED'}" type="button" class="btn btn-xs btn-outline-purple rounded-lg text-xs py-0.5 px-1.5" 
+                                                    style="color: #7c3aed; border-color: #ddd6fe;"
+                                                    data-bs-toggle="modal" th:data-bs-target="'#assignCouncilModal-' + ${t.id}">
+                                                <i class="fa-solid fa-users text-xs"></i> Phân HĐ
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <!-- Modal Assign Reviewer -->
@@ -161,12 +173,13 @@
                                             <div class="modal-content rounded-2xl border-0 shadow-xl">
                                                 <form th:action="@{/department-head/topics/{id}/assign-reviewer(id=${t.id})}" method="post">
                                                     <div class="modal-header border-b border-slate-100 p-4">
-                                                        <h6 class="modal-title font-bold text-slate-900 text-sm">Phân Công Giảng Viên Phản Biện (GVPB)</h6>
+                                                        <h6 class="modal-title font-bold text-slate-900 text-sm">Phân công Cán bộ Phản biện (GVPB)</h6>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
                                                     <div class="modal-body p-4">
                                                         <div class="p-3 bg-slate-50 rounded-xl mb-3 border border-slate-100">
-                                                            <div class="text-xs font-bold text-slate-900" th:text="${t.title}"></div>
+                                                            <div class="text-xs text-slate-500 font-mono mb-1" th:text="${t.code}">DT-01</div>
+                                                            <div class="text-xs font-bold text-slate-800" th:text="${t.title}">Tên đề tài</div>
                                                             <div class="text-xs text-slate-500 mt-1">GVHD: <strong th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'N/A'}"></strong></div>
                                                         </div>
                                                         <label class="form-label text-xs font-semibold text-slate-700">Chọn Cán bộ Phản biện *</label>
@@ -178,7 +191,6 @@
                                                                     th:text="${(l.academicTitle != null ? l.academicTitle + ' ' : '') + (l.user != null ? l.user.fullName : '')}"
                                                                     th:selected="${t.reviewer != null && t.reviewer.id.equals(l.id)}"></option>
                                                         </select>
-                                                        <span class="text-xs text-slate-400 mt-1.5 d-block italic">* Hệ thống đã tự động loại bỏ Giảng viên hướng dẫn để tránh xung đột lợi ích.</span>
                                                     </div>
                                                     <div class="modal-footer border-t border-slate-100 p-3">
                                                         <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
@@ -195,27 +207,25 @@
                                             <div class="modal-content rounded-2xl border-0 shadow-xl">
                                                 <form th:action="@{/department-head/topics/{id}/assign-council(id=${t.id})}" method="post">
                                                     <div class="modal-header border-b border-slate-100 p-4">
-                                                        <h6 class="modal-title font-bold text-slate-900 text-sm">Phân Công Hội Đồng Bảo Vệ</h6>
+                                                        <h6 class="modal-title font-bold text-slate-900 text-sm">Phân công Hội đồng Đánh giá / Bảo vệ</h6>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
                                                     <div class="modal-body p-4">
                                                         <div class="p-3 bg-slate-50 rounded-xl mb-3 border border-slate-100">
-                                                            <div class="text-xs font-bold text-slate-900" th:text="${t.title}"></div>
+                                                            <div class="text-xs text-slate-500 font-mono mb-1" th:text="${t.code}">DT-01</div>
+                                                            <div class="text-xs font-bold text-slate-800" th:text="${t.title}">Tên đề tài</div>
                                                             <div class="text-xs text-slate-500 mt-1">GVHD: <strong th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'N/A'}"></strong></div>
                                                         </div>
-                                                        <label class="form-label text-xs font-semibold text-slate-700">Chọn Hội đồng bảo vệ *</label>
+                                                        <label class="form-label text-xs font-semibold text-slate-700">Chọn Hội đồng chấm *</label>
                                                         <select name="councilId" class="form-select text-xs rounded-xl" required>
                                                             <option value="">-- Chọn Hội đồng --</option>
-                                                            <th:block th:each="c : ${councils}">
-                                                                <option th:with="memberIds=${councilLecturerIdsMap != null ? councilLecturerIdsMap.get(c.id) : null},
-                                                                                 isConflict=${memberIds != null && ((t.supervisor != null && memberIds.contains(t.supervisor.id)) || (t.coSupervisor != null && memberIds.contains(t.coSupervisor.id)))}"
-                                                                        th:if="${!isConflict}"
-                                                                        th:value="${c.id}" 
-                                                                        th:text="${c.name + ' (' + c.code + ')'}" 
-                                                                        th:selected="${t.council != null && t.council.id.equals(c.id)}"></option>
-                                                            </th:block>
+                                                            <option th:each="c : ${councils}" 
+                                                                    th:if="${councilLecturerIdsMap[c.id] == null || ((t.supervisor == null || !councilLecturerIdsMap[c.id].contains(t.supervisor.id)) && (t.coSupervisor == null || !councilLecturerIdsMap[c.id].contains(t.coSupervisor.id)))}"
+                                                                    th:value="${c.id}" 
+                                                                    th:text="${c.name + ' (' + (c.major != null ? c.major.name : (c.division != null ? c.division.name : (c.department != null ? c.department.name : 'Chung'))) + ')'}"
+                                                                    th:selected="${t.council != null && t.council.id.equals(c.id)}"></option>
                                                         </select>
-                                                        <span class="text-xs text-slate-400 mt-1.5 d-block italic">* Hệ thống đã tự động lọc bỏ các Hội đồng có chứa Giảng viên hướng dẫn.</span>
+                                                        <span class="text-xs text-slate-400 mt-1.5 d-block italic">* Các hội đồng có thành viên là GVHD chính/phụ của đề tài đã tự động được lọc bỏ.</span>
                                                     </div>
                                                     <div class="modal-footer border-t border-slate-100 p-3">
                                                         <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
@@ -270,6 +280,9 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Server-Side Pagination -->
+            <div th:replace="~{fragments/pagination :: pager(${topicsPage}, '/department-head/topics')}"></div>
 
         </main>
     </div>
