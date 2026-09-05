@@ -25,6 +25,10 @@ public class AnnouncementService {
         return announcementRepository.findAllByOrderByIsPinnedDescCreatedAtDesc();
     }
 
+    public List<Announcement> getActiveAnnouncements() {
+        return getAllAnnouncements();
+    }
+
     public List<Announcement> getAnnouncementsByDepartment(Long departmentId) {
         if (departmentId == null) {
             return getAllAnnouncements();

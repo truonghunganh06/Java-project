@@ -72,7 +72,7 @@ public class LecturerController {
 
         long approvedCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus())).count();
         long pendingCount = topics.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
-        List<Announcement> announcements = announcementService.getActiveAnnouncements();
+        List<Announcement> announcements = announcementService.getAllAnnouncements();
 
         List<StudentGroup> pendingGroups = groups.stream()
                 .filter(g -> "DRAFT".equalsIgnoreCase(g.getStatus()) || "REGISTERED".equalsIgnoreCase(g.getStatus()) || "PENDING".equalsIgnoreCase(g.getStatus()))
