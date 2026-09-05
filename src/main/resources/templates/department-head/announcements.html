@@ -9,7 +9,7 @@
     <!-- Main Wrapper -->
     <div class="saas-main-wrapper">
         <!-- Topbar -->
-        <header th:replace="~{fragments/topbar :: topbar('Bảng tin Thông báo', 'Trưởng Khoa', '/department-head/dashboard', ${user})}"></header>
+        <header th:replace="~{fragments/topbar :: topbar('Bảng tin Thông báo', ${user != null && user.role != null ? user.role.name : 'Trưởng Bộ Môn'}, '/department-head/dashboard', ${user})}"></header>
 
         <!-- Main Content View -->
         <main class="saas-content">
@@ -44,6 +44,7 @@
                     <div class="saas-card p-4 position-relative cursor-pointer hover:border-slate-300 transition" 
                          th:classappend="${a.isPinned ? 'border-amber-300 bg-amber-50/10' : ''}"
                          onclick="showAnnouncementDetail(this)"
+                         th:data-announcement-id="${a.id}"
                          th:data-title="${a.title}"
                          th:data-category="${a.getCategoryName()}"
                          th:data-author="${a.author != null ? a.author.fullName : 'Ban chủ nhiệm Khoa'}"

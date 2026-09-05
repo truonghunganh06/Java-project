@@ -8,8 +8,8 @@
             <i class="fa-solid fa-compass-drafting"></i>
         </div>
 
-        <h1 class="text-2xl font-black text-slate-900 mb-2">Trang không tồn tại (404)</h1>
-        <p class="text-xs text-slate-500 mb-4 leading-relaxed">
+        <h1 class="text-2xl font-black text-slate-900 mb-2" th:text="${status == 404 || status == null ? 'Trang không tồn tại (404)' : (status == 403 ? 'Không có quyền truy cập (403)' : (status == 500 ? 'Lỗi máy chủ (500)' : 'Có lỗi xảy ra (' + status + ')'))}">Trang không tồn tại (404)</h1>
+        <p class="text-xs text-slate-500 mb-4 leading-relaxed" th:text="${message != null && !message.isEmpty() && message != 'No message available' ? message : (status == 403 ? 'Bạn không có quyền truy cập vào chức năng hoặc trang này.' : (status == 500 ? 'Hệ thống đã gặp lỗi trong quá trình xử lý yêu cầu. Vui lòng thử lại sau.' : 'Đường dẫn bạn vừa truy cập không tồn tại hoặc đã được chuyển sang địa chỉ khác trong hệ thống Quản lý Đề tài TopicHub.'))}">
             Đường dẫn bạn vừa truy cập không tồn tại hoặc đã được chuyển sang địa chỉ khác trong hệ thống Quản lý Đề tài TopicHub.
         </p>
 

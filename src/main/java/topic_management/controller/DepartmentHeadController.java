@@ -13,9 +13,10 @@ import topic_management.repository.SubmissionRepository;
 
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
-@RequestMapping("/department-head")
+@RequestMapping({"/department-head", "/division-head"})
 public class DepartmentHeadController {
 
     private final DepartmentHeadService departmentHeadService;
@@ -24,6 +25,7 @@ public class DepartmentHeadController {
     private final LecturerService lecturerService;
     private final StudentGroupRepository studentGroupRepository;
     private final SubmissionRepository submissionRepository;
+    private final GroupRegistrationService groupRegistrationService;
 
     public DepartmentHeadController(
             DepartmentHeadService departmentHeadService,
@@ -31,19 +33,23 @@ public class DepartmentHeadController {
             AnnouncementService announcementService,
             LecturerService lecturerService,
             StudentGroupRepository studentGroupRepository,
-            SubmissionRepository submissionRepository) {
+            SubmissionRepository submissionRepository,
+            GroupRegistrationService groupRegistrationService) {
         this.departmentHeadService = departmentHeadService;
         this.councilService = councilService;
         this.announcementService = announcementService;
         this.lecturerService = lecturerService;
         this.studentGroupRepository = studentGroupRepository;
         this.submissionRepository = submissionRepository;
+        this.groupRegistrationService = groupRegistrationService;
     }
 
     private AppUser getAuthenticatedDeptHead(HttpSession session) {
         AppUser user = (AppUser) session.getAttribute("currentUser");
         if (user == null) return null;
-        if (user.getRole() == null || (!"DEPARTMENT_HEAD".equalsIgnoreCase(user.getRole().getCode()) && !"ADMIN".equalsIgnoreCase(user.getRole().getCode()))) {
+        if (user.getRole() == null || (!"DEPARTMENT_HEAD".equalsIgnoreCase(user.getRole().getCode())
+                && !"DIVISION_HEAD".equalsIgnoreCase(user.getRole().getCode())
+                && !"ADMIN".equalsIgnoreCase(user.getRole().getCode()))) {
             return null;
         }
         return user;
@@ -57,16 +63,27 @@ public class DepartmentHeadController {
         if (user == null) return "redirect:/login";
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
-        Map<String, Object> stats = departmentHeadService.getDepartmentStats(dept.getId());
-        List<Topic> pendingTopics = departmentHeadService.getDepartmentTopics(dept.getId(), "PENDING", null, null, null);
+        Division division = departmentHeadService.getDivisionForUser(user);
+        Map<String, Object> stats = (division != null)
+                ? departmentHeadService.getDivisionStats(division.getId(), dept.getId())
+                : departmentHeadService.getDepartmentStats(dept.getId());
+
+        List<Topic> pendingTopics = (division != null)
+                ? departmentHeadService.getDivisionTopics(division.getId(), "PENDING", null, null, null)
+                : departmentHeadService.getDepartmentTopics(dept.getId(), "PENDING", null, null, null);
+
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
         List<Announcement> announcements = announcementService.getAnnouncementsByDepartment(dept.getId());
-        List<Council> councils = councilService.getCouncilsByDepartment(dept.getId());
+        List<Council> councils = (division != null)
+                ? councilService.getCouncilsByDivision(division.getId())
+                : councilService.getCouncilsByDepartment(dept.getId());
 
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
+        model.addAttribute("division", division);
         model.addAttribute("stats", stats);
-        model.addAttribute("pendingTopics", pendingTopics.stream().limit(5).toList());
+        model.addAttribute("pendingTopics", pendingTopics.stream().limit(8).toList());
+        model.addAttribute("totalPendingTopics", pendingTopics.size());
         model.addAttribute("periods", periods.stream().limit(4).toList());
         model.addAttribute("allPeriods", periods);
         model.addAttribute("councils", councils.stream().limit(4).toList());
@@ -112,12 +129,34 @@ public class DepartmentHeadController {
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
 
-        OffsetDateTime pStart = parseDate(propStart);
-        OffsetDateTime pEnd = parseDate(propEnd);
-        OffsetDateTime rStart = parseDate(regStart);
-        OffsetDateTime rEnd = parseDate(regEnd);
-        OffsetDateTime rDead = parseDate(revDead);
-        OffsetDateTime dDate = parseDate(defenseDate);
+        OffsetDateTime pStart = parseDate(propStart, false);
+        OffsetDateTime pEnd = parseDate(propEnd, true);
+        OffsetDateTime rStart = parseDate(regStart, false);
+        OffsetDateTime rEnd = parseDate(regEnd, true);
+        OffsetDateTime rDead = parseDate(revDead, true);
+        OffsetDateTime dDate = parseDate(defenseDate, false);
+
+        // Validation logic giữa các mốc thời gian
+        if (pStart != null && pEnd != null && pEnd.isBefore(pStart)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Hạn chót GV đề xuất phải sau ngày bắt đầu đề xuất!");
+            return "redirect:/department-head/periods";
+        }
+        if (rStart != null && rEnd != null && rEnd.isBefore(rStart)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Hạn chót SV đăng ký phải sau ngày bắt đầu đăng ký!");
+            return "redirect:/department-head/periods";
+        }
+        if (pStart != null && rStart != null && rStart.isBefore(pStart)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Thời gian SV đăng ký không được diễn ra trước thời gian GV đề xuất!");
+            return "redirect:/department-head/periods";
+        }
+        if (rEnd != null && rDead != null && rDead.isBefore(rEnd)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Hạn nộp điểm GVPB phải sau hạn chót SV đăng ký đề tài!");
+            return "redirect:/department-head/periods";
+        }
+        if (rDead != null && dDate != null && dDate.isBefore(rDead)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Ngày báo cáo Hội đồng phải diễn ra sau hạn nộp điểm GVPB!");
+            return "redirect:/department-head/periods";
+        }
 
         departmentHeadService.createPeriod(dept, name, periodType, academicYear, semester, pStart, pEnd, rStart, rEnd, rDead, dDate);
 
@@ -154,6 +193,8 @@ public class DepartmentHeadController {
             @RequestParam(value = "majorId", required = false) Long majorId,
             @RequestParam(value = "periodId", required = false) Long periodId,
             @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
             HttpSession session,
             Model model) {
 
@@ -161,20 +202,55 @@ public class DepartmentHeadController {
         if (user == null) return "redirect:/login";
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
-        List<Topic> topics = departmentHeadService.getDepartmentTopics(dept.getId(), status, majorId, periodId, keyword);
-        List<Major> majors = departmentHeadService.getDepartmentMajors(dept.getId());
+        Division division = departmentHeadService.getDivisionForUser(user);
+
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                Math.max(0, page - 1), size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+
+        org.springframework.data.domain.Page<Topic> topicsPage = (division != null)
+                ? departmentHeadService.getDivisionTopicsPaged(division.getId(), status, majorId, periodId, keyword, pageable)
+                : departmentHeadService.getDepartmentTopicsPaged(dept.getId(), status, majorId, periodId, keyword, pageable);
+
+        List<Topic> topics = topicsPage.getContent();
+
+        List<Major> majors = (division != null)
+                ? departmentHeadService.getDivisionMajors(division.getId())
+                : departmentHeadService.getDepartmentMajors(dept.getId());
+
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
-        List<Lecturer> lecturers = departmentHeadService.getLecturersInDepartment(dept.getId());
-        List<Council> councils = councilService.getCouncilsByDepartment(dept.getId());
-        Map<String, Object> stats = departmentHeadService.getDepartmentStats(dept.getId());
+        List<Lecturer> lecturers = (division != null)
+                ? departmentHeadService.getLecturersInDivision(division.getId())
+                : departmentHeadService.getLecturersInDepartment(dept.getId());
+
+        List<Council> councils = (division != null)
+                ? councilService.getCouncilsByDivision(division.getId())
+                : councilService.getCouncilsByDepartment(dept.getId());
+
+        Map<String, Object> stats = (division != null)
+                ? departmentHeadService.getDivisionStats(division.getId(), dept.getId())
+                : departmentHeadService.getDepartmentStats(dept.getId());
+
+        // Lập bản đồ thành viên từng hội đồng để tự động lọc bỏ hội đồng xung đột với GVHD
+        Map<Long, Set<Long>> councilLecturerIdsMap = new HashMap<>();
+        for (Council c : councils) {
+            List<CouncilMember> members = councilService.getCouncilMembers(c.getId());
+            Set<Long> lIds = members.stream()
+                    .filter(m -> m.getLecturer() != null)
+                    .map(m -> m.getLecturer().getId())
+                    .collect(Collectors.toSet());
+            councilLecturerIdsMap.put(c.getId(), lIds);
+        }
 
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
+        model.addAttribute("division", division);
         model.addAttribute("topics", topics);
+        model.addAttribute("topicsPage", topicsPage);
         model.addAttribute("majors", majors);
         model.addAttribute("periods", periods);
         model.addAttribute("lecturers", lecturers);
         model.addAttribute("councils", councils);
+        model.addAttribute("councilLecturerIdsMap", councilLecturerIdsMap);
         model.addAttribute("selectedStatus", status);
         model.addAttribute("selectedMajorId", majorId);
         model.addAttribute("selectedPeriodId", periodId);
@@ -189,10 +265,12 @@ public class DepartmentHeadController {
         AppUser user = getAuthenticatedDeptHead(session);
         if (user == null) return "redirect:/login";
 
-        // BUG-06 FIX: Truyền departmentId để kiểm tra cross-department
         Department dept = departmentHeadService.getDepartmentForUser(user);
+        Division division = departmentHeadService.getDivisionForUser(user);
         Topic topic = departmentHeadService.getTopicById(id);
-        boolean success = departmentHeadService.approveTopic(id, dept.getId());
+        Long divId = division != null ? division.getId() : null;
+        Long deptId = dept != null ? dept.getId() : null;
+        boolean success = departmentHeadService.approveTopic(id, divId, deptId);
 
         if (success) {
             redirectAttributes.addFlashAttribute("successMessage", "Phê duyệt thành công đề tài: '" + (topic != null ? topic.getTitle() : "") + "'!");
@@ -213,10 +291,12 @@ public class DepartmentHeadController {
         AppUser user = getAuthenticatedDeptHead(session);
         if (user == null) return "redirect:/login";
 
-        // BUG-06 FIX: Truyền departmentId để kiểm tra cross-department
         Department dept = departmentHeadService.getDepartmentForUser(user);
+        Division division = departmentHeadService.getDivisionForUser(user);
         Topic topic = departmentHeadService.getTopicById(id);
-        boolean success = departmentHeadService.rejectTopic(id, rejectionReason != null ? rejectionReason.trim() : "Chưa đạt yêu cầu", dept.getId());
+        Long divId = division != null ? division.getId() : null;
+        Long deptId = dept != null ? dept.getId() : null;
+        boolean success = departmentHeadService.rejectTopic(id, rejectionReason != null ? rejectionReason.trim() : "Chưa đạt yêu cầu", divId, deptId);
 
         if (success) {
             redirectAttributes.addFlashAttribute("errorMessage", "Đã từ chối đề tài '" + (topic != null ? topic.getTitle() : "") + "'.");
@@ -272,12 +352,21 @@ public class DepartmentHeadController {
         if (user == null) return "redirect:/login";
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
-        List<Council> councils = councilService.getCouncilsByDepartment(dept.getId());
-        List<Lecturer> lecturers = departmentHeadService.getLecturersInDepartment(dept.getId());
+        Division division = departmentHeadService.getDivisionForUser(user);
+
+        List<Council> councils = (division != null)
+                ? councilService.getCouncilsByDivision(division.getId())
+                : councilService.getCouncilsByDepartment(dept.getId());
+
+        List<Lecturer> lecturers = (division != null)
+                ? departmentHeadService.getLecturersInDivision(division.getId())
+                : departmentHeadService.getLecturersInDepartment(dept.getId());
+
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
 
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
+        model.addAttribute("division", division);
         model.addAttribute("councils", councils);
         model.addAttribute("lecturers", lecturers);
         model.addAttribute("periods", periods);
@@ -304,6 +393,7 @@ public class DepartmentHeadController {
         if (user == null) return "redirect:/login";
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
+        Division division = departmentHeadService.getDivisionForUser(user);
 
         if (name == null || name.trim().isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Tên hội đồng không được để trống!");
@@ -348,7 +438,8 @@ public class DepartmentHeadController {
         }
 
         try {
-            councilService.createCouncil(dept.getId(), periodId, code, name, location, parseDate(defenseDate), lecturerIds, roles);
+            Long divId = division != null ? division.getId() : null;
+            councilService.createCouncil(dept.getId(), divId, periodId, code, name, location, parseDate(defenseDate), lecturerIds, roles);
             redirectAttributes.addFlashAttribute("successMessage", "Thành lập Hội đồng '" + name.trim() + "' thành công với " + lecturerIds.size() + " giảng viên!");
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
@@ -488,27 +579,14 @@ public class DepartmentHeadController {
         return "redirect:/department-head/announcements";
     }
 
-    // ==================== LECTURERS & STUDENTS ====================
+    // ==================== UNIFIED PERSONNEL HUB ====================
 
-    @GetMapping("/lecturers")
-    public String listLecturers(HttpSession session, Model model) {
-        AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
-
-        Department dept = departmentHeadService.getDepartmentForUser(user);
-        List<Lecturer> lecturers = departmentHeadService.getLecturersInDepartment(dept.getId());
-
-        model.addAttribute("user", user);
-        model.addAttribute("department", dept);
-        model.addAttribute("lecturers", lecturers);
-
-        return "department-head/lecturers";
-    }
-
-    @GetMapping("/students")
-    public String listStudents(
+    @GetMapping("/personnel")
+    public String showPersonnelHub(
+            @RequestParam(value = "tab", defaultValue = "lecturers") String tab,
             @RequestParam(value = "periodId", required = false) Long periodId,
             @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "8") int size,
             HttpSession session,
             Model model) {
 
@@ -516,6 +594,7 @@ public class DepartmentHeadController {
         if (user == null) return "redirect:/login";
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
+        List<Lecturer> lecturers = departmentHeadService.getLecturersInDepartment(dept.getId());
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
 
         // Default to first period if none selected
@@ -524,17 +603,11 @@ public class DepartmentHeadController {
             effectivePeriodId = periods.get(0).getId();
         }
 
-        List<StudentGroup> allGroups = departmentHeadService.getGroupsInDepartmentAndPeriod(dept.getId(), effectivePeriodId);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                Math.max(0, page - 1), size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
 
-        // Pagination: Limit to 8 groups per page
-        int pageSize = 8;
-        int totalGroups = allGroups.size();
-        int totalPages = totalGroups > 0 ? (int) Math.ceil((double) totalGroups / pageSize) : 1;
-        int currentPage = Math.max(1, Math.min(page, totalPages));
-        int fromIndex = (currentPage - 1) * pageSize;
-        int toIndex = Math.min(fromIndex + pageSize, totalGroups);
-
-        List<StudentGroup> pagedGroups = (fromIndex < totalGroups) ? allGroups.subList(fromIndex, toIndex) : Collections.emptyList();
+        org.springframework.data.domain.Page<StudentGroup> groupsPage = departmentHeadService.getGroupsInDepartmentAndPeriodPaged(dept.getId(), effectivePeriodId, pageable);
+        List<StudentGroup> pagedGroups = groupsPage.getContent();
 
         Map<Long, List<Submission>> groupSubmissionsMap = new HashMap<>();
         List<Topic> pagedTopics = new ArrayList<>();
@@ -546,21 +619,44 @@ public class DepartmentHeadController {
         }
         Map<Long, List<Evaluation>> topicEvaluationsMap = councilService.getEvaluationsMapForTopics(pagedTopics);
 
+        // Map topic count for each lecturer
+        Map<Long, Long> lecturerTopicCountMap = new HashMap<>();
+        for (Lecturer lec : lecturers) {
+            long count = lecturerService.getTopicsByLecturer(lec).stream()
+                    .filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus()))
+                    .count();
+            lecturerTopicCountMap.put(lec.getId(), count);
+        }
+
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
+        model.addAttribute("activeTab", tab);
+        model.addAttribute("lecturers", lecturers);
+        model.addAttribute("lecturerTopicCountMap", lecturerTopicCountMap);
         model.addAttribute("groups", pagedGroups);
+        model.addAttribute("groupsPage", groupsPage);
         model.addAttribute("periods", periods);
         model.addAttribute("selectedPeriodId", effectivePeriodId);
         model.addAttribute("groupSubmissionsMap", groupSubmissionsMap);
         model.addAttribute("topicEvaluationsMap", topicEvaluationsMap);
-        model.addAttribute("currentPage", currentPage);
-        model.addAttribute("totalPages", totalPages);
-        model.addAttribute("totalGroups", totalGroups);
-        model.addAttribute("pageSize", pageSize);
-        model.addAttribute("hasPrevious", currentPage > 1);
-        model.addAttribute("hasNext", currentPage < totalPages);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", groupsPage.getTotalPages());
+        model.addAttribute("totalGroups", groupsPage.getTotalElements());
+        model.addAttribute("pageSize", size);
+        model.addAttribute("hasPrevious", groupsPage.hasPrevious());
+        model.addAttribute("hasNext", groupsPage.hasNext());
 
-        return "department-head/students";
+        return "department-head/personnel";
+    }
+
+    @GetMapping("/lecturers")
+    public String listLecturers() {
+        return "redirect:/department-head/personnel?tab=lecturers";
+    }
+
+    @GetMapping("/students")
+    public String listStudents(@RequestParam(value = "periodId", required = false) Long periodId) {
+        return "redirect:/department-head/personnel?tab=students" + (periodId != null ? "&periodId=" + periodId : "");
     }
 
     @PostMapping("/students/groups/{id}/unassign-topic")
@@ -583,11 +679,37 @@ public class DepartmentHeadController {
         return "redirect:/department-head/students" + (periodId != null ? "?periodId=" + periodId : "");
     }
 
+    @PostMapping("/groups/merge")
+    public String mergeGroups(
+            @RequestParam("sourceGroupId") Long sourceGroupId,
+            @RequestParam("targetGroupId") Long targetGroupId,
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) return "redirect:/login";
+
+        try {
+            topic_management.dto.RegistrationDtos.ApiResponse<?> res = groupRegistrationService.mergeGroups(user, sourceGroupId, targetGroupId);
+            redirectAttributes.addFlashAttribute("successMessage", res.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/department-head/students" + (periodId != null ? "?periodId=" + periodId : "");
+    }
+
     private OffsetDateTime parseDate(String dateStr) {
+        return parseDate(dateStr, false);
+    }
+
+    private OffsetDateTime parseDate(String dateStr, boolean isEndOfDay) {
         if (dateStr == null || dateStr.trim().isEmpty()) return null;
         try {
             if (dateStr.length() == 10) { // yyyy-MM-dd
-                return OffsetDateTime.parse(dateStr + "T00:00:00+07:00");
+                String timePart = isEndOfDay ? "T23:59:59+07:00" : "T00:00:00+07:00";
+                return OffsetDateTime.parse(dateStr + timePart);
             }
             if (dateStr.length() == 16) { // yyyy-MM-ddTHH:mm
                 return OffsetDateTime.parse(dateStr + ":00+07:00");

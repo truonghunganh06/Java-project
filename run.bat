@@ -66,6 +66,12 @@ if not defined JAVA_HOME (
 echo [*] Su dung JAVA_HOME: %JAVA_HOME%
 set "PATH=%JAVA_HOME%\bin;%PATH%"
 
+echo [*] Kiem tra va giai phong port 8080 neu co ung dung cu dang chay...
+for /f "tokens=5" %%p in ('netstat -aon ^| findstr ":8080" ^| findstr "LISTENING"') do (
+    echo [*] Dang dong tien trinh cu PID %%p dang dung port 8080...
+    taskkill /F /PID %%p >nul 2>&1
+)
+
 echo [*] Dang bien dich va dong goi du an...
 call mvnw.cmd package -DskipTests
 

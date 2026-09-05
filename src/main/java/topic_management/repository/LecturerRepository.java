@@ -1,6 +1,8 @@
 package topic_management.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import topic_management.entity.Lecturer;
 import java.util.List;
@@ -11,5 +13,7 @@ public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
     Optional<Lecturer> findByUserId(Long userId);
     Optional<Lecturer> findByLecturerCode(String lecturerCode);
     List<Lecturer> findByDepartmentId(Long departmentId);
+    
+    @Query("SELECT l FROM Lecturer l WHERE l.division.id = :divisionId")
+    List<Lecturer> findByDivisionId(@Param("divisionId") Long divisionId);
 }
-
