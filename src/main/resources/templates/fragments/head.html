@@ -378,7 +378,8 @@
             border-radius: 1rem;
             border: 1px solid #f1f5f9;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-            overflow: hidden;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .table-saas,
@@ -715,6 +716,15 @@
             background-color: #f1f5f9;
             border-radius: 0.75rem;
             gap: 0.25rem;
+            max-width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .segmented-control::-webkit-scrollbar {
+            display: none;
         }
 
         .segmented-tab {
@@ -779,6 +789,16 @@
             z-index: 1035;
         }
 
+        .dropdown-menu {
+            max-width: calc(100vw - 24px);
+        }
+
+        .table-saas td:last-child,
+        .saas-table td:last-child {
+            white-space: nowrap;
+        }
+
+        /* ===== MULTI-DEVICE RESPONSIVE OVERRIDES ===== */
         @media (max-width: 991.98px) {
             .saas-sidebar {
                 transform: translateX(-100%);
@@ -796,9 +816,190 @@
                 display: block;
             }
 
+            .saas-topbar {
+                padding: 0 1rem;
+            }
+
             .saas-content {
                 padding: 1.25rem 1rem;
             }
+        }
+
+        @media (max-width: 575.98px) {
+            .saas-content {
+                padding: 1rem 0.625rem;
+            }
+
+            .topbar-breadcrumb .breadcrumb-item:not(.active) {
+                display: none;
+            }
+
+            .saas-drawer-panel {
+                max-width: 100% !important;
+                width: 100vw !important;
+            }
+
+            /* Responsive student stepper on small phones */
+            .stepper-saas {
+                overflow-x: auto;
+                padding-bottom: 0.75rem;
+                scrollbar-width: none;
+                justify-content: flex-start;
+                gap: 0.5rem;
+            }
+            .stepper-saas::-webkit-scrollbar {
+                display: none;
+            }
+            .step-item {
+                min-width: 110px;
+                flex: 0 0 auto;
+            }
+            .step-line {
+                display: none;
+            }
+        }
+
+        /* ===== GLOBAL FLOATING TOAST NOTIFICATIONS ===== */
+        .saas-toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 380px;
+            width: calc(100vw - 32px);
+            pointer-events: none;
+        }
+
+        .saas-toast {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.06);
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            pointer-events: auto;
+            transform: translateX(120%);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .saas-toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .saas-toast-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+
+        .saas-toast-success .saas-toast-icon { background: #ecfdf5; color: #059669; }
+        .saas-toast-error .saas-toast-icon { background: #fef2f2; color: #dc2626; }
+        .saas-toast-warning .saas-toast-icon { background: #fffbeb; color: #d97706; }
+        .saas-toast-info .saas-toast-icon { background: #eff6ff; color: #2563eb; }
+
+        .saas-toast-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .saas-toast-title {
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 2px;
+            line-height: 1.2;
+        }
+
+        .saas-toast-message {
+            font-size: 0.75rem;
+            color: #475569;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
+        .saas-toast-close {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: 2px 4px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: color 0.15s;
+            margin-left: 2px;
+            line-height: 1;
+        }
+        .saas-toast-close:hover { color: #0f172a; }
+
+        .saas-toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            width: 100%;
+            background: currentColor;
+            opacity: 0.2;
+            transition: width linear;
+        }
+
+        /* ===== CONFIRMATION MODAL ENHANCEMENTS ===== */
+        .saas-confirm-modal .modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+            overflow: hidden;
+        }
+
+        .saas-confirm-icon-wrap {
+            width: 54px;
+            height: 54px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            margin-bottom: 0.875rem;
+        }
+        .saas-confirm-icon-wrap.danger { background: #fee2e2; color: #dc2626; }
+        .saas-confirm-icon-wrap.primary { background: #eff6ff; color: #2563eb; }
+        .saas-confirm-icon-wrap.warning { background: #fef3c7; color: #d97706; }
+
+        /* ===== FIX BOOTSTRAP MODAL SCROLLBAR COMPENSATION ===== */
+        /* Bootstrap adds padding-right to body when modal opens to compensate for
+           scrollbar disappearing. With a fixed sidebar layout this is incorrectly
+           calculated (picks up the sidebar width). Override to 0 always. */
+        body.modal-open {
+            padding-right: 0 !important;
+            overflow-y: auto !important;
+        }
+
+        /* Also prevent the topbar (sticky) from shifting right */
+        body.modal-open .saas-topbar {
+            padding-right: 1.5rem !important;
+        }
+
+        /* Sidebar brand row: align close button + brand link */
+        .sidebar-brand-row {
+            height: var(--topbar-height);
+            padding: 0 1.25rem;
+            border-bottom: 1px solid var(--sidebar-border);
+        }
+        .sidebar-brand-row .sidebar-brand {
+            height: auto;
+            padding: 0;
+            border-bottom: none;
         }
     </style>
 </head>
