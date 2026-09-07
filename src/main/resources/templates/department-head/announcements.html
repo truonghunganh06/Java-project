@@ -51,18 +51,20 @@
                          th:data-created-at="${#temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm')}"
                          th:data-period="${a.period != null ? a.period.name : ''}"
                          th:data-content="${a.content}">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <span th:if="${a.isPinned}" class="badge-pill-pending font-bold">
+                        <div class="d-flex align-items-start justify-content-between gap-2 mb-2 flex-wrap">
+                            <!-- Left: badges + title (min-w-0 allows truncation) -->
+                            <div class="d-flex align-items-center gap-2 flex-wrap" style="min-width:0; flex:1 1 0;">
+                                <span th:if="${a.isPinned}" class="badge-pill-pending font-bold flex-shrink-0">
                                     <i class="fa-solid fa-thumbtack text-amber-500 me-1"></i>Đã ghim
                                 </span>
-                                <span class="badge-pill-neutral font-medium" th:text="${a.getCategoryName()}">Kế hoạch đợt</span>
-                                <h2 class="text-base font-bold text-slate-900 mb-0 ms-1 hover:text-blue-600 transition" th:text="${a.title}">Thông báo nộp báo cáo tiến độ</h2>
+                                <span class="badge-pill-neutral font-medium flex-shrink-0" th:text="${a.getCategoryName()}">Kế hoạch đợt</span>
+                                <h2 class="text-base font-bold text-slate-900 mb-0 ms-1 hover:text-blue-600 transition text-truncate" style="min-width:0;" th:text="${a.title}">Thông báo nộp báo cáo tiến độ</h2>
                             </div>
-                            <div class="d-flex align-items-center gap-2" onclick="event.stopPropagation()">
-                                <span class="text-xs text-slate-400" th:text="${#temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                            <!-- Right: timestamp + delete (never shrinks) -->
+                            <div class="d-flex align-items-center gap-2 flex-shrink-0" onclick="event.stopPropagation()">
+                                <span class="text-xs text-slate-400 d-none d-sm-inline" th:text="${#temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
                                 <form th:action="@{/department-head/announcements/{id}/delete(id=${a.id})}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa thông báo này?');">
-                                    <button type="submit" class="btn btn-sm btn-link text-rose-500 hover:text-rose-700 p-0 ms-2" title="Xóa thông báo">
+                                    <button type="submit" class="btn btn-sm btn-link text-rose-500 hover:text-rose-700 p-0" title="Xóa thông báo">
                                         <i class="fa-regular fa-trash-can text-xs"></i>
                                     </button>
                                 </form>

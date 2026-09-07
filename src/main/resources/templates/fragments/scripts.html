@@ -37,6 +37,28 @@
             </div>
         </div>
 
+        <!-- Global Toast Container (Fixed top-right) -->
+        <div class="saas-toast-container" id="saasToastContainer"></div>
+
+        <!-- Global Confirmation Modal (Replaces browser default confirm dialogs) -->
+        <div class="modal fade saas-confirm-modal" id="globalConfirmModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+                <div class="modal-content text-center p-4">
+                    <div class="d-flex justify-content-center">
+                        <div class="saas-confirm-icon-wrap primary" id="confirmModalIconWrap">
+                            <i class="fa-solid fa-circle-question" id="confirmModalIcon"></i>
+                        </div>
+                    </div>
+                    <h5 class="modal-title fw-bold text-slate-900 text-base mb-1" id="confirmModalTitle">Xác nhận thao tác</h5>
+                    <p class="text-xs text-slate-500 mb-4" id="confirmModalMessage">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-light border rounded-xl flex-grow-1 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100" data-bs-dismiss="modal" id="confirmModalCancelBtn">Hủy</button>
+                        <button type="button" class="btn btn-sm btn-primary rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm" id="confirmModalAcceptBtn">Xác nhận</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Bootstrap 5.3 JS Bundle -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -484,10 +506,181 @@
                 if (titleSpan) titleSpan.textContent = decodeUnicode(title) || '';
             }
 
-            // Auto Initialize Tooltips & Popovers
+            // ==================== GLOBAL TOAST SYSTEM ====================
+            window.showToast = function(message, type = 'info', title = '', duration = 4000) {
+                if (!message) return;
+                const container = document.getElementById('saasToastContainer');
+                if (!container) return;
+
+                const toast = document.createElement('div');
+                toast.className = 'saas-toast saas-toast-' + type;
+
+                let iconHtml = '<i class="fa-solid fa-circle-info"></i>';
+                let defaultTitle = 'Thông báo';
+                if (type === 'success') {
+                    iconHtml = '<i class="fa-solid fa-circle-check"></i>';
+                    defaultTitle = 'Thành công';
+                } else if (type === 'error') {
+                    iconHtml = '<i class="fa-solid fa-circle-xmark"></i>';
+                    defaultTitle = 'Thông báo lỗi';
+                } else if (type === 'warning') {
+                    iconHtml = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                    defaultTitle = 'Cảnh báo';
+                }
+
+                toast.innerHTML = `
+                    <div class="saas-toast-icon">${iconHtml}</div>
+                    <div class="saas-toast-body">
+                        <div class="saas-toast-title">${title || defaultTitle}</div>
+                        <div class="saas-toast-message">${decodeUnicode(message)}</div>
+                    </div>
+                    <button type="button" class="saas-toast-close" aria-label="Close">&times;</button>
+                    <div class="saas-toast-progress" style="width: 100%;"></div>
+                `;
+
+                container.appendChild(toast);
+
+                // Animate in
+                requestAnimationFrame(() => {
+                    toast.classList.add('show');
+                    const progress = toast.querySelector('.saas-toast-progress');
+                    if (progress) {
+                        progress.style.transitionDuration = duration + 'ms';
+                        progress.style.width = '0%';
+                    }
+                });
+
+                function removeToast() {
+                    toast.classList.remove('show');
+                    setTimeout(() => { toast.remove(); }, 300);
+                }
+
+                const timer = setTimeout(removeToast, duration);
+
+                const closeBtn = toast.querySelector('.saas-toast-close');
+                if (closeBtn) {
+                    closeBtn.onclick = function() {
+                        clearTimeout(timer);
+                        removeToast();
+                    };
+                }
+            };
+
+            // Modern replacement for window.alert()
+            window.alert = function(msg) {
+                window.showToast(msg, 'warning', 'Cảnh báo');
+            };
+
+            // ==================== GLOBAL CONFIRMATION MODAL ====================
+            window.showConfirmDialog = function(options) {
+                const modalEl = document.getElementById('globalConfirmModal');
+                if (!modalEl) {
+                    if (options.onConfirm) options.onConfirm();
+                    return;
+                }
+
+                const titleEl = document.getElementById('confirmModalTitle');
+                const msgEl = document.getElementById('confirmModalMessage');
+                const iconWrap = document.getElementById('confirmModalIconWrap');
+                const iconEl = document.getElementById('confirmModalIcon');
+                const acceptBtn = document.getElementById('confirmModalAcceptBtn');
+                const cancelBtn = document.getElementById('confirmModalCancelBtn');
+
+                const isDanger = options.type === 'danger';
+                titleEl.textContent = options.title || 'Xác nhận thao tác';
+                msgEl.textContent = decodeUnicode(options.message) || 'Bạn có chắc chắn muốn tiếp tục?';
+
+                // Icon and Color Styling
+                iconWrap.className = 'saas-confirm-icon-wrap ' + (isDanger ? 'danger' : 'primary');
+                iconEl.className = isDanger ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-question';
+
+                acceptBtn.className = isDanger 
+                    ? 'btn btn-sm btn-danger rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm'
+                    : 'btn btn-sm btn-primary rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm';
+                acceptBtn.textContent = options.confirmText || (isDanger ? 'Đồng ý' : 'Xác nhận');
+                if (cancelBtn) cancelBtn.textContent = options.cancelText || 'Hủy';
+
+                const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+                // Clone accept button to clean previous event listeners
+                const newAcceptBtn = acceptBtn.cloneNode(true);
+                acceptBtn.parentNode.replaceChild(newAcceptBtn, acceptBtn);
+
+                newAcceptBtn.onclick = function() {
+                    bsModal.hide();
+                    if (typeof options.onConfirm === 'function') {
+                        options.onConfirm();
+                    }
+                };
+
+                bsModal.show();
+            };
+
+            // ==================== AUTO INTERCEPT FORM CONFIRMS ====================
+            // Intercepts all forms using onsubmit="return confirm('...')" and transforms into sleek modern modal
+            document.addEventListener('submit', function(e) {
+                const form = e.target;
+                if (!form || form._isConfirmed) return;
+
+                const onsubmitAttr = form.getAttribute('onsubmit') || '';
+                let confirmMsg = null;
+                if (onsubmitAttr.includes('confirm(')) {
+                    const match = onsubmitAttr.match(/confirm\(\s*['"](.*?)['"]\s*\)/);
+                    if (match && match[1]) {
+                        confirmMsg = match[1].replace(/\\'/g, "'").replace(/\\"/g, '"');
+                    }
+                } else if (form.dataset.confirm) {
+                    confirmMsg = form.dataset.confirm;
+                }
+
+                if (confirmMsg) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+
+                    const isDanger = /xóa|từ chối|hủy|giải tán|cảnh báo|delete|reject|dissolve|cancel|unassign/i.test(confirmMsg);
+
+                    window.showConfirmDialog({
+                        title: isDanger ? 'Xác nhận hành động' : 'Xác nhận phê duyệt',
+                        message: confirmMsg,
+                        type: isDanger ? 'danger' : 'primary',
+                        confirmText: isDanger ? 'Đồng ý thực hiện' : 'Xác nhận',
+                        onConfirm: function() {
+                            form._isConfirmed = true;
+                            form.submit();
+                        }
+                    });
+                }
+            }, true);
+
+            // ==================== AUTO FLASH MESSAGE DETECTOR ====================
+            function detectAndShowFlashMessages() {
+                const alerts = document.querySelectorAll('.alert-success, .alert-danger, .alert-warning, .alert-info');
+                alerts.forEach(function(alert) {
+                    // Skip if inside modal, drawer, or already hidden
+                    if (alert.closest('.modal') || alert.closest('.saas-drawer-panel') || alert.classList.contains('saas-toast')) return;
+
+                    let type = 'info';
+                    if (alert.classList.contains('alert-success')) type = 'success';
+                    else if (alert.classList.contains('alert-danger')) type = 'error';
+                    else if (alert.classList.contains('alert-warning')) type = 'warning';
+
+                    const text = alert.innerText.trim();
+                    if (text) {
+                        window.showToast(text, type);
+                        // Hide ugly layout-pushing flash alert
+                        alert.style.display = 'none';
+                    }
+                });
+            }
+
+            // Auto Initialize Tooltips, Flash detection & Top Loader
             document.addEventListener('DOMContentLoaded', function () {
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                tooltipTriggerList.forEach(function (el) { new bootstrap.Tooltip(el); });
+                try {
+                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                    tooltipTriggerList.forEach(function (el) { new bootstrap.Tooltip(el); });
+                } catch (e) {}
+
+                detectAndShowFlashMessages();
             });
         </script>
     </div>
