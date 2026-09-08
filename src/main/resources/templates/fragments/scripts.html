@@ -78,6 +78,93 @@
                 return str;
             }
 
+            function closeSelectMenus(except) {
+                document.querySelectorAll('.custom-select-wrap.is-open').forEach(function (wrap) {
+                    if (wrap !== except) {
+                        wrap.classList.remove('is-open');
+                        const trigger = wrap.querySelector('.custom-select-trigger');
+                        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+
+            function createCustomSelect(select) {
+                if (select.dataset.customSelect === 'true' || select.disabled) return;
+
+                const hasPeriodInUrl = new URLSearchParams(window.location.search).has('periodId');
+                if (select.name === 'periodId' && !hasPeriodInUrl && select.querySelector('option[value=""]')) {
+                    select.value = '';
+                }
+
+                const wrap = document.createElement('div');
+                wrap.className = 'custom-select-wrap';
+                wrap.style.width = select.style.width || '100%';
+                select.parentNode.insertBefore(wrap, select);
+                wrap.appendChild(select);
+                select.classList.add('custom-select-source');
+                select.dataset.customSelect = 'true';
+
+                const trigger = document.createElement('button');
+                trigger.type = 'button';
+                trigger.className = 'custom-select-trigger';
+                trigger.setAttribute('aria-haspopup', 'listbox');
+                trigger.setAttribute('aria-expanded', 'false');
+                wrap.appendChild(trigger);
+
+                const menu = document.createElement('ul');
+                menu.className = 'custom-select-menu';
+                menu.setAttribute('role', 'listbox');
+                wrap.appendChild(menu);
+
+                function sync() {
+                    const selected = select.options[select.selectedIndex];
+                    const label = selected ? selected.textContent.trim() : '';
+                    trigger.textContent = label;
+                    trigger.title = label;
+                    menu.querySelectorAll('.custom-select-option').forEach(function (item) {
+                        item.classList.toggle('is-selected', item.dataset.value === select.value);
+                    });
+                }
+
+                Array.from(select.options).forEach(function (option) {
+                    const item = document.createElement('li');
+                    item.className = 'custom-select-option' + (!option.value ? ' is-placeholder' : '');
+                    item.dataset.value = option.value;
+                    item.textContent = option.textContent.trim();
+                    item.setAttribute('role', 'option');
+                    item.addEventListener('click', function () {
+                        select.value = option.value;
+                        select.dispatchEvent(new Event('change', { bubbles: true }));
+                        sync();
+                        wrap.classList.remove('is-open');
+                        trigger.setAttribute('aria-expanded', 'false');
+                    });
+                    menu.appendChild(item);
+                });
+
+                trigger.addEventListener('click', function () {
+                    const shouldOpen = !wrap.classList.contains('is-open');
+                    closeSelectMenus(wrap);
+                    wrap.classList.toggle('is-open', shouldOpen);
+                    trigger.setAttribute('aria-expanded', String(shouldOpen));
+                });
+
+                select.addEventListener('change', sync);
+                sync();
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('select.form-select').forEach(createCustomSelect);
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!event.target.closest('.custom-select-wrap')) closeSelectMenus();
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') closeSelectMenus();
+            });
+
             // Sidebar Mobile Toggle
             function toggleSidebar() {
                 const sidebar = document.getElementById('saasSidebar');
