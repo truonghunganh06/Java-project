@@ -85,7 +85,7 @@
                     </div>
 
                     <!-- Dropdowns & Quick Search -->
-                    <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 max-w-2xl justify-content-xl-end">
+                    <div class="topics-filter-controls d-flex align-items-center gap-2 flex-grow-1 justify-content-xl-end">
                         <div class="relative flex-grow-1" style="min-width: 200px;">
                             <input type="text" name="keyword"
                                 class="form-control form-control-sm rounded-xl pl-8 text-xs"
@@ -194,7 +194,7 @@
                                             </span>
                                             <button th:if="${t.reviewer == null && t.status == 'APPROVED'}"
                                                 type="button"
-                                                class="btn btn-xs btn-outline-primary rounded-lg text-xs py-0.5 px-1.5"
+                                                class="topic-assignment-btn btn btn-xs btn-outline-primary rounded-lg text-xs py-0.5 px-1.5"
                                                 data-bs-toggle="modal"
                                                 th:data-bs-target="'#assignReviewerModal-' + ${t.id}">
                                                 <i class="fa-solid fa-user-plus text-xs"></i> Phân GVPB
@@ -210,7 +210,7 @@
                                                 HĐ: Hội đồng KTPM 01
                                             </span>
                                             <button th:if="${t.council == null && t.status == 'APPROVED'}" type="button"
-                                                class="btn btn-xs btn-outline-purple rounded-lg text-xs py-0.5 px-1.5"
+                                                class="topic-assignment-btn btn btn-xs btn-outline-purple rounded-lg text-xs py-0.5 px-1.5"
                                                 style="color: #7c3aed; border-color: #ddd6fe;" data-bs-toggle="modal"
                                                 th:data-bs-target="'#assignCouncilModal-' + ${t.id}">
                                                 <i class="fa-solid fa-users text-xs"></i> Phân HĐ
