@@ -157,7 +157,60 @@
                 </div>
             </div>
 
-            <!-- 2. MAIN BALANCED 2-COLUMN GRID (65% Left Stream - 35% Right Stream) -->
+            <!-- 2. INTERACTIVE ANALYTICS & CHARTS ROW (Chart.js) -->
+            <div class="row g-4 mb-4">
+                <!-- Chart 1: Grade Distribution (Doughnut) -->
+                <div class="col-12 col-lg-5">
+                    <div class="saas-card p-4 h-100 rounded-2xl bg-white border border-slate-100 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="text-sm font-bold text-slate-900 mb-0">Phân bố Phổ điểm</h6>
+                                <span class="text-xs text-slate-400">Tỉ lệ xếp loại kết quả toàn bộ môn</span>
+                            </div>
+                            <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200">
+                                <i class="fa-solid fa-chart-pie me-1"></i> Trực quan
+                            </span>
+                        </div>
+                        <div class="position-relative d-flex justify-content-center align-items-center" style="height: 200px;">
+                            <canvas id="gradeDistributionChart"></canvas>
+                        </div>
+                        <div class="row g-2 mt-2 pt-2 border-t border-slate-100 text-center text-xs">
+                            <div class="col-4">
+                                <span class="text-slate-400 d-block">Xuất sắc</span>
+                                <strong class="text-emerald-600 font-bold" th:text="${countExcellent}">0</strong>
+                            </div>
+                            <div class="col-4">
+                                <span class="text-slate-400 d-block">Giỏi / Khá</span>
+                                <strong class="text-blue-600 font-bold" th:text="${countGood + countFair}">0</strong>
+                            </div>
+                            <div class="col-4">
+                                <span class="text-slate-400 d-block">TB / Chưa đạt</span>
+                                <strong class="text-amber-600 font-bold" th:text="${countAverage + countFailed}">0</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Topic Pipeline & Defense Status (Bar) -->
+                <div class="col-12 col-lg-7">
+                    <div class="saas-card p-4 h-100 rounded-2xl bg-white border border-slate-100 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="text-sm font-bold text-slate-900 mb-0">Tiến độ Hoàn thành Đề tài</h6>
+                                <span class="text-xs text-slate-400">Quy trình từ Duyệt -> Phản biện -> Hội đồng -> Công bố</span>
+                            </div>
+                            <a th:href="@{/department-head/results}" class="btn btn-sm btn-light border text-xs rounded-xl px-2.5 py-1 text-slate-700">
+                                Xem kết quả &rarr;
+                            </a>
+                        </div>
+                        <div class="position-relative" style="height: 230px;">
+                            <canvas id="topicPipelineChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. MAIN BALANCED 2-COLUMN GRID (65% Left Stream - 35% Right Stream) -->
             <div class="row g-4 mb-4">
 
                 <!-- Left Column (col-12 col-xl-8): Main Operational Stream -->
@@ -568,6 +621,78 @@
 
     <!-- Reusable Slide-over Topic Drawer Fragment -->
     <div th:replace="~{fragments/drawer :: topicDrawer}"></div>
+
+    <!-- Chart.js CDN & Chart Init -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const excellent = /*[[${countExcellent}]]*/ 0;
+            const good = /*[[${countGood}]]*/ 0;
+            const fair = /*[[${countFair}]]*/ 0;
+            const average = /*[[${countAverage}]]*/ 0;
+            const failed = /*[[${countFailed}]]*/ 0;
+            const ungraded = /*[[${countUngraded}]]*/ 0;
+
+            const approvedTopics = /*[[${stats != null ? stats['approvedTopics'] : 0}]]*/ 0;
+            const pendingTopics = /*[[${totalPendingTopics != null ? totalPendingTopics : 0}]]*/ 0;
+            const withReviewer = /*[[${countWithReviewer}]]*/ 0;
+            const withCouncil = /*[[${countWithCouncil}]]*/ 0;
+            const finalized = /*[[${countFinalized}]]*/ 0;
+
+            // Chart 1: Grade Doughnut
+            const gradeCtx = document.getElementById('gradeDistributionChart');
+            if (gradeCtx) {
+                new Chart(gradeCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Xuất sắc (>=9)', 'Giỏi (8-8.9)', 'Khá (6.5-7.9)', 'Trung bình (5-6.4)', 'Không đạt (<5)', 'Chưa chấm'],
+                        datasets: [{
+                            data: [excellent, good, fair, average, failed, ungraded],
+                            backgroundColor: ['#10b981', '#3b82f6', '#06b6d4', '#f59e0b', '#ef4444', '#cbd5e1'],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+                        },
+                        cutout: '70%'
+                    }
+                });
+            }
+
+            // Chart 2: Pipeline Bar
+            const pipelineCtx = document.getElementById('topicPipelineChart');
+            if (pipelineCtx) {
+                new Chart(pipelineCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Chờ duyệt', 'Đã duyệt', 'Đã gán GVPB', 'Đã gán Hội đồng', 'Đã công bố điểm'],
+                        datasets: [{
+                            label: 'Số lượng đề tài',
+                            data: [pendingTopics, approvedTopics, withReviewer, withCouncil, finalized],
+                            backgroundColor: ['#f59e0b', '#10b981', '#6366f1', '#8b5cf6', '#2563eb'],
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#f1f5f9' } },
+                            x: { ticks: { font: { size: 10 } }, grid: { display: false } }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 
     <!-- Scripts Fragment -->
     <div th:replace="~{fragments/scripts :: scripts}"></div>

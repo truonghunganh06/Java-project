@@ -64,6 +64,10 @@
                             <option value="pending">Đã có nhóm - Chưa có điểm</option>
                             <option value="unassigned">Chưa có nhóm</option>
                         </select>
+                        <a th:href="@{/department-head/results/export-csv(periodId=${selectedPeriodId})}" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold inline-flex items-center gap-1.5 shadow-xs" title="Tải file Excel/CSV bảng điểm tổng kết">
+                            <i class="fa-solid fa-file-excel text-emerald-400"></i>
+                            <span>Xuất Excel/CSV</span>
+                        </a>
                         <a th:href="@{/department-head/results}" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2.5 text-slate-600 hover:bg-slate-100" title="Đặt lại bộ lọc">
                             <i class="fa-solid fa-rotate-left text-xs"></i>
                         </a>
@@ -259,6 +263,19 @@
                                                         </div>
                                                     </div>
 
+                                                    <!-- Discrepancy Alert Banner if max - min > 2.0 -->
+                                                    <div th:with="discrepancy=${topicEvaluationsMap != null && topicEvaluationsMap.get(t.id) != null ? T(topic_management.entity.Evaluation).calculateCouncilDiscrepancy(topicEvaluationsMap.get(t.id)) : 0.0}"
+                                                         th:if="${discrepancy > 2.0}"
+                                                         class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 d-flex align-items-center gap-2">
+                                                        <i class="fa-solid fa-triangle-exclamation text-amber-600 text-sm"></i>
+                                                        <div>
+                                                            <strong class="font-semibold">Cảnh báo độ lệch điểm Hội đồng:</strong>
+                                                            <span>Chênh lệch giữa điểm cao nhất và thấp nhất là </span>
+                                                            <strong class="font-bold font-mono" th:text="${discrepancy} + ' đ'"></strong>
+                                                            <span> (&gt; 2.0 đ). Hội đồng cần xem xét hội ý trước khi duyệt công bố!</span>
+                                                        </div>
+                                                    </div>
+
                                                     <!-- List of individual evaluation sheets -->
                                                     <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mt-3 mb-2">Các phiếu đánh giá thành phần:</h6>
                                                     <div class="d-flex flex-column gap-2.5">
@@ -279,7 +296,12 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="modal-footer border-t border-slate-100 p-3">
+                                                <div class="modal-footer border-t border-slate-100 p-3 d-flex justify-content-between">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary rounded-xl px-3 text-xs font-semibold d-inline-flex align-items-center gap-1.5" 
+                                                            th:onclick="'printTopicReport(' + ${t.id} + ')'">
+                                                        <i class="fa-solid fa-file-pdf text-rose-600"></i>
+                                                        <span>In / Xuất PDF Phiếu Đánh Giá</span>
+                                                    </button>
                                                     <button type="button" class="btn btn-sm btn-light border rounded-xl px-4 text-xs font-medium" data-bs-dismiss="modal">Đóng</button>
                                                 </div>
                                             </div>
@@ -385,6 +407,113 @@
             <div id="drawerActionButtons" class="d-flex align-items-center gap-2"></div>
         </div>
     </div>
+
+    <script>
+        function printTopicReport(topicId) {
+            const modal = document.getElementById('evalDetailModal-' + topicId);
+            if (!modal) return;
+
+            const printWindow = window.open('', '_blank', 'width=850,height=900');
+            const topicTitle = modal.querySelector('.modal-header span')?.innerText || 'Đề tài';
+            const finalScore = modal.querySelector('.text-xl.font-black')?.innerText || '--';
+            const evalItems = modal.querySelectorAll('.modal-body .d-flex.flex-column > div');
+
+            let evalHtml = '';
+            evalItems.forEach(item => {
+                const type = item.querySelector('.badge-pill-neutral')?.innerText || 'Đánh giá';
+                const name = item.querySelector('strong')?.innerText || 'Giảng viên';
+                const score = item.querySelector('.text-sm.font-mono')?.innerText || '--';
+                const comment = item.querySelector('p')?.innerText || '';
+
+                evalHtml += `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 8px 12px; font-weight: 600;">${type}</td>
+                        <td style="padding: 8px 12px;">${name}</td>
+                        <td style="padding: 8px 12px; text-align: center; font-weight: bold; font-family: monospace;">${score}</td>
+                        <td style="padding: 8px 12px; font-style: italic; color: #475569;">${comment}</td>
+                    </tr>
+                `;
+            });
+
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="vi">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Biên bản đánh giá - \${topicTitle}</title>
+                    <style>
+                        body { font-family: 'Times New Roman', serif; margin: 40px; color: #111; line-height: 1.5; font-size: 13pt; }
+                        .header-top { display: flex; justify-content: space-between; margin-bottom: 20px; }
+                        .header-col { text-align: center; }
+                        .title { font-size: 16pt; font-weight: bold; text-transform: uppercase; margin: 20px 0 10px 0; text-align: center; }
+                        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+                        th, td { border: 1px solid #333; padding: 8px; font-size: 11pt; }
+                        th { background: #f0f0f0; }
+                        .signatures { display: flex; justify-content: space-between; margin-top: 40px; text-align: center; }
+                        .sign-col { width: 45%; }
+                        @media print { body { margin: 15mm; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header-top">
+                        <div class="header-col">
+                            <strong>BỘ GIÁO DỤC VÀ ĐÀO TẠO</strong><br>
+                            TRƯỜNG ĐẠI HỌC CÔNG NGHỆ<br>
+                            <strong>KHOA CÔNG NGHỆ THÔNG TIN</strong>
+                        </div>
+                        <div class="header-col">
+                            <strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br>
+                            <strong>Độc lập - Tự do - Hạnh phúc</strong><br>
+                            ------------------------
+                        </div>
+                    </div>
+                    
+                    <div class="title">BIÊN BẢN ĐÁNH GIÁ & CHẤM ĐIỂM ĐỀ TÀI / KHÓA LUẬN</div>
+                    
+                    <p><strong>Tên đề tài:</strong> \${topicTitle}</p>
+                    <p><strong>Điểm tổng kết cuối cùng:</strong> <span style="font-size: 14pt; font-weight: bold; color: #1d4ed8;">\${finalScore}</span> (Thang điểm 10)</p>
+
+                    <h4 style="margin-top: 20px; margin-bottom: 5px;">BẢNG TỔNG HỢP PHIẾU ĐÁNH GIÁ CHI TIẾT:</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">Vị trí đánh giá</th>
+                                <th style="width: 25%;">Giảng viên chấm</th>
+                                <th style="width: 15%;">Điểm số</th>
+                                <th style="width: 35%;">Nhận xét & Góp ý</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            \${evalHtml}
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top: 30px; text-align: right; font-style: italic;">
+                        Ngày ..... tháng ..... năm 2026
+                    </div>
+
+                    <div class="signatures">
+                        <div class="sign-col">
+                            <strong>GIẢNG VIÊN HƯỚNG DẪN / PHẢN BIỆN</strong><br>
+                            <i>(Ký và ghi rõ họ tên)</i>
+                        </div>
+                        <div class="sign-col">
+                            <strong>TRƯỞNG BỘ MÔN / CHỦ TỊCH HỘI ĐỒNG</strong><br>
+                            <i>(Ký và ghi rõ họ tên)</i>
+                        </div>
+                    </div>
+
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+    </script>
 
     <!-- Scripts Fragment -->
     <div th:replace="~{fragments/scripts :: scripts}"></div>

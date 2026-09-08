@@ -1320,6 +1320,162 @@
             border-radius: 12px;
             font-size: 0.9375rem;
         }
+
+        /* ==================== DARK MODE ==================== */
+        [data-theme="dark"] {
+            --bg-body: #090d16;
+            --sidebar-bg: #0f172a;
+            --sidebar-border: #1e293b;
+            --sidebar-text: #94a3b8;
+            --sidebar-text-active: #60a5fa;
+            --sidebar-hover: #1e293b;
+            --sidebar-active-bg: #1e293b;
+
+            --topbar-bg: #0f172a;
+            --text-main: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #1e293b;
+            --border-light: #1e293b;
+            --card-bg: #0f172a;
+        }
+
+        [data-theme="dark"] body {
+            background-color: #090d16;
+            color: #f8fafc;
+        }
+
+        [data-theme="dark"] .saas-card,
+        [data-theme="dark"] .saas-topbar,
+        [data-theme="dark"] .saas-sidebar,
+        [data-theme="dark"] .modal-content,
+        [data-theme="dark"] .saas-drawer-content {
+            background-color: #0f172a !important;
+            border-color: #1e293b !important;
+            color: #f8fafc !important;
+        }
+
+        [data-theme="dark"] .table-saas thead th {
+            background-color: #1e293b !important;
+            color: #94a3b8 !important;
+            border-color: #334155 !important;
+        }
+
+        [data-theme="dark"] .table-saas tbody tr {
+            background-color: #0f172a !important;
+            border-color: #1e293b !important;
+        }
+
+        [data-theme="dark"] .table-saas tbody tr:hover {
+            background-color: #1e293b !important;
+        }
+
+        [data-theme="dark"] .table-saas tbody td {
+            color: #cbd5e1 !important;
+            border-color: #1e293b !important;
+        }
+
+        [data-theme="dark"] .text-slate-900 {
+            color: #f8fafc !important;
+        }
+
+        [data-theme="dark"] .text-slate-800,
+        [data-theme="dark"] .text-slate-700 {
+            color: #e2e8f0 !important;
+        }
+
+        [data-theme="dark"] .text-slate-500,
+        [data-theme="dark"] .text-slate-600 {
+            color: #94a3b8 !important;
+        }
+
+        [data-theme="dark"] .bg-slate-50,
+        [data-theme="dark"] .bg-slate-100 {
+            background-color: #1e293b !important;
+        }
+
+        [data-theme="dark"] .border-slate-100,
+        [data-theme="dark"] .border-slate-200 {
+            border-color: #334155 !important;
+        }
+
+        [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+
+        [data-theme="dark"] .btn-light {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+
+        [data-theme="dark"] .btn-light:hover {
+            background-color: #334155 !important;
+        }
+
+        /* ==================== TOAST NOTIFICATIONS ==================== */
+        .toast-container-top-right {
+            position: fixed;
+            top: 1.25rem;
+            right: 1.25rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            pointer-events: none;
+        }
+
+        .saas-toast {
+            pointer-events: auto;
+            min-width: 320px;
+            max-width: 420px;
+            background: #ffffff;
+            border-radius: 1rem;
+            padding: 0.875rem 1.25rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        [data-theme="dark"] .saas-toast {
+            background: #1e293b;
+            border-color: #334155;
+            color: #f8fafc;
+        }
+
+        @keyframes toastSlideIn {
+            from { opacity: 0; transform: translateX(40px) scale(0.95); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
+        }
+
+        /* ==================== PRINT / PDF EXPORT STYLES ==================== */
+        @media print {
+            .saas-sidebar, .saas-topbar, .btn, .modal-footer, header, aside, .no-print {
+                display: none !important;
+            }
+            .saas-main-wrapper {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            .saas-content {
+                padding: 0 !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-size: 12pt;
+            }
+        }
     </style>
 </head>
 

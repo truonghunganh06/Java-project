@@ -636,13 +636,13 @@ public class ThesisWorkflowIntegrationTest {
         boolean evalCouncil = councilService.submitEvaluation(testTopic.getId(), gvCouncil1.getId(), "COUNCIL", 9.0, "Bảo vệ tự tin, trả lời xuất sắc các câu hỏi chuyên sâu.");
         assertTrue(evalCouncil, "Thành viên Hội đồng chấm điểm bảo vệ phải thành công");
 
-        // 5. Kiểm tra tính toán điểm tổng kết tự động (LOẠI BỎ HOÀN TOÀN ĐIỂM GVHD):
-        // Weighted Avg = Reviewer (8.5 * 0.40) + Council (9.0 * 0.60) = 3.40 + 5.40 = 8.80
+        // 5. Kiểm tra tính toán điểm tổng kết tự động (TRUNG BÌNH CỘNG 3 TRẠM: GVHD + GVPB + HỘI ĐỒNG):
+        // Arithmetic Mean = (GVHD 9.0 + Reviewer 8.5 + Council 9.0) / 3 = 26.5 / 3 = 8.8333... -> 8.83
         Topic topicWithScore = lecturerService.getTopicById(testTopic.getId());
         assertNotNull(topicWithScore.getFinalScore(), "Điểm tổng kết finalScore phải được tự động tính");
-        assertEquals(8.80, topicWithScore.getFinalScore(), 0.05, "Điểm tổng kết phải đúng chuẩn 40% Phản biện + 60% Hội đồng (8.80)");
-        assertEquals(9.0, topicWithScore.getAdvisorScore(), 0.05, "Điểm quá trình GVHD phải được lưu độc lập ở advisorScore");
-        System.out.println("-> [ĐẠT CHUẨN] Điểm tổng kết bảo vệ (40% GVPB + 60% HĐ): " + topicWithScore.getFinalScore() + " / 10.0 (Điểm GVHD lưu độc lập: " + topicWithScore.getAdvisorScore() + ")");
+        assertEquals(8.83, topicWithScore.getFinalScore(), 0.01, "Điểm tổng kết phải đúng chuẩn TBC 3 trạm (GVHD + GVPB + Hội đồng) = 8.83");
+        assertEquals(9.0, topicWithScore.getAdvisorScore(), 0.01, "Điểm quá trình GVHD phải được lưu ở advisorScore");
+        System.out.println("-> [ĐẠT CHUẨN] Điểm tổng kết bảo vệ (TBC 3 trạm): " + topicWithScore.getFinalScore() + " / 10.0 (Điểm GVHD: " + topicWithScore.getAdvisorScore() + ")");
     }
 
     @Test

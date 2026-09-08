@@ -120,4 +120,16 @@ public class Evaluation {
     public void setEvaluatedAt(OffsetDateTime evaluatedAt) {
         this.evaluatedAt = evaluatedAt;
     }
+
+    public static Double calculateCouncilDiscrepancy(java.util.List<Evaluation> evals) {
+        if (evals == null || evals.isEmpty()) return 0.0;
+        java.util.List<Double> scores = evals.stream()
+                .filter(e -> "COUNCIL".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null)
+                .map(Evaluation::getScore)
+                .toList();
+        if (scores.size() < 2) return 0.0;
+        double max = scores.stream().max(Double::compare).orElse(0.0);
+        double min = scores.stream().min(Double::compare).orElse(0.0);
+        return java.math.BigDecimal.valueOf(max - min).setScale(2, java.math.RoundingMode.HALF_UP).doubleValue();
+    }
 }

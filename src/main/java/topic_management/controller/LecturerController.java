@@ -322,9 +322,16 @@ public class LecturerController {
         List<Topic> reviewerTopics = lecturerService.getReviewerTopics(lecturer);
         List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
 
+        Map<Long, Evaluation> existingEvaluationsMap = new HashMap<>();
+        for (Topic t : reviewerTopics) {
+            councilService.getEvaluation(t.getId(), lecturer.getId(), "REVIEWER")
+                    .ifPresent(e -> existingEvaluationsMap.put(t.getId(), e));
+        }
+
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("reviewerTopics", reviewerTopics);
+        model.addAttribute("existingEvaluationsMap", existingEvaluationsMap);
         model.addAttribute("periods", periods);
 
         return "lecturer/reviews";
@@ -365,14 +372,21 @@ public class LecturerController {
         List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
 
         Map<Long, List<Topic>> councilTopicsMap = new HashMap<>();
+        Map<Long, Evaluation> existingEvaluationsMap = new HashMap<>();
         for (Council c : councils) {
-            councilTopicsMap.put(c.getId(), councilService.getTopicsInCouncil(c.getId()));
+            List<Topic> topics = councilService.getTopicsInCouncil(c.getId());
+            councilTopicsMap.put(c.getId(), topics);
+            for (Topic t : topics) {
+                councilService.getEvaluation(t.getId(), lecturer.getId(), "COUNCIL")
+                        .ifPresent(e -> existingEvaluationsMap.put(t.getId(), e));
+            }
         }
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("councils", councils);
         model.addAttribute("councilTopicsMap", councilTopicsMap);
+        model.addAttribute("existingEvaluationsMap", existingEvaluationsMap);
         model.addAttribute("periods", periods);
 
         return "lecturer/councils";

@@ -760,8 +760,37 @@
                 });
             }
 
-            // Auto Initialize Tooltips, Flash detection & Top Loader
+            // ==================== DARK / LIGHT THEME TOGGLE ====================
+            function initTheme() {
+                const savedTheme = localStorage.getItem('topichub-theme') || 'light';
+                setTheme(savedTheme);
+            }
+
+            function setTheme(theme) {
+                const icon = document.getElementById('themeToggleIcon');
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('topichub-theme', 'dark');
+                    if (icon) {
+                        icon.className = 'fa-solid fa-sun text-amber-400';
+                    }
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('topichub-theme', 'light');
+                    if (icon) {
+                        icon.className = 'fa-regular fa-moon text-secondary';
+                    }
+                }
+            }
+
+            function toggleTheme() {
+                const current = localStorage.getItem('topichub-theme') || 'light';
+                setTheme(current === 'dark' ? 'light' : 'dark');
+            }
+
+            // Auto Initialize Tooltips, Flash detection, Theme & Top Loader
             document.addEventListener('DOMContentLoaded', function () {
+                initTheme();
                 try {
                     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
                     tooltipTriggerList.forEach(function (el) { new bootstrap.Tooltip(el); });

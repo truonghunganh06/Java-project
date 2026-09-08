@@ -78,6 +78,21 @@ public class DepartmentHeadController {
                 ? councilService.getCouncilsByDivision(division.getId())
                 : councilService.getCouncilsByDepartment(dept.getId());
 
+        List<Topic> allDeptTopics = (division != null)
+                ? departmentHeadService.getDivisionTopics(division.getId(), null, null, null, null)
+                : departmentHeadService.getDepartmentTopics(dept.getId(), null, null, null, null);
+
+        long countExcellent = allDeptTopics.stream().filter(t -> t.getFinalScore() != null && t.getFinalScore() >= 9.0).count();
+        long countGood = allDeptTopics.stream().filter(t -> t.getFinalScore() != null && t.getFinalScore() >= 8.0 && t.getFinalScore() < 9.0).count();
+        long countFair = allDeptTopics.stream().filter(t -> t.getFinalScore() != null && t.getFinalScore() >= 6.5 && t.getFinalScore() < 8.0).count();
+        long countAverage = allDeptTopics.stream().filter(t -> t.getFinalScore() != null && t.getFinalScore() >= 5.0 && t.getFinalScore() < 6.5).count();
+        long countFailed = allDeptTopics.stream().filter(t -> t.getFinalScore() != null && t.getFinalScore() < 5.0).count();
+        long countUngraded = allDeptTopics.stream().filter(t -> t.getFinalScore() == null && "APPROVED".equalsIgnoreCase(t.getStatus())).count();
+
+        long countWithReviewer = allDeptTopics.stream().filter(t -> t.getReviewer() != null).count();
+        long countWithCouncil = allDeptTopics.stream().filter(t -> t.getCouncil() != null).count();
+        long countFinalized = allDeptTopics.stream().filter(t -> Boolean.TRUE.equals(t.getIsFinalized())).count();
+
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
         model.addAttribute("division", division);
@@ -88,6 +103,16 @@ public class DepartmentHeadController {
         model.addAttribute("allPeriods", periods);
         model.addAttribute("councils", councils.stream().limit(4).toList());
         model.addAttribute("announcements", announcements.stream().limit(3).toList());
+
+        model.addAttribute("countExcellent", countExcellent);
+        model.addAttribute("countGood", countGood);
+        model.addAttribute("countFair", countFair);
+        model.addAttribute("countAverage", countAverage);
+        model.addAttribute("countFailed", countFailed);
+        model.addAttribute("countUngraded", countUngraded);
+        model.addAttribute("countWithReviewer", countWithReviewer);
+        model.addAttribute("countWithCouncil", countWithCouncil);
+        model.addAttribute("countFinalized", countFinalized);
 
         return "department-head/dashboard";
     }
@@ -528,6 +553,68 @@ public class DepartmentHeadController {
                         ? "Đã công bố kết quả điểm chính thức cho toàn bộ " + count + " đề tài trong đợt!"
                         : "Đã chuyển " + count + " đề tài về trạng thái dự thảo điểm.");
         return "redirect:/department-head/results" + (periodId != null ? "?periodId=" + periodId : "");
+    }
+
+    @GetMapping("/results/export-csv")
+    public org.springframework.http.ResponseEntity<byte[]> exportResultsCsv(
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            HttpSession session) {
+
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) {
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Department dept = departmentHeadService.getDepartmentForUser(user);
+        List<Topic> topics = departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, periodId, null);
+        Map<Long, StudentGroup> topicGroupsMap = councilService.getGroupsMapForTopics(topics);
+
+        StringBuilder sb = new StringBuilder();
+        // UTF-8 BOM for seamless Excel compatibility
+        sb.append('\uFEFF');
+        sb.append("STT,Mã Đề Tài,Tên Đề Tài,Chuyên Ngành,Đợt Đăng Ký,GV Hướng Dẫn,GV Phản Biện,Hội Đồng,Tên Nhóm,Mã SV Nhóm Trưởng,Tên Nhóm Trưởng,Điểm GVHD,Điểm GVPB,Điểm Hội Đồng,Điểm Tổng Kết,Trạng Thái Công Bố\n");
+
+        int index = 1;
+        for (Topic t : topics) {
+            StudentGroup g = topicGroupsMap.get(t.getId());
+            String supervisorName = (t.getSupervisor() != null && t.getSupervisor().getUser() != null) ? t.getSupervisor().getUser().getFullName() : "N/A";
+            String reviewerName = (t.getReviewer() != null && t.getReviewer().getUser() != null) ? t.getReviewer().getUser().getFullName() : "N/A";
+            String councilName = (t.getCouncil() != null) ? t.getCouncil().getName() : "N/A";
+            String groupName = (g != null) ? g.getGroupName() : "Chưa có nhóm";
+            String leaderCode = (g != null && g.getLeader() != null) ? g.getLeader().getStudentCode() : "";
+            String leaderName = (g != null && g.getLeader() != null && g.getLeader().getUser() != null) ? g.getLeader().getUser().getFullName() : "";
+
+            sb.append(index++).append(",")
+                    .append(escapeCsv(t.getCode())).append(",")
+                    .append(escapeCsv(t.getTitle())).append(",")
+                    .append(escapeCsv(t.getMajor() != null ? t.getMajor().getName() : "")).append(",")
+                    .append(escapeCsv(t.getPeriod() != null ? t.getPeriod().getName() : "")).append(",")
+                    .append(escapeCsv(supervisorName)).append(",")
+                    .append(escapeCsv(reviewerName)).append(",")
+                    .append(escapeCsv(councilName)).append(",")
+                    .append(escapeCsv(groupName)).append(",")
+                    .append(escapeCsv(leaderCode)).append(",")
+                    .append(escapeCsv(leaderName)).append(",")
+                    .append(t.getAdvisorScore() != null ? t.getAdvisorScore() : "").append(",")
+                    .append(t.getReviewerScore() != null ? t.getReviewerScore() : "").append(",")
+                    .append(t.getCouncilScore() != null ? t.getCouncilScore() : "").append(",")
+                    .append(t.getFinalScore() != null ? t.getFinalScore() : "").append(",")
+                    .append(Boolean.TRUE.equals(t.getIsFinalized()) ? "ĐÃ CÔNG BỐ" : "DỰ THẢO")
+                    .append("\n");
+        }
+
+        byte[] bytes = sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        String filename = "bang_diem_tong_ket_" + System.currentTimeMillis() + ".csv";
+
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(org.springframework.http.MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .body(bytes);
+    }
+
+    private String escapeCsv(String str) {
+        if (str == null) return "\"\"";
+        return "\"" + str.replace("\"", "\"\"") + "\"";
     }
 
     // ==================== ANNOUNCEMENTS ====================
