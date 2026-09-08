@@ -40,6 +40,9 @@
         <!-- Global Toast Container (Fixed top-right) -->
         <div class="saas-toast-container" id="saasToastContainer"></div>
 
+        <!-- Global Floating AI Assistant Widget -->
+        <div th:replace="~{fragments/ai_chat :: aiChatWidget}"></div>
+
         <!-- Global Confirmation Modal (Replaces browser default confirm dialogs) -->
         <div class="modal fade saas-confirm-modal" id="globalConfirmModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">

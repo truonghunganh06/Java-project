@@ -68,19 +68,19 @@ public class DepartmentHeadController {
                 ? departmentHeadService.getDivisionStats(division.getId(), dept.getId())
                 : departmentHeadService.getDepartmentStats(dept.getId());
 
-        List<Topic> pendingTopics = (division != null)
-                ? departmentHeadService.getDivisionTopics(division.getId(), "PENDING", null, null, null)
-                : departmentHeadService.getDepartmentTopics(dept.getId(), "PENDING", null, null, null);
+        List<Topic> allDeptTopics = (division != null)
+                ? departmentHeadService.getDivisionTopics(division.getId(), null, null, null, null)
+                : departmentHeadService.getDepartmentTopics(dept.getId(), null, null, null, null);
+
+        List<Topic> pendingTopics = allDeptTopics.stream()
+                .filter(t -> "PENDING".equalsIgnoreCase(t.getStatus()))
+                .toList();
 
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
         List<Announcement> announcements = announcementService.getAnnouncementsByDepartment(dept.getId());
         List<Council> councils = (division != null)
                 ? councilService.getCouncilsByDivision(division.getId())
                 : councilService.getCouncilsByDepartment(dept.getId());
-
-        List<Topic> allDeptTopics = (division != null)
-                ? departmentHeadService.getDivisionTopics(division.getId(), null, null, null, null)
-                : departmentHeadService.getDepartmentTopics(dept.getId(), null, null, null, null);
 
         long countExcellent = allDeptTopics.stream().filter(t -> t.getFinalScore() != null && t.getFinalScore() >= 9.0).count();
         long countGood = allDeptTopics.stream().filter(t -> t.getFinalScore() != null && t.getFinalScore() >= 8.0 && t.getFinalScore() < 9.0).count();

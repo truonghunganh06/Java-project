@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<body>
+    <div th:fragment="aiChatWidget">
+        <!-- Floating AI Trigger Button -->
+        <button id="aiChatTriggerBtn" class="ai-chat-fab" type="button" onclick="toggleAiChat()" title="Hỏi Trợ lý AI TopicHub">
+            <span class="ai-fab-glow"></span>
+            <div class="ai-fab-icon-wrap">
+                <i class="fa-solid fa-wand-magic-sparkles text-white text-lg ai-icon-open"></i>
+                <i class="fa-solid fa-xmark text-white text-lg ai-icon-close d-none"></i>
+            </div>
+            <span class="ai-fab-badge">AI</span>
+        </button>
+
+        <!-- Floating AI Chatbox Window -->
+        <div id="aiChatWindow" class="ai-chat-window shadow-2xl rounded-3xl d-none">
+            <!-- Header -->
+            <div class="ai-chat-header d-flex align-items-center justify-content-between p-3.5 border-b">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+                        <i class="fa-solid fa-robot text-sm"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-1.5">
+                            <h6 class="mb-0 font-bold text-slate-900 text-xs">TopicHub AI Assistant</h6>
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        </div>
+                        <span class="text-[11px] text-slate-400">Tra cứu nhanh tiến độ & quy chế</span>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                    <button type="button" class="btn btn-sm btn-icon rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100" onclick="clearAiChat()" title="Xóa lịch sử chat">
+                        <i class="fa-solid fa-rotate-right text-xs"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-icon rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100" onclick="toggleAiChat()" title="Đóng cửa sổ">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages Stream -->
+            <div id="aiChatMessages" class="ai-chat-messages p-3.5 space-y-3 overflow-y-auto">
+                <!-- Welcome Message -->
+                <div class="ai-msg-row ai-msg-bot">
+                    <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
+                        <i class="fa-solid fa-sparkles"></i>
+                    </div>
+                    <div class="ai-msg-bubble">
+                        <p class="mb-1 text-xs">Xin chào! Tôi là **TopicHub AI**, trợ lý thông minh của hệ thống. Tôi có thể hỗ trợ bạn tra cứu tiến độ nhóm, công thức tính điểm và thông tin đề tài.</p>
+                        <span class="text-[10px] text-slate-400">Bây giờ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing Indicator (Hidden by default) -->
+            <div id="aiTypingIndicator" class="ai-msg-row ai-msg-bot px-3.5 pb-2 d-none">
+                <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="ai-msg-bubble py-2 px-3">
+                    <div class="typing-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Suggestions Box -->
+            <div id="aiSuggestionsBox" class="ai-suggestions-box px-3.5 py-2 border-t border-slate-100 bg-slate-50/70 d-flex flex-wrap gap-1.5">
+                <button type="button" class="ai-chip" onclick="sendAiQuickPrompt('Tiến độ nhóm của tôi')">📋 Tiến độ nhóm</button>
+                <button type="button" class="ai-chip" onclick="sendAiQuickPrompt('Công thức tính điểm KLTN')">📊 Công thức tính điểm</button>
+                <button type="button" class="ai-chip" onclick="sendAiQuickPrompt('Tìm đề tài còn trống')">🔍 Tìm đề tài</button>
+                <button type="button" class="ai-chip" onclick="sendAiQuickPrompt('Hạn chót các đợt')">📅 Lịch & Hạn chót</button>
+            </div>
+
+            <!-- Input Box -->
+            <div class="ai-chat-input-wrap p-2.5 border-t border-slate-100 bg-white rounded-b-3xl">
+                <form id="aiChatForm" onsubmit="handleAiChatSubmit(event)" class="d-flex align-items-center gap-1.5">
+                    <input type="text" id="aiChatInput" class="form-control form-control-sm border-0 bg-slate-100 rounded-2xl text-xs px-3 py-2 text-slate-800" placeholder="Hỏi AI bất kỳ điều gì..." autocomplete="off" required>
+                    <button type="submit" class="btn btn-sm bg-gradient-to-tr from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl px-3 py-2 shadow-xs transition flex-shrink-0">
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <style>
+            /* ===== FLOATING AI FAB ===== */
+            .ai-chat-fab {
+                position: fixed;
+                bottom: 1.5rem;
+                right: 1.5rem;
+                width: 54px;
+                height: 54px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #2563eb, #7c3aed, #ec4899);
+                border: none;
+                cursor: pointer;
+                z-index: 1060;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.5), 0 8px 10px -6px rgba(37, 99, 235, 0.4);
+                transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s ease;
+            }
+
+            .ai-chat-fab:hover {
+                transform: scale(1.08) translateY(-2px);
+                box-shadow: 0 14px 28px -4px rgba(124, 58, 237, 0.6), 0 10px 14px -5px rgba(37, 99, 235, 0.5);
+            }
+
+            .ai-fab-glow {
+                position: absolute;
+                inset: -3px;
+                border-radius: 50%;
+                background: inherit;
+                filter: blur(8px);
+                opacity: 0.5;
+                z-index: -1;
+                animation: aiFabPulse 3s infinite;
+            }
+
+            @keyframes aiFabPulse {
+                0%, 100% { opacity: 0.4; transform: scale(1); }
+                50% { opacity: 0.8; transform: scale(1.12); }
+            }
+
+            .ai-fab-badge {
+                position: absolute;
+                top: -4px;
+                right: -4px;
+                background: #ec4899;
+                color: #ffffff;
+                font-size: 0.625rem;
+                font-weight: 800;
+                padding: 1px 5px;
+                border-radius: 9999px;
+                border: 2px solid #ffffff;
+                letter-spacing: 0.05em;
+            }
+
+            /* ===== CHATBOX WINDOW ===== */
+            .ai-chat-window {
+                position: fixed;
+                bottom: 5.5rem;
+                right: 1.5rem;
+                width: 380px;
+                max-width: calc(100vw - 2rem);
+                height: 520px;
+                max-height: calc(100vh - 7rem);
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                z-index: 1060;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                animation: aiWindowPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+
+            @keyframes aiWindowPop {
+                from { opacity: 0; transform: translateY(20px) scale(0.95); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+
+            .ai-chat-header {
+                background: linear-gradient(to right, #f8fafc, #ffffff);
+                border-color: #f1f5f9;
+            }
+
+            .ai-chat-messages {
+                flex: 1;
+                scrollbar-width: thin;
+                scrollbar-color: #cbd5e1 transparent;
+            }
+
+            .ai-msg-row {
+                display: flex;
+                gap: 0.625rem;
+                align-items: flex-start;
+            }
+
+            .ai-msg-user {
+                flex-direction: row-reverse;
+            }
+
+            .ai-msg-bubble {
+                max-width: 82%;
+                padding: 0.625rem 0.875rem;
+                border-radius: 1.125rem;
+                font-size: 0.75rem;
+                line-height: 1.5;
+            }
+
+            .ai-msg-bot .ai-msg-bubble {
+                background: #f1f5f9;
+                color: #0f172a;
+                border-bottom-left-radius: 0.25rem;
+            }
+
+            .ai-msg-user .ai-msg-bubble {
+                background: linear-gradient(135deg, #2563eb, #3b82f6);
+                color: #ffffff;
+                border-bottom-right-radius: 0.25rem;
+            }
+
+            .ai-chip {
+                background: #ffffff;
+                border: 1px solid #cbd5e1;
+                color: #334155;
+                font-size: 0.6875rem;
+                font-weight: 600;
+                padding: 3px 8px;
+                border-radius: 9999px;
+                transition: all 0.15s ease;
+                cursor: pointer;
+            }
+
+            .ai-chip:hover {
+                background: #eff6ff;
+                color: #1d4ed8;
+                border-color: #93c5fd;
+            }
+
+            /* ===== TYPING DOTS ===== */
+            .typing-dots span {
+                display: inline-block;
+                width: 5px;
+                height: 5px;
+                background-color: #64748b;
+                border-radius: 50%;
+                margin: 0 1.5px;
+                animation: typingBounce 1.4s infinite ease-in-out both;
+            }
+            .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+            .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+            @keyframes typingBounce {
+                0%, 80%, 100% { transform: scale(0); }
+                40% { transform: scale(1); }
+            }
+
+            /* ===== DARK MODE FOR AI WIDGET ===== */
+            [data-theme="dark"] .ai-chat-window {
+                background: #0f172a !important;
+                border-color: #1e293b !important;
+            }
+            [data-theme="dark"] .ai-chat-header,
+            [data-theme="dark"] .ai-chat-input-wrap,
+            [data-theme="dark"] .ai-suggestions-box {
+                background: #0f172a !important;
+                border-color: #1e293b !important;
+            }
+            [data-theme="dark"] .ai-msg-bot .ai-msg-bubble {
+                background: #1e293b !important;
+                color: #f8fafc !important;
+            }
+            [data-theme="dark"] .ai-chip {
+                background: #1e293b !important;
+                color: #cbd5e1 !important;
+                border-color: #334155 !important;
+            }
+            [data-theme="dark"] .ai-chip:hover {
+                background: #334155 !important;
+                color: #60a5fa !important;
+            }
+            [data-theme="dark"] #aiChatInput {
+                background: #1e293b !important;
+                color: #f8fafc !important;
+            }
+        </style>
+
+        <script>
+            let isAiChatOpen = false;
+
+            function toggleAiChat() {
+                const win = document.getElementById('aiChatWindow');
+                const openIcon = document.querySelector('.ai-icon-open');
+                const closeIcon = document.querySelector('.ai-icon-close');
+                if (!win) return;
+
+                isAiChatOpen = !isAiChatOpen;
+                if (isAiChatOpen) {
+                    win.classList.remove('d-none');
+                    if (openIcon) openIcon.classList.add('d-none');
+                    if (closeIcon) closeIcon.classList.remove('d-none');
+                    document.getElementById('aiChatInput')?.focus();
+                } else {
+                    win.classList.add('d-none');
+                    if (openIcon) openIcon.classList.remove('d-none');
+                    if (closeIcon) closeIcon.classList.add('d-none');
+                }
+            }
+
+            function sendAiQuickPrompt(text) {
+                const input = document.getElementById('aiChatInput');
+                if (input) {
+                    input.value = text;
+                    handleAiChatSubmit(new Event('submit'));
+                }
+            }
+
+            function clearAiChat() {
+                const box = document.getElementById('aiChatMessages');
+                if (box) {
+                    box.innerHTML = `
+                        <div class="ai-msg-row ai-msg-bot">
+                            <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
+                                <i class="fa-solid fa-sparkles"></i>
+                            </div>
+                            <div class="ai-msg-bubble">
+                                <p class="mb-1 text-xs">Cuộc hội thoại đã được làm mới. Bạn muốn hỏi gì tiếp theo?</p>
+                                <span class="text-[10px] text-slate-400">Bây giờ</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            function renderAiMarkdown(text) {
+                if (!text) return '';
+                // Simple fast markdown parser for bold, italic, code, bullets, line breaks
+                let html = text
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`(.*?)`/g, '<code class="px-1 py-0.5 bg-slate-200 dark:bg-slate-800 text-blue-700 dark:text-blue-400 rounded text-[11px] font-mono">$1</code>')
+                    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-blue-600 dark:text-blue-400 font-semibold underline hover:text-blue-700">$1</a>')
+                    .replace(/\n/g, '<br>');
+                return html;
+            }
+
+            async function handleAiChatSubmit(e) {
+                if (e && e.preventDefault) e.preventDefault();
+
+                const input = document.getElementById('aiChatInput');
+                const msgBox = document.getElementById('aiChatMessages');
+                const typing = document.getElementById('aiTypingIndicator');
+                const sugBox = document.getElementById('aiSuggestionsBox');
+                if (!input || !input.value.trim()) return;
+
+                const userMsg = input.value.trim();
+                input.value = '';
+
+                // 1. Append User Message
+                const userRow = document.createElement('div');
+                userRow.className = 'ai-msg-row ai-msg-user';
+                userRow.innerHTML = `
+                    <div class="ai-msg-bubble">
+                        <p class="mb-1 text-xs">${userMsg}</p>
+                        <span class="text-[10px] text-blue-100">Bây giờ</span>
+                    </div>
+                `;
+                msgBox.appendChild(userRow);
+                msgBox.scrollTop = msgBox.scrollHeight;
+
+                // 2. Show Typing Indicator
+                if (typing) typing.classList.remove('d-none');
+                msgBox.scrollTop = msgBox.scrollHeight;
+
+                try {
+                    const res = await fetch('/api/ai/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: userMsg })
+                    });
+                    const data = await res.json();
+
+                    // Hide typing
+                    if (typing) typing.classList.add('d-none');
+
+                    // 3. Append Bot Message
+                    const botRow = document.createElement('div');
+                    botRow.className = 'ai-msg-row ai-msg-bot';
+                    botRow.innerHTML = `
+                        <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
+                            <i class="fa-solid fa-sparkles"></i>
+                        </div>
+                        <div class="ai-msg-bubble">
+                            <div class="text-xs mb-1">${renderAiMarkdown(data.reply)}</div>
+                            <span class="text-[10px] text-slate-400">Bây giờ</span>
+                        </div>
+                    `;
+                    msgBox.appendChild(botRow);
+                    msgBox.scrollTop = msgBox.scrollHeight;
+
+                    // 4. Update Suggestions
+                    if (sugBox && data.suggestions && data.suggestions.length > 0) {
+                        sugBox.innerHTML = data.suggestions
+                            .map(s => `<button type="button" class="ai-chip" onclick="sendAiQuickPrompt('${s.replace(/'/g, "\\'")}')">${s}</button>`)
+                            .join('');
+                    }
+                } catch (err) {
+                    if (typing) typing.classList.add('d-none');
+                    const errRow = document.createElement('div');
+                    errRow.className = 'ai-msg-row ai-msg-bot';
+                    errRow.innerHTML = `
+                        <div class="w-7 h-7 rounded-xl bg-rose-500 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="ai-msg-bubble">
+                            <p class="text-xs text-rose-600 mb-0">Đã xảy ra lỗi khi kết nối với AI Assistant. Vui lòng thử lại sau!</p>
+                        </div>
+                    `;
+                    msgBox.appendChild(errRow);
+                    msgBox.scrollTop = msgBox.scrollHeight;
+                }
+            }
+        </script>
+    </div>
+</body>
+</html>
