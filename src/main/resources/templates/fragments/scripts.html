@@ -296,8 +296,8 @@
                 }
 
                 // Rejection Alert Box
-                let rejAlert = document.getElementById('drawerTopicRejectionAlert');
-                const rejReason = data.rejectionReason || (element ? element.dataset.topicRejectionReason : null);
+                    let rejAlert = document.getElementById('drawerTopicRejectionAlert');
+                    const rejReason = data.rejectionReason || '';
                 if (data.status === 'REJECTED' && rejReason) {
                     if (!rejAlert) {
                         const drawerBody = document.querySelector('.drawer-body');
