@@ -2,30 +2,52 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <body>
     <div th:fragment="aiChatWidget">
-        <!-- Floating AI Trigger Button -->
-        <button id="aiChatTriggerBtn" class="ai-chat-fab" type="button" onclick="toggleAiChat()" title="Hỏi Trợ lý AI TopicHub">
-            <span class="ai-fab-glow"></span>
-            <div class="ai-fab-icon-wrap">
-                <i class="fa-solid fa-wand-magic-sparkles text-white text-lg ai-icon-open"></i>
-                <i class="fa-solid fa-xmark text-white text-lg ai-icon-close d-none"></i>
+        <!-- Floating AI Desktop Virtual Pet Mascot (Black Dot) -->
+        <div class="black-dot-pet-container" id="blackDotPetContainer">
+            <!-- Cute Dynamic Speech Bubble -->
+            <div class="black-dot-speech-bubble" id="blackDotSpeechBubble" onclick="toggleAiChat()">
+                <span id="blackDotSpeechText">Meow! Cần Black Dot soi đồ án hộ không? 🐾</span>
             </div>
-            <span class="ai-fab-badge">AI</span>
-        </button>
+
+            <!-- Sleeping Zzz Indicator -->
+            <div class="black-dot-zzz d-none" id="blackDotZzz">
+                <span>Z</span><span>z</span><span>z</span>
+            </div>
+
+            <!-- Floating Heart / Paw Reactions Container -->
+            <div class="black-dot-particles" id="blackDotParticles"></div>
+
+            <!-- Interactive Pet Character -->
+            <div id="blackDotPetCharacter" class="black-dot-pet" onclick="handlePetClick(event)" title="Click để trò chuyện cùng Mèo Black Dot AI">
+                <img id="blackDotImg" 
+                     th:src="@{/images/mascot/black_dot_idle.png?v=2}" 
+                     src="/images/mascot/black_dot_idle.png?v=2" 
+                     alt="Mèo Black Dot AI" 
+                     class="black-dot-sprite" />
+                
+                <!-- Dynamic Floor Shadow -->
+                <div class="black-dot-floor-shadow" id="blackDotShadow"></div>
+                <!-- Small AI Badge -->
+                <span class="black-dot-badge">AI 🐾</span>
+            </div>
+        </div>
 
         <!-- Floating AI Chatbox Window -->
         <div id="aiChatWindow" class="ai-chat-window shadow-2xl rounded-3xl d-none">
             <!-- Header -->
-            <div class="ai-chat-header d-flex align-items-center justify-content-between p-3.5 border-b">
+            <div class="ai-chat-header d-flex align-items-center justify-content-between p-3 border-b">
                 <div class="d-flex align-items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
-                        <i class="fa-solid fa-robot text-sm"></i>
+                    <div class="w-9 h-9 rounded-2xl bg-slate-900 flex items-center justify-center flex-shrink-0 shadow-sm p-0.5 border border-slate-700 overflow-hidden">
+                        <img th:src="@{/images/mascot/black_dot_smart.png?v=2}" src="/images/mascot/black_dot_smart.png?v=2" alt="Black Dot" class="w-full h-full object-contain" />
                     </div>
                     <div>
                         <div class="d-flex align-items-center gap-1.5">
-                            <h6 class="mb-0 font-bold text-slate-900 text-xs">TopicHub AI Assistant</h6>
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <h6 class="mb-0 font-bold text-slate-900 text-xs">Black Dot AI 🐾</h6>
+                            <span class="inline-flex items-center gap-1 text-[10px] text-emerald-600 font-medium">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Sẵn sàng
+                            </span>
                         </div>
-                        <span class="text-[11px] text-slate-400">Tra cứu nhanh tiến độ & quy chế</span>
+                        <span class="text-[11px] text-slate-400 block truncate">Trợ lý đồ án thông minh</span>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-1">
@@ -42,11 +64,11 @@
             <div id="aiChatMessages" class="ai-chat-messages p-3.5 space-y-3 overflow-y-auto">
                 <!-- Welcome Message -->
                 <div class="ai-msg-row ai-msg-bot">
-                    <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
-                        <i class="fa-solid fa-sparkles"></i>
+                    <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-700 text-white flex items-center justify-center flex-shrink-0 p-0.5 shadow-xs overflow-hidden">
+                        <img th:src="@{/images/mascot/black_dot_wave.png?v=2}" src="/images/mascot/black_dot_wave.png?v=2" alt="Black Dot" class="w-full h-full object-contain" />
                     </div>
                     <div class="ai-msg-bubble">
-                        <p class="mb-1 text-xs">Xin chào! Tôi là **TopicHub AI**, trợ lý thông minh của hệ thống. Tôi có thể hỗ trợ bạn tra cứu tiến độ nhóm, công thức tính điểm và thông tin đề tài.</p>
+                        <p class="mb-1 text-xs">Yo! Tớ là **Black Dot** 🐾 — Trợ lý đồ án TopicHub. Cần tớ tra điểm, soi tiến độ hay tìm đề tài gì thì cứ hỏi tớ nhé!</p>
                         <span class="text-[10px] text-slate-400">Bây giờ</span>
                     </div>
                 </div>
@@ -54,8 +76,8 @@
 
             <!-- Typing Indicator (Hidden by default) -->
             <div id="aiTypingIndicator" class="ai-msg-row ai-msg-bot px-3.5 pb-2 d-none">
-                <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
-                    <i class="fa-solid fa-robot"></i>
+                <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-700 text-white flex items-center justify-center flex-shrink-0 p-0.5 shadow-xs overflow-hidden">
+                    <img th:src="@{/images/mascot/black_dot_smart.png?v=2}" src="/images/mascot/black_dot_smart.png?v=2" alt="Black Dot" class="w-full h-full object-contain" />
                 </div>
                 <div class="ai-msg-bubble py-2 px-3">
                     <div class="typing-dots">
@@ -75,8 +97,8 @@
             <!-- Input Box -->
             <div class="ai-chat-input-wrap p-2.5 border-t border-slate-100 bg-white rounded-b-3xl">
                 <form id="aiChatForm" onsubmit="handleAiChatSubmit(event)" class="d-flex align-items-center gap-1.5">
-                    <input type="text" id="aiChatInput" class="form-control form-control-sm border-0 bg-slate-100 rounded-2xl text-xs px-3 py-2 text-slate-800" placeholder="Hỏi AI bất kỳ điều gì..." autocomplete="off" required>
-                    <button type="submit" class="btn btn-sm bg-gradient-to-tr from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl px-3 py-2 shadow-xs transition flex-shrink-0">
+                    <input type="text" id="aiChatInput" class="form-control form-control-sm border-0 bg-slate-100 rounded-2xl text-xs px-3 py-2 text-slate-800" placeholder="Hỏi Black Dot bất kỳ điều gì..." autocomplete="off" required>
+                    <button type="submit" class="btn btn-sm bg-gradient-to-tr from-slate-900 via-blue-900 to-blue-600 hover:from-slate-800 hover:to-blue-700 text-white rounded-2xl px-3.5 py-2 shadow-xs transition flex-shrink-0">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                     </button>
                 </form>
@@ -84,69 +106,255 @@
         </div>
 
         <style>
-            /* ===== FLOATING AI FAB ===== */
-            .ai-chat-fab {
+            /* ===== BLACK DOT DESKTOP VIRTUAL PET CONTAINER ===== */
+            .black-dot-pet-container {
                 position: fixed;
-                bottom: 1.5rem;
+                bottom: 1.25rem;
                 right: 1.5rem;
-                width: 54px;
-                height: 54px;
-                border-radius: 50%;
-                background: linear-gradient(135deg, #2563eb, #7c3aed, #ec4899);
-                border: none;
-                cursor: pointer;
                 z-index: 1060;
                 display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.5), 0 8px 10px -6px rgba(37, 99, 235, 0.4);
-                transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s ease;
+                flex-direction: column;
+                align-items: flex-end;
+                user-select: none;
             }
 
-            .ai-chat-fab:hover {
-                transform: scale(1.08) translateY(-2px);
-                box-shadow: 0 14px 28px -4px rgba(124, 58, 237, 0.6), 0 10px 14px -5px rgba(37, 99, 235, 0.5);
+            /* Cute Dynamic Speech Bubble */
+            .black-dot-speech-bubble {
+                background: #0f172a;
+                color: #f8fafc;
+                font-size: 0.75rem;
+                font-weight: 600;
+                padding: 7px 14px;
+                border-radius: 16px;
+                box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.4), 0 0 0 1px rgba(255,255,255,0.08);
+                border: 1px solid #334155;
+                margin-bottom: 6px;
+                cursor: pointer;
+                position: relative;
+                animation: petBubbleFloat 3.5s infinite ease-in-out;
+                transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+                white-space: nowrap;
+                max-width: 260px;
+                text-align: center;
             }
 
-            .ai-fab-glow {
+            .black-dot-speech-bubble::after {
+                content: '';
                 position: absolute;
-                inset: -3px;
+                bottom: -5px;
+                right: 38px;
+                width: 10px;
+                height: 10px;
+                background: #0f172a;
+                border-right: 1px solid #334155;
+                border-bottom: 1px solid #334155;
+                transform: rotate(45deg);
+            }
+
+            .black-dot-speech-bubble:hover {
+                transform: scale(1.06) translateY(-2px);
+                background: #1e293b;
+                border-color: #3b82f6;
+                color: #60a5fa;
+                box-shadow: 0 12px 28px -4px rgba(59, 130, 246, 0.45);
+            }
+
+            @keyframes petBubbleFloat {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-5px); }
+            }
+
+            /* Sleeping Zzz */
+            .black-dot-zzz {
+                position: absolute;
+                top: -18px;
+                left: 10px;
+                font-weight: 800;
+                color: #60a5fa;
+                font-family: monospace;
+                pointer-events: none;
+            }
+            .black-dot-zzz span {
+                display: inline-block;
+                animation: zzzFly 2s infinite linear;
+                opacity: 0;
+            }
+            .black-dot-zzz span:nth-child(1) { font-size: 11px; animation-delay: 0s; }
+            .black-dot-zzz span:nth-child(2) { font-size: 14px; animation-delay: 0.6s; }
+            .black-dot-zzz span:nth-child(3) { font-size: 17px; animation-delay: 1.2s; }
+
+            @keyframes zzzFly {
+                0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+                50% { opacity: 1; transform: translate(-8px, -12px) scale(1); }
+                100% { opacity: 0; transform: translate(-16px, -24px) scale(1.3); }
+            }
+
+            /* Floating Heart / Reaction Particles */
+            .black-dot-particles {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                overflow: visible;
+            }
+
+            .pet-particle {
+                position: absolute;
+                font-size: 18px;
+                animation: particleFloatUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                pointer-events: none;
+            }
+
+            @keyframes particleFloatUp {
+                0% { opacity: 1; transform: translateY(0) scale(0.6) rotate(0deg); }
+                50% { opacity: 1; transform: translateY(-28px) scale(1.2) rotate(12deg); }
+                100% { opacity: 0; transform: translateY(-55px) scale(0.9) rotate(-15deg); }
+            }
+
+            /* Black Dot Character Sprite */
+            .black-dot-pet {
+                width: 96px;
+                height: 104px;
+                position: relative;
+                cursor: pointer;
+                transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                transform-origin: bottom center;
+            }
+
+            .black-dot-sprite {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                filter: drop-shadow(0 8px 18px rgba(15, 23, 42, 0.4));
+                animation: petOrganicBreath 3.2s infinite ease-in-out;
+                transform-origin: bottom center;
+                transition: filter 0.25s ease;
+                display: block;
+            }
+
+            .black-dot-floor-shadow {
+                position: absolute;
+                bottom: 2px;
+                left: 18px;
+                right: 18px;
+                height: 9px;
                 border-radius: 50%;
-                background: inherit;
-                filter: blur(8px);
-                opacity: 0.5;
+                background: rgba(15, 23, 42, 0.32);
+                filter: blur(4px);
                 z-index: -1;
-                animation: aiFabPulse 3s infinite;
+                animation: shadowOrganicBreath 3.2s infinite ease-in-out;
+                transform-origin: center center;
             }
 
-            @keyframes aiFabPulse {
-                0%, 100% { opacity: 0.4; transform: scale(1); }
-                50% { opacity: 0.8; transform: scale(1.12); }
-            }
-
-            .ai-fab-badge {
+            .black-dot-badge {
                 position: absolute;
-                top: -4px;
-                right: -4px;
-                background: #ec4899;
+                bottom: 2px;
+                right: -2px;
+                background: linear-gradient(135deg, #1e40af, #3b82f6);
                 color: #ffffff;
                 font-size: 0.625rem;
                 font-weight: 800;
-                padding: 1px 5px;
+                padding: 1.5px 7px;
                 border-radius: 9999px;
                 border: 2px solid #ffffff;
-                letter-spacing: 0.05em;
+                box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+                transition: transform 0.2s ease;
+            }
+
+            /* Natural Organic Breathing with Squash & Stretch */
+            @keyframes petOrganicBreath {
+                0%, 100% { transform: translateY(0) scale(1, 1); }
+                35% { transform: translateY(-2px) scale(1.025, 0.975); }
+                70% { transform: translateY(1px) scale(0.985, 1.015); }
+            }
+
+            @keyframes shadowOrganicBreath {
+                0%, 100% { transform: scale(1); opacity: 0.35; }
+                35% { transform: scale(1.15, 0.9); opacity: 0.22; }
+                70% { transform: scale(0.95, 1.05); opacity: 0.4; }
+            }
+
+            /* Hover Playful State */
+            .black-dot-pet:hover .black-dot-sprite {
+                filter: drop-shadow(0 12px 24px rgba(59, 130, 246, 0.55));
+            }
+
+            .black-dot-pet:hover .black-dot-badge {
+                transform: scale(1.1);
+            }
+
+            /* Playful Happy Hop */
+            .pet-hopping .black-dot-sprite {
+                animation: petHopJoy 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+            }
+            .pet-hopping .black-dot-floor-shadow {
+                animation: shadowHopJoy 0.7s ease-in-out forwards !important;
+            }
+
+            @keyframes petHopJoy {
+                0% { transform: translateY(0) scale(1.08, 0.88); }
+                30% { transform: translateY(-26px) scale(0.92, 1.14) rotate(4deg); }
+                55% { transform: translateY(-30px) scale(1, 1.05) rotate(-3deg); }
+                80% { transform: translateY(2px) scale(1.14, 0.86); }
+                100% { transform: translateY(0) scale(1, 1); }
+            }
+
+            @keyframes shadowHopJoy {
+                0% { transform: scale(1.15); opacity: 0.45; }
+                45% { transform: scale(0.55); opacity: 0.12; }
+                80% { transform: scale(1.25); opacity: 0.5; }
+                100% { transform: scale(1); opacity: 0.35; }
+            }
+
+            /* Natural Bouncy Patrol Walk (Little Steps with Hops) */
+            .pet-walking {
+                animation: petBouncyPatrol 3.2s ease-in-out forwards;
+            }
+
+            @keyframes petBouncyPatrol {
+                0% { transform: translateX(0) scaleX(1); }
+                15% { transform: translateX(-15px) translateY(-10px) scale(0.95, 1.08) rotate(3deg); }
+                30% { transform: translateX(-32px) translateY(0) scale(1.08, 0.92); }
+                48% { transform: translateX(-32px) scaleX(1); }
+                50% { transform: translateX(-32px) scaleX(-1); }
+                65% { transform: translateX(-16px) translateY(-10px) scale(-0.95, 1.08) rotate(-3deg); }
+                80% { transform: translateX(0) translateY(0) scale(-1.08, 0.92); }
+                98% { transform: translateX(0) scaleX(-1); }
+                100% { transform: translateX(0) scaleX(1); }
+            }
+
+            /* Smart Glasses Thinking State */
+            .pet-smart .black-dot-sprite {
+                animation: petSmartPose 3.2s ease-in-out forwards !important;
+            }
+
+            @keyframes petSmartPose {
+                0% { transform: scale(1) rotate(0deg); }
+                15% { transform: translateY(-6px) scale(1.04) rotate(-3deg); }
+                40% { transform: translateY(-6px) scale(1.06) rotate(3deg); }
+                70% { transform: translateY(-3px) scale(1.03) rotate(0deg); }
+                100% { transform: translateY(0) scale(1); }
+            }
+
+            /* Sleep Mode */
+            .pet-sleeping .black-dot-sprite {
+                opacity: 0.88;
+                filter: drop-shadow(0 4px 10px rgba(15, 23, 42, 0.25));
+                transform: scale(0.95, 0.9) translateY(4px) !important;
+                animation: none !important;
             }
 
             /* ===== CHATBOX WINDOW ===== */
             .ai-chat-window {
                 position: fixed;
-                bottom: 5.5rem;
+                bottom: 7.25rem;
                 right: 1.5rem;
                 width: 380px;
                 max-width: calc(100vw - 2rem);
                 height: 520px;
-                max-height: calc(100vh - 7rem);
+                max-height: calc(100vh - 8.5rem);
                 background: #ffffff;
                 border: 1px solid #e2e8f0;
                 z-index: 1060;
@@ -197,7 +405,7 @@
             }
 
             .ai-msg-user .ai-msg-bubble {
-                background: linear-gradient(135deg, #2563eb, #3b82f6);
+                background: linear-gradient(135deg, #0f172a, #2563eb);
                 color: #ffffff;
                 border-bottom-right-radius: 0.25rem;
             }
@@ -215,9 +423,9 @@
             }
 
             .ai-chip:hover {
-                background: #eff6ff;
-                color: #1d4ed8;
-                border-color: #93c5fd;
+                background: #0f172a;
+                color: #ffffff;
+                border-color: #0f172a;
             }
 
             /* ===== TYPING DOTS ===== */
@@ -265,27 +473,200 @@
                 background: #1e293b !important;
                 color: #f8fafc !important;
             }
+            [data-theme="dark"] .black-dot-speech-bubble {
+                background: #1e293b !important;
+                color: #f8fafc !important;
+                border-color: #334155 !important;
+            }
+            [data-theme="dark"] .black-dot-speech-bubble::after {
+                background: #1e293b !important;
+                border-color: #334155 !important;
+            }
         </style>
 
         <script>
             let isAiChatOpen = false;
+            let petActionTimer = null;
+            let petSpeechTimer = null;
+            let isPetSleeping = false;
+
+            // Mascot Sprite Assets
+            const MASCOT_SPRITES = {
+                idle: '/images/mascot/black_dot_idle.png?v=2',
+                smart: '/images/mascot/black_dot_smart.png?v=2',
+                wave: '/images/mascot/black_dot_wave.png?v=2'
+            };
+
+            // Preload Mascot Sprites
+            Object.values(MASCOT_SPRITES).forEach(src => {
+                const img = new Image();
+                img.src = src;
+            });
+
+            const blackDotQuotes = [
+                "Meow! Cần Black Dot soi đồ án hộ không? 🐾",
+                "Đang code đồ án hả? Có bug gọi Black Dot nhé!",
+                "Deadline KLTN sắp tới rồi, nhóm làm tới đâu rồi? ✨",
+                "Gâu... à nhầm, Meow! Tớ là Black Dot AI siêu ngầu 🐾",
+                "Click vào tớ để tra điểm hoặc tìm đề tài nha!",
+                "Hôm nay nhớ nộp báo cáo tiến độ đúng hạn đấy nhé!"
+            ];
+
+            // Change Mascot Sprite
+            function setPetSprite(spriteKey) {
+                const img = document.getElementById('blackDotImg');
+                if (img && MASCOT_SPRITES[spriteKey]) {
+                    img.src = MASCOT_SPRITES[spriteKey];
+                }
+            }
+
+            // Spawn floating emojis (+1, 💖, ✨, 🐾)
+            function spawnPetParticle(emoji) {
+                const container = document.getElementById('blackDotParticles');
+                if (!container) return;
+                const p = document.createElement('span');
+                p.className = 'pet-particle';
+                p.innerText = emoji || '💖';
+                p.style.left = (30 + Math.random() * 35) + 'px';
+                p.style.top = (10 + Math.random() * 20) + 'px';
+                container.appendChild(p);
+                setTimeout(() => p.remove(), 1200);
+            }
+
+            // Initialize Virtual Pet Engine on DOM loaded
+            document.addEventListener('DOMContentLoaded', () => {
+                startBlackDotPetEngine();
+            });
+
+            function startBlackDotPetEngine() {
+                const pet = document.getElementById('blackDotPetCharacter');
+                const bubble = document.getElementById('blackDotSpeechBubble');
+                const speechText = document.getElementById('blackDotSpeechText');
+                const zzz = document.getElementById('blackDotZzz');
+                if (!pet) return;
+
+                // 1. Hover Listener: Wake up, wave paw & hop!
+                pet.addEventListener('mouseenter', () => {
+                    clearPetActionClasses();
+                    if (zzz) zzz.classList.add('d-none');
+                    isPetSleeping = false;
+
+                    // Switch to joyful wave sprite
+                    setPetSprite('wave');
+                    pet.classList.add('pet-hopping');
+                    spawnPetParticle(['💖', '🐾', '✨', '😻'][Math.floor(Math.random() * 4)]);
+
+                    setTimeout(() => {
+                        pet.classList.remove('pet-hopping');
+                        setPetSprite('idle');
+                    }, 750);
+
+                    // Show snappy quote
+                    if (speechText && bubble) {
+                        const randomQuote = blackDotQuotes[Math.floor(Math.random() * blackDotQuotes.length)];
+                        speechText.innerText = randomQuote;
+                        bubble.style.opacity = '1';
+                        bubble.style.transform = 'scale(1.05)';
+                    }
+                });
+
+                pet.addEventListener('mouseleave', () => {
+                    if (bubble) {
+                        bubble.style.transform = 'scale(1)';
+                    }
+                });
+
+                // 2. Periodic Autonomous Pet Behaviors (Walk, Hop, Smart Glasses, Sleep)
+                if (petActionTimer) clearInterval(petActionTimer);
+                petActionTimer = setInterval(() => {
+                    if (isAiChatOpen) return; // Stay still while chat is open
+
+                    const rand = Math.random();
+                    clearPetActionClasses();
+
+                    if (rand < 0.28) {
+                        // Action 1: Walk / Patrol with playful hops
+                        pet.classList.add('pet-walking');
+                        if (zzz) zzz.classList.add('d-none');
+                        setTimeout(() => pet.classList.remove('pet-walking'), 3200);
+                    } else if (rand < 0.55) {
+                        // Action 2: Wave & Hop
+                        setPetSprite('wave');
+                        pet.classList.add('pet-hopping');
+                        if (zzz) zzz.classList.add('d-none');
+                        spawnPetParticle('✨');
+                        setTimeout(() => {
+                            pet.classList.remove('pet-hopping');
+                            setPetSprite('idle');
+                        }, 750);
+                    } else if (rand < 0.80) {
+                        // Action 3: Push Glasses (Smart pose)
+                        setPetSprite('smart');
+                        pet.classList.add('pet-smart');
+                        if (zzz) zzz.classList.add('d-none');
+                        if (speechText) speechText.innerText = "Black Dot đang phân tích đồ án... 👓✨";
+                        setTimeout(() => {
+                            pet.classList.remove('pet-smart');
+                            setPetSprite('idle');
+                        }, 3200);
+                    } else {
+                        // Action 4: Sleepy Zzz
+                        pet.classList.add('pet-sleeping');
+                        if (zzz) zzz.classList.remove('d-none');
+                        isPetSleeping = true;
+                    }
+                }, 8500);
+
+                // 3. Periodic Random Bubble Quotes
+                if (petSpeechTimer) clearInterval(petSpeechTimer);
+                petSpeechTimer = setInterval(() => {
+                    if (isAiChatOpen || isPetSleeping) return;
+                    if (speechText) {
+                        const randomQuote = blackDotQuotes[Math.floor(Math.random() * blackDotQuotes.length)];
+                        speechText.innerText = randomQuote;
+                    }
+                }, 12000);
+            }
+
+            function clearPetActionClasses() {
+                const pet = document.getElementById('blackDotPetCharacter');
+                if (!pet) return;
+                pet.classList.remove('pet-walking', 'pet-hopping', 'pet-smart', 'pet-sleeping');
+            }
+
+            function handlePetClick(e) {
+                if (e) e.stopPropagation();
+                clearPetActionClasses();
+                const pet = document.getElementById('blackDotPetCharacter');
+                const zzz = document.getElementById('blackDotZzz');
+                if (zzz) zzz.classList.add('d-none');
+                isPetSleeping = false;
+
+                // Click excitement
+                setPetSprite('wave');
+                spawnPetParticle('😻');
+                if (pet) {
+                    pet.classList.add('pet-hopping');
+                    setTimeout(() => {
+                        pet.classList.remove('pet-hopping');
+                        setPetSprite('smart');
+                    }, 700);
+                }
+                toggleAiChat();
+            }
 
             function toggleAiChat() {
                 const win = document.getElementById('aiChatWindow');
-                const openIcon = document.querySelector('.ai-icon-open');
-                const closeIcon = document.querySelector('.ai-icon-close');
                 if (!win) return;
 
                 isAiChatOpen = !isAiChatOpen;
                 if (isAiChatOpen) {
                     win.classList.remove('d-none');
-                    if (openIcon) openIcon.classList.add('d-none');
-                    if (closeIcon) closeIcon.classList.remove('d-none');
+                    setPetSprite('smart');
                     document.getElementById('aiChatInput')?.focus();
                 } else {
                     win.classList.add('d-none');
-                    if (openIcon) openIcon.classList.remove('d-none');
-                    if (closeIcon) closeIcon.classList.add('d-none');
+                    setPetSprite('idle');
                 }
             }
 
@@ -302,11 +683,11 @@
                 if (box) {
                     box.innerHTML = `
                         <div class="ai-msg-row ai-msg-bot">
-                            <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
-                                <i class="fa-solid fa-sparkles"></i>
+                            <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-700 text-white flex items-center justify-center flex-shrink-0 p-0.5 shadow-xs overflow-hidden">
+                                <img src="/images/mascot/black_dot_wave.png?v=2" alt="Black Dot" class="w-full h-full object-contain" />
                             </div>
                             <div class="ai-msg-bubble">
-                                <p class="mb-1 text-xs">Cuộc hội thoại đã được làm mới. Bạn muốn hỏi gì tiếp theo?</p>
+                                <p class="mb-1 text-xs">Cuộc hội thoại đã được làm mới. Cần Black Dot hỗ trợ gì tiếp theo không bạn?</p>
                                 <span class="text-[10px] text-slate-400">Bây giờ</span>
                             </div>
                         </div>
@@ -350,7 +731,8 @@
                 msgBox.appendChild(userRow);
                 msgBox.scrollTop = msgBox.scrollHeight;
 
-                // 2. Show Typing Indicator
+                // 2. Show Typing Indicator & Pet Smart Sprite
+                setPetSprite('smart');
                 if (typing) typing.classList.remove('d-none');
                 msgBox.scrollTop = msgBox.scrollHeight;
 
@@ -360,7 +742,13 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ message: userMsg })
                     });
+                    if (!res.ok) {
+                        throw new Error('Server returned ' + res.status);
+                    }
                     const data = await res.json();
+                    if (!data || !data.reply) {
+                        throw new Error('Empty reply');
+                    }
 
                     // Hide typing
                     if (typing) typing.classList.add('d-none');
@@ -369,8 +757,8 @@
                     const botRow = document.createElement('div');
                     botRow.className = 'ai-msg-row ai-msg-bot';
                     botRow.innerHTML = `
-                        <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
-                            <i class="fa-solid fa-sparkles"></i>
+                        <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-700 text-white flex items-center justify-center flex-shrink-0 p-0.5 shadow-xs overflow-hidden">
+                            <img src="/images/mascot/black_dot_smart.png?v=2" alt="Black Dot" class="w-full h-full object-contain" />
                         </div>
                         <div class="ai-msg-bubble">
                             <div class="text-xs mb-1">${renderAiMarkdown(data.reply)}</div>
@@ -391,11 +779,11 @@
                     const errRow = document.createElement('div');
                     errRow.className = 'ai-msg-row ai-msg-bot';
                     errRow.innerHTML = `
-                        <div class="w-7 h-7 rounded-xl bg-rose-500 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
+                        <div class="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
                             <i class="fa-solid fa-triangle-exclamation"></i>
                         </div>
                         <div class="ai-msg-bubble">
-                            <p class="text-xs text-rose-600 mb-0">Đã xảy ra lỗi khi kết nối với AI Assistant. Vui lòng thử lại sau!</p>
+                            <p class="text-xs text-rose-600 mb-0">Đã xảy ra lỗi khi kết nối với Black Dot AI. Vui lòng thử lại sau!</p>
                         </div>
                     `;
                     msgBox.appendChild(errRow);

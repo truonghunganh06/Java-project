@@ -100,8 +100,7 @@ public class DepartmentHeadService {
 
     public List<RegistrationPeriod> getAllPeriods(Long departmentId) {
         if (departmentId != null) {
-            List<RegistrationPeriod> list = periodRepository.findByDepartmentId(departmentId);
-            if (!list.isEmpty()) return list;
+            return periodRepository.findByDepartmentId(departmentId);
         }
         return periodRepository.findByIsActiveTrueOrderByIdDesc();
     }
@@ -149,6 +148,57 @@ public class DepartmentHeadService {
         p.setStatus(status);
         periodRepository.save(p);
         System.out.println("[DB-HEAD] Cập nhật trạng thái đợt ID=" + periodId + " -> " + status);
+        return true;
+    }
+
+    @Transactional
+    public RegistrationPeriod updatePeriod(Long id, Long departmentId, String name, String periodType, String academicYear, Integer semester,
+                                           OffsetDateTime propStart, OffsetDateTime propEnd,
+                                           OffsetDateTime regStart, OffsetDateTime regEnd,
+                                           OffsetDateTime revDead, OffsetDateTime defenseDate,
+                                           String status) {
+        RegistrationPeriod p = getPeriodById(id);
+        if (p == null) return null;
+        if (departmentId != null && p.getDepartment() != null
+                && !departmentId.equals(p.getDepartment().getId())) {
+            System.err.println("[SECURITY] Cố sửa đợt thuộc dept=" + p.getDepartment().getId() + " nhưng user dept=" + departmentId);
+            return null;
+        }
+        if (name != null && !name.isBlank()) p.setName(name);
+        if (periodType != null && !periodType.isBlank()) p.setPeriodType(periodType);
+        if (academicYear != null && !academicYear.isBlank()) p.setAcademicYear(academicYear);
+        if (semester != null) p.setSemester(semester);
+        if (propStart != null) p.setLecturerProposalStart(propStart);
+        if (propEnd != null) p.setLecturerProposalEnd(propEnd);
+        if (regStart != null) p.setStudentRegistrationStart(regStart);
+        if (regEnd != null) p.setStudentRegistrationEnd(regEnd);
+        if (revDead != null) p.setReviewerDeadline(revDead);
+        if (defenseDate != null) p.setCouncilDefenseDate(defenseDate);
+        if (status != null && !status.isBlank()) p.setStatus(status);
+
+        RegistrationPeriod saved = periodRepository.save(p);
+        System.out.println("[DB-HEAD] Đã cập nhật đợt ID=" + id + " ('" + p.getName() + "')");
+        return saved;
+    }
+
+    @Transactional
+    public boolean deletePeriod(Long periodId, Long departmentId) {
+        RegistrationPeriod p = getPeriodById(periodId);
+        if (p == null) return false;
+        if (departmentId != null && p.getDepartment() != null
+                && !departmentId.equals(p.getDepartment().getId())) {
+            return false;
+        }
+        List<Topic> topics = topicRepository.findByPeriodId(periodId);
+        if (topics != null && !topics.isEmpty()) {
+            p.setIsActive(false);
+            p.setStatus("CLOSED");
+            periodRepository.save(p);
+            System.out.println("[DB-HEAD] Đợt ID=" + periodId + " có đề tài liên quan -> Đã ẩn đợt (isActive=false)");
+            return true;
+        }
+        periodRepository.delete(p);
+        System.out.println("[DB-HEAD] Đã xóa đợt ID=" + periodId);
         return true;
     }
 
@@ -381,12 +431,18 @@ public class DepartmentHeadService {
         long pendingCount = topics.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
         long approvedCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus())).count();
         long rejectedCount = topics.stream().filter(t -> "REJECTED".equalsIgnoreCase(t.getStatus())).count();
+        long needsReviewerCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus()) && t.getReviewer() == null).count();
+        long needsCouncilCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus()) && t.getCouncil() == null).count();
+        long readyCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus()) && t.getReviewer() != null && t.getCouncil() != null).count();
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalTopics", topics.size());
         stats.put("pendingTopics", pendingCount);
         stats.put("approvedTopics", approvedCount);
         stats.put("rejectedTopics", rejectedCount);
+        stats.put("needsReviewerTopics", needsReviewerCount);
+        stats.put("needsCouncilTopics", needsCouncilCount);
+        stats.put("readyTopics", readyCount);
         stats.put("totalLecturers", lecturers.size());
         stats.put("totalStudents", students.size());
         stats.put("totalPeriods", periods.size());
@@ -408,12 +464,18 @@ public class DepartmentHeadService {
         long pendingCount = topics.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
         long approvedCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus())).count();
         long rejectedCount = topics.stream().filter(t -> "REJECTED".equalsIgnoreCase(t.getStatus())).count();
+        long needsReviewerCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus()) && t.getReviewer() == null).count();
+        long needsCouncilCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus()) && t.getCouncil() == null).count();
+        long readyCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus()) && t.getReviewer() != null && t.getCouncil() != null).count();
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalTopics", topics.size());
         stats.put("pendingTopics", pendingCount);
         stats.put("approvedTopics", approvedCount);
         stats.put("rejectedTopics", rejectedCount);
+        stats.put("needsReviewerTopics", needsReviewerCount);
+        stats.put("needsCouncilTopics", needsCouncilCount);
+        stats.put("readyTopics", readyCount);
         stats.put("totalLecturers", lecturers.size());
         stats.put("totalStudents", students.size());
         stats.put("totalPeriods", periods.size());

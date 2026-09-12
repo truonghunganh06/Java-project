@@ -405,6 +405,11 @@ public class AiAssistantService {
     }
 
     private AiResponse handleProgressAndSubmissionQuery(AppUser user, String roleCode, String q) {
+        if (user == null) {
+            return new AiResponse("Bạn cần [Đăng nhập](/login) vào hệ thống để tra cứu thông tin tiến độ nhóm hoặc đề tài của mình.",
+                    getDefaultSuggestions(null));
+        }
+
         if ("STUDENT".equalsIgnoreCase(roleCode)) {
             Student student = studentRepository.findByUserId(user.getId()).orElse(null);
             if (student == null) {
@@ -483,7 +488,19 @@ public class AiAssistantService {
 
             return new AiResponse(sb.toString(), List.of("Đề tài tôi hướng dẫn", "Hội đồng của tôi", "Quy chế tính điểm"));
         } else {
-            return handleStatisticsQuery(user, roleCode);
+            // DEPARTMENT_HEAD / DIVISION_HEAD / ADMIN
+            List<StudentGroup> allGroups = groupRepository.findAll();
+            long assignedGroups = allGroups.stream().filter(g -> g.getTopic() != null).count();
+            List<Topic> allTopics = topicRepository.findAll();
+            long pendingTopics = allTopics.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("📊 **TIẾN ĐỘ QUẢN LÝ NHÓM & ĐỀ TÀI (DÀNH CHO BỘ MÔN / KHOA):**\n\n");
+            sb.append("* Tổng số nhóm sinh viên: **").append(allGroups.size()).append(" nhóm** (trong đó **").append(assignedGroups).append(" nhóm** đã có đề tài).\n");
+            sb.append("* Đề tài chờ duyệt: **").append(pendingTopics).append(" đề tài**.\n\n");
+            sb.append("👉 Thầy/Cô có thể xem danh sách sinh viên tại **[Quản lý Nhóm Sinh viên](/department-head/students)** hoặc duyệt đề tài tại **[Quản lý Đề tài](/department-head/topics)**.");
+
+            return new AiResponse(sb.toString(), List.of("Đề tài chờ duyệt", "Giảng viên nào đang rảnh để phân GVPB", "Thống kê toàn bộ môn"));
         }
     }
 

@@ -1,6 +1,8 @@
 package topic_management.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -127,15 +129,29 @@ public class DepartmentHeadController {
         Department dept = departmentHeadService.getDepartmentForUser(user);
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
 
+        Map<String, Object> periodStats = new HashMap<>();
+        long total = periods.size();
+        long proposalOpen = periods.stream().filter(p -> "PROPOSAL_OPEN".equalsIgnoreCase(p.getDisplayStatus())).count();
+        long registrationOpen = periods.stream().filter(p -> "REGISTRATION_OPEN".equalsIgnoreCase(p.getDisplayStatus())).count();
+        long reviewingOrDefense = periods.stream().filter(p -> "REVIEWING".equalsIgnoreCase(p.getDisplayStatus()) || "DEFENSE_WAITING".equalsIgnoreCase(p.getDisplayStatus())).count();
+        long closedOrEnded = periods.stream().filter(p -> "CLOSED".equalsIgnoreCase(p.getDisplayStatus()) || "COMPLETED".equalsIgnoreCase(p.getDisplayStatus()) || "REGISTRATION_ENDED".equalsIgnoreCase(p.getDisplayStatus())).count();
+
+        periodStats.put("total", total);
+        periodStats.put("proposalOpen", proposalOpen);
+        periodStats.put("registrationOpen", registrationOpen);
+        periodStats.put("reviewingOrDefense", reviewingOrDefense);
+        periodStats.put("closedOrEnded", closedOrEnded);
+
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
         model.addAttribute("periods", periods);
+        model.addAttribute("periodStats", periodStats);
 
         return "department-head/periods";
     }
 
     @PostMapping("/periods/create")
-    public String createPeriod(
+    public Object createPeriod(
             @RequestParam("name") String name,
             @RequestParam("periodType") String periodType,
             @RequestParam("academicYear") String academicYear,
@@ -146,11 +162,20 @@ public class DepartmentHeadController {
             @RequestParam(value = "regEnd", required = false) String regEnd,
             @RequestParam(value = "revDead", required = false) String revDead,
             @RequestParam(value = "defenseDate", required = false) String defenseDate,
+            HttpServletRequest request,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))
+                || (request.getHeader("Accept") != null && request.getHeader("Accept").contains("application/json"));
+
+        if (user == null) {
+            if (isAjax) {
+                return ResponseEntity.status(401).body(Map.of("success", false, "message", "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!"));
+            }
+            return "redirect:/login";
+        }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
 
@@ -161,29 +186,46 @@ public class DepartmentHeadController {
         OffsetDateTime rDead = parseDate(revDead, true);
         OffsetDateTime dDate = parseDate(defenseDate, false);
 
-        // Validation logic giữa các mốc thời gian
-        if (pStart != null && pEnd != null && pEnd.isBefore(pStart)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Hạn chót GV đề xuất phải sau ngày bắt đầu đề xuất!");
-            return "redirect:/department-head/periods";
+        // Validation logic: Không cho phép thiết lập các hạn chót kết thúc là ngày trong quá khứ
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.ZoneId zone = java.time.ZoneId.systemDefault();
+        OffsetDateTime startOfToday = today.atStartOfDay(zone).toOffsetDateTime();
+
+        String validationError = null;
+
+        if (pEnd != null && pEnd.isBefore(startOfToday)) {
+            validationError = "Hạn chót GV đề xuất không thể là ngày trong quá khứ!";
+        } else if (rEnd != null && rEnd.isBefore(startOfToday)) {
+            validationError = "Hạn chót SV đăng ký không thể là ngày trong quá khứ!";
+        } else if (rDead != null && rDead.isBefore(startOfToday)) {
+            validationError = "Hạn nộp điểm GVPB không thể là ngày trong quá khứ!";
+        } else if (dDate != null && dDate.isBefore(startOfToday)) {
+            validationError = "Ngày báo cáo Hội đồng không thể là ngày trong quá khứ!";
+        } else if (pStart != null && pEnd != null && pEnd.isBefore(pStart)) {
+            validationError = "Hạn chót GV đề xuất phải diễn ra sau ngày bắt đầu đề xuất!";
+        } else if (pEnd != null && rStart != null && rStart.isBefore(pEnd)) {
+            validationError = "Thời gian SV bắt đầu đăng ký phải diễn ra từ ngày hoặc sau khi GV kết thúc hạn đề xuất đề tài!";
+        } else if (rStart != null && rEnd != null && rEnd.isBefore(rStart)) {
+            validationError = "Hạn chót SV đăng ký phải diễn ra sau ngày bắt đầu đăng ký!";
+        } else if (rEnd != null && rDead != null && rDead.isBefore(rEnd)) {
+            validationError = "Hạn nộp điểm GVPB phải diễn ra sau khi kết thúc hạn SV đăng ký đề tài!";
+        } else if (rDead != null && dDate != null && dDate.isBefore(rDead)) {
+            validationError = "Ngày báo cáo Hội đồng phải diễn ra sau hạn nộp điểm GVPB!";
         }
-        if (rStart != null && rEnd != null && rEnd.isBefore(rStart)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Hạn chót SV đăng ký phải sau ngày bắt đầu đăng ký!");
-            return "redirect:/department-head/periods";
-        }
-        if (pStart != null && rStart != null && rStart.isBefore(pStart)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Thời gian SV đăng ký không được diễn ra trước thời gian GV đề xuất!");
-            return "redirect:/department-head/periods";
-        }
-        if (rEnd != null && rDead != null && rDead.isBefore(rEnd)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Hạn nộp điểm GVPB phải sau hạn chót SV đăng ký đề tài!");
-            return "redirect:/department-head/periods";
-        }
-        if (rDead != null && dDate != null && dDate.isBefore(rDead)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Ngày báo cáo Hội đồng phải diễn ra sau hạn nộp điểm GVPB!");
+
+        if (validationError != null) {
+            if (isAjax) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", validationError));
+            }
+            redirectAttributes.addFlashAttribute("errorMessage", validationError);
             return "redirect:/department-head/periods";
         }
 
         departmentHeadService.createPeriod(dept, name, periodType, academicYear, semester, pStart, pEnd, rStart, rEnd, rDead, dDate);
+
+        if (isAjax) {
+            return ResponseEntity.ok(Map.of("success", true, "message", "Tạo đợt đăng ký '" + name + "' thành công!"));
+        }
 
         redirectAttributes.addFlashAttribute("successMessage", "Tạo đợt đăng ký '" + name + "' thành công!");
         return "redirect:/department-head/periods";
@@ -206,6 +248,131 @@ public class DepartmentHeadController {
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái đợt thành công!");
         } else {
             redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật trạng thái đợt này!");
+        }
+        return "redirect:/department-head/periods";
+    }
+
+    @GetMapping("/periods/{id}/json")
+    @ResponseBody
+    public ResponseEntity<?> getPeriodJson(@PathVariable("id") Long id, HttpSession session) {
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "Chưa đăng nhập"));
+        }
+        RegistrationPeriod p = departmentHeadService.getPeriodById(id);
+        if (p == null) {
+            return ResponseEntity.status(404).body(Map.of("success", false, "message", "Không tìm thấy đợt"));
+        }
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", p.getId());
+        data.put("name", p.getName());
+        data.put("periodType", p.getPeriodType());
+        data.put("academicYear", p.getAcademicYear());
+        data.put("semester", p.getSemester());
+        data.put("status", p.getStatus() != null ? p.getStatus() : "OPEN");
+        data.put("propStart", p.getLecturerProposalStart() != null ? p.getLecturerProposalStart().toLocalDate().toString() : "");
+        data.put("propEnd", p.getLecturerProposalEnd() != null ? p.getLecturerProposalEnd().toLocalDate().toString() : "");
+        data.put("regStart", p.getStudentRegistrationStart() != null ? p.getStudentRegistrationStart().toLocalDate().toString() : "");
+        data.put("regEnd", p.getStudentRegistrationEnd() != null ? p.getStudentRegistrationEnd().toLocalDate().toString() : "");
+        data.put("revDead", p.getReviewerDeadline() != null ? p.getReviewerDeadline().toLocalDate().toString() : "");
+        data.put("defenseDate", p.getCouncilDefenseDate() != null ? p.getCouncilDefenseDate().toLocalDate().toString() : "");
+        return ResponseEntity.ok(data);
+    }
+
+    @PostMapping("/periods/{id}/update")
+    public Object updatePeriod(
+            @PathVariable("id") Long id,
+            @RequestParam("name") String name,
+            @RequestParam("periodType") String periodType,
+            @RequestParam("academicYear") String academicYear,
+            @RequestParam("semester") Integer semester,
+            @RequestParam(value = "status", defaultValue = "OPEN") String status,
+            @RequestParam(value = "propStart", required = false) String propStart,
+            @RequestParam(value = "propEnd", required = false) String propEnd,
+            @RequestParam(value = "regStart", required = false) String regStart,
+            @RequestParam(value = "regEnd", required = false) String regEnd,
+            @RequestParam(value = "revDead", required = false) String revDead,
+            @RequestParam(value = "defenseDate", required = false) String defenseDate,
+            HttpServletRequest request,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedDeptHead(session);
+        boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))
+                || (request.getHeader("Accept") != null && request.getHeader("Accept").contains("application/json"));
+
+        if (user == null) {
+            if (isAjax) {
+                return ResponseEntity.status(401).body(Map.of("success", false, "message", "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!"));
+            }
+            return "redirect:/login";
+        }
+
+        Department dept = departmentHeadService.getDepartmentForUser(user);
+
+        OffsetDateTime pStart = parseDate(propStart, false);
+        OffsetDateTime pEnd = parseDate(propEnd, true);
+        OffsetDateTime rStart = parseDate(regStart, false);
+        OffsetDateTime rEnd = parseDate(regEnd, true);
+        OffsetDateTime rDead = parseDate(revDead, true);
+        OffsetDateTime dDate = parseDate(defenseDate, false);
+
+        String validationError = null;
+
+        if (pStart != null && pEnd != null && pEnd.isBefore(pStart)) {
+            validationError = "Hạn chót GV đề xuất phải diễn ra sau ngày bắt đầu đề xuất!";
+        } else if (pEnd != null && rStart != null && rStart.isBefore(pEnd)) {
+            validationError = "Thời gian SV bắt đầu đăng ký phải diễn ra từ ngày hoặc sau khi GV kết thúc hạn đề xuất đề tài!";
+        } else if (rStart != null && rEnd != null && rEnd.isBefore(rStart)) {
+            validationError = "Hạn chót SV đăng ký phải diễn ra sau ngày bắt đầu đăng ký!";
+        } else if (rEnd != null && rDead != null && rDead.isBefore(rEnd)) {
+            validationError = "Hạn nộp điểm GVPB phải diễn ra sau khi kết thúc hạn SV đăng ký đề tài!";
+        } else if (rDead != null && dDate != null && dDate.isBefore(rDead)) {
+            validationError = "Ngày báo cáo Hội đồng phải diễn ra sau hạn nộp điểm GVPB!";
+        }
+
+        if (validationError != null) {
+            if (isAjax) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", validationError));
+            }
+            redirectAttributes.addFlashAttribute("errorMessage", validationError);
+            return "redirect:/department-head/periods";
+        }
+
+        RegistrationPeriod updated = departmentHeadService.updatePeriod(id, dept.getId(), name, periodType, academicYear, semester,
+                pStart, pEnd, rStart, rEnd, rDead, dDate, status);
+
+        if (updated == null) {
+            if (isAjax) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Không thể cập nhật đợt này!"));
+            }
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật đợt này!");
+            return "redirect:/department-head/periods";
+        }
+
+        if (isAjax) {
+            return ResponseEntity.ok(Map.of("success", true, "message", "Cập nhật đợt đăng ký '" + name + "' thành công!"));
+        }
+
+        redirectAttributes.addFlashAttribute("successMessage", "Cập nhật đợt đăng ký '" + name + "' thành công!");
+        return "redirect:/department-head/periods";
+    }
+
+    @PostMapping("/periods/{id}/delete")
+    public String deletePeriod(
+            @PathVariable("id") Long id,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) return "redirect:/login";
+
+        Department dept = departmentHeadService.getDepartmentForUser(user);
+        boolean success = departmentHeadService.deletePeriod(id, dept.getId());
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa đợt đăng ký thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa đợt này!");
         }
         return "redirect:/department-head/periods";
     }
@@ -280,6 +447,7 @@ public class DepartmentHeadController {
         model.addAttribute("selectedMajorId", majorId);
         model.addAttribute("selectedPeriodId", periodId);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("stats", stats);
         model.addAttribute("pendingCount", stats.get("pendingTopics"));
 
         return "department-head/topics";

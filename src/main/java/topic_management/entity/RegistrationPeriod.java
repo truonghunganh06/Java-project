@@ -228,4 +228,72 @@ public class RegistrationPeriod {
         if (studentRegistrationEnd != null && now.isAfter(studentRegistrationEnd)) return false;
         return Boolean.TRUE.equals(isActive) && ("OPEN".equalsIgnoreCase(status) || "IN_PROGRESS".equalsIgnoreCase(status));
     }
+
+    public String getDisplayStatus() {
+        if (!Boolean.TRUE.equals(isActive) || "CLOSED".equalsIgnoreCase(status)) {
+            return "CLOSED";
+        }
+        OffsetDateTime now = OffsetDateTime.now();
+        if (councilDefenseDate != null && now.isAfter(councilDefenseDate)) {
+            return "COMPLETED";
+        }
+        if (lecturerProposalStart != null && now.isBefore(lecturerProposalStart)) {
+            return "UPCOMING";
+        }
+        if (lecturerProposalStart != null && lecturerProposalEnd != null
+                && !now.isBefore(lecturerProposalStart) && !now.isAfter(lecturerProposalEnd)) {
+            return "PROPOSAL_OPEN";
+        }
+        if (lecturerProposalEnd != null && studentRegistrationStart != null
+                && now.isAfter(lecturerProposalEnd) && now.isBefore(studentRegistrationStart)) {
+            return "PENDING_REGISTRATION";
+        }
+        if (studentRegistrationStart != null && studentRegistrationEnd != null
+                && !now.isBefore(studentRegistrationStart) && !now.isAfter(studentRegistrationEnd)) {
+            return "REGISTRATION_OPEN";
+        }
+        if (reviewerDeadline != null && studentRegistrationEnd != null
+                && now.isAfter(studentRegistrationEnd) && !now.isAfter(reviewerDeadline)) {
+            return "REVIEWING";
+        }
+        if (councilDefenseDate != null && reviewerDeadline != null
+                && now.isAfter(reviewerDeadline) && !now.isAfter(councilDefenseDate)) {
+            return "DEFENSE_WAITING";
+        }
+        if (studentRegistrationEnd != null && now.isAfter(studentRegistrationEnd)) {
+            return "REGISTRATION_ENDED";
+        }
+        return "OPEN";
+    }
+
+    public boolean isProposalPassed() {
+        return lecturerProposalEnd != null && OffsetDateTime.now().isAfter(lecturerProposalEnd);
+    }
+
+    public boolean isRegistrationPassed() {
+        return studentRegistrationEnd != null && OffsetDateTime.now().isAfter(studentRegistrationEnd);
+    }
+
+    public boolean isReviewerDeadlinePassed() {
+        return reviewerDeadline != null && OffsetDateTime.now().isAfter(reviewerDeadline);
+    }
+
+    public boolean isCouncilDefensePassed() {
+        return councilDefenseDate != null && OffsetDateTime.now().isAfter(councilDefenseDate);
+    }
+
+    public String getDisplayStatusName() {
+        return switch (getDisplayStatus()) {
+            case "CLOSED" -> "Đã đóng";
+            case "UPCOMING" -> "Sắp diễn ra";
+            case "PROPOSAL_OPEN" -> "Đang mở Đề xuất (GV)";
+            case "PENDING_REGISTRATION" -> "Chờ mở Đăng ký (SV)";
+            case "REGISTRATION_OPEN" -> "Đang mở Đăng ký (SV)";
+            case "REVIEWING" -> "Đang chấm GVPB";
+            case "DEFENSE_WAITING" -> "Chờ bảo vệ Hội đồng";
+            case "REGISTRATION_ENDED" -> "Hết hạn đăng ký";
+            case "COMPLETED" -> "Đã kết thúc đợt";
+            default -> "Đang hoạt động";
+        };
+    }
 }

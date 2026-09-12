@@ -15,13 +15,10 @@
         <main class="saas-content">
 
             <!-- Page Header -->
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-                <div>
-                    <div class="d-flex align-items-center gap-2">
-                        <h1 class="text-xl font-bold text-slate-900 mb-0">Danh Sách Giảng Viên Khoa</h1>
-                        <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200" th:text="${department != null ? department.name : 'Khoa CNTT'}">Khoa CNTT</span>
-                    </div>
-                    <p class="text-xs text-slate-500 mb-0 mt-1">Quản lý đội ngũ cán bộ giảng dạy, theo dõi chỉ tiêu hướng dẫn và số lượng đề tài đã duyệt.</p>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <h1 class="text-lg font-bold text-slate-900 mb-0">Danh Sách Giảng Viên</h1>
+                    <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200" th:text="${department != null ? department.name : 'Khoa CNTT'}">Khoa CNTT</span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <span id="filteredRowCount" class="badge-pill-neutral font-medium text-xs" th:text="'Tổng số: ' + ${#lists.size(lecturers)} + ' giảng viên'"></span>
