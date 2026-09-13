@@ -904,7 +904,7 @@
                 } else if (stage === 'NEEDS_REVIEWER') {
                     matchesStage = (status === 'APPROVED' && !hasReviewer);
                 } else if (stage === 'NEEDS_COUNCIL') {
-                    matchesStage = (status === 'APPROVED' && hasReviewer && !hasCouncil);
+                    matchesStage = (status === 'APPROVED' && !hasCouncil);
                 } else if (stage === 'READY') {
                     matchesStage = (status === 'APPROVED' && hasReviewer && hasCouncil);
                 }
@@ -935,7 +935,7 @@
                 } else if (stage === 'NEEDS_REVIEWER') {
                     matchesStage = (status === 'APPROVED' && !hasReviewer);
                 } else if (stage === 'NEEDS_COUNCIL') {
-                    matchesStage = (status === 'APPROVED' && hasReviewer && !hasCouncil);
+                    matchesStage = (status === 'APPROVED' && !hasCouncil);
                 } else if (stage === 'READY') {
                     matchesStage = (status === 'APPROVED' && hasReviewer && hasCouncil);
                 }
