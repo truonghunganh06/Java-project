@@ -221,13 +221,40 @@ public class DepartmentHeadController {
             return "redirect:/department-head/periods";
         }
 
-        departmentHeadService.createPeriod(dept, name, periodType, academicYear, semester, pStart, pEnd, rStart, rEnd, rDead, dDate);
+        RegistrationPeriod savedPeriod = departmentHeadService.createPeriod(dept, name, periodType, academicYear, semester, pStart, pEnd, rStart, rEnd, rDead, dDate);
 
-        if (isAjax) {
-            return ResponseEntity.ok(Map.of("success", true, "message", "Tạo đợt đăng ký '" + name + "' thành công!"));
+        // Tự động ban hành Thông báo chính thức cho toàn Khoa / Giảng viên / Sinh viên
+        try {
+            java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            StringBuilder sb = new StringBuilder();
+            sb.append("Kính gửi toàn thể Giảng viên và Sinh viên thuộc ").append(dept != null ? dept.getName() : "Khoa").append(",\n\n");
+            sb.append("Khoa/Bộ môn xin thông báo chính thức ban hành kế hoạch tổ chức: **").append(name).append("** (Học kỳ ").append(semester).append(" - Năm học ").append(academicYear).append(").\n\n");
+            sb.append("### 📅 CÁC MỐC THỜI GIAN QUAN TRỌNG:\n");
+            if (pStart != null && pEnd != null) {
+                sb.append("- **1. Giảng viên đề xuất đề tài:** từ ").append(pStart.format(dtf)).append(" đến ").append(pEnd.format(dtf)).append("\n");
+            }
+            if (rStart != null && rEnd != null) {
+                sb.append("- **2. Sinh viên đăng ký đề tài:** từ ").append(rStart.format(dtf)).append(" đến ").append(rEnd.format(dtf)).append("\n");
+            }
+            if (rDead != null) {
+                sb.append("- **3. Hạn nộp điểm GVPB:** ").append(rDead.format(dtf)).append("\n");
+            }
+            if (dDate != null) {
+                sb.append("- **4. Báo cáo Hội đồng đánh giá:** ").append(dDate.format(dtf)).append("\n");
+            }
+            sb.append("\nKính đề nghị các Thầy/Cô và các bạn Sinh viên theo dõi sát các mốc thời gian để thực hiện đúng quy định.");
+
+            String noticeTitle = "[THÔNG BÁO BAN HÀNH] Kế hoạch " + name + " (HK" + semester + " " + academicYear + ")";
+            announcementService.createAnnouncement(user, dept, savedPeriod.getId(), noticeTitle, sb.toString(), "PERIOD", true, null);
+        } catch (Exception e) {
+            System.err.println("[ANNOUNCEMENT-AUTO-CREATE-ERROR] " + e.getMessage());
         }
 
-        redirectAttributes.addFlashAttribute("successMessage", "Tạo đợt đăng ký '" + name + "' thành công!");
+        if (isAjax) {
+            return ResponseEntity.ok(Map.of("success", true, "message", "Tạo đợt đăng ký và ban hành thông báo '" + name + "' thành công!"));
+        }
+
+        redirectAttributes.addFlashAttribute("successMessage", "Tạo đợt đăng ký và ban hành thông báo '" + name + "' thành công!");
         return "redirect:/department-head/periods";
     }
 
@@ -410,9 +437,7 @@ public class DepartmentHeadController {
                 : departmentHeadService.getDepartmentMajors(dept.getId());
 
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
-        List<Lecturer> lecturers = (division != null)
-                ? departmentHeadService.getLecturersInDivision(division.getId())
-                : departmentHeadService.getLecturersInDepartment(dept.getId());
+        List<Lecturer> lecturers = departmentHeadService.getLecturersInDepartment(dept.getId());
 
         List<Council> councils = (division != null)
                 ? councilService.getCouncilsByDivision(division.getId())

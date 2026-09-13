@@ -225,15 +225,15 @@
                                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5 text-xs">
                                                     <div class="d-flex justify-content-between">
                                                         <span class="text-slate-500"><i class="fa-solid fa-chalkboard-user text-blue-600 me-1"></i> GV Hướng dẫn chính:</span>
-                                                        <strong class="text-slate-900" th:text="${g.topic.supervisor != null && g.topic.supervisor.user != null ? (g.topic.supervisor.academicTitle != null ? g.topic.supervisor.academicTitle + ' ' : '') + g.topic.supervisor.user.fullName : 'Chưa phân công'}"></strong>
+                                                        <strong class="text-slate-900" th:text="${g.topic.supervisor != null && g.topic.supervisor.user != null ? g.topic.supervisor.user.fullName : 'Chưa phân công'}"></strong>
                                                     </div>
                                                     <div th:if="${g.topic.coSupervisor != null && g.topic.coSupervisor.user != null}" class="d-flex justify-content-between">
                                                         <span class="text-slate-500"><i class="fa-solid fa-user-plus text-slate-400 me-1"></i> GV Hướng dẫn phụ:</span>
-                                                        <strong class="text-slate-900" th:text="${(g.topic.coSupervisor.academicTitle != null ? g.topic.coSupervisor.academicTitle + ' ' : '') + g.topic.coSupervisor.user.fullName}"></strong>
+                                                        <strong class="text-slate-900" th:text="${g.topic.coSupervisor.user.fullName}"></strong>
                                                     </div>
                                                     <div class="d-flex justify-content-between">
                                                         <span class="text-slate-500"><i class="fa-solid fa-user-check text-indigo-600 me-1"></i> GV Phản biện:</span>
-                                                        <strong class="text-slate-900" th:text="${g.topic.reviewer != null && g.topic.reviewer.user != null ? (g.topic.reviewer.academicTitle != null ? g.topic.reviewer.academicTitle + ' ' : '') + g.topic.reviewer.user.fullName : 'Chưa phân công'}"></strong>
+                                                        <strong class="text-slate-900" th:text="${g.topic.reviewer != null && g.topic.reviewer.user != null ? g.topic.reviewer.user.fullName : 'Chưa phân công'}"></strong>
                                                     </div>
                                                     <div class="d-flex justify-content-between">
                                                         <span class="text-slate-500"><i class="fa-solid fa-users-rectangle text-purple-600 me-1"></i> Hội đồng bảo vệ:</span>

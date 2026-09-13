@@ -45,6 +45,43 @@
                 </div>
             </div>
 
+            <!-- COMPACT ACTIVE PROPOSAL PERIOD ALERT BANNER (Zero Clutter, 1-Row SaaS) -->
+            <div th:if="${openProposalPeriods != null && !openProposalPeriods.isEmpty()}" class="mb-4">
+                <div class="p-2.5 px-3.5 rounded-2xl bg-gradient-to-r from-blue-50/90 via-indigo-50/40 to-white border border-blue-200/80 shadow-2xs d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2.5">
+                    <div class="d-flex align-items-center gap-2.5 overflow-hidden">
+                        <div class="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
+                            <i class="fa-solid fa-bullhorn"></i>
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-2 min-w-0">
+                            <span class="badge bg-blue-600 text-white text-2xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Đang mở đề xuất</span>
+                            <div class="d-flex align-items-center gap-1.5 overflow-x-auto py-0.5 text-xs text-slate-800">
+                                <span th:if="${openProposalPeriods.size() == 1}">
+                                    <strong class="text-blue-950 font-bold" th:text="${openProposalPeriods[0].name}"></strong>
+                                    <span class="text-slate-500 text-2xs font-normal ms-1" th:if="${openProposalPeriods[0].lecturerProposalEnd != null}" th:text="'(Hạn chót: ' + ${#temporals.format(openProposalPeriods[0].lecturerProposalEnd, 'dd/MM/yyyy')} + ')'"></span>
+                                </span>
+                                <span th:if="${openProposalPeriods.size() > 1}" class="text-slate-700">
+                                    Có <strong class="text-blue-700 font-bold" th:text="${openProposalPeriods.size()}"></strong> đợt đang mở nhận đề tài:
+                                    <span class="d-inline-flex flex-wrap gap-1.5 ms-1">
+                                        <span th:each="p, iter : ${openProposalPeriods}" th:if="${iter.index < 3}"
+                                              class="badge bg-white text-slate-700 border border-slate-200 text-2xs font-medium px-2 py-0.5 rounded-lg shadow-2xs"
+                                              th:text="${p.name}">
+                                        </span>
+                                        <span th:if="${openProposalPeriods.size() > 3}" class="badge bg-slate-100 text-slate-500 text-2xs px-1.5 py-0.5 rounded-lg" th:text="'+' + (${openProposalPeriods.size()} - 3)"></span>
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0 d-flex align-items-center gap-2">
+                        <a th:href="@{/lecturer/topics/create}" class="btn btn-xs bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3 py-1.5 text-xs font-bold shadow-xs d-inline-flex align-items-center gap-1.5 transition hover:-translate-y-0.5">
+                            <i class="fa-solid fa-plus text-xs"></i>
+                            <span>Đề xuất ngay</span>
+                            <i class="fa-solid fa-arrow-right text-xs ms-0.5"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <!-- 1. METRIC STAT CARDS (Row of 4 with Impeccable Style) -->
             <div class="row g-3 mb-4">
                 <!-- Card 1: Supervising Topics (Blue Accent) -->

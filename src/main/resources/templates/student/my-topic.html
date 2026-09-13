@@ -61,13 +61,13 @@
                                 <i class="fa-solid fa-chalkboard-user"></i>
                             </div>
                             <div>
-                                <div class="font-semibold text-slate-900 text-xs" th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.academicTitle + ' ' + group.topic.supervisor.user.fullName : 'Chưa có'}"></div>
+                                <div class="font-semibold text-slate-900 text-xs" th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.user.fullName : 'Chưa có'}"></div>
                                 <span class="text-slate-400 text-xs font-mono" th:text="'Mã GV: ' + (${group.topic.supervisor != null ? group.topic.supervisor.lecturerCode : ''})"></span>
                             </div>
                         </div>
-                        <div th:if="${group.topic.coSupervisor != null}" class="pt-2 border-t border-slate-100">
+                        <div th:if="${group.topic.coSupervisor != null && group.topic.coSupervisor.user != null}" class="pt-2 border-t border-slate-100">
                             <span class="text-slate-400 text-xs d-block mb-1">GVHD phụ (Đồng hướng dẫn):</span>
-                            <strong class="text-slate-800 text-xs font-medium" th:text="${group.topic.coSupervisor.academicTitle + ' ' + group.topic.coSupervisor.user.fullName}"></strong>
+                            <strong class="text-slate-800 text-xs font-medium" th:text="${group.topic.coSupervisor.user.fullName}"></strong>
                         </div>
                     </div>
 

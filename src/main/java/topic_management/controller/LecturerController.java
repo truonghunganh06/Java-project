@@ -84,8 +84,11 @@ public class LecturerController {
                 .filter(t -> "REJECTED".equalsIgnoreCase(t.getStatus()))
                 .toList();
 
+        List<RegistrationPeriod> openProposalPeriods = lecturerService.getOpenProposalPeriods(lecturer);
+
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
+        model.addAttribute("openProposalPeriods", openProposalPeriods);
         model.addAttribute("topics", topics);
         model.addAttribute("reviewerTopics", reviewerTopics);
         model.addAttribute("councils", councils);
@@ -117,7 +120,7 @@ public class LecturerController {
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         List<Topic> topics = lecturerService.getTopicsByLecturer(lecturer);
-        List<Major> majors = lecturerService.getAllMajors();
+        List<Major> majors = lecturerService.getMajorsForLecturer(lecturer);
         List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
 
         model.addAttribute("user", user);
@@ -135,9 +138,9 @@ public class LecturerController {
         if (user == null) return "redirect:/login";
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
-        List<RegistrationPeriod> openPeriods = lecturerService.getOpenProposalPeriods();
+        List<RegistrationPeriod> openPeriods = lecturerService.getOpenProposalPeriods(lecturer);
         List<Lecturer> coSupervisors = lecturerService.getOtherLecturers(lecturer.getId());
-        List<Major> majors = lecturerService.getAllMajors();
+        List<Major> majors = lecturerService.getMajorsForLecturer(lecturer);
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
@@ -163,10 +166,10 @@ public class LecturerController {
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         try {
-            lecturerService.createTopic(lecturer, periodId, majorId, coSupervisorId, topic);
-            redirectAttributes.addFlashAttribute("successMessage", "Đề xuất đề tài '" + topic.getTitle() + "' thành công và đang chờ Trưởng khoa xét duyệt!");
-        } catch (IllegalStateException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            Topic created = lecturerService.createTopic(lecturer, periodId, majorId, coSupervisorId, topic);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi đề xuất đề tài '" + created.getTitle() + "' thành công! Vui lòng chờ Trưởng khoa/Bộ môn xét duyệt.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi đề xuất đề tài: " + e.getMessage());
         }
         return "redirect:/lecturer/topics";
     }
@@ -185,7 +188,7 @@ public class LecturerController {
 
         List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
         List<Lecturer> coSupervisors = lecturerService.getOtherLecturers(lecturer.getId());
-        List<Major> majors = lecturerService.getAllMajors();
+        List<Major> majors = lecturerService.getMajorsForLecturer(lecturer);
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);

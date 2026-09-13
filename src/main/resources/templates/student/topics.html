@@ -92,9 +92,9 @@
                      th:data-topic-title="${t.title}"
                      th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
                      th:data-topic-major="${t.major != null ? t.major.name : 'CNTT'}"
-                     th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? (t.supervisor.academicTitle != null ? t.supervisor.academicTitle + ' ' : '') + t.supervisor.user.fullName : 'Chưa phân công'}"
-                     th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? (t.coSupervisor.academicTitle != null ? t.coSupervisor.academicTitle + ' ' : '') + t.coSupervisor.user.fullName : 'Không có'}"
-                     th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? (t.reviewer.academicTitle != null ? t.reviewer.academicTitle + ' ' : '') + t.reviewer.user.fullName : 'Chưa phân công'}"
+                     th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}"
+                     th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
+                     th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
                      th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
                      th:data-topic-max-students="${t.maxStudents}"
                      th:data-topic-status="${t.status}"
@@ -131,8 +131,8 @@
                             <p class="text-xs text-slate-500 mb-3 line-clamp-2 leading-relaxed" th:text="${t.description}">Mô tả đề tài...</p>
 
                             <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs mb-3 space-y-1">
-                                <div><span class="text-slate-400">GVHD chính:</span> <strong class="text-slate-800" th:text="${t.supervisor != null && t.supervisor.user != null ? (t.supervisor.academicTitle != null ? t.supervisor.academicTitle + ' ' : '') + t.supervisor.user.fullName : 'N/A'}"></strong></div>
-                                <div th:if="${t.coSupervisor != null && t.coSupervisor.user != null}"><span class="text-slate-400">GVHD phụ:</span> <strong class="text-slate-800" th:text="${(t.coSupervisor.academicTitle != null ? t.coSupervisor.academicTitle + ' ' : '') + t.coSupervisor.user.fullName}"></strong></div>
+                                <div><span class="text-slate-400">GVHD chính:</span> <strong class="text-slate-800" th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'N/A'}"></strong></div>
+                                <div th:if="${t.coSupervisor != null && t.coSupervisor.user != null}"><span class="text-slate-400">GVHD phụ:</span> <strong class="text-slate-800" th:text="${t.coSupervisor.user.fullName}"></strong></div>
                             </div>
                         </div>
 

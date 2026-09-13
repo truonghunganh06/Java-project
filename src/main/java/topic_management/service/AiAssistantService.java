@@ -177,8 +177,7 @@ public class AiAssistantService {
 
         if (matched == null) return null;
 
-        String title = matched.getAcademicTitle() != null ? matched.getAcademicTitle() + " " : "";
-        String fullName = title + matched.getUser().getFullName();
+        String fullName = matched.getUser().getFullName();
         String divName = matched.getDivision() != null ? matched.getDivision().getName() : "Chưa phân bộ môn";
         String email = matched.getUser().getEmail() != null ? matched.getUser().getEmail() : "Chưa cập nhật";
         String phone = matched.getUser().getPhone() != null ? matched.getUser().getPhone() : "Chưa cập nhật";
@@ -244,8 +243,7 @@ public class AiAssistantService {
         for (Lecturer l : validLecturers) {
             long sup = supervisorCounts.getOrDefault(l.getId(), 0L);
             long rev = reviewerCounts.getOrDefault(l.getId(), 0L);
-            String title = l.getAcademicTitle() != null ? l.getAcademicTitle() + " " : "";
-            String name = title + l.getUser().getFullName();
+            String name = l.getUser().getFullName();
             String div = l.getDivision() != null ? l.getDivision().getName() : "Bộ môn";
 
             sb.append("* **").append(name).append("** (").append(div).append("):\n");

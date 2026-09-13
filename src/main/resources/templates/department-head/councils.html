@@ -159,7 +159,7 @@
                                 <label class="form-label text-xs font-semibold text-amber-700"><i class="fa-solid fa-crown me-1 text-amber-500"></i> Chủ tịch Hội đồng *</label>
                                 <select name="presidentId" class="form-select text-xs rounded-xl border-amber-200 bg-amber-50/20" required>
                                     <option value="">-- Chọn Chủ tịch --</option>
-                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.academicTitle + ' ' + l.user.fullName + ' (' + l.lecturerCode + ')'}"></option>
+                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user.fullName + ' (' + l.lecturerCode + ')'}"></option>
                                 </select>
                             </div>
 
@@ -167,7 +167,7 @@
                                 <label class="form-label text-xs font-semibold text-blue-700"><i class="fa-solid fa-pen-fancy me-1 text-blue-500"></i> Thư ký Hội đồng *</label>
                                 <select name="secretaryId" class="form-select text-xs rounded-xl border-blue-200 bg-blue-50/20" required>
                                     <option value="">-- Chọn Thư ký --</option>
-                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.academicTitle + ' ' + l.user.fullName + ' (' + l.lecturerCode + ')'}"></option>
+                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user.fullName + ' (' + l.lecturerCode + ')'}"></option>
                                 </select>
                             </div>
 
@@ -175,7 +175,7 @@
                                 <label class="form-label text-xs font-semibold text-slate-700">Ủy viên 1 *</label>
                                 <select name="member1Id" class="form-select text-xs rounded-xl" required>
                                     <option value="">-- Chọn Ủy viên 1 --</option>
-                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.academicTitle + ' ' + l.user.fullName}"></option>
+                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user.fullName}"></option>
                                 </select>
                             </div>
 
@@ -183,7 +183,7 @@
                                 <label class="form-label text-xs font-semibold text-slate-700">Ủy viên 2 (Tùy chọn)</label>
                                 <select name="member2Id" class="form-select text-xs rounded-xl">
                                     <option value="">-- Không chọn --</option>
-                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.academicTitle + ' ' + l.user.fullName}"></option>
+                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user.fullName}"></option>
                                 </select>
                             </div>
 
@@ -191,7 +191,7 @@
                                 <label class="form-label text-xs font-semibold text-slate-700">Ủy viên 3 (Tùy chọn)</label>
                                 <select name="member3Id" class="form-select text-xs rounded-xl">
                                     <option value="">-- Không chọn --</option>
-                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.academicTitle + ' ' + l.user.fullName}"></option>
+                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user.fullName}"></option>
                                 </select>
                             </div>
                         </div>
