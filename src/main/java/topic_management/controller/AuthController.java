@@ -121,12 +121,4 @@ public class AuthController {
         redirectAttributes.addFlashAttribute("error", "Không tìm thấy tài khoản kiểm thử: " + username);
         return "redirect:/login";
     }
-
-    @GetMapping("/")
-    public String home(HttpSession session) {
-        if (session.getAttribute("currentUser") != null) {
-            return "redirect:/dashboard";
-        }
-        return "redirect:/login";
-    }
 }
