@@ -34,7 +34,9 @@
                                 <label class="form-label text-xs font-semibold text-slate-700">Đợt đăng ký *</label>
                                 <select name="periodId" class="form-select text-xs rounded-xl" required>
                                     <option value="">-- Chọn đợt đăng ký đang mở --</option>
-                                    <option th:each="p : ${openPeriods}" th:value="${p.id}" th:text="${p.name + ' (' + p.getPeriodTypeName() + ')'}"></option>
+                                    <option th:each="p : ${openPeriods}" th:value="${p.id}" 
+                                            th:selected="${param.periodId != null && param.periodId[0] == #strings.toString(p.id)}"
+                                            th:text="${p.name + ' (' + p.getPeriodTypeName() + ' · Chỉ tiêu: tối thiểu ' + p.getMinTopicsPerLecturer() + ' đề tài)'}"></option>
                                 </select>
                                 <span class="text-xs text-slate-400 d-block mt-1" th:if="${#lists.isEmpty(openPeriods)}"><em>Hiện không có đợt nào trong thời gian mở đề xuất.</em></span>
                             </div>

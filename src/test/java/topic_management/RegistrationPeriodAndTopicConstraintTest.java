@@ -324,6 +324,107 @@ public class RegistrationPeriodAndTopicConstraintTest {
         assertNotEquals(saved2.getSupervisor().getId(), saved2.getCoSupervisor().getId(), "Hai GVHD không được trùng nhau");
     }
 
+    @Test
+    @Order(6)
+    @DisplayName("6. Kiểm tra theo dõi tiến trình đề xuất (Quota), thanh tiến độ và cơ chế Ân hạn sửa đề tài Rejected")
+    void testProposalQuotaTrackingAndGracePeriodResubmission() {
+        OffsetDateTime now = OffsetDateTime.now();
+        RegistrationPeriod period = departmentHeadService.createPeriod(
+                department,
+                "Đợt kiểm tra Quota & Grace Period",
+                "KLTN",
+                "2026-2027",
+                1,
+                now.minusDays(5), now.plusDays(5),
+                now.plusDays(10), now.plusDays(25),
+                now.plusDays(40), now.plusDays(55),
+                3 // Chỉ tiêu tối thiểu = 3 đề tài / GV
+        );
+
+        assertEquals(3, period.getMinTopicsPerLecturer(), "Chỉ tiêu tối thiểu phải là 3 đề tài");
+
+        // GV đề xuất 1 đề tài
+        Topic t1 = new Topic();
+        t1.setCode("DT-QUOTA-1-" + System.nanoTime());
+        t1.setTitle("Hệ thống nhận diện biển số xe");
+        t1.setDescription("Mô tả AI");
+        t1.setRequirements("OpenCV, Python");
+        Topic savedT1 = lecturerService.createTopic(supervisor1, period.getId(), majorSoftware.getId(), null, t1);
+
+        // Kiểm tra tiến độ qua Service
+        List<LecturerService.ProposalProgressDto> progressList = lecturerService.getProposalProgressList(supervisor1);
+        assertFalse(progressList.isEmpty());
+        LecturerService.ProposalProgressDto currentProg = progressList.stream()
+                .filter(p -> p.getPeriod().getId().equals(period.getId()))
+                .findFirst().orElse(null);
+
+        assertNotNull(currentProg);
+        assertEquals(1, currentProg.getProposedCount(), "Đã nộp 1 đề tài");
+        assertEquals(3, currentProg.getMinRequired(), "Chỉ tiêu tối thiểu là 3");
+        assertFalse(currentProg.isTargetReached(), "Chưa đạt chỉ tiêu vì mới có 1/3");
+        assertEquals(2, currentProg.getRemainingNeeded(), "Còn thiếu 2 đề tài");
+        assertEquals(33, currentProg.getProgressPercent(), "Tiến độ 33%");
+
+        // Trưởng khoa Từ chối đề tài T1
+        departmentHeadService.rejectTopic(savedT1.getId(), "Yêu cầu thu hẹp phạm vi đề tài", department.getId());
+        Topic rejectedT1 = lecturerService.getTopicById(savedT1.getId());
+        assertEquals("REJECTED", rejectedT1.getStatus());
+        assertEquals("Yêu cầu thu hẹp phạm vi đề tài", rejectedT1.getRejectionReason());
+
+        // GV thực hiện Ân hạn sửa chữa & Gửi lại (Grace Period Resubmit)
+        Topic editData = new Topic();
+        editData.setTitle("Hệ thống nhận diện biển số xe máy tại bãi đỗ");
+        editData.setDescription("Thu hẹp phạm vi trong bãi đỗ nội bộ");
+        editData.setRequirements("OpenCV, Python, FastAPI");
+        Topic resubmitted = lecturerService.updateTopic(supervisor1, savedT1.getId(), period.getId(), majorSoftware.getId(), null, editData);
+
+        assertEquals("PENDING", resubmitted.getStatus(), "Sau khi sửa và nộp lại, trạng thái phải chuyển về PENDING");
+        assertNull(resubmitted.getRejectionReason(), "Lý do từ chối cũ phải được xóa sạch");
+        assertEquals("Hệ thống nhận diện biển số xe máy tại bãi đỗ", resubmitted.getTitle());
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("7. Kiểm tra Trưởng khoa Hiệu chỉnh nhanh & Phê duyệt trực tiếp (Quick Edit & Approve)")
+    void testDepartmentHeadQuickEditAndApprove() {
+        OffsetDateTime now = OffsetDateTime.now();
+        RegistrationPeriod period = departmentHeadService.createPeriod(
+                department,
+                "Đợt kiểm tra Quick Edit Approve",
+                "KLTN",
+                "2026-2027",
+                1,
+                now.minusDays(5), now.plusDays(5),
+                now.plusDays(10), now.plusDays(25),
+                now.plusDays(40), now.plusDays(55),
+                3
+        );
+
+        // GV nộp đề tài tên chưa chuẩn
+        Topic t = new Topic();
+        t.setCode("DT-ROUGH-" + System.nanoTime());
+        t.setTitle("lam web ban hang");
+        t.setDescription("web ban quan ao");
+        t.setRequirements("biet code");
+        Topic saved = lecturerService.createTopic(supervisor1, period.getId(), majorSoftware.getId(), null, t);
+        assertEquals("PENDING", saved.getStatus());
+
+        // Trưởng khoa dùng tính năng Sửa nhanh & Duyệt luôn (để kịp công bố cho SV)
+        boolean quickApproved = departmentHeadService.quickEditAndApproveTopic(
+                saved.getId(),
+                "Xây dựng Website Thương mại Điện tử Đa nền tảng",
+                "Nghiên cứu kiến trúc Microservices và thanh toán trực tuyến",
+                "Hiểu biết về Spring Boot, React, MySQL",
+                null, department.getId()
+        );
+
+        assertTrue(quickApproved, "Trưởng khoa phải sửa nhanh và duyệt thành công");
+        Topic approvedTopic = lecturerService.getTopicById(saved.getId());
+        assertEquals("APPROVED", approvedTopic.getStatus(), "Trạng thái đề tài phải là APPROVED");
+        assertEquals("Xây dựng Website Thương mại Điện tử Đa nền tảng", approvedTopic.getTitle(), "Tiêu đề đã được chuẩn hóa");
+        assertNull(approvedTopic.getRejectionReason());
+    }
+
     private Lecturer createLecturerFixture(String username, String fullName) {
         Role role = roleRepository.findByCode("LECTURER").orElse(null);
         String unique = username + "_" + System.nanoTime();

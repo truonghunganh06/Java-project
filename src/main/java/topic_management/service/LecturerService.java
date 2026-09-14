@@ -336,4 +336,93 @@ public class LecturerService {
     public List<RegistrationPeriod> getAllPeriods() {
         return periodRepository.findAll();
     }
+
+    public static class ProposalProgressDto {
+        private RegistrationPeriod period;
+        private long proposedCount; // PENDING + APPROVED
+        private long approvedCount;
+        private long pendingCount;
+        private long rejectedCount;
+        private int minRequired;
+        private int maxQuota;
+        private boolean targetReached;
+        private int remainingNeeded;
+        private int progressPercent;
+        private long daysRemaining;
+
+        public ProposalProgressDto() {}
+
+        public RegistrationPeriod getPeriod() { return period; }
+        public void setPeriod(RegistrationPeriod period) { this.period = period; }
+        public long getProposedCount() { return proposedCount; }
+        public void setProposedCount(long proposedCount) { this.proposedCount = proposedCount; }
+        public long getApprovedCount() { return approvedCount; }
+        public void setApprovedCount(long approvedCount) { this.approvedCount = approvedCount; }
+        public long getPendingCount() { return pendingCount; }
+        public void setPendingCount(long pendingCount) { this.pendingCount = pendingCount; }
+        public long getRejectedCount() { return rejectedCount; }
+        public void setRejectedCount(long rejectedCount) { this.rejectedCount = rejectedCount; }
+        public int getMinRequired() { return minRequired; }
+        public void setMinRequired(int minRequired) { this.minRequired = minRequired; }
+        public int getMaxQuota() { return maxQuota; }
+        public void setMaxQuota(int maxQuota) { this.maxQuota = maxQuota; }
+        public boolean isTargetReached() { return targetReached; }
+        public void setTargetReached(boolean targetReached) { this.targetReached = targetReached; }
+        public int getRemainingNeeded() { return remainingNeeded; }
+        public void setRemainingNeeded(int remainingNeeded) { this.remainingNeeded = remainingNeeded; }
+        public int getProgressPercent() { return progressPercent; }
+        public void setProgressPercent(int progressPercent) { this.progressPercent = progressPercent; }
+        public long getDaysRemaining() { return daysRemaining; }
+        public void setDaysRemaining(long daysRemaining) { this.daysRemaining = daysRemaining; }
+    }
+
+    public List<ProposalProgressDto> getProposalProgressList(Lecturer lecturer) {
+        List<RegistrationPeriod> openPeriods = getOpenProposalPeriods(lecturer);
+        if (openPeriods.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Topic> myTopics = getTopicsByLecturer(lecturer);
+        List<ProposalProgressDto> list = new ArrayList<>();
+
+        for (RegistrationPeriod p : openPeriods) {
+            ProposalProgressDto dto = new ProposalProgressDto();
+            dto.setPeriod(p);
+
+            List<Topic> periodTopics = myTopics.stream()
+                    .filter(t -> t.getPeriod() != null && t.getPeriod().getId().equals(p.getId()))
+                    .toList();
+
+            long approved = periodTopics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus())).count();
+            long pending = periodTopics.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
+            long rejected = periodTopics.stream().filter(t -> "REJECTED".equalsIgnoreCase(t.getStatus())).count();
+            long validProposed = approved + pending;
+
+            int minReq = p.getMinTopicsPerLecturer();
+            int maxQ = (lecturer != null && lecturer.getMaxTopicsQuota() != null) ? lecturer.getMaxTopicsQuota() : 5;
+
+            dto.setApprovedCount(approved);
+            dto.setPendingCount(pending);
+            dto.setRejectedCount(rejected);
+            dto.setProposedCount(validProposed);
+            dto.setMinRequired(minReq);
+            dto.setMaxQuota(maxQ);
+            dto.setTargetReached(validProposed >= minReq);
+            dto.setRemainingNeeded(Math.max(0, minReq - (int) validProposed));
+            
+            int pct = (minReq > 0) ? (int) Math.min(100, (validProposed * 100) / minReq) : 100;
+            dto.setProgressPercent(pct);
+
+            long daysLeft = 0;
+            if (p.getLecturerProposalEnd() != null) {
+                java.time.Duration diff = java.time.Duration.between(OffsetDateTime.now(), p.getLecturerProposalEnd());
+                daysLeft = Math.max(0, diff.toDays());
+            }
+            dto.setDaysRemaining(daysLeft);
+
+            list.add(dto);
+        }
+
+        return list;
+    }
 }

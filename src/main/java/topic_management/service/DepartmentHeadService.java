@@ -115,6 +115,15 @@ public class DepartmentHeadService {
                                            OffsetDateTime propStart, OffsetDateTime propEnd,
                                            OffsetDateTime regStart, OffsetDateTime regEnd,
                                            OffsetDateTime revDead, OffsetDateTime defenseDate) {
+        return createPeriod(dept, name, periodType, academicYear, semester, propStart, propEnd, regStart, regEnd, revDead, defenseDate, 3);
+    }
+
+    @Transactional
+    public RegistrationPeriod createPeriod(Department dept, String name, String periodType, String academicYear, Integer semester,
+                                           OffsetDateTime propStart, OffsetDateTime propEnd,
+                                           OffsetDateTime regStart, OffsetDateTime regEnd,
+                                           OffsetDateTime revDead, OffsetDateTime defenseDate,
+                                           Integer minTopicsPerLecturer) {
         RegistrationPeriod p = new RegistrationPeriod();
         p.setDepartment(dept);
         p.setName(name);
@@ -127,12 +136,13 @@ public class DepartmentHeadService {
         p.setStudentRegistrationEnd(regEnd != null ? regEnd : OffsetDateTime.now().plusDays(30));
         p.setReviewerDeadline(revDead != null ? revDead : OffsetDateTime.now().plusDays(60));
         p.setCouncilDefenseDate(defenseDate != null ? defenseDate : OffsetDateTime.now().plusDays(75));
+        p.setMinTopicsPerLecturer(minTopicsPerLecturer != null && minTopicsPerLecturer > 0 ? minTopicsPerLecturer : 3);
         p.setStatus("OPEN");
         p.setIsActive(true);
         p.setCreatedAt(OffsetDateTime.now());
 
         RegistrationPeriod saved = periodRepository.save(p);
-        System.out.println("[DB-HEAD] Đã tạo đợt đăng ký mới: '" + name + "' (ID=" + saved.getId() + ")");
+        System.out.println("[DB-HEAD] Đã tạo đợt đăng ký mới: '" + name + "' (ID=" + saved.getId() + ", minTopics=" + saved.getMinTopicsPerLecturer() + ")");
         return saved;
     }
 
@@ -157,6 +167,15 @@ public class DepartmentHeadService {
                                            OffsetDateTime regStart, OffsetDateTime regEnd,
                                            OffsetDateTime revDead, OffsetDateTime defenseDate,
                                            String status) {
+        return updatePeriod(id, departmentId, name, periodType, academicYear, semester, propStart, propEnd, regStart, regEnd, revDead, defenseDate, status, 3);
+    }
+
+    @Transactional
+    public RegistrationPeriod updatePeriod(Long id, Long departmentId, String name, String periodType, String academicYear, Integer semester,
+                                           OffsetDateTime propStart, OffsetDateTime propEnd,
+                                           OffsetDateTime regStart, OffsetDateTime regEnd,
+                                           OffsetDateTime revDead, OffsetDateTime defenseDate,
+                                           String status, Integer minTopicsPerLecturer) {
         RegistrationPeriod p = getPeriodById(id);
         if (p == null) return null;
         if (departmentId != null && p.getDepartment() != null
@@ -175,10 +194,44 @@ public class DepartmentHeadService {
         if (revDead != null) p.setReviewerDeadline(revDead);
         if (defenseDate != null) p.setCouncilDefenseDate(defenseDate);
         if (status != null && !status.isBlank()) p.setStatus(status);
+        if (minTopicsPerLecturer != null && minTopicsPerLecturer > 0) {
+            p.setMinTopicsPerLecturer(minTopicsPerLecturer);
+        }
 
         RegistrationPeriod saved = periodRepository.save(p);
-        System.out.println("[DB-HEAD] Đã cập nhật đợt ID=" + id + " ('" + p.getName() + "')");
+        System.out.println("[DB-HEAD] Đã cập nhật đợt ID=" + id + " ('" + p.getName() + "', minTopics=" + p.getMinTopicsPerLecturer() + ")");
         return saved;
+    }
+
+    /**
+     * Sửa nhanh và Phê duyệt trực tiếp đề tài (Tránh trễ hạn công bố cho sinh viên)
+     */
+    @Transactional
+    public boolean quickEditAndApproveTopic(Long topicId, String title, String description, String requirements, Long divisionId, Long departmentId) {
+        Optional<Topic> opt = topicRepository.findById(topicId);
+        if (opt.isEmpty()) return false;
+        Topic t = opt.get();
+
+        if (!isTopicInScope(t, divisionId, departmentId)) {
+            System.err.println("[SECURITY-IDOR] Người dùng (div=" + divisionId + ", dept=" + departmentId + ") cố sửa/duyệt đề tài ngoài phạm vi (topicId=" + topicId + ")");
+            return false;
+        }
+
+        if (title != null && !title.trim().isEmpty()) {
+            t.setTitle(title.trim());
+        }
+        if (description != null) {
+            t.setDescription(description.trim());
+        }
+        if (requirements != null) {
+            t.setRequirements(requirements.trim());
+        }
+
+        t.setStatus("APPROVED");
+        t.setRejectionReason(null);
+        topicRepository.save(t);
+        System.out.println("[DB-HEAD] Đã sửa nhanh và Phê duyệt đề tài ID=" + topicId + " ('" + t.getTitle() + "')");
+        return true;
     }
 
     @Transactional

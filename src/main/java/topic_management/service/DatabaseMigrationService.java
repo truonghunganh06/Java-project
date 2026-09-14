@@ -63,9 +63,10 @@ public class DatabaseMigrationService implements InitializingBean {
             stmt.execute("ALTER TABLE topic_registrations ADD COLUMN IF NOT EXISTS group_id BIGINT;");
             stmt.execute("ALTER TABLE topic_registrations ADD COLUMN IF NOT EXISTS registered_by_student_id BIGINT;");
 
-            // 5. Thêm cột min_students và max_students cho registration_periods
+            // 5. Thêm cột min_students, max_students và min_topics_per_lecturer cho registration_periods
             stmt.execute("ALTER TABLE registration_periods ADD COLUMN IF NOT EXISTS min_students INT DEFAULT 2;");
             stmt.execute("ALTER TABLE registration_periods ADD COLUMN IF NOT EXISTS max_students INT DEFAULT 3;");
+            stmt.execute("ALTER TABLE registration_periods ADD COLUMN IF NOT EXISTS min_topics_per_lecturer INT DEFAULT 3;");
 
             // Thêm cột cho submissions
             stmt.execute("ALTER TABLE submissions ADD COLUMN IF NOT EXISTS original_file_name VARCHAR(255);");

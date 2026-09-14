@@ -535,6 +535,14 @@
                                     <option value="3">Học kỳ hè</option>
                                 </select>
                             </div>
+                            <div class="col-md-12">
+                                <label class="form-label text-xs font-semibold text-slate-700">Chỉ tiêu đề tài tối thiểu mỗi GV phải đề xuất *</label>
+                                <div class="input-group">
+                                    <input type="number" name="minTopicsPerLecturer" class="form-control text-xs rounded-xl" value="3" min="1" max="20" required>
+                                    <span class="input-group-text text-xs bg-slate-50 text-slate-500 rounded-xl">đề tài / giảng viên</span>
+                                </div>
+                                <span class="text-2xs text-slate-400 mt-1 d-block">Giảng viên sẽ thấy thanh tiến độ và cảnh báo nếu chưa nộp đủ số lượng này trước hạn chót.</span>
+                            </div>
 
                             <div class="col-12"><hr class="my-1 border-slate-100"></div>
 
@@ -653,6 +661,13 @@
                                     <option value="OPEN" class="text-emerald-700">🟢 Đang mở (Hoạt động)</option>
                                     <option value="CLOSED" class="text-rose-700">🔒 Đã đóng (Tạm khóa)</option>
                                 </select>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label text-xs font-semibold text-slate-700">Chỉ tiêu đề tài tối thiểu mỗi GV phải đề xuất *</label>
+                                <div class="input-group">
+                                    <input type="number" id="editMinTopicsPerLecturer" name="minTopicsPerLecturer" class="form-control text-xs rounded-xl" value="3" min="1" max="20" required>
+                                    <span class="input-group-text text-xs bg-slate-50 text-slate-500 rounded-xl">đề tài / giảng viên</span>
+                                </div>
                             </div>
 
                             <div class="col-12"><hr class="my-1 border-slate-100"></div>
@@ -1024,6 +1039,7 @@
                 document.getElementById('editPeriodTypeSelect').value = p.periodType || 'KLTN';
                 document.getElementById('editAcademicYear').value = p.academicYear || '2026-2027';
                 document.getElementById('editSemester').value = p.semester || 1;
+                document.getElementById('editMinTopicsPerLecturer').value = p.minTopicsPerLecturer || 3;
                 document.getElementById('editStatus').value = p.status || 'OPEN';
 
                 document.getElementById('editPropStart').value = p.propStart || '';

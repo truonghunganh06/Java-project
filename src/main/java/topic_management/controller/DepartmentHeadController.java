@@ -156,6 +156,7 @@ public class DepartmentHeadController {
             @RequestParam("periodType") String periodType,
             @RequestParam("academicYear") String academicYear,
             @RequestParam("semester") Integer semester,
+            @RequestParam(value = "minTopicsPerLecturer", defaultValue = "3") Integer minTopicsPerLecturer,
             @RequestParam(value = "propStart", required = false) String propStart,
             @RequestParam(value = "propEnd", required = false) String propEnd,
             @RequestParam(value = "regStart", required = false) String regStart,
@@ -221,7 +222,7 @@ public class DepartmentHeadController {
             return "redirect:/department-head/periods";
         }
 
-        RegistrationPeriod savedPeriod = departmentHeadService.createPeriod(dept, name, periodType, academicYear, semester, pStart, pEnd, rStart, rEnd, rDead, dDate);
+        RegistrationPeriod savedPeriod = departmentHeadService.createPeriod(dept, name, periodType, academicYear, semester, pStart, pEnd, rStart, rEnd, rDead, dDate, minTopicsPerLecturer);
 
         // Tự động ban hành Thông báo chính thức cho toàn Khoa / Giảng viên / Sinh viên
         try {
@@ -231,7 +232,8 @@ public class DepartmentHeadController {
             sb.append("Khoa/Bộ môn xin thông báo chính thức ban hành kế hoạch tổ chức: **").append(name).append("** (Học kỳ ").append(semester).append(" - Năm học ").append(academicYear).append(").\n\n");
             sb.append("### 📅 CÁC MỐC THỜI GIAN QUAN TRỌNG:\n");
             if (pStart != null && pEnd != null) {
-                sb.append("- **1. Giảng viên đề xuất đề tài:** từ ").append(pStart.format(dtf)).append(" đến ").append(pEnd.format(dtf)).append("\n");
+                sb.append("- **1. Giảng viên đề xuất đề tài:** từ ").append(pStart.format(dtf)).append(" đến ").append(pEnd.format(dtf))
+                        .append(" (Chỉ tiêu tối thiểu: **").append(savedPeriod.getMinTopicsPerLecturer()).append(" đề tài/GV**)\n");
             }
             if (rStart != null && rEnd != null) {
                 sb.append("- **2. Sinh viên đăng ký đề tài:** từ ").append(rStart.format(dtf)).append(" đến ").append(rEnd.format(dtf)).append("\n");
@@ -296,6 +298,7 @@ public class DepartmentHeadController {
         data.put("periodType", p.getPeriodType());
         data.put("academicYear", p.getAcademicYear());
         data.put("semester", p.getSemester());
+        data.put("minTopicsPerLecturer", p.getMinTopicsPerLecturer());
         data.put("status", p.getStatus() != null ? p.getStatus() : "OPEN");
         data.put("propStart", p.getLecturerProposalStart() != null ? p.getLecturerProposalStart().toLocalDate().toString() : "");
         data.put("propEnd", p.getLecturerProposalEnd() != null ? p.getLecturerProposalEnd().toLocalDate().toString() : "");
@@ -313,6 +316,7 @@ public class DepartmentHeadController {
             @RequestParam("periodType") String periodType,
             @RequestParam("academicYear") String academicYear,
             @RequestParam("semester") Integer semester,
+            @RequestParam(value = "minTopicsPerLecturer", defaultValue = "3") Integer minTopicsPerLecturer,
             @RequestParam(value = "status", defaultValue = "OPEN") String status,
             @RequestParam(value = "propStart", required = false) String propStart,
             @RequestParam(value = "propEnd", required = false) String propEnd,
@@ -367,7 +371,7 @@ public class DepartmentHeadController {
         }
 
         RegistrationPeriod updated = departmentHeadService.updatePeriod(id, dept.getId(), name, periodType, academicYear, semester,
-                pStart, pEnd, rStart, rEnd, rDead, dDate, status);
+                pStart, pEnd, rStart, rEnd, rDead, dDate, status, minTopicsPerLecturer);
 
         if (updated == null) {
             if (isAjax) {
@@ -520,6 +524,32 @@ public class DepartmentHeadController {
             redirectAttributes.addFlashAttribute("errorMessage", "Đã từ chối đề tài '" + (topic != null ? topic.getTitle() : "") + "'.");
         } else {
             redirectAttributes.addFlashAttribute("errorMessage", "Không thể từ chối đề tài (không tìm thấy hoặc không thuộc bộ môn của bạn)!");
+        }
+        return "redirect:/department-head/topics";
+    }
+
+    @PostMapping("/topics/{id}/quick-edit-approve")
+    public String quickEditAndApprove(
+            @PathVariable("id") Long id,
+            @RequestParam("title") String title,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "requirements", required = false) String requirements,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) return "redirect:/login";
+
+        Department dept = departmentHeadService.getDepartmentForUser(user);
+        Division division = departmentHeadService.getDivisionForUser(user);
+        Long divId = division != null ? division.getId() : null;
+        Long deptId = dept != null ? dept.getId() : null;
+
+        boolean success = departmentHeadService.quickEditAndApproveTopic(id, title, description, requirements, divId, deptId);
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã hiệu chỉnh và Phê duyệt đề tài thành công để kịp tiến độ công bố!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể hiệu chỉnh đề tài (ngoài thẩm quyền hoặc không tìm thấy đề tài)!");
         }
         return "redirect:/department-head/topics";
     }

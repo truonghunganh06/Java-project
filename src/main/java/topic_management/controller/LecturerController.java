@@ -85,10 +85,12 @@ public class LecturerController {
                 .toList();
 
         List<RegistrationPeriod> openProposalPeriods = lecturerService.getOpenProposalPeriods(lecturer);
+        List<LecturerService.ProposalProgressDto> proposalProgressList = lecturerService.getProposalProgressList(lecturer);
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("openProposalPeriods", openProposalPeriods);
+        model.addAttribute("proposalProgressList", proposalProgressList);
         model.addAttribute("topics", topics);
         model.addAttribute("reviewerTopics", reviewerTopics);
         model.addAttribute("councils", councils);
@@ -139,6 +141,7 @@ public class LecturerController {
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         List<RegistrationPeriod> openPeriods = lecturerService.getOpenProposalPeriods(lecturer);
+        List<LecturerService.ProposalProgressDto> proposalProgressList = lecturerService.getProposalProgressList(lecturer);
         List<Lecturer> coSupervisors = lecturerService.getOtherLecturers(lecturer.getId());
         List<Major> majors = lecturerService.getMajorsForLecturer(lecturer);
 
@@ -146,6 +149,7 @@ public class LecturerController {
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("topic", new Topic());
         model.addAttribute("openPeriods", openPeriods);
+        model.addAttribute("proposalProgressList", proposalProgressList);
         model.addAttribute("coSupervisors", coSupervisors);
         model.addAttribute("majors", majors);
 

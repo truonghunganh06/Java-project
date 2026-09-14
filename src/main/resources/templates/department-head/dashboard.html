@@ -280,7 +280,8 @@
                                                 <button type="button"
                                                     class="btn btn-sm bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-lg px-2 py-0.5 text-xs font-semibold transition"
                                                     data-bs-toggle="modal" data-bs-target="#rejectModal"
-                                                    th:onclick="'prepareRejectModal(' + ${t.id} + ', \'' + ${#strings.replace(t.title, '\'', '\\\'')} + '\')'"
+                                                    th:data-topic-id="${t.id}" th:data-topic-title="${t.title}"
+                                                    onclick="prepareRejectModalFromBtn(this)"
                                                     title="Từ chối đề tài">
                                                     <i class="fa-solid fa-xmark text-xs"></i>
                                                 </button>
@@ -554,8 +555,16 @@
     <!-- Reusable Slide-over Topic Drawer Fragment -->
     <div th:replace="~{fragments/drawer :: topicDrawer}"></div>
 
-    <!-- Chart.js CDN & Chart Init -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        function prepareRejectModalFromBtn(btn) {
+            const topicId = btn.getAttribute('data-topic-id');
+            const title = btn.getAttribute('data-topic-title') || '';
+            const form = document.getElementById('rejectForm');
+            if (form) form.action = '/department-head/topics/' + topicId + '/reject';
+            const titleEl = document.getElementById('rejectTopicTitle');
+            if (titleEl) titleEl.textContent = title;
+        }
+    </script>
     <script th:inline="javascript">
         document.addEventListener('DOMContentLoaded', function() {
             const excellent = /*[[${countExcellent}]]*/ 0;

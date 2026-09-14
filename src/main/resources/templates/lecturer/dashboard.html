@@ -45,42 +45,184 @@
                 </div>
             </div>
 
-            <!-- COMPACT ACTIVE PROPOSAL PERIOD ALERT BANNER (Zero Clutter, 1-Row SaaS) -->
-            <div th:if="${openProposalPeriods != null && !openProposalPeriods.isEmpty()}" class="mb-4">
-                <div class="p-2.5 px-3.5 rounded-2xl bg-gradient-to-r from-blue-50/90 via-indigo-50/40 to-white border border-blue-200/80 shadow-2xs d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2.5">
-                    <div class="d-flex align-items-center gap-2.5 overflow-hidden">
-                        <div class="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
+            <!-- ULTRA-COMPACT PROPOSAL PROGRESS TOOLBAR (Single-row with Quick Selector) -->
+            <div th:if="${proposalProgressList != null && !proposalProgressList.isEmpty()}" 
+                 id="proposalProgressWidget"
+                 class="saas-card rounded-2xl bg-white border border-blue-100/90 shadow-2xs mb-4 overflow-hidden">
+                
+                <!-- Main Single-Row Bar (Compact ~48px) -->
+                <div class="p-2.5 px-3.5 bg-gradient-to-r from-blue-50/70 via-indigo-50/30 to-white d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2.5">
+                    
+                    <!-- Left: Icon & Dropdown Select -->
+                    <div class="d-flex align-items-center gap-2.5 min-w-0" style="flex: 1 1 38%;">
+                        <div class="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-2xs">
                             <i class="fa-solid fa-bullhorn"></i>
                         </div>
-                        <div class="d-flex flex-wrap align-items-center gap-2 min-w-0">
-                            <span class="badge bg-blue-600 text-white text-2xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Đang mở đề xuất</span>
-                            <div class="d-flex align-items-center gap-1.5 overflow-x-auto py-0.5 text-xs text-slate-800">
-                                <span th:if="${openProposalPeriods.size() == 1}">
-                                    <strong class="text-blue-950 font-bold" th:text="${openProposalPeriods[0].name}"></strong>
-                                    <span class="text-slate-500 text-2xs font-normal ms-1" th:if="${openProposalPeriods[0].lecturerProposalEnd != null}" th:text="'(Hạn chót: ' + ${#temporals.format(openProposalPeriods[0].lecturerProposalEnd, 'dd/MM/yyyy')} + ')'"></span>
+                        <div class="d-flex align-items-center gap-2 min-w-0 w-100">
+                            <span class="text-xs font-bold text-slate-800 flex-shrink-0 d-none d-sm-inline">Đợt đề xuất:</span>
+                            <select id="periodSelector" 
+                                    class="form-select form-select-sm rounded-xl text-xs font-semibold text-slate-800 border-slate-200 bg-white py-1 ps-2.5 pe-7 cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition truncate shadow-2xs"
+                                    onchange="onPeriodChange(this.value)">
+                                <option th:each="prog, iter : ${proposalProgressList}" 
+                                        th:value="${prog.period.id}"
+                                        th:selected="${iter.index == 0}"
+                                        th:data-name="${prog.period.name}"
+                                        th:data-type="${prog.period.periodTypeName}"
+                                        th:data-deadline="${#temporals.format(prog.period.lecturerProposalEnd, 'dd/MM/yyyy')}"
+                                        th:data-days="${prog.daysRemaining}"
+                                        th:data-count="${prog.proposedCount}"
+                                        th:data-min="${prog.minRequired}"
+                                        th:data-percent="${prog.progressPercent}"
+                                        th:data-reached="${prog.targetReached}"
+                                        th:data-remaining="${prog.remainingNeeded}"
+                                        th:text="${prog.period.name + ' (' + (prog.targetReached ? 'Đạt' : 'Thiếu ' + prog.remainingNeeded) + ' · Hạn ' + #temporals.format(prog.period.lecturerProposalEnd, 'dd/MM') + ')'}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Middle: Dynamic Progress & Status for Selected Period -->
+                    <div class="d-flex align-items-center gap-3" style="flex: 1 1 38%;">
+                        <div class="w-full" style="max-width: 220px;">
+                            <div class="d-flex justify-content-between align-items-center text-2xs mb-1">
+                                <span class="text-slate-600 font-medium">
+                                    Đã nộp: <strong id="progCountText" class="text-slate-900" th:text="${proposalProgressList[0].proposedCount} + '/' + ${proposalProgressList[0].minRequired}">0/3</strong> đề tài
                                 </span>
-                                <span th:if="${openProposalPeriods.size() > 1}" class="text-slate-700">
-                                    Có <strong class="text-blue-700 font-bold" th:text="${openProposalPeriods.size()}"></strong> đợt đang mở nhận đề tài:
-                                    <span class="d-inline-flex flex-wrap gap-1.5 ms-1">
-                                        <span th:each="p, iter : ${openProposalPeriods}" th:if="${iter.index < 3}"
-                                              class="badge bg-white text-slate-700 border border-slate-200 text-2xs font-medium px-2 py-0.5 rounded-lg shadow-2xs"
-                                              th:text="${p.name}">
-                                        </span>
-                                        <span th:if="${openProposalPeriods.size() > 3}" class="badge bg-slate-100 text-slate-500 text-2xs px-1.5 py-0.5 rounded-lg" th:text="'+' + (${openProposalPeriods.size()} - 3)"></span>
-                                    </span>
-                                </span>
+                                <span id="progPercentText" class="font-bold font-mono text-blue-600" th:text="${proposalProgressList[0].progressPercent} + '%'">0%</span>
+                            </div>
+                            <div class="progress" style="height: 6px; border-radius: 9999px; background-color: #e2e8f0;">
+                                <div id="progBar" class="progress-bar progress-bar-striped progress-bar-animated bg-blue-600"
+                                     role="progressbar"
+                                     th:style="'width: ' + ${proposalProgressList[0].progressPercent} + '%;'">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status Badge -->
+                        <div id="progBadgeContainer">
+                            <span th:if="${proposalProgressList[0].targetReached}" class="badge bg-emerald-50 text-emerald-700 border border-emerald-200 text-2xs font-semibold px-2 py-0.5 rounded-lg whitespace-nowrap">
+                                <i class="fa-solid fa-check me-0.5"></i> Đạt chỉ tiêu
+                            </span>
+                            <span th:unless="${proposalProgressList[0].targetReached}" class="badge bg-amber-50 text-amber-800 border border-amber-200 text-2xs font-semibold px-2 py-0.5 rounded-lg whitespace-nowrap">
+                                Thiếu <strong th:text="${proposalProgressList[0].remainingNeeded}">3</strong> đề tài
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Right: Actions (Submit button + View All toggle) -->
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0 justify-content-end">
+                        <a id="btnSubmitProposal" 
+                           th:href="@{/lecturer/topics/create(periodId=${proposalProgressList[0].period.id})}" 
+                           class="btn btn-xs bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3 py-1.5 text-xs font-bold transition shadow-2xs d-inline-flex align-items-center gap-1">
+                            <i class="fa-solid fa-plus text-2xs"></i>
+                            <span>Đề xuất ngay</span>
+                        </a>
+
+                        <button th:if="${proposalProgressList.size() > 1}" 
+                                type="button" 
+                                class="btn btn-xs btn-light border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl px-2.5 py-1.5 text-xs font-medium transition d-inline-flex align-items-center gap-1"
+                                onclick="toggleAllPeriodsDrawer()"
+                                title="Xem toàn bộ các đợt">
+                            <span class="d-none d-sm-inline">Tất cả (<span th:text="${proposalProgressList.size()}"></span>)</span>
+                            <i id="drawerToggleIcon" class="fa-solid fa-chevron-down text-2xs transition-transform duration-200"></i>
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Expandable Drawer for All Periods (Collapsible with Scrollbar) -->
+                <div id="allPeriodsDrawer" class="border-t border-slate-100 bg-slate-50/40 p-2.5 px-3.5 d-none">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-2xs font-bold text-slate-500 uppercase tracking-wider">Danh sách tất cả <span th:text="${proposalProgressList.size()}"></span> đợt đang mở</span>
+                        <span class="text-2xs text-slate-400">Nhấn vào đợt để chọn nhanh</span>
+                    </div>
+                    <div class="d-flex flex-column gap-1.5" style="max-height: 200px; overflow-y: auto;">
+                        <div th:each="prog : ${proposalProgressList}" 
+                             class="p-2 px-3 rounded-xl bg-white border border-slate-200/80 hover:border-blue-300 hover:bg-blue-50/40 transition cursor-pointer d-flex align-items-center justify-content-between gap-2"
+                             th:onclick="'selectPeriodFromDrawer(' + ${prog.period.id} + ')'">
+                            <div class="d-flex align-items-center gap-2 min-w-0">
+                                <span class="badge text-2xs font-bold px-1.5 py-0.5 rounded"
+                                      th:classappend="${prog.targetReached ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}"
+                                      th:text="${prog.period.periodTypeName}">KLTN</span>
+                                <span class="text-xs font-semibold text-slate-800 truncate" th:text="${prog.period.name}">Tên đợt</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2.5 flex-shrink-0 text-2xs">
+                                <span class="text-slate-500">Hạn: <strong class="text-slate-700" th:text="${#temporals.format(prog.period.lecturerProposalEnd, 'dd/MM')}"></strong></span>
+                                <span class="font-bold" th:classappend="${prog.targetReached ? 'text-emerald-600' : 'text-blue-600'}" th:text="${prog.proposedCount} + '/' + ${prog.minRequired}">0/3</span>
+                                <span th:if="${prog.targetReached}" class="badge bg-emerald-100 text-emerald-700 text-2xs px-1.5 py-0.5 rounded">Đạt</span>
+                                <span th:unless="${prog.targetReached}" class="badge bg-amber-100 text-amber-800 text-2xs px-1.5 py-0.5 rounded" th:text="'Thiếu ' + ${prog.remainingNeeded}">Thiếu 3</span>
                             </div>
                         </div>
                     </div>
-                    <div class="flex-shrink-0 d-flex align-items-center gap-2">
-                        <a th:href="@{/lecturer/topics/create}" class="btn btn-xs bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3 py-1.5 text-xs font-bold shadow-xs d-inline-flex align-items-center gap-1.5 transition hover:-translate-y-0.5">
-                            <i class="fa-solid fa-plus text-xs"></i>
-                            <span>Đề xuất ngay</span>
-                            <i class="fa-solid fa-arrow-right text-xs ms-0.5"></i>
-                        </a>
-                    </div>
                 </div>
+
             </div>
+
+            <!-- Client Script for Ultra-Compact Widget -->
+            <script>
+                function onPeriodChange(periodId) {
+                    var sel = document.getElementById('periodSelector');
+                    var opt = sel.options[sel.selectedIndex];
+                    if (!opt) return;
+
+                    var count = opt.getAttribute('data-count');
+                    var min = opt.getAttribute('data-min');
+                    var percent = opt.getAttribute('data-percent');
+                    var reached = opt.getAttribute('data-reached') === 'true';
+                    var remaining = opt.getAttribute('data-remaining');
+                    var days = parseInt(opt.getAttribute('data-days') || '0', 10);
+
+                    // Update count & percent text
+                    document.getElementById('progCountText').innerText = count + '/' + min;
+                    var percentEl = document.getElementById('progPercentText');
+                    percentEl.innerText = percent + '%';
+                    percentEl.className = 'font-bold font-mono ' + (reached ? 'text-emerald-600' : 'text-blue-600');
+
+                    // Update Progress bar
+                    var bar = document.getElementById('progBar');
+                    bar.style.width = percent + '%';
+                    bar.className = 'progress-bar progress-bar-striped progress-bar-animated ' + 
+                                    (reached ? 'bg-emerald-500' : (days <= 3 ? 'bg-amber-500' : 'bg-blue-600'));
+
+                    // Update Badge
+                    var badgeContainer = document.getElementById('progBadgeContainer');
+                    if (reached) {
+                        badgeContainer.innerHTML = '<span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200 text-2xs font-semibold px-2 py-0.5 rounded-lg whitespace-nowrap"><i class="fa-solid fa-check me-0.5"></i> Đạt chỉ tiêu</span>';
+                    } else {
+                        badgeContainer.innerHTML = '<span class="badge bg-amber-50 text-amber-800 border border-amber-200 text-2xs font-semibold px-2 py-0.5 rounded-lg whitespace-nowrap">Thiếu <strong>' + remaining + '</strong> đề tài</span>';
+                    }
+
+                    // Update submit URL
+                    var btn = document.getElementById('btnSubmitProposal');
+                    btn.href = '/lecturer/topics/create?periodId=' + periodId;
+                    if (reached) {
+                        btn.className = 'btn btn-xs btn-light border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl px-3 py-1.5 text-xs font-bold transition shadow-2xs d-inline-flex align-items-center gap-1';
+                        btn.innerHTML = '<i class="fa-solid fa-plus text-2xs"></i><span>Đề xuất thêm</span>';
+                    } else {
+                        btn.className = 'btn btn-xs bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3 py-1.5 text-xs font-bold transition shadow-2xs d-inline-flex align-items-center gap-1';
+                        btn.innerHTML = '<i class="fa-solid fa-plus text-2xs"></i><span>Đề xuất ngay</span>';
+                    }
+                }
+
+                function toggleAllPeriodsDrawer() {
+                    var drawer = document.getElementById('allPeriodsDrawer');
+                    var icon = document.getElementById('drawerToggleIcon');
+                    if (drawer.classList.contains('d-none')) {
+                        drawer.classList.remove('d-none');
+                        icon.style.transform = 'rotate(180deg)';
+                    } else {
+                        drawer.classList.add('d-none');
+                        icon.style.transform = 'rotate(0deg)';
+                    }
+                }
+
+                function selectPeriodFromDrawer(periodId) {
+                    var sel = document.getElementById('periodSelector');
+                    sel.value = periodId;
+                    onPeriodChange(periodId);
+                    toggleAllPeriodsDrawer();
+                }
+            </script>
 
             <!-- 1. METRIC STAT CARDS (Row of 4 with Impeccable Style) -->
             <div class="row g-3 mb-4">
@@ -149,24 +291,37 @@
                 </div>
             </div>
 
-            <!-- URGENT ACTION SECTION: REJECTED TOPICS ALERT (If any) -->
-            <div th:if="${rejectedTopics != null && !rejectedTopics.isEmpty()}" class="alert alert-danger p-4 rounded-2xl mb-4 border border-rose-200 shadow-sm">
-                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0 text-base">
+            <!-- URGENT ACTION SECTION: REJECTED TOPICS ALERT (Grace Period Resubmission) -->
+            <div th:if="${rejectedTopics != null && !rejectedTopics.isEmpty()}" class="saas-card rounded-2xl bg-white border border-rose-200 shadow-sm overflow-hidden mb-4">
+                <div class="p-3.5 px-4 bg-rose-50/60 border-b border-rose-100 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
                             <i class="fa-solid fa-triangle-exclamation"></i>
                         </div>
                         <div>
-                            <h6 class="font-bold text-rose-900 text-xs mb-0.5">
-                                Có <span th:text="${rejectedTopics.size()}">1</span> đề tài bị Trưởng khoa từ chối cần chỉnh sửa & gửi lại!
+                            <h6 class="font-bold text-rose-950 text-xs mb-0.5">
+                                Có <span th:text="${rejectedTopics.size()}">1</span> đề tài bị Trưởng khoa từ chối cần chỉnh sửa & nộp lại (Ân hạn sửa chữa)
                             </h6>
-                            <span class="text-xs text-rose-700">Vui lòng cập nhật lại thông tin đề tài theo góp ý để Trưởng khoa xem xét lại.</span>
+                            <span class="text-2xs text-rose-700">Bạn có thể sửa lại nội dung theo góp ý và gửi lại xét duyệt mà không bị khóa quyền nộp.</span>
                         </div>
                     </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <a th:each="rt : ${rejectedTopics}" th:href="@{/lecturer/topics/{id}/edit(id=${rt.id})}" 
-                           class="btn btn-sm btn-dark rounded-xl px-3 py-1.5 text-xs font-semibold shadow-xs">
-                            <i class="fa-solid fa-pen-to-square me-1"></i> Sửa: <span th:text="${rt.code != null ? rt.code : rt.title}"></span>
+                </div>
+                <div class="p-3 d-flex flex-column gap-2.5">
+                    <div th:each="rt : ${rejectedTopics}" class="p-3 rounded-xl border border-rose-100 bg-rose-50/20 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2.5">
+                        <div class="min-w-0">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-rose-100 text-rose-700 border border-rose-200 text-2xs font-mono" th:text="${rt.code}">DT01</span>
+                                <strong class="text-slate-900 text-xs font-bold" th:text="${rt.title}">Tên đề tài</strong>
+                            </div>
+                            <div class="text-xs text-rose-800 mt-1 bg-white p-2 rounded-lg border border-rose-100">
+                                <i class="fa-solid fa-comment-dots text-rose-500 me-1"></i>
+                                <strong>Lý do từ chối:</strong> <span th:text="${rt.rejectionReason != null ? rt.rejectionReason : 'Chưa đạt yêu cầu học thuật'}">Lý do...</span>
+                            </div>
+                        </div>
+                        <a th:href="@{/lecturer/topics/{id}/edit(id=${rt.id})}" 
+                           class="btn btn-sm bg-rose-600 hover:bg-rose-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-xs flex-shrink-0 d-inline-flex align-items-center gap-1.5 transition">
+                            <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            <span>Sửa & Nộp lại</span>
                         </a>
                     </div>
                 </div>
