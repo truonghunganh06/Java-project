@@ -7,7 +7,18 @@
 
         <!-- 2. Main Topbar Navbar -->
         <header class="saas-topbar">
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <!-- Laptop / Desktop Toggle Button -->
+                <button class="btn btn-sm btn-light border rounded-xl d-none d-lg-inline-flex align-items-center justify-content-center me-1" 
+                        type="button" 
+                        onclick="toggleDesktopSidebar()" 
+                        id="desktopSidebarToggleBtn" 
+                        title="Ẩn/Hiện thanh menu (Sidebar)"
+                        aria-label="Thu gọn hoặc mở rộng Sidebar"
+                        style="width: 36px; height: 36px; padding: 0; flex-shrink: 0; transition: all 0.2s ease;">
+                    <i class="fa-solid fa-indent text-secondary" id="desktopSidebarToggleIcon" style="font-size: 0.9rem; transition: transform 0.3s ease;"></i>
+                </button>
+
                 <!-- Mobile Toggle -->
                 <button class="btn btn-sm btn-light border d-lg-none rounded-xl" type="button" onclick="toggleSidebar()" aria-label="Toggle navigation">
                     <i class="fa-solid fa-bars text-secondary"></i>

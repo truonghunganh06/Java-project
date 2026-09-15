@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
 <body>
     <div th:fragment="scripts">
         <!-- Global Announcement Detail Modal (Available across all pages) -->
@@ -8,30 +9,43 @@
                 <div class="modal-content rounded-2xl border-0 shadow-xl">
                     <div class="modal-header border-b border-slate-100 p-4">
                         <div class="d-flex align-items-center gap-2">
-                            <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0">
+                            <div
+                                class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0">
                                 <i class="fa-solid fa-bullhorn text-sm"></i>
                             </div>
                             <div>
-                                <span id="modalAnnouncementCategory" class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200 mb-0.5 d-inline-block">Thông báo chung</span>
-                                <h6 id="modalAnnouncementTitle" class="modal-title font-bold text-slate-900 text-sm mb-0">Tiêu đề thông báo</h6>
+                                <span id="modalAnnouncementCategory"
+                                    class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200 mb-0.5 d-inline-block">Thông
+                                    báo chung</span>
+                                <h6 id="modalAnnouncementTitle"
+                                    class="modal-title font-bold text-slate-900 text-sm mb-0">Tiêu đề thông báo</h6>
                             </div>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body p-4 space-y-3">
-                        <div class="d-flex align-items-center justify-content-between text-xs text-slate-400 pb-2 border-b border-slate-100">
-                            <div><i class="fa-solid fa-user-pen me-1"></i> Người đăng: <strong id="modalAnnouncementAuthor" class="text-slate-700">Ban chủ nhiệm Khoa</strong></div>
-                            <div><i class="fa-regular fa-clock me-1"></i> <span id="modalAnnouncementTime">--</span></div>
+                        <div
+                            class="d-flex align-items-center justify-content-between text-xs text-slate-400 pb-2 border-b border-slate-100">
+                            <div><i class="fa-solid fa-user-pen me-1"></i> Người đăng: <strong
+                                    id="modalAnnouncementAuthor" class="text-slate-700">Ban chủ nhiệm Khoa</strong>
+                            </div>
+                            <div><i class="fa-regular fa-clock me-1"></i> <span id="modalAnnouncementTime">--</span>
+                            </div>
                         </div>
-                        <div id="modalAnnouncementPeriodWrap" class="p-2.5 bg-blue-50/50 rounded-xl border border-blue-100 text-xs text-blue-800 d-none">
-                            <i class="fa-solid fa-bookmark me-1.5 text-blue-600"></i> Áp dụng cho: <strong id="modalAnnouncementPeriod">Đợt KLTN</strong>
+                        <div id="modalAnnouncementPeriodWrap"
+                            class="p-2.5 bg-blue-50/50 rounded-xl border border-blue-100 text-xs text-blue-800 d-none">
+                            <i class="fa-solid fa-bookmark me-1.5 text-blue-600"></i> Áp dụng cho: <strong
+                                id="modalAnnouncementPeriod">Đợt KLTN</strong>
                         </div>
-                        <div id="modalAnnouncementContent" class="text-xs text-slate-700 leading-relaxed p-3 bg-slate-50/70 rounded-xl border border-slate-100" style="white-space: pre-line; min-height: 120px;">
+                        <div id="modalAnnouncementContent"
+                            class="text-xs text-slate-700 leading-relaxed p-3 bg-slate-50/70 rounded-xl border border-slate-100"
+                            style="white-space: pre-line; min-height: 120px;">
                             Nội dung chi tiết thông báo...
                         </div>
                     </div>
                     <div class="modal-footer border-t border-slate-100 p-3">
-                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-4 text-xs font-semibold" data-bs-dismiss="modal">Đóng</button>
+                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-4 text-xs font-semibold"
+                            data-bs-dismiss="modal">Đóng</button>
                     </div>
                 </div>
             </div>
@@ -52,11 +66,17 @@
                             <i class="fa-solid fa-circle-question" id="confirmModalIcon"></i>
                         </div>
                     </div>
-                    <h5 class="modal-title fw-bold text-slate-900 text-base mb-1" id="confirmModalTitle">Xác nhận thao tác</h5>
-                    <p class="text-xs text-slate-500 mb-4" id="confirmModalMessage">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+                    <h5 class="modal-title fw-bold text-slate-900 text-base mb-1" id="confirmModalTitle">Xác nhận thao
+                        tác</h5>
+                    <p class="text-xs text-slate-500 mb-4" id="confirmModalMessage">Bạn có chắc chắn muốn thực hiện hành
+                        động này?</p>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-light border rounded-xl flex-grow-1 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100" data-bs-dismiss="modal" id="confirmModalCancelBtn">Hủy</button>
-                        <button type="button" class="btn btn-sm btn-primary rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm" id="confirmModalAcceptBtn">Xác nhận</button>
+                        <button type="button"
+                            class="btn btn-sm btn-light border rounded-xl flex-grow-1 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                            data-bs-dismiss="modal" id="confirmModalCancelBtn">Hủy</button>
+                        <button type="button"
+                            class="btn btn-sm btn-primary rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm"
+                            id="confirmModalAcceptBtn">Xác nhận</button>
                     </div>
                 </div>
             </div>
@@ -76,7 +96,7 @@
                 } catch (e) {
                     try {
                         return decodeURIComponent(escape(str));
-                    } catch (e2) {}
+                    } catch (e2) { }
                 }
                 return str;
             }
@@ -175,6 +195,39 @@
                 if (sidebar) sidebar.classList.toggle('show');
                 if (overlay) overlay.classList.toggle('show');
             }
+
+            // Desktop / Laptop Sidebar Toggle with smooth motion
+            function toggleDesktopSidebar() {
+                const isCollapsed = document.body.classList.toggle('sidebar-collapsed');
+                try {
+                    localStorage.setItem('topichub_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+                } catch (e) { }
+
+                const icon = document.getElementById('desktopSidebarToggleIcon');
+                if (icon) {
+                    if (isCollapsed) {
+                        icon.className = 'fa-solid fa-bars text-secondary';
+                    } else {
+                        icon.className = 'fa-solid fa-indent text-secondary';
+                    }
+                }
+            }
+
+            // Restore Desktop Sidebar collapse state on page load
+            document.addEventListener('DOMContentLoaded', function () {
+                try {
+                    if (window.innerWidth >= 992) {
+                        const savedState = localStorage.getItem('topichub_sidebar_collapsed');
+                        if (savedState === 'true') {
+                            document.body.classList.add('sidebar-collapsed');
+                            const icon = document.getElementById('desktopSidebarToggleIcon');
+                            if (icon) {
+                                icon.className = 'fa-solid fa-bars text-secondary';
+                            }
+                        }
+                    }
+                } catch (e) { }
+            });
 
             // Clean UTF-8 Topic Drawer Opener (supports ID number, DOM element, or Object)
             function openTopicDrawer(source) {
@@ -299,8 +352,8 @@
                 }
 
                 // Rejection Alert Box
-                    let rejAlert = document.getElementById('drawerTopicRejectionAlert');
-                    const rejReason = data.rejectionReason || '';
+                let rejAlert = document.getElementById('drawerTopicRejectionAlert');
+                const rejReason = data.rejectionReason || '';
                 if (data.status === 'REJECTED' && rejReason) {
                     if (!rejAlert) {
                         const drawerBody = document.querySelector('.drawer-body');
@@ -384,7 +437,7 @@
             }
 
             // Close on ESC key
-            document.addEventListener('keydown', function(event) {
+            document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape') closeTopicDrawer();
             });
 
@@ -406,7 +459,7 @@
                     readList.push(strId);
                     try {
                         localStorage.setItem('topic_hub_read_announcements', JSON.stringify(readList));
-                    } catch (e) {}
+                    } catch (e) { }
                 }
                 updateNotificationBadges();
             }
@@ -422,7 +475,7 @@
                 });
                 try {
                     localStorage.setItem('topic_hub_read_announcements', JSON.stringify(readList));
-                } catch (e) {}
+                } catch (e) { }
                 updateNotificationBadges();
             }
 
@@ -523,7 +576,7 @@
                 }
             }
 
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 updateNotificationBadges();
             });
 
@@ -597,7 +650,7 @@
             }
 
             // ==================== GLOBAL TOAST SYSTEM ====================
-            window.showToast = function(message, type = 'info', title = '', duration = 4000) {
+            window.showToast = function (message, type = 'info', title = '', duration = 4000) {
                 if (!message) return;
                 const container = document.getElementById('saasToastContainer');
                 if (!container) return;
@@ -649,7 +702,7 @@
 
                 const closeBtn = toast.querySelector('.saas-toast-close');
                 if (closeBtn) {
-                    closeBtn.onclick = function() {
+                    closeBtn.onclick = function () {
                         clearTimeout(timer);
                         removeToast();
                     };
@@ -657,12 +710,12 @@
             };
 
             // Modern replacement for window.alert()
-            window.alert = function(msg) {
+            window.alert = function (msg) {
                 window.showToast(msg, 'warning', 'Cảnh báo');
             };
 
             // ==================== GLOBAL CONFIRMATION MODAL ====================
-            window.showConfirmDialog = function(options) {
+            window.showConfirmDialog = function (options) {
                 const modalEl = document.getElementById('globalConfirmModal');
                 if (!modalEl) {
                     if (options.onConfirm) options.onConfirm();
@@ -684,7 +737,7 @@
                 iconWrap.className = 'saas-confirm-icon-wrap ' + (isDanger ? 'danger' : 'primary');
                 iconEl.className = isDanger ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-question';
 
-                acceptBtn.className = isDanger 
+                acceptBtn.className = isDanger
                     ? 'btn btn-sm btn-danger rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm'
                     : 'btn btn-sm btn-primary rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm';
                 acceptBtn.textContent = options.confirmText || (isDanger ? 'Đồng ý' : 'Xác nhận');
@@ -696,7 +749,7 @@
                 const newAcceptBtn = acceptBtn.cloneNode(true);
                 acceptBtn.parentNode.replaceChild(newAcceptBtn, acceptBtn);
 
-                newAcceptBtn.onclick = function() {
+                newAcceptBtn.onclick = function () {
                     bsModal.hide();
                     if (typeof options.onConfirm === 'function') {
                         options.onConfirm();
@@ -708,7 +761,7 @@
 
             // ==================== AUTO INTERCEPT FORM CONFIRMS ====================
             // Intercepts all forms using onsubmit="return confirm('...')" and transforms into sleek modern modal
-            document.addEventListener('submit', function(e) {
+            document.addEventListener('submit', function (e) {
                 const form = e.target;
                 if (!form || form._isConfirmed) return;
 
@@ -734,7 +787,7 @@
                         message: confirmMsg,
                         type: isDanger ? 'danger' : 'primary',
                         confirmText: isDanger ? 'Đồng ý thực hiện' : 'Xác nhận',
-                        onConfirm: function() {
+                        onConfirm: function () {
                             form._isConfirmed = true;
                             form.submit();
                         }
@@ -745,7 +798,7 @@
             // ==================== AUTO FLASH MESSAGE DETECTOR ====================
             function detectAndShowFlashMessages() {
                 const alerts = document.querySelectorAll('.alert-success, .alert-danger, .alert-warning, .alert-info');
-                alerts.forEach(function(alert) {
+                alerts.forEach(function (alert) {
                     // Skip if inside modal, drawer, or already hidden
                     if (alert.closest('.modal') || alert.closest('.saas-drawer-panel') || alert.classList.contains('saas-toast')) return;
 
@@ -797,11 +850,118 @@
                 try {
                     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
                     tooltipTriggerList.forEach(function (el) { new bootstrap.Tooltip(el); });
-                } catch (e) {}
+                } catch (e) { }
 
                 detectAndShowFlashMessages();
+
+                // === STAT COUNTER ANIMATION ===
+                function animateCounter(el) {
+                    var target = parseFloat(el.dataset.target || el.textContent.replace(/[^0-9.]/g, '')) || 0;
+                    var isFloat = String(target).includes('.');
+                    var decimals = isFloat ? 1 : 0;
+                    var duration = 800;
+                    var start = performance.now();
+                    function step(now) {
+                        var elapsed = Math.min((now - start) / duration, 1);
+                        var eased = 1 - Math.pow(1 - elapsed, 3);
+                        var val = target * eased;
+                        el.textContent = isFloat ? val.toFixed(decimals) : Math.floor(val);
+                        if (elapsed < 1) requestAnimationFrame(step);
+                        else el.textContent = isFloat ? target.toFixed(decimals) : target;
+                    }
+                    requestAnimationFrame(step);
+                }
+                if (window.IntersectionObserver) {
+                    var cObs = new IntersectionObserver(function (entries) {
+                        entries.forEach(function (entry) {
+                            if (entry.isIntersecting) { animateCounter(entry.target); cObs.unobserve(entry.target); }
+                        });
+                    }, { threshold: 0.5 });
+                    document.querySelectorAll('[data-counter]').forEach(function (el) {
+                        el.dataset.target = el.textContent.trim();
+                        el.textContent = '0';
+                        cObs.observe(el);
+                    });
+                }
+
+                // === DASHBOARD TAB SWITCHER ===
+                document.querySelectorAll('.dash-tab-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var grp = btn.dataset.tabGroup, tgt = btn.dataset.tabTarget;
+                        document.querySelectorAll('.dash-tab-btn[data-tab-group="' + grp + '"]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+                        document.querySelectorAll('.dash-tab-pane[data-tab-group="' + grp + '"]').forEach(function (p) { p.classList.toggle('active', p.id === tgt); });
+                        try { sessionStorage.setItem('dash-tab-' + grp, tgt); } catch (e) { }
+                    });
+                });
+
+                // === COLLAPSIBLE SECTIONS ===
+                document.querySelectorAll('.section-toggle-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var t = document.getElementById(btn.dataset.collapseTarget);
+                        if (!t) return;
+                        var c = t.classList.toggle('collapsed');
+                        btn.classList.toggle('collapsed', c);
+                        try { sessionStorage.setItem('col-' + btn.dataset.collapseTarget, c ? '1' : '0'); } catch (e) { }
+                    });
+                    try {
+                        if (sessionStorage.getItem('col-' + btn.dataset.collapseTarget) === '1') {
+                            var t = document.getElementById(btn.dataset.collapseTarget);
+                            if (t) { t.classList.add('collapsed'); btn.classList.add('collapsed'); }
+                        }
+                    } catch (e) { }
+                });
             });
+
+            // === PAGE TRANSITION LOADER & OVERLAY ===
+            (function () {
+                var overlay = document.createElement('div');
+                overlay.id = 'page-loader';
+                overlay.innerHTML = '<div class="spinner"></div><span class="page-loader-text">Đang tải dữ liệu...</span>';
+                if (document.body) {
+                    document.body.appendChild(overlay);
+                } else {
+                    document.addEventListener('DOMContentLoaded', function () { document.body.appendChild(overlay); });
+                }
+
+                var bar = document.createElement('div');
+                bar.className = 'page-loader-bar';
+                document.documentElement.appendChild(bar);
+                var w = 0, iv = null;
+
+                function startPL() {
+                    w = 0; bar.style.opacity = '1'; bar.style.width = '0%';
+                    if (overlay) overlay.classList.add('is-loading');
+                    clearInterval(iv);
+                    iv = setInterval(function () {
+                        if (w < 85) { w += (85 - w) * 0.08 + 0.5; bar.style.width = Math.min(w, 85) + '%'; }
+                    }, 40);
+                }
+
+                function finishPL() {
+                    clearInterval(iv); bar.style.width = '100%';
+                    if (overlay) overlay.classList.remove('is-loading');
+                    setTimeout(function () { bar.style.opacity = '0'; setTimeout(function () { bar.style.width = '0%'; }, 350); }, 250);
+                }
+
+                document.addEventListener('click', function (e) {
+                    var a = e.target.closest('a[href]');
+                    if (!a) return;
+                    var h = a.getAttribute('href');
+                    if (!h || h.charAt(0) === '#' || h.indexOf('javascript') === 0 || h.indexOf('mailto') === 0 || h.indexOf('tel') === 0 ||
+                        a.target === '_blank' || a.hasAttribute('data-bs-toggle') || a.hasAttribute('data-bs-dismiss') ||
+                        e.ctrlKey || e.metaKey || e.shiftKey) return;
+                    startPL();
+                }, true);
+
+                document.addEventListener('submit', function (e) {
+                    if (e.target && e.target.method && e.target.method.toLowerCase() !== 'get') startPL();
+                }, true);
+
+                window.addEventListener('pageshow', finishPL);
+                window.addEventListener('load', finishPL);
+            })();
         </script>
     </div>
 </body>
+
 </html>
