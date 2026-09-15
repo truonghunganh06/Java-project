@@ -554,12 +554,15 @@ public class StudentService {
      * BUG-10 FIX: Chỉ trả về evaluations khi đề tài đã được công bố chính thức (isFinalized = true)
      */
     public List<Evaluation> getGroupEvaluations(StudentGroup group) {
-        if (group == null || group.getTopic() == null) return Collections.emptyList();
+        if (group == null || group.getId() == null) return Collections.emptyList();
+        StudentGroup freshGroup = groupRepository.findById(group.getId()).orElse(group);
+        if (freshGroup.getTopic() == null || freshGroup.getTopic().getId() == null) return Collections.emptyList();
+        Topic freshTopic = topicRepository.findById(freshGroup.getTopic().getId()).orElse(freshGroup.getTopic());
         // Guard: Ẩn điểm cho SV khi chưa được công bố
-        if (!Boolean.TRUE.equals(group.getTopic().getIsFinalized())) {
+        if (!Boolean.TRUE.equals(freshTopic.getIsFinalized())) {
             return Collections.emptyList();
         }
-        return evaluationRepository.findByTopicId(group.getTopic().getId());
+        return evaluationRepository.findByTopicId(freshTopic.getId());
     }
 
     public List<RegistrationPeriod> getAllActivePeriods() {

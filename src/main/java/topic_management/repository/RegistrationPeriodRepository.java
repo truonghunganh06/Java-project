@@ -1,5 +1,6 @@
 package topic_management.repository;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,9 +11,13 @@ import java.util.List;
 
 @Repository
 public interface RegistrationPeriodRepository extends JpaRepository<RegistrationPeriod, Long> {
-    @Query("SELECT p FROM RegistrationPeriod p WHERE p.department.id = :departmentId")
+    @EntityGraph(attributePaths = {"department"})
+    @Query("SELECT p FROM RegistrationPeriod p WHERE p.department.id = :departmentId AND p.isActive = true ORDER BY p.id DESC")
     List<RegistrationPeriod> findByDepartmentId(@Param("departmentId") Long departmentId);
     
+    @EntityGraph(attributePaths = {"department"})
     List<RegistrationPeriod> findByIsActiveTrueOrderByIdDesc();
+
+    @EntityGraph(attributePaths = {"department"})
     List<RegistrationPeriod> findByPeriodType(String periodType);
 }

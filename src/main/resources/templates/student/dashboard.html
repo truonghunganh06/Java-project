@@ -225,7 +225,7 @@
                             <p class="text-xs text-slate-500 mb-3 line-clamp-2 leading-relaxed" th:text="${group.topic.description}">Mô tả tóm tắt...</p>
 
                             <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs space-y-1">
-                                <div><span class="text-slate-400">GVHD chính:</span> <strong class="text-slate-800" th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.academicTitle + ' ' + group.topic.supervisor.user.fullName : 'N/A'}"></strong></div>
+                                <div><span class="text-slate-400">GVHD chính:</span> <strong class="text-slate-800" th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.user.fullName : 'N/A'}"></strong></div>
                                 <div><span class="text-slate-400">Nhóm thực hiện:</span> <strong class="text-slate-800" th:text="${group.groupName}"></strong> (<span th:text="${group.members.size()} + ' thành viên'"></span>)</div>
                             </div>
                         </div>
@@ -509,7 +509,7 @@
                             <span class="badge bg-slate-200 text-slate-800 text-[10px] font-mono font-semibold" th:text="${group.topic.code}">DT-01</span>
                         </div>
                         <h6 class="font-bold text-slate-900 text-xs mb-1 line-clamp-1" th:text="${group.topic.title}">Tên đề tài</h6>
-                        <span class="text-slate-500 text-[11px]"><i class="fa-solid fa-chalkboard-user me-1 text-slate-400"></i> GVHD: <strong class="text-slate-800" th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.academicTitle + ' ' + group.topic.supervisor.user.fullName : 'N/A'}"></strong></span>
+                        <span class="text-slate-500 text-[11px]"><i class="fa-solid fa-chalkboard-user me-1 text-slate-400"></i> GVHD: <strong class="text-slate-800" th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.user.fullName : 'N/A'}"></strong></span>
                     </div>
                 </div>
                 <div class="modal-footer bg-slate-50 border-t border-slate-100 p-3 d-flex justify-content-between">

@@ -139,7 +139,13 @@ public class CouncilAndDefenseComprehensiveTest {
         topicB = lecturerService.createTopic(gvSupervisorOnly, kltnPeriod.getId(), major.getId(), null, tB);
         departmentHeadService.approveTopic(topicB.getId(), department.getId());
 
-        // 5. Tạo nhóm sinh viên đăng ký Topic B
+        // 5. Tạo nhóm sinh viên đăng ký Topic A
+        Student studentLeadA = createStudentFixture("sv_lead_a", "Nguyễn Văn Lead A");
+        StudentGroup groupA = studentService.createGroup(studentLeadA, kltnPeriod.getId(), "Nhóm Cloud KLTN");
+        studentService.registerTopicForGroup(studentLeadA, groupA, topicA.getId());
+        lecturerService.approveGroupTopic(groupA.getId(), "APPROVED", gvChair);
+
+        // 6. Tạo nhóm sinh viên đăng ký Topic B
         studentLeader = createStudentFixture("sv_defense_lead", "Trần Văn Leader");
         studentGroup = studentService.createGroup(studentLeader, kltnPeriod.getId(), "Nhóm Blockchain KLTN");
         studentService.registerTopicForGroup(studentLeader, studentGroup, topicB.getId());
@@ -159,11 +165,14 @@ public class CouncilAndDefenseComprehensiveTest {
         );
         List<String> roles = List.of("PRESIDENT", "SECRETARY", "MEMBER", "MEMBER", "MEMBER");
 
+        String councilCode = "HD-" + System.nanoTime() % 1000000;
+        String councilName = "Hội đồng KLTN Hệ thống thông tin " + System.nanoTime();
+
         council = councilService.createCouncil(
                 department.getId(),
                 kltnPeriod.getId(),
-                "HĐ-CHUYÊN-NGÀNH-01",
-                "Hội đồng đánh giá KLTN Hệ thống thông tin 01",
+                councilCode,
+                councilName,
                 "Phòng Lab A3-302",
                 OffsetDateTime.now().plusDays(20),
                 memberIds,
@@ -172,7 +181,7 @@ public class CouncilAndDefenseComprehensiveTest {
 
         assertNotNull(council.getId(), "Hội đồng phải được khởi tạo thành công");
         assertEquals("ESTABLISHED", council.getStatus());
-        assertEquals("HĐ-CHUYÊN-NGÀNH-01", council.getCode());
+        assertEquals(councilCode, council.getCode());
 
         Council loaded = councilService.getCouncilById(council.getId());
         assertNotNull(loaded);
@@ -235,7 +244,7 @@ public class CouncilAndDefenseComprehensiveTest {
 
     @Test
     @Order(4)
-    @DisplayName("4. Một Giảng viên có thể tham gia chấm nhiều đề tài khác nhau trong Hội đồng")
+    @DisplayName("4. Một Giảng viên có thể tham gia chấm nhiều đề tài khác nhau")
     void testLecturerCanGradeMultipleDifferentTopics() {
         // gvMember2 là GVPB của Topic B
         boolean gradeB = councilService.submitEvaluation(
@@ -243,37 +252,103 @@ public class CouncilAndDefenseComprehensiveTest {
         );
         assertTrue(gradeB, "gvMember2 chấm Topic B thành công");
 
-        // gvMember2 cũng là thành viên Hội đồng chấm Topic A (vì gvMember2 không hướng dẫn Topic A)
+        // gvMember2 cũng phân công làm GVPB chấm Topic A (vì gvMember2 không hướng dẫn Topic A)
+        councilService.assignReviewer(topicA.getId(), gvMember2.getId());
         boolean gradeA = councilService.submitEvaluation(
-                topicA.getId(), gvMember2.getId(), "COUNCIL", 8.0, "Hội đồng chấm Topic A tốt"
+                topicA.getId(), gvMember2.getId(), "REVIEWER", 8.0, "GVPB chấm Topic A tốt"
         );
         assertTrue(gradeA, "gvMember2 chấm Topic A thành công vì không phải GVHD của Topic A");
     }
 
     @Test
     @Order(5)
-    @DisplayName("5. Tính toán điểm trung bình cộng chính xác từ các thành phần (GVHD, GVPB, Hội đồng)")
+    @DisplayName("5. Tính toán điểm trung bình cộng chính xác từ các thành phần (GVHD, GVPB, Hội đồng) cho KLTN")
     void testFinalScoreCalculationAverageOfComponents() {
-        // Đề tài Topic B có 3 phiếu điểm:
+        // Đề tài Topic B có 4 phiếu điểm trong đợt KLTN:
         // 1. GVHD (gvSupervisorOnly): 9.0
         // 2. GVPB (gvMember2): 8.5
-        // 3. Chủ tịch Hội đồng (gvChair - độc lập với Topic B): 9.5
-        // 4. Thư ký Hội đồng (gvSecretary - độc lập với Topic B): 8.0
+        // 3. Chủ tịch Hội đồng (gvChair): 9.5
+        // 4. Thư ký Hội đồng (gvSecretary): 8.0
+        // Điểm Hội đồng = (9.5 + 8.0) / 2 = 8.75
+        // Điểm Tổng kết KLTN = (Score_GVHD 9.0 + Score_GVPB 8.5 + Score_Council 8.75) / 3 = 26.25 / 3 = 8.75
 
         councilService.submitEvaluation(topicB.getId(), gvSupervisorOnly.getId(), "SUPERVISOR", 9.0, "Thực hiện đúng tiến độ");
         councilService.submitEvaluation(topicB.getId(), gvMember2.getId(), "REVIEWER", 8.5, "Báo cáo đầy đủ, rõ ràng");
         councilService.submitEvaluation(topicB.getId(), gvChair.getId(), "COUNCIL", 9.5, "Bảo vệ thuyết phục");
         councilService.submitEvaluation(topicB.getId(), gvSecretary.getId(), "COUNCIL", 8.0, "Trả lời câu hỏi tốt");
 
-        // Trung bình cộng: (9.0 + 8.5 + 9.5 + 8.0) / 4 = 35.0 / 4 = 8.75
         Topic updatedB = lecturerService.getTopicById(topicB.getId());
         assertNotNull(updatedB.getFinalScore(), "Điểm tổng kết không được null");
-        assertEquals(8.75, updatedB.getFinalScore(), 0.01, "Điểm tổng kết phải đúng bằng trung bình cộng 8.75");
+        assertEquals(8.75, updatedB.getFinalScore(), 0.01, "Điểm tổng kết KLTN phải đúng bằng TBC 3 trạm = 8.75");
+        assertEquals(9.0, updatedB.getAdvisorScore(), 0.01);
+        assertEquals(8.5, updatedB.getReviewerScore(), 0.01);
+        assertEquals(8.75, updatedB.getCouncilScore(), 0.01);
     }
 
     @Test
     @Order(6)
-    @DisplayName("6. Công bố kết quả và Sinh viên tra cứu điểm số của đề tài mình thực hiện")
+    @DisplayName("6. Kiểm tra tính điểm phân nhánh cho đợt MON_HOC và đợt TLCN")
+    void testPeriodTypeBranchingGrading() {
+        OffsetDateTime now = OffsetDateTime.now();
+
+        // 1. Đợt MON_HOC: FinalScore = Score_GVHD
+        RegistrationPeriod monHocPeriod = departmentHeadService.createPeriod(
+                department, "Đợt Môn Học Test", "MON_HOC", "2026-2027", 1,
+                now.minusDays(5), now.plusDays(5), now.minusDays(3), now.plusDays(10),
+                null, null
+        );
+
+        Topic topicMonHoc = new Topic();
+        topicMonHoc.setCode("TOPIC-MH-" + System.nanoTime());
+        topicMonHoc.setTitle("Đồ án lập trình Web nâng cao");
+        topicMonHoc.setDescription("Xây dựng ứng dụng fullstack");
+        topicMonHoc.setAcademicYear("2026-2027");
+        topicMonHoc.setSemester(1);
+        topicMonHoc = lecturerService.createTopic(gvSupervisorOnly, monHocPeriod.getId(), major.getId(), null, topicMonHoc);
+        departmentHeadService.approveTopic(topicMonHoc.getId(), department.getId());
+
+        Student svMH = createStudentFixture("sv_mh_test", "Lê Văn Môn Học");
+        StudentGroup groupMH = studentService.createGroup(svMH, monHocPeriod.getId(), "Nhóm Môn Học 01");
+        studentService.registerTopicForGroup(svMH, groupMH, topicMonHoc.getId());
+        lecturerService.approveGroupTopic(groupMH.getId(), "APPROVED", gvSupervisorOnly);
+
+        councilService.submitEvaluation(topicMonHoc.getId(), gvSupervisorOnly.getId(), "SUPERVISOR", 8.6, "Hoàn thành đồ án tốt");
+        Topic updatedMH = lecturerService.getTopicById(topicMonHoc.getId());
+        assertEquals(8.60, updatedMH.getFinalScore(), 0.01, "Đợt MON_HOC điểm tổng kết = Điểm GVHD (8.60)");
+
+        // 2. Đợt TLCN: FinalScore = (Score_GVHD + Score_GVPB) / 2
+        RegistrationPeriod tlcnPeriod = departmentHeadService.createPeriod(
+                department, "Đợt TLCN Test", "TLCN", "2026-2027", 1,
+                now.minusDays(5), now.plusDays(5), now.minusDays(3), now.plusDays(10),
+                now.plusDays(20), null
+        );
+
+        Topic topicTlcn = new Topic();
+        topicTlcn.setCode("TOPIC-TLCN-" + System.nanoTime());
+        topicTlcn.setTitle("Tiểu luận chuyên ngành An toàn thông tin");
+        topicTlcn.setDescription("Phân tích mã độc");
+        topicTlcn.setAcademicYear("2026-2027");
+        topicTlcn.setSemester(1);
+        topicTlcn = lecturerService.createTopic(gvSupervisorOnly, tlcnPeriod.getId(), major.getId(), null, topicTlcn);
+        departmentHeadService.approveTopic(topicTlcn.getId(), department.getId());
+
+        Student svTlcn = createStudentFixture("sv_tlcn_test", "Hoàng Văn TLCN");
+        StudentGroup groupTlcn = studentService.createGroup(svTlcn, tlcnPeriod.getId(), "Nhóm TLCN 01");
+        studentService.registerTopicForGroup(svTlcn, groupTlcn, topicTlcn.getId());
+        lecturerService.approveGroupTopic(groupTlcn.getId(), "APPROVED", gvSupervisorOnly);
+
+        councilService.assignReviewer(topicTlcn.getId(), gvMember2.getId());
+        councilService.submitEvaluation(topicTlcn.getId(), gvSupervisorOnly.getId(), "SUPERVISOR", 8.0, "GVHD chấm 8.0");
+        councilService.submitEvaluation(topicTlcn.getId(), gvMember2.getId(), "REVIEWER", 9.0, "GVPB chấm 9.0");
+
+        Topic updatedTlcn = lecturerService.getTopicById(topicTlcn.getId());
+        // TBC: (8.0 + 9.0) / 2 = 8.50
+        assertEquals(8.50, updatedTlcn.getFinalScore(), 0.01, "Đợt TLCN điểm tổng kết = TBC(GVHD + GVPB) = 8.50");
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("7. Công bố kết quả và Sinh viên tra cứu điểm số của đề tài mình thực hiện")
     void testPublishResultsAndStudentScoreView() {
         // 1. Trưởng khoa công bố kết quả
         boolean published = councilService.publishTopicResults(topicB.getId(), true);

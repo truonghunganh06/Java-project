@@ -218,8 +218,8 @@ public class RegistrationPeriodAndTopicConstraintTest {
                 "KLTN",
                 "2026-2027",
                 1,
-                now.minusDays(10), now.minusDays(2), // GV proposal đã qua
-                now.plusDays(5), now.plusDays(20),   // SV registration trong tương lai
+                now.minusDays(5), now.plusDays(5), // GV proposal đang mở để tạo đề tài
+                now.plusDays(10), now.plusDays(25),   // SV registration trong tương lai
                 now.plusDays(40), now.plusDays(55)
         );
 

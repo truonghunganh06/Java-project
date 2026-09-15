@@ -88,6 +88,6 @@ echo [*] Truy cap sau khi khoi dong xong: http://localhost:8080
 echo ===================================================
 echo.
 
-"%JAVA_HOME%\bin\java.exe" -Dfile.encoding=UTF-8 -jar "target\topic_management-0.0.1-SNAPSHOT.jar"
+"%JAVA_HOME%\bin\java.exe" -Dfile.encoding=UTF-8 -Dspring.thymeleaf.prefix=file:src/main/resources/templates/ -Dspring.web.resources.static-locations=file:src/main/resources/static/ -jar "target\topic_management-0.0.1-SNAPSHOT.jar"
 
 pause

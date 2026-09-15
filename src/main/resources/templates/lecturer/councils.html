@@ -96,6 +96,20 @@
                             ĐỘNG</span>
                     </div>
 
+                    <!-- Council Members Info Chips -->
+                    <div th:if="${c.members != null && !#lists.isEmpty(c.members)}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                        <span class="text-slate-500 font-semibold me-1"><i class="fa-solid fa-users me-1"></i>Thành viên:</span>
+                        <span th:each="m : ${c.members}" 
+                              class="badge px-2.5 py-1 rounded-lg border font-medium"
+                              th:classappend="${m.councilRole == 'PRESIDENT' ? 'bg-amber-50 text-amber-800 border-amber-200' : (m.councilRole == 'SECRETARY' ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-white text-slate-700 border-slate-200')}">
+                            <i th:if="${m.councilRole == 'PRESIDENT'}" class="fa-solid fa-crown text-amber-500 me-1"></i>
+                            <i th:if="${m.councilRole == 'SECRETARY'}" class="fa-solid fa-feather text-blue-500 me-1"></i>
+                            <i th:if="${m.councilRole == 'MEMBER' || m.councilRole == null}" class="fa-solid fa-user text-slate-400 me-1"></i>
+                            <span th:text="${m.lecturer != null && m.lecturer.user != null ? m.lecturer.user.fullName : 'Chưa rõ'}"></span>
+                            <span class="text-slate-400 ms-1 font-normal" th:text="'(' + ${m.roleName} + ')'"></span>
+                        </span>
+                    </div>
+
                     <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
                         Danh sách đề tài phân công bảo vệ tại Hội đồng này:
                     </h6>
@@ -104,10 +118,10 @@
                         <table class="table table-saas mb-0">
                             <thead>
                                 <tr>
-                                    <th style="width: 40%;">Mã & Tên đề tài</th>
+                                    <th style="width: 35%;">Mã & Tên đề tài</th>
                                     <th style="width: 25%;">GV Hướng dẫn</th>
-                                    <th style="width: 15%;">Ràng buộc</th>
-                                    <th style="width: 20%;" class="text-end">Chấm điểm</th>
+                                    <th style="width: 20%;">Trạng thái chấm</th>
+                                    <th style="width: 20%;" class="text-end">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -139,17 +153,26 @@
                                                 class="badge-pill-rejected font-semibold text-xs">
                                                 <i class="fa-solid fa-lock me-1"></i> Khóa: GVHD
                                             </span>
-                                            <span th:unless="${t.isSupervisorOrCoSupervisor(lecturer)}"
-                                                class="badge-pill-approved font-semibold text-xs">
-                                                <i class="fa-solid fa-unlock me-1"></i> Được chấm
-                                            </span>
+                                            <th:block th:unless="${t.isSupervisorOrCoSupervisor(lecturer)}">
+                                                <span th:if="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id)}"
+                                                    class="badge-pill-approved font-semibold text-xs">
+                                                    <i class="fa-solid fa-circle-check me-1"></i> Đã chấm: <span th:text="${existingEvaluationsMap.get(t.id).score}">9.0</span> đ
+                                                </span>
+                                                <span th:unless="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id)}"
+                                                    class="badge-pill-neutral font-semibold text-xs">
+                                                    <i class="fa-solid fa-hourglass-half me-1"></i> Chưa chấm
+                                                </span>
+                                            </th:block>
                                         </td>
                                         <td class="text-end">
                                             <button th:if="${!t.isSupervisorOrCoSupervisor(lecturer)}"
-                                                class="btn btn-sm btn-dark rounded-xl px-3 py-1 text-xs font-semibold"
+                                                class="btn btn-sm rounded-xl px-3 py-1 text-xs font-semibold"
+                                                th:classappend="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id) ? 'btn-outline-primary' : 'btn-dark'}"
                                                 data-bs-toggle="modal"
                                                 th:data-bs-target="'#gradeCouncilModal-' + ${t.id}">
-                                                <i class="fa-solid fa-star me-1 text-amber-400"></i> Chấm điểm
+                                                <i th:if="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id)}" class="fa-solid fa-pen-to-square me-1"></i>
+                                                <i th:unless="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id)}" class="fa-solid fa-star me-1 text-amber-400"></i>
+                                                <span th:text="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id) ? 'Sửa điểm' : 'Chấm điểm'}"></span>
                                             </button>
                                             <span th:if="${t.isSupervisorOrCoSupervisor(lecturer)}"
                                                 class="text-slate-400 text-xs italic">
@@ -188,6 +211,7 @@
                                                                     <input type="number" step="0.1" min="0" max="10"
                                                                         name="score"
                                                                         class="form-control text-xs rounded-xl"
+                                                                        th:value="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id) ? existingEvaluationsMap.get(t.id).score : ''}"
                                                                         placeholder="Ví dụ: 9.0" required>
                                                                 </div>
                                                                 <div>
@@ -197,6 +221,7 @@
                                                                     <textarea name="comments"
                                                                         class="form-control text-xs rounded-xl" rows="4"
                                                                         placeholder="Nhận xét phần trình bày của nhóm, mức độ trả lời câu hỏi và sản phẩm thực tế..."
+                                                                        th:text="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id) ? existingEvaluationsMap.get(t.id).comments : ''}"
                                                                         required></textarea>
                                                                 </div>
                                                             </div>

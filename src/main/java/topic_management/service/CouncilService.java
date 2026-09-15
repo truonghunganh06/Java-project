@@ -492,15 +492,17 @@ public class CouncilService {
     }
 
     /**
-     * Tính điểm tổng kết theo chuẩn quy chế học thuật thực tế:
-     * - LOẠI BỎ HOÀN TOÀN ĐIỂM GVHD KHỎI ĐIỂM TỔNG KẾT KHÓA LUẬN (FinalScore).
-     * - Điểm GVHD (AdvisorScore) được lưu độc lập để theo dõi quá trình/điều kiện ra bảo vệ.
-     * - Điểm Tổng Kết (FinalScore) tính trên 2 thành phần độc lập:
-     *   1. ReviewerScore: Điểm phản biện từ Giảng viên Phản biện độc lập (Trọng số 40%)
-     *   2. CouncilScore: Điểm trung bình cộng từ các thành viên Hội đồng bảo vệ (Trọng số 60%)
+     * Tính điểm tổng kết theo chuẩn quy chế học thuật bất biến V2.0:
+     * - Chỉ sử dụng Trung bình cộng (Arithmetic Mean).
+     * - CẤM TUYỆT ĐỐI trọng số phần trăm cố định (40%-60%, 30%-70%).
+     * - Làm tròn số học đến 2 chữ số thập phân (0.01) sử dụng BigDecimal với RoundingMode.HALF_UP.
      * 
-     * Công thức chuẩn (Tổng 100%):
-     * FinalScore = (ReviewerScore * 0.40) + (CouncilScore * 0.60)
+     * Phân nhánh theo loại đợt (PeriodType):
+     * 1. MON_HOC / NCKH: FinalScore = Score_GVHD (hoặc TBC nếu có 2 GVHD)
+     * 2. TLCN: FinalScore = (Score_GVHD + Score_GVPB) / 2
+     * 3. KLTN:
+     *    Score_Council = (1/N) * sum(Score_Member_i) (N: số thành viên HĐ, 3 <= N <= 5)
+     *    FinalScore = (Score_GVHD + Score_GVPB + Score_Council) / 3
      */
     @Transactional
     public void calculateAndSetFinalScore(Topic topic) {
@@ -527,54 +529,83 @@ public class CouncilService {
             return;
         }
 
-        // 1. Điểm quá trình từ Giảng viên Hướng dẫn (SUPERVISOR) - Lưu riêng để theo dõi tiến độ
+        // 1. Điểm Giảng viên Hướng dẫn (SUPERVISOR) - TBC nếu có 2 GVHD
         List<Evaluation> supervisorEvals = evals.stream()
                 .filter(e -> "SUPERVISOR".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null)
                 .toList();
         Double advisorScore = null;
         if (!supervisorEvals.isEmpty()) {
             double avg = supervisorEvals.stream().mapToDouble(Evaluation::getScore).average().orElse(0.0);
-            advisorScore = Math.round(avg * 100.0) / 100.0;
+            advisorScore = roundScore(avg);
         }
 
-        // 2. Điểm phản biện từ Giảng viên Phản biện (REVIEWER) - Trọng số 40%
+        // 2. Điểm Giảng viên Phản biện (REVIEWER) - TBC nếu có nhiều phiếu
         List<Evaluation> reviewerEvals = evals.stream()
                 .filter(e -> "REVIEWER".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null)
                 .toList();
         Double reviewerScore = null;
         if (!reviewerEvals.isEmpty()) {
             double avg = reviewerEvals.stream().mapToDouble(Evaluation::getScore).average().orElse(0.0);
-            reviewerScore = Math.round(avg * 100.0) / 100.0;
+            reviewerScore = roundScore(avg);
         }
 
-        // 3. Điểm trung bình từ các thành viên Hội đồng bảo vệ (COUNCIL) - Trọng số 60%
+        // 3. Điểm Hội đồng bảo vệ (COUNCIL) = TBC điểm của các thành viên HĐ (3-5 thành viên)
         List<Evaluation> councilEvals = evals.stream()
                 .filter(e -> "COUNCIL".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null)
                 .toList();
         Double councilScore = null;
         if (!councilEvals.isEmpty()) {
             double avg = councilEvals.stream().mapToDouble(Evaluation::getScore).average().orElse(0.0);
-            councilScore = Math.round(avg * 100.0) / 100.0;
+            councilScore = roundScore(avg);
         }
 
         topic.setAdvisorScore(advisorScore);
         topic.setReviewerScore(reviewerScore);
         topic.setCouncilScore(councilScore);
 
-        // 4. ÁP DỤNG CÔNG THỨC ĐIỂM TỔNG KẾT (FinalScore) - LOẠI BỎ HOÀN TOÀN ĐIỂM GVHD
+        // 4. ÁP DỤNG CÔNG THỨC ĐIỂM TỔNG KẾT (FinalScore) THEO PERIOD TYPE (TRUNG BÌNH CỘNG)
+        RegistrationPeriod period = topic.getPeriod();
+        String periodType = (period != null && period.getPeriodType() != null) 
+                ? period.getPeriodType().trim().toUpperCase() 
+                : "KLTN";
+
         Double finalScore = null;
-        if (reviewerScore != null && councilScore != null) {
-            // Có cả Phản biện (40%) và Hội đồng (60%)
-            double calc = (reviewerScore * 0.40) + (councilScore * 0.60);
-            finalScore = Math.round(calc * 100.0) / 100.0;
-        } else if (councilScore != null) {
-            finalScore = councilScore;
-        } else if (reviewerScore != null) {
-            finalScore = reviewerScore;
+        switch (periodType) {
+            case "MON_HOC":
+            case "NCKH":
+                if (advisorScore != null) {
+                    finalScore = advisorScore;
+                }
+                break;
+            case "TLCN":
+                if (advisorScore != null && reviewerScore != null) {
+                    finalScore = roundScore((advisorScore + reviewerScore) / 2.0);
+                }
+                break;
+            case "KLTN":
+            default:
+                if (advisorScore != null && reviewerScore != null && councilScore != null) {
+                    // Đầy đủ 3 trạm: GVHD + GVPB + Hội đồng
+                    finalScore = roundScore((advisorScore + reviewerScore + councilScore) / 3.0);
+                } else if (councilScore != null && advisorScore != null) {
+                    // Fallback nếu có GVHD và Hội đồng bảo vệ
+                    int count = 1;
+                    double sum = councilScore;
+                    if (advisorScore != null) { sum += advisorScore; count++; }
+                    if (reviewerScore != null) { sum += reviewerScore; count++; }
+                    finalScore = roundScore(sum / count);
+                }
+                break;
         }
 
         topic.setFinalScore(finalScore);
         topicRepository.save(topic);
+    }
+
+    private Double roundScore(double val) {
+        return java.math.BigDecimal.valueOf(val)
+                .setScale(2, java.math.RoundingMode.HALF_UP)
+                .doubleValue();
     }
 
     /**

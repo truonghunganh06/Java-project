@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head th:replace="~{fragments/head :: head('Quản lý Đợt Đăng ký Đề tài')}"></head>
-<body>
+<body class="bg-slate-50">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('periods', ${user})}"></aside>
@@ -15,127 +15,454 @@
         <main class="saas-content">
 
             <!-- Flash Messages -->
-            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200" role="alert">
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-3 py-2 px-3.5 text-xs font-medium border border-emerald-200" role="alert">
                 <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.6rem 0.8rem;"></button>
             </div>
-            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200" role="alert">
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-2xl mb-3 py-2 px-3.5 text-xs font-medium border border-rose-200" role="alert">
                 <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span th:text="${errorMessage}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.6rem 0.8rem;"></button>
             </div>
 
-            <!-- Page Header -->
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-                <div>
-                    <div class="d-flex align-items-center gap-2">
-                        <h1 class="text-xl font-bold text-slate-900 mb-0">Quản lý Đợt Đăng Ký Đề Tài</h1>
-                        <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200" th:text="${department != null ? department.name : 'Khoa CNTT'}">Khoa CNTT</span>
-                    </div>
-                    <p class="text-xs text-slate-500 mb-0 mt-1">Thiết lập các mốc thời gian đề xuất, đăng ký, nộp điểm GVPB và ngày báo cáo hội đồng.</p>
+            <!-- Clean Compact Page Header -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <h1 class="text-lg font-bold text-slate-900 mb-0">Đợt Đăng Ký Đề Tài</h1>
+                    <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200" th:text="${department != null ? department.name : 'Khoa CNTT'}">Khoa CNTT</span>
                 </div>
-                <button class="btn btn-sm btn-dark rounded-xl px-3 py-2 text-xs font-semibold shadow-sm d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createPeriodModal">
+                <button class="btn btn-sm btn-dark rounded-xl px-3 py-1.5 text-xs font-semibold shadow-sm d-inline-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#createPeriodModal">
                     <i class="fa-solid fa-plus text-xs"></i> Tạo đợt mới
                 </button>
             </div>
 
-            <!-- Universal 1-Row Toolbar -->
-            <div class="saas-card p-3 mb-4">
-                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-                    <div class="relative flex-grow-1 max-w-md">
-                        <input type="text" class="form-control form-control-sm rounded-xl pl-8 text-xs" placeholder="Tìm kiếm theo tên đợt, loại đợt, năm học..." onkeyup="filterTableByKeyword(this.value)">
-                        <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
+            <!-- Lifecycle KPI Summary Chips (Compact & Interactive) -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2.5 mb-3">
+                <!-- KPI 1: All Periods -->
+                <div class="period-kpi-card active" onclick="filterByPeriodStage('ALL', this)">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-xs font-semibold text-slate-600">Tất cả đợt</span>
+                        <div class="kpi-icon-badge bg-slate-100 text-slate-600">
+                            <i class="fa-solid fa-folder-open text-2xs"></i>
+                        </div>
                     </div>
-                    <div class="d-flex flex-wrap align-items-center gap-2">
-                        <select class="form-select form-select-sm rounded-xl text-xs" style="width: 170px;" onchange="filterTableByAttribute('period-type', this.value)">
-                            <option value="all">-- Tất cả loại đợt --</option>
+                    <div class="text-lg font-bold text-slate-900 mt-1" th:text="${periodStats != null && periodStats['total'] != null ? periodStats['total'] : (periods != null ? periods.size() : 0)}">0</div>
+                    <div class="kpi-highlight-bar bg-slate-400"></div>
+                </div>
+
+                <!-- KPI 2: Lecturer Proposal Open -->
+                <div class="period-kpi-card" onclick="filterByPeriodStage('PROPOSAL_OPEN', this)">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-xs font-semibold text-emerald-700">1. GV Đề xuất</span>
+                        <div class="kpi-icon-badge bg-emerald-100 text-emerald-600">
+                            <i class="fa-solid fa-chalkboard-user text-2xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-lg font-bold text-emerald-600 mt-1" th:text="${periodStats != null && periodStats['proposalOpen'] != null ? periodStats['proposalOpen'] : 0}">0</div>
+                    <div class="kpi-highlight-bar bg-emerald-500"></div>
+                </div>
+
+                <!-- KPI 3: Student Registration Open -->
+                <div class="period-kpi-card" onclick="filterByPeriodStage('REGISTRATION_OPEN', this)">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-xs font-semibold text-blue-700">2. SV Đăng ký</span>
+                        <div class="kpi-icon-badge bg-blue-100 text-blue-600">
+                            <i class="fa-solid fa-user-check text-2xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-lg font-bold text-blue-600 mt-1" th:text="${periodStats != null && periodStats['registrationOpen'] != null ? periodStats['registrationOpen'] : 0}">0</div>
+                    <div class="kpi-highlight-bar bg-blue-500"></div>
+                </div>
+
+                <!-- KPI 4: Reviewing & Defense -->
+                <div class="period-kpi-card" onclick="filterByPeriodStage('REVIEWING_DEFENSE', this)">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-xs font-semibold text-purple-700">3. PB & Bảo vệ</span>
+                        <div class="kpi-icon-badge bg-purple-100 text-purple-600">
+                            <i class="fa-solid fa-scale-balanced text-2xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-lg font-bold text-purple-600 mt-1" th:text="${periodStats != null && periodStats['reviewingOrDefense'] != null ? periodStats['reviewingOrDefense'] : 0}">0</div>
+                    <div class="kpi-highlight-bar bg-purple-500"></div>
+                </div>
+
+                <!-- KPI 5: Closed or Ended -->
+                <div class="period-kpi-card col-span-2 md:col-span-1" onclick="filterByPeriodStage('CLOSED_ENDED', this)">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-xs font-semibold text-slate-600">4. Đã kết thúc</span>
+                        <div class="kpi-icon-badge bg-slate-100 text-slate-600">
+                            <i class="fa-solid fa-circle-check text-2xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-lg font-bold text-slate-700 mt-1" th:text="${periodStats != null && periodStats['closedOrEnded'] != null ? periodStats['closedOrEnded'] : 0}">0</div>
+                    <div class="kpi-highlight-bar bg-slate-400"></div>
+                </div>
+            </div>
+
+            <!-- Universal 1-Row Toolbar -->
+            <div class="saas-card p-2.5 mb-3">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2.5">
+                    <!-- Left: View Mode Toggle -->
+                    <div class="view-mode-toggle bg-slate-100 p-0.5 rounded-xl d-inline-flex border border-slate-200">
+                        <button type="button" id="viewBtnTable" class="btn btn-xs rounded-lg px-2.5 py-1 text-xs font-semibold view-toggle-btn active" onclick="setPeriodViewMode('table')">
+                            <i class="fa-solid fa-table-list me-1"></i> Bảng
+                        </button>
+                        <button type="button" id="viewBtnCards" class="btn btn-xs rounded-lg px-2.5 py-1 text-xs font-semibold view-toggle-btn text-slate-600" onclick="setPeriodViewMode('cards')">
+                            <i class="fa-solid fa-timeline me-1"></i> Thẻ
+                        </button>
+                    </div>
+
+                    <!-- Center & Right: Search and Filters -->
+                    <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 justify-content-lg-end">
+                        <div class="relative flex-grow-1 max-w-xs">
+                            <input type="text" id="periodSearchInput" class="form-control form-control-sm rounded-xl pl-7 text-xs" placeholder="Tìm kiếm đợt, năm học..." onkeyup="applyAllPeriodFilters()">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-2xs"></i>
+                        </div>
+                        <select id="periodTypeSelectFilter" class="form-select form-select-sm rounded-xl text-xs" style="width: 155px;" onchange="applyAllPeriodFilters()">
+                            <option value="all">-- Loại đợt --</option>
                             <option value="KLTN">Khóa luận tốt nghiệp</option>
                             <option value="TLCN">Tiểu luận chuyên ngành</option>
                             <option value="NCKH">Nghiên cứu khoa học</option>
                             <option value="MON_HOC">Đồ án môn học</option>
                         </select>
-                        <select class="form-select form-select-sm rounded-xl text-xs" style="width: 150px;" onchange="filterTableByAttribute('status', this.value)">
-                            <option value="all">-- Tất cả trạng thái --</option>
-                            <option value="OPEN">Đang mở</option>
+                        <select id="periodStatusSelectFilter" class="form-select form-select-sm rounded-xl text-xs" style="width: 155px;" onchange="applyAllPeriodFilters()">
+                            <option value="all">-- Trạng thái --</option>
+                            <option value="PROPOSAL_OPEN">Đang mở ĐX (GV)</option>
+                            <option value="REGISTRATION_OPEN">Đang mở ĐK (SV)</option>
+                            <option value="PENDING_REGISTRATION">Chờ mở ĐK (SV)</option>
+                            <option value="REVIEWING">Đang chấm GVPB</option>
+                            <option value="DEFENSE_WAITING">Chờ bảo vệ HĐ</option>
+                            <option value="UPCOMING">Sắp diễn ra</option>
+                            <option value="REGISTRATION_ENDED">Hết hạn ĐK</option>
+                            <option value="COMPLETED">Đã hoàn thành</option>
                             <option value="CLOSED">Đã đóng</option>
                         </select>
-                        <span id="filteredRowCount" class="badge-pill-neutral font-medium text-xs ms-1" th:text="'Tổng số: ' + (${periods != null ? periods.size() : 0}) + ' đợt'"></span>
+                        <span id="periodFilteredCountBadge" class="badge-pill-neutral font-medium text-xs ms-1" th:text="'Tổng: ' + (${periods != null ? periods.size() : 0}) + ' đợt'"></span>
                     </div>
                 </div>
             </div>
 
-            <!-- Periods Table Card with Overflow Protection -->
-            <div class="table-saas-container mb-4">
+            <!-- VIEW 1: TABLE VIEW (DEFAULT) -->
+            <div id="periodTableView" class="table-saas-container mb-3">
                 <div class="w-full overflow-x-auto">
                     <table class="table table-saas mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 22%;">Tên đợt</th>
-                                <th style="width: 16%;">Loại đợt</th>
-                                <th style="width: 12%;">Năm học - HK</th>
-                                <th style="width: 14%;">Mốc đề xuất (GV)</th>
-                                <th style="width: 14%;">Mốc đăng ký (SV)</th>
-                                <th style="width: 12%;">Hạn GVPB / Bảo vệ</th>
-                                <th style="width: 10%;">Trạng thái</th>
+                                <th style="width: 25%;">Đợt Đăng Ký</th>
+                                <th style="width: 50%;">Tiến Trình 4 Mốc Thời Gian</th>
+                                <th style="width: 13%;">Trạng Thái</th>
+                                <th style="width: 12%; text-align: center;">Thao Tác</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr th:if="${periods == null || #lists.isEmpty(periods)}">
-                                <td colspan="7" class="text-center py-5 text-muted text-xs">
-                                    <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
-                                    Chưa có đợt đăng ký nào được tạo. Hãy nhấn <strong>Tạo đợt mới</strong> để bắt đầu.
+                        <tbody id="periodTableBody">
+                            <tr th:if="${periods == null || #lists.isEmpty(periods)}" class="no-data-row">
+                                <td colspan="4" class="text-center py-5 text-muted text-xs">
+                                    <i class="fa-regular fa-folder-open text-2xl mb-1.5 d-block text-slate-300"></i>
+                                    Chưa có đợt đăng ký nào. Nhấn <strong>Tạo đợt mới</strong> để bắt đầu.
                                 </td>
                             </tr>
-                            <tr th:each="p : ${periods}" class="filterable-row" th:data-period-type="${p.periodType}" th:data-status="${p.status}">
-                                <td>
-                                    <div class="font-bold text-slate-900 text-xs line-clamp-1" th:text="${p.name}">Đợt Khóa Luận Tốt Nghiệp HK1</div>
-                                    <span class="text-xs text-slate-400 font-mono" th:text="'RP-' + ${p.id}">RP-1</span>
-                                </td>
-                                <td>
-                                    <span th:if="${p.periodType == 'KLTN'}" class="badge-pill-neutral font-semibold text-blue-700 bg-blue-50 border-blue-200">Khóa luận tốt nghiệp</span>
-                                    <span th:if="${p.periodType == 'TLCN'}" class="badge-pill-neutral font-semibold text-indigo-700 bg-indigo-50 border-indigo-200">Tiểu luận chuyên ngành</span>
-                                    <span th:if="${p.periodType == 'NCKH'}" class="badge-pill-neutral font-semibold text-emerald-700 bg-emerald-50 border-emerald-200">Nghiên cứu khoa học</span>
-                                    <span th:if="${p.periodType == 'MON_HOC'}" class="badge-pill-neutral font-semibold text-slate-700 bg-slate-100 border-slate-200">Đồ án môn học</span>
-                                </td>
-                                <td>
-                                    <span class="font-medium text-slate-900 text-xs" th:text="${p.academicYear}">2026-2027</span>
-                                    <span class="text-slate-400 text-xs" th:text="' - HK' + ${p.semester}"> - HK1</span>
-                                </td>
-                                <td>
-                                    <div class="text-xs space-y-0.5">
-                                        <span class="text-slate-400">Từ:</span> <span class="text-slate-700 font-medium" th:text="${p.lecturerProposalStart != null ? #temporals.format(p.lecturerProposalStart, 'dd/MM/yyyy') : '--'}"></span><br>
-                                        <span class="text-slate-400">Đến:</span> <span class="text-rose-600 font-semibold" th:text="${p.lecturerProposalEnd != null ? #temporals.format(p.lecturerProposalEnd, 'dd/MM/yyyy') : '--'}"></span>
+                            <tr th:each="p : ${periods}" class="period-row"
+                                th:data-period-id="${p.id}"
+                                th:data-period-name="${p.name}"
+                                th:data-period-type="${p.periodType}"
+                                th:data-academic-year="${p.academicYear}"
+                                th:data-status="${p.status}"
+                                th:data-display-status="${p.displayStatus}">
+                                
+                                <!-- Column 1: Info & Badges -->
+                                <td class="align-middle">
+                                    <div class="d-flex align-items-center gap-1.5 mb-1 flex-wrap">
+                                        <span class="badge bg-slate-100 text-slate-700 font-mono text-[11px] px-1.5 py-0.5 rounded font-semibold" th:text="'RP-' + ${p.id}">RP-1</span>
+                                        <span th:if="${p.periodType == 'KLTN'}" class="badge-pill-neutral font-semibold text-blue-700 bg-blue-50 border-blue-200 text-[11px] py-0.5 px-1.5">Khóa luận</span>
+                                        <span th:if="${p.periodType == 'TLCN'}" class="badge-pill-neutral font-semibold text-indigo-700 bg-indigo-50 border-indigo-200 text-[11px] py-0.5 px-1.5">Tiểu luận</span>
+                                        <span th:if="${p.periodType == 'NCKH'}" class="badge-pill-neutral font-semibold text-emerald-700 bg-emerald-50 border-emerald-200 text-[11px] py-0.5 px-1.5">NCKH</span>
+                                        <span th:if="${p.periodType == 'MON_HOC'}" class="badge-pill-neutral font-semibold text-slate-700 bg-slate-100 border-slate-200 text-[11px] py-0.5 px-1.5">Môn học</span>
+                                    </div>
+                                    <div class="font-bold text-slate-900 text-xs line-clamp-1 mb-0.5" th:text="${p.name}">Đợt Khóa Luận Tốt Nghiệp HK1</div>
+                                    <div class="text-[11px] text-slate-500">
+                                        <span class="font-medium text-slate-700" th:text="${p.academicYear}">2026-2027</span>
+                                        <span class="text-slate-300 mx-1">•</span>
+                                        <span>HK<strong th:text="${p.semester}">1</strong></span>
+                                        <span class="text-slate-300 mx-1">•</span>
+                                        <span class="text-slate-400 font-mono" th:text="${p.minStudents} + '-' + ${p.maxStudents} + ' SV/nhóm'">2-3 SV</span>
                                     </div>
                                 </td>
-                                <td>
-                                    <div class="text-xs space-y-0.5">
-                                        <span class="text-slate-400">Từ:</span> <span class="text-slate-700 font-medium" th:text="${p.studentRegistrationStart != null ? #temporals.format(p.studentRegistrationStart, 'dd/MM/yyyy') : '--'}"></span><br>
-                                        <span class="text-slate-400">Đến:</span> <span class="text-rose-600 font-semibold" th:text="${p.studentRegistrationEnd != null ? #temporals.format(p.studentRegistrationEnd, 'dd/MM/yyyy') : '--'}"></span>
+
+                                <!-- Column 2: Visual 4-Step Milestone Stepper -->
+                                <td class="align-middle">
+                                    <div class="milestone-stepper-wrapper">
+                                        <!-- Step 1: Lecturer Proposal -->
+                                        <div class="milestone-step" th:classappend="${p.displayStatus == 'PROPOSAL_OPEN' ? 'is-active' : (p.proposalPassed ? 'is-done' : '')}">
+                                            <div class="step-icon">
+                                                <i class="fa-solid fa-chalkboard-user"></i>
+                                            </div>
+                                            <div class="step-info">
+                                                <div class="step-name">1. GV Đề xuất</div>
+                                                <div class="step-date">
+                                                    <span th:if="${p.lecturerProposalStart != null}" th:text="${#temporals.format(p.lecturerProposalStart, 'dd/MM')}">01/09</span>
+                                                    <span th:if="${p.lecturerProposalStart != null}"> → </span>
+                                                    <span th:if="${p.lecturerProposalEnd != null}" class="font-semibold text-slate-700" th:text="${#temporals.format(p.lecturerProposalEnd, 'dd/MM/yy')}">15/09/26</span>
+                                                    <span th:if="${p.lecturerProposalStart == null && p.lecturerProposalEnd == null}" class="text-slate-300">--</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="step-connector" th:classappend="${p.proposalPassed ? 'is-done' : ''}"></div>
+
+                                        <!-- Step 2: Student Registration -->
+                                        <div class="milestone-step" th:classappend="${p.displayStatus == 'REGISTRATION_OPEN' ? 'is-active' : (p.registrationPassed ? 'is-done' : '')}">
+                                            <div class="step-icon">
+                                                <i class="fa-solid fa-user-check"></i>
+                                            </div>
+                                            <div class="step-info">
+                                                <div class="step-name">2. SV Đăng ký</div>
+                                                <div class="step-date">
+                                                    <span th:if="${p.studentRegistrationStart != null}" th:text="${#temporals.format(p.studentRegistrationStart, 'dd/MM')}">16/09</span>
+                                                    <span th:if="${p.studentRegistrationStart != null}"> → </span>
+                                                    <span th:if="${p.studentRegistrationEnd != null}" class="font-semibold text-slate-700" th:text="${#temporals.format(p.studentRegistrationEnd, 'dd/MM/yy')}">30/09/26</span>
+                                                    <span th:if="${p.studentRegistrationStart == null && p.studentRegistrationEnd == null}" class="text-slate-300">--</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="step-connector" th:classappend="${p.registrationPassed ? 'is-done' : ''}"></div>
+
+                                        <!-- Step 3: Reviewer Deadline -->
+                                        <div class="milestone-step" th:classappend="${p.periodType != 'KLTN' && p.periodType != 'TLCN' ? 'is-na' : (p.displayStatus == 'REVIEWING' ? 'is-active' : (p.reviewerDeadlinePassed ? 'is-done' : ''))}">
+                                            <div class="step-icon">
+                                                <i class="fa-solid fa-user-shield"></i>
+                                            </div>
+                                            <div class="step-info">
+                                                <div class="step-name">3. Chấm GVPB</div>
+                                                <div class="step-date">
+                                                    <span th:if="${p.periodType != 'KLTN' && p.periodType != 'TLCN'}" class="text-slate-300">--</span>
+                                                    <span th:if="${(p.periodType == 'KLTN' || p.periodType == 'TLCN') && p.reviewerDeadline != null}" class="font-semibold text-slate-700" th:text="${#temporals.format(p.reviewerDeadline, 'dd/MM/yy')}">15/10/26</span>
+                                                    <span th:if="${(p.periodType == 'KLTN' || p.periodType == 'TLCN') && p.reviewerDeadline == null}" class="text-slate-300">--</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="step-connector" th:classappend="${p.reviewerDeadlinePassed ? 'is-done' : ''}"></div>
+
+                                        <!-- Step 4: Defense Date -->
+                                        <div class="milestone-step" th:classappend="${p.periodType != 'KLTN' ? 'is-na' : (p.displayStatus == 'DEFENSE_WAITING' ? 'is-active' : (p.councilDefensePassed ? 'is-done' : ''))}">
+                                            <div class="step-icon">
+                                                <i class="fa-solid fa-scale-balanced"></i>
+                                            </div>
+                                            <div class="step-info">
+                                                <div class="step-name">4. Hội đồng</div>
+                                                <div class="step-date">
+                                                    <span th:if="${p.periodType != 'KLTN'}" class="text-slate-300">--</span>
+                                                    <span th:if="${p.periodType == 'KLTN' && p.councilDefenseDate != null}" class="font-semibold text-blue-700" th:text="${#temporals.format(p.councilDefenseDate, 'dd/MM/yy')}">30/10/26</span>
+                                                    <span th:if="${p.periodType == 'KLTN' && p.councilDefenseDate == null}" class="text-slate-300">--</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
-                                <td>
-                                    <div class="text-xs space-y-0.5">
-                                        <span class="text-slate-400">Hạn GVPB:</span> <span class="text-slate-800 font-medium" th:text="${p.reviewerDeadline != null ? #temporals.format(p.reviewerDeadline, 'dd/MM/yyyy') : 'Theo lịch'}"></span><br>
-                                        <span class="text-slate-400">Bảo vệ:</span> <span class="text-blue-600 font-semibold" th:text="${p.councilDefenseDate != null ? #temporals.format(p.councilDefenseDate, 'dd/MM/yyyy') : 'Theo lịch'}"></span>
+
+                                <!-- Column 3: Status Badge -->
+                                <td class="align-middle">
+                                    <div th:if="${p.status == 'CLOSED'}" class="badge-pill-rejected font-semibold">
+                                        <i class="fa-solid fa-lock text-xs"></i> Đã đóng
+                                    </div>
+                                    <div th:if="${p.status == 'OPEN'}">
+                                        <span th:if="${p.displayStatus == 'UPCOMING'}" class="badge-pill-neutral font-semibold text-slate-700 bg-slate-100 border-slate-300">
+                                            <i class="fa-solid fa-hourglass-start text-xs"></i> Sắp diễn ra
+                                        </span>
+                                        <span th:if="${p.displayStatus == 'PROPOSAL_OPEN'}" class="badge-pill-neutral font-semibold text-emerald-700 bg-emerald-50 border-emerald-300">
+                                            <i class="fa-solid fa-chalkboard-user text-xs"></i> Mở ĐX (GV)
+                                        </span>
+                                        <span th:if="${p.displayStatus == 'PENDING_REGISTRATION'}" class="badge-pill-neutral font-semibold text-amber-700 bg-amber-50 border-amber-300">
+                                            <i class="fa-solid fa-clock text-xs"></i> Chờ mở ĐK
+                                        </span>
+                                        <span th:if="${p.displayStatus == 'REGISTRATION_OPEN'}" class="badge-pill-approved font-semibold">
+                                            <i class="fa-solid fa-circle-check text-xs"></i> Mở ĐK (SV)
+                                        </span>
+                                        <span th:if="${p.displayStatus == 'REVIEWING'}" class="badge-pill-neutral font-semibold text-purple-700 bg-purple-50 border-purple-300">
+                                            <i class="fa-solid fa-clipboard-check text-xs"></i> Chấm GVPB
+                                        </span>
+                                        <span th:if="${p.displayStatus == 'DEFENSE_WAITING'}" class="badge-pill-neutral font-semibold text-blue-700 bg-blue-50 border-blue-300">
+                                            <i class="fa-solid fa-scale-balanced text-xs"></i> Chờ bảo vệ HĐ
+                                        </span>
+                                        <span th:if="${p.displayStatus == 'REGISTRATION_ENDED'}" class="badge-pill-pending font-semibold">
+                                            <i class="fa-solid fa-clock-rotate-left text-xs"></i> Hết hạn ĐK
+                                        </span>
+                                        <span th:if="${p.displayStatus == 'COMPLETED'}" class="badge-pill-neutral font-semibold text-slate-500 bg-slate-100 border-slate-200">
+                                            <i class="fa-solid fa-circle-check text-xs text-slate-400"></i> Đã kết thúc
+                                        </span>
+                                        <span th:if="${p.displayStatus == 'OPEN'}" class="badge-pill-approved font-semibold">
+                                            <i class="fa-solid fa-circle-check text-xs"></i> Đang mở
+                                        </span>
                                     </div>
                                 </td>
-                                <td>
-                                    <!-- Toggle Status Button -->
-                                    <form th:action="@{/department-head/periods/{id}/status(id=${p.id})}" method="post" class="d-inline"
-                                          onsubmit="return confirm('Bạn có chắc muốn đổi trạng thái của đợt này?');">
-                                        <input type="hidden" name="status" th:value="${p.status == 'OPEN' ? 'CLOSED' : 'OPEN'}">
-                                        <button type="submit" class="border-0 bg-transparent p-0" th:title="${p.status == 'OPEN' ? 'Nhấn để đóng đợt' : 'Nhấn để mở đợt'}">
-                                            <span th:if="${p.status == 'OPEN'}" class="badge-pill-approved font-semibold cursor-pointer">
-                                                <i class="fa-solid fa-circle-check text-xs"></i> Đang mở
-                                            </span>
-                                            <span th:if="${p.status == 'CLOSED'}" class="badge-pill-rejected font-semibold cursor-pointer">
-                                                <i class="fa-solid fa-lock text-xs"></i> Đã đóng
-                                            </span>
+
+                                <!-- Column 4: Actions -->
+                                <td class="align-middle text-center">
+                                    <div class="d-inline-flex align-items-center gap-1">
+                                        <!-- Edit Button -->
+                                        <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-lg px-2 py-1 text-slate-700 hover:text-blue-600 hover:border-blue-300 transition-colors shadow-2xs"
+                                                th:onclick="'openEditPeriodModal(' + ${p.id} + ')'" title="Sửa">
+                                            <i class="fa-solid fa-pen-to-square text-xs"></i>
                                         </button>
-                                    </form>
+
+                                        <!-- Quick Status Toggle Button -->
+                                        <form th:action="@{/department-head/periods/{id}/status(id=${p.id})}" method="post" class="d-inline"
+                                              th:onsubmit="'return confirm(\'Bạn có chắc muốn ' + (${p.status == 'OPEN'} ? 'ĐÓNG' : 'MỞ LẠI') + ' đợt đăng ký này?\');'">
+                                            <input type="hidden" name="status" th:value="${p.status == 'OPEN' ? 'CLOSED' : 'OPEN'}">
+                                            <button type="submit" class="btn btn-sm rounded-lg px-2 py-1 transition-colors shadow-2xs"
+                                                    th:classappend="${p.status == 'OPEN' ? 'btn-light border border-amber-200 text-amber-600 hover:bg-amber-50' : 'btn-light border border-emerald-200 text-emerald-600 hover:bg-emerald-50'}"
+                                                    th:title="${p.status == 'OPEN' ? 'Khóa đợt' : 'Mở lại đợt'}">
+                                                <i th:class="${p.status == 'OPEN' ? 'fa-solid fa-lock text-xs' : 'fa-solid fa-lock-open text-xs'}"></i>
+                                            </button>
+                                        </form>
+
+                                        <!-- Delete Button -->
+                                        <form th:action="@{/department-head/periods/{id}/delete(id=${p.id})}" method="post" class="d-inline"
+                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa đợt đăng ký này?');">
+                                            <button type="submit" class="btn btn-sm btn-light border border-slate-200 rounded-lg px-2 py-1 text-slate-400 hover:text-rose-600 hover:border-rose-300 transition-colors shadow-2xs" title="Xóa">
+                                                <i class="fa-regular fa-trash-can text-xs"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- VIEW 2: TIMELINE CARDS VIEW (GRID) -->
+            <div id="periodCardsView" class="mb-3 d-none">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-3" id="periodCardsGrid">
+                    <div th:if="${periods == null || #lists.isEmpty(periods)}" class="col-span-full text-center py-5 text-muted text-xs bg-white rounded-2xl border border-slate-200">
+                        <i class="fa-regular fa-folder-open text-2xl mb-1.5 d-block text-slate-300"></i>
+                        Chưa có đợt đăng ký nào. Nhấn <strong>Tạo đợt mới</strong> để bắt đầu.
+                    </div>
+                    <div th:each="p : ${periods}" class="period-card bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition duration-200 p-3.5"
+                        th:data-period-id="${p.id}"
+                        th:data-period-name="${p.name}"
+                        th:data-period-type="${p.periodType}"
+                        th:data-academic-year="${p.academicYear}"
+                        th:data-status="${p.status}"
+                        th:data-display-status="${p.displayStatus}">
+
+                        <!-- Card Header -->
+                        <div class="d-flex align-items-start justify-content-between gap-2 mb-2.5 pb-2.5 border-b border-slate-100">
+                            <div>
+                                <div class="d-flex align-items-center gap-1.5 mb-1 flex-wrap">
+                                    <span class="badge bg-slate-100 text-slate-700 font-mono text-[11px] px-1.5 py-0.5 rounded font-semibold" th:text="'RP-' + ${p.id}">RP-1</span>
+                                    <span th:if="${p.periodType == 'KLTN'}" class="badge-pill-neutral font-semibold text-blue-700 bg-blue-50 border-blue-200 text-[11px] py-0.5 px-1.5">Khóa luận</span>
+                                    <span th:if="${p.periodType == 'TLCN'}" class="badge-pill-neutral font-semibold text-indigo-700 bg-indigo-50 border-indigo-200 text-[11px] py-0.5 px-1.5">Tiểu luận</span>
+                                    <span th:if="${p.periodType == 'NCKH'}" class="badge-pill-neutral font-semibold text-emerald-700 bg-emerald-50 border-emerald-200 text-[11px] py-0.5 px-1.5">NCKH</span>
+                                    <span th:if="${p.periodType == 'MON_HOC'}" class="badge-pill-neutral font-semibold text-slate-700 bg-slate-100 border-slate-200 text-[11px] py-0.5 px-1.5">Môn học</span>
+                                </div>
+                                <h6 class="font-bold text-slate-900 text-xs mb-0.5 line-clamp-1" th:text="${p.name}">Tên đợt đăng ký</h6>
+                                <div class="text-[11px] text-slate-500">
+                                    <span class="font-medium text-slate-700" th:text="${p.academicYear}">2026-2027</span>
+                                    <span class="text-slate-300 mx-1">•</span>
+                                    <span>HK<strong th:text="${p.semester}">1</strong></span>
+                                    <span class="text-slate-300 mx-1">•</span>
+                                    <span class="text-slate-400 font-mono" th:text="${p.minStudents} + '-' + ${p.maxStudents} + ' SV/nhóm'">2-3 SV</span>
+                                </div>
+                            </div>
+                            <div>
+                                <!-- Status Badge -->
+                                <span th:if="${p.status == 'CLOSED'}" class="badge-pill-rejected font-semibold"><i class="fa-solid fa-lock text-xs"></i> Đã đóng</span>
+                                <span th:if="${p.status == 'OPEN' && p.displayStatus == 'PROPOSAL_OPEN'}" class="badge-pill-neutral font-semibold text-emerald-700 bg-emerald-50 border-emerald-300"><i class="fa-solid fa-chalkboard-user text-xs"></i> Mở ĐX (GV)</span>
+                                <span th:if="${p.status == 'OPEN' && p.displayStatus == 'REGISTRATION_OPEN'}" class="badge-pill-approved font-semibold"><i class="fa-solid fa-circle-check text-xs"></i> Mở ĐK (SV)</span>
+                                <span th:if="${p.status == 'OPEN' && p.displayStatus == 'PENDING_REGISTRATION'}" class="badge-pill-neutral font-semibold text-amber-700 bg-amber-50 border-amber-300"><i class="fa-solid fa-clock text-xs"></i> Chờ mở ĐK</span>
+                                <span th:if="${p.status == 'OPEN' && p.displayStatus == 'REVIEWING'}" class="badge-pill-neutral font-semibold text-purple-700 bg-purple-50 border-purple-300"><i class="fa-solid fa-clipboard-check text-xs"></i> Chấm GVPB</span>
+                                <span th:if="${p.status == 'OPEN' && p.displayStatus == 'DEFENSE_WAITING'}" class="badge-pill-neutral font-semibold text-blue-700 bg-blue-50 border-blue-300"><i class="fa-solid fa-scale-balanced text-xs"></i> Chờ bảo vệ HĐ</span>
+                                <span th:if="${p.status == 'OPEN' && p.displayStatus == 'UPCOMING'}" class="badge-pill-neutral font-semibold text-slate-700 bg-slate-100 border-slate-300"><i class="fa-solid fa-hourglass-start text-xs"></i> Sắp diễn ra</span>
+                                <span th:if="${p.status == 'OPEN' && p.displayStatus == 'REGISTRATION_ENDED'}" class="badge-pill-pending font-semibold"><i class="fa-solid fa-clock-rotate-left text-xs"></i> Hết hạn ĐK</span>
+                                <span th:if="${p.status == 'OPEN' && p.displayStatus == 'COMPLETED'}" class="badge-pill-neutral font-semibold text-slate-500 bg-slate-100 border-slate-200"><i class="fa-solid fa-circle-check text-xs"></i> Hoàn thành</span>
+                            </div>
+                        </div>
+
+                        <!-- Card Body: Horizontal 4-Milestone Grid -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2.5">
+                            <!-- Step 1 Card Box -->
+                            <div class="p-2 rounded-xl border text-xs"
+                                th:classappend="${p.displayStatus == 'PROPOSAL_OPEN' ? 'bg-emerald-50/70 border-emerald-300' : 'bg-slate-50/80 border-slate-200'}">
+                                <div class="d-flex align-items-center gap-1 font-semibold text-slate-700 mb-0.5 text-[11px]">
+                                    <span class="w-1.5 h-1.5 rounded-full" th:classappend="${p.displayStatus == 'PROPOSAL_OPEN' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}"></span>
+                                    1. GV Đề Xuất
+                                </div>
+                                <div class="text-[10.5px] text-slate-500">
+                                    <span th:if="${p.lecturerProposalStart != null}" th:text="${#temporals.format(p.lecturerProposalStart, 'dd/MM')}">01/09</span>
+                                    <span th:if="${p.lecturerProposalStart != null}"> - </span>
+                                    <span th:if="${p.lecturerProposalEnd != null}" class="font-bold text-slate-800" th:text="${#temporals.format(p.lecturerProposalEnd, 'dd/MM/yy')}">15/09/26</span>
+                                    <span th:if="${p.lecturerProposalStart == null && p.lecturerProposalEnd == null}" class="text-slate-300">--</span>
+                                </div>
+                            </div>
+
+                            <!-- Step 2 Card Box -->
+                            <div class="p-2 rounded-xl border text-xs"
+                                th:classappend="${p.displayStatus == 'REGISTRATION_OPEN' ? 'bg-blue-50/70 border-blue-300' : 'bg-slate-50/80 border-slate-200'}">
+                                <div class="d-flex align-items-center gap-1 font-semibold text-slate-700 mb-0.5 text-[11px]">
+                                    <span class="w-1.5 h-1.5 rounded-full" th:classappend="${p.displayStatus == 'REGISTRATION_OPEN' ? 'bg-blue-500 animate-pulse' : 'bg-slate-400'}"></span>
+                                    2. SV Đăng Ký
+                                </div>
+                                <div class="text-[10.5px] text-slate-500">
+                                    <span th:if="${p.studentRegistrationStart != null}" th:text="${#temporals.format(p.studentRegistrationStart, 'dd/MM')}">16/09</span>
+                                    <span th:if="${p.studentRegistrationStart != null}"> - </span>
+                                    <span th:if="${p.studentRegistrationEnd != null}" class="font-bold text-slate-800" th:text="${#temporals.format(p.studentRegistrationEnd, 'dd/MM/yy')}">30/09/26</span>
+                                    <span th:if="${p.studentRegistrationStart == null && p.studentRegistrationEnd == null}" class="text-slate-300">--</span>
+                                </div>
+                            </div>
+
+                            <!-- Step 3 Card Box -->
+                            <div class="p-2 rounded-xl border text-xs"
+                                th:classappend="${p.displayStatus == 'REVIEWING' ? 'bg-purple-50/70 border-purple-300' : 'bg-slate-50/80 border-slate-200'}">
+                                <div class="d-flex align-items-center gap-1 font-semibold text-slate-700 mb-0.5 text-[11px]">
+                                    <span class="w-1.5 h-1.5 rounded-full" th:classappend="${p.displayStatus == 'REVIEWING' ? 'bg-purple-500 animate-pulse' : 'bg-slate-400'}"></span>
+                                    3. Hạn GVPB
+                                </div>
+                                <div class="text-[10.5px] text-slate-500">
+                                    <span th:if="${p.periodType != 'KLTN' && p.periodType != 'TLCN'}" class="text-slate-300">--</span>
+                                    <span th:if="${(p.periodType == 'KLTN' || p.periodType == 'TLCN') && p.reviewerDeadline != null}" class="font-bold text-purple-800" th:text="${#temporals.format(p.reviewerDeadline, 'dd/MM/yy')}">15/10/26</span>
+                                    <span th:if="${(p.periodType == 'KLTN' || p.periodType == 'TLCN') && p.reviewerDeadline == null}" class="text-slate-300">--</span>
+                                </div>
+                            </div>
+
+                            <!-- Step 4 Card Box -->
+                            <div class="p-2 rounded-xl border text-xs"
+                                th:classappend="${p.displayStatus == 'DEFENSE_WAITING' ? 'bg-indigo-50/70 border-indigo-300' : 'bg-slate-50/80 border-slate-200'}">
+                                <div class="d-flex align-items-center gap-1 font-semibold text-slate-700 mb-0.5 text-[11px]">
+                                    <span class="w-1.5 h-1.5 rounded-full" th:classappend="${p.displayStatus == 'DEFENSE_WAITING' ? 'bg-indigo-500 animate-pulse' : 'bg-slate-400'}"></span>
+                                    4. Báo Cáo HĐ
+                                </div>
+                                <div class="text-[10.5px] text-slate-500">
+                                    <span th:if="${p.periodType != 'KLTN'}" class="text-slate-300">--</span>
+                                    <span th:if="${p.periodType == 'KLTN' && p.councilDefenseDate != null}" class="font-bold text-indigo-800" th:text="${#temporals.format(p.councilDefenseDate, 'dd/MM/yy')}">30/10/26</span>
+                                    <span th:if="${p.periodType == 'KLTN' && p.councilDefenseDate == null}" class="text-slate-300">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Footer: Action Buttons -->
+                        <div class="pt-2 border-t border-slate-100 d-flex align-items-center justify-content-end gap-1.5">
+                            <button type="button" class="btn btn-xs btn-light border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 hover:text-blue-600 hover:border-blue-300 transition"
+                                th:onclick="'openEditPeriodModal(' + ${p.id} + ')'">
+                                <i class="fa-solid fa-pen-to-square me-1"></i> Sửa
+                            </button>
+                            <form th:action="@{/department-head/periods/{id}/status(id=${p.id})}" method="post" class="d-inline"
+                                  th:onsubmit="'return confirm(\'Bạn có chắc muốn ' + (${p.status == 'OPEN'} ? 'ĐÓNG' : 'MỞ LẠI') + ' đợt đăng ký này?\');'">
+                                <input type="hidden" name="status" th:value="${p.status == 'OPEN' ? 'CLOSED' : 'OPEN'}">
+                                <button type="submit" class="btn btn-xs rounded-lg px-2 py-1 text-xs font-semibold transition"
+                                        th:classappend="${p.status == 'OPEN' ? 'btn-light border border-amber-200 text-amber-600 hover:bg-amber-50' : 'btn-light border border-emerald-200 text-emerald-600 hover:bg-emerald-50'}">
+                                    <i th:class="${p.status == 'OPEN' ? 'fa-solid fa-lock me-1' : 'fa-solid fa-lock-open me-1'}"></i>
+                                    <span th:text="${p.status == 'OPEN' ? 'Khóa' : 'Mở'}">Khóa</span>
+                                </button>
+                            </form>
+                            <form th:action="@{/department-head/periods/{id}/delete(id=${p.id})}" method="post" class="d-inline"
+                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa đợt đăng ký này?');">
+                                <button type="submit" class="btn btn-xs btn-light border border-slate-200 rounded-lg px-2 py-1 text-slate-400 hover:text-rose-600 hover:border-rose-300 transition" title="Xóa">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -146,12 +473,42 @@
     <div class="modal fade" id="createPeriodModal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content rounded-2xl border-0 shadow-xl">
-                <form th:action="@{/department-head/periods/create}" method="post">
-                    <div class="modal-header border-b border-slate-100 p-4">
-                        <h6 class="modal-title font-bold text-slate-900 text-sm"><i class="fa-solid fa-calendar-plus text-blue-600 me-1.5"></i> Thiết Lập Đợt Đăng Ký Đề Tài Mới</h6>
+                <form th:action="@{/department-head/periods/create}" method="post" id="formCreatePeriod">
+                    <div class="modal-header border-b border-slate-100 p-3.5">
+                        <h6 class="modal-title font-bold text-slate-900 text-sm"><i class="fa-solid fa-calendar-plus text-blue-600 me-1.5"></i> Tạo Đợt Đăng Ký Đề Tài Mới</h6>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-4 space-y-3">
+
+                        <!-- Roadmap Indicator -->
+                        <div class="p-2 bg-slate-50 border border-slate-200/80 rounded-xl mb-2">
+                            <div class="d-flex align-items-center justify-content-between text-[11px] font-semibold text-slate-600 flex-wrap gap-1">
+                                <span class="d-inline-flex align-items-center gap-1 text-blue-700">
+                                    <span class="badge bg-blue-600 text-white rounded-full px-1.5 py-0.2">1</span> GV Đề xuất
+                                </span>
+                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]"></i>
+                                <span class="d-inline-flex align-items-center gap-1 text-emerald-700">
+                                    <span class="badge bg-emerald-600 text-white rounded-full px-1.5 py-0.2">2</span> SV Đăng ký
+                                </span>
+                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]"></i>
+                                <span class="d-inline-flex align-items-center gap-1 text-purple-700" id="stepIndicatorReviewer">
+                                    <span class="badge bg-purple-600 text-white rounded-full px-1.5 py-0.2">3</span> Chấm GVPB
+                                </span>
+                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]" id="stepArrowDefense"></i>
+                                <span class="d-inline-flex align-items-center gap-1 text-indigo-700" id="stepIndicatorDefense">
+                                    <span class="badge bg-indigo-600 text-white rounded-full px-1.5 py-0.2">4</span> Bảo vệ Hội đồng
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Inline Error Alert inside Modal -->
+                        <div id="createPeriodErrorAlert" class="alert alert-danger rounded-2xl mb-3 py-2 px-3 text-xs font-medium border border-rose-200 d-none" role="alert">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-rose-600 flex-shrink-0"></i>
+                                <span id="createPeriodErrorText" class="text-rose-700"></span>
+                            </div>
+                        </div>
+
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Tên đợt đăng ký *</label>
@@ -159,7 +516,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Loại đợt đào tạo *</label>
-                                <select id="createPeriodTypeSelect" name="periodType" class="form-select text-xs rounded-xl" required onchange="handlePeriodTypeChange(this.value)">
+                                <select id="createPeriodTypeSelect" name="periodType" class="form-select text-xs rounded-xl" required onchange="handlePeriodTypeChange(this.value, '')">
                                     <option value="KLTN">Khóa luận tốt nghiệp</option>
                                     <option value="TLCN">Tiểu luận chuyên ngành</option>
                                     <option value="NCKH">Nghiên cứu khoa học sinh viên</option>
@@ -175,122 +532,744 @@
                                 <select name="semester" class="form-select text-xs rounded-xl">
                                     <option value="1">Học kỳ 1</option>
                                     <option value="2">Học kỳ 2</option>
-                                    <option value="3">Học kỳ hè (Học kỳ phụ)</option>
+                                    <option value="3">Học kỳ hè</option>
                                 </select>
                             </div>
 
                             <div class="col-12"><hr class="my-1 border-slate-100"></div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">GV đề xuất đề tài: Bắt đầu</label>
-                                <input type="date" name="propStart" class="form-control text-xs rounded-xl">
+                                <label class="form-label text-xs font-semibold text-slate-700">1. GV đề xuất: Bắt đầu</label>
+                                <input type="date" name="propStart" id="inputPropStart" class="form-control text-xs rounded-xl">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">GV đề xuất đề tài: Hạn chót</label>
-                                <input type="date" name="propEnd" class="form-control text-xs rounded-xl">
+                                <label class="form-label text-xs font-semibold text-slate-700">1. GV đề xuất: Hạn chót</label>
+                                <input type="date" name="propEnd" id="inputPropEnd" class="form-control text-xs rounded-xl">
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Sinh viên đăng ký: Bắt đầu</label>
-                                <input type="date" name="regStart" class="form-control text-xs rounded-xl">
+                                <label class="form-label text-xs font-semibold text-slate-700">2. SV đăng ký: Bắt đầu</label>
+                                <input type="date" name="regStart" id="inputRegStart" class="form-control text-xs rounded-xl">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Sinh viên đăng ký: Hạn chót</label>
-                                <input type="date" name="regEnd" class="form-control text-xs rounded-xl">
+                                <label class="form-label text-xs font-semibold text-slate-700">2. SV đăng ký: Hạn chót</label>
+                                <input type="date" name="regEnd" id="inputRegEnd" class="form-control text-xs rounded-xl">
                             </div>
 
-                            <!-- Conditional Fields according to Assignment Spec -->
+                            <!-- Conditional Fields -->
                             <div class="col-md-6" id="fieldReviewerDeadline">
                                 <label class="form-label text-xs font-semibold text-slate-700">
-                                    Hạn nộp điểm GVPB <span class="badge bg-blue-50 text-blue-700 border border-blue-200 text-[10px] px-1 py-0.2 rounded font-normal">KLTN / TLCN</span>
+                                    3. Hạn nộp điểm GVPB <span class="badge bg-blue-50 text-blue-700 border border-blue-200 text-[10px] px-1 py-0.2 rounded font-normal">KLTN / TLCN</span>
                                 </label>
                                 <input type="date" name="revDead" id="inputRevDead" class="form-control text-xs rounded-xl">
-                                <span class="text-[11px] text-slate-400 mt-1 d-block italic">* Hạn chót GVPB nộp điểm về Khoa</span>
                             </div>
                             <div class="col-md-6" id="fieldCouncilDefenseDate">
                                 <label class="form-label text-xs font-semibold text-slate-700">
-                                    Ngày báo cáo Hội đồng <span class="badge bg-purple-50 text-purple-700 border border-purple-200 text-[10px] px-1 py-0.2 rounded font-normal">Chỉ KLTN</span>
+                                    4. Ngày báo cáo Hội đồng <span class="badge bg-purple-50 text-purple-700 border border-purple-200 text-[10px] px-1 py-0.2 rounded font-normal">Chỉ KLTN</span>
                                 </label>
                                 <input type="date" name="defenseDate" id="inputDefenseDate" class="form-control text-xs rounded-xl">
-                                <span class="text-[11px] text-slate-400 mt-1 d-block italic">* Ngày bảo vệ trước Hội đồng chấm KLTN</span>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer border-t border-slate-100 p-3">
                         <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-semibold">Tạo đợt đăng ký</button>
+                        <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-semibold">Tạo đợt</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
+    <!-- Edit Period Modal -->
+    <div class="modal fade" id="editPeriodModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-2xl border-0 shadow-xl">
+                <form method="post" id="formEditPeriod">
+                    <input type="hidden" id="editPeriodId" name="id">
+                    <div class="modal-header border-b border-slate-100 p-3.5">
+                        <h6 class="modal-title font-bold text-slate-900 text-sm"><i class="fa-solid fa-pen-to-square text-blue-600 me-1.5"></i> Chỉnh Sửa Đợt Đăng Ký</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-3">
+
+                        <!-- Roadmap Indicator -->
+                        <div class="p-2 bg-slate-50 border border-slate-200/80 rounded-xl mb-2">
+                            <div class="d-flex align-items-center justify-content-between text-[11px] font-semibold text-slate-600 flex-wrap gap-1">
+                                <span class="d-inline-flex align-items-center gap-1 text-blue-700">
+                                    <span class="badge bg-blue-600 text-white rounded-full px-1.5 py-0.2">1</span> GV Đề xuất
+                                </span>
+                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]"></i>
+                                <span class="d-inline-flex align-items-center gap-1 text-emerald-700">
+                                    <span class="badge bg-emerald-600 text-white rounded-full px-1.5 py-0.2">2</span> SV Đăng ký
+                                </span>
+                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]"></i>
+                                <span class="d-inline-flex align-items-center gap-1 text-purple-700" id="stepIndicatorReviewerEdit">
+                                    <span class="badge bg-purple-600 text-white rounded-full px-1.5 py-0.2">3</span> Chấm GVPB
+                                </span>
+                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]" id="stepArrowDefenseEdit"></i>
+                                <span class="d-inline-flex align-items-center gap-1 text-indigo-700" id="stepIndicatorDefenseEdit">
+                                    <span class="badge bg-indigo-600 text-white rounded-full px-1.5 py-0.2">4</span> Bảo vệ Hội đồng
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Inline Error Alert inside Edit Modal -->
+                        <div id="editPeriodErrorAlert" class="alert alert-danger rounded-2xl mb-3 py-2 px-3 text-xs font-medium border border-rose-200 d-none" role="alert">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-rose-600 flex-shrink-0"></i>
+                                <span id="editPeriodErrorText" class="text-rose-700"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-slate-700">Tên đợt đăng ký *</label>
+                                <input type="text" id="editName" name="name" class="form-control text-xs rounded-xl" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-slate-700">Loại đợt đào tạo *</label>
+                                <select id="editPeriodTypeSelect" name="periodType" class="form-select text-xs rounded-xl" required onchange="handlePeriodTypeChange(this.value, 'Edit')">
+                                    <option value="KLTN">Khóa luận tốt nghiệp</option>
+                                    <option value="TLCN">Tiểu luận chuyên ngành</option>
+                                    <option value="NCKH">Nghiên cứu khoa học sinh viên</option>
+                                    <option value="MON_HOC">Đồ án môn học chuyên ngành</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-xs font-semibold text-slate-700">Năm học *</label>
+                                <input type="text" id="editAcademicYear" name="academicYear" class="form-control text-xs rounded-xl" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-xs font-semibold text-slate-700">Học kỳ *</label>
+                                <select id="editSemester" name="semester" class="form-select text-xs rounded-xl">
+                                    <option value="1">Học kỳ 1</option>
+                                    <option value="2">Học kỳ 2</option>
+                                    <option value="3">Học kỳ hè</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-xs font-semibold text-slate-700">Trạng thái đợt *</label>
+                                <select id="editStatus" name="status" class="form-select text-xs rounded-xl font-semibold">
+                                    <option value="OPEN" class="text-emerald-700">🟢 Đang mở (Hoạt động)</option>
+                                    <option value="CLOSED" class="text-rose-700">🔒 Đã đóng (Tạm khóa)</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12"><hr class="my-1 border-slate-100"></div>
+
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-slate-700">1. GV đề xuất: Bắt đầu</label>
+                                <input type="date" name="propStart" id="editPropStart" class="form-control text-xs rounded-xl">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-slate-700">1. GV đề xuất: Hạn chót</label>
+                                <input type="date" name="propEnd" id="editPropEnd" class="form-control text-xs rounded-xl">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-slate-700">2. SV đăng ký: Bắt đầu</label>
+                                <input type="date" name="regStart" id="editRegStart" class="form-control text-xs rounded-xl">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-slate-700">2. SV đăng ký: Hạn chót</label>
+                                <input type="date" name="regEnd" id="editRegEnd" class="form-control text-xs rounded-xl">
+                            </div>
+
+                            <!-- Conditional Fields -->
+                            <div class="col-md-6" id="fieldReviewerDeadlineEdit">
+                                <label class="form-label text-xs font-semibold text-slate-700">
+                                    3. Hạn nộp điểm GVPB <span class="badge bg-blue-50 text-blue-700 border border-blue-200 text-[10px] px-1 py-0.2 rounded font-normal">KLTN / TLCN</span>
+                                </label>
+                                <input type="date" name="revDead" id="editRevDead" class="form-control text-xs rounded-xl">
+                            </div>
+                            <div class="col-md-6" id="fieldCouncilDefenseDateEdit">
+                                <label class="form-label text-xs font-semibold text-slate-700">
+                                    4. Ngày báo cáo Hội đồng <span class="badge bg-purple-50 text-purple-700 border border-purple-200 text-[10px] px-1 py-0.2 rounded font-normal">Chỉ KLTN</span>
+                                </label>
+                                <input type="date" name="defenseDate" id="editDefenseDate" class="form-control text-xs rounded-xl">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 p-3">
+                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-blue rounded-xl px-4 text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scoped CSS for Compact Modern Periods & Milestones UI -->
+    <style>
+        .period-kpi-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.875rem;
+            padding: 0.625rem 0.875rem;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.15s ease-in-out;
+            user-select: none;
+        }
+        .period-kpi-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
+            border-color: #cbd5e1;
+        }
+        .period-kpi-card.active {
+            border-color: #3b82f6;
+            background: #f8faff;
+            box-shadow: 0 3px 10px rgba(59, 130, 246, 0.1);
+        }
+        .period-kpi-card .kpi-highlight-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2.5px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .period-kpi-card.active .kpi-highlight-bar {
+            opacity: 1;
+        }
+        .kpi-icon-badge {
+            width: 20px;
+            height: 20px;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* View Mode Toggle */
+        .view-toggle-btn {
+            border: none;
+            background: transparent;
+            transition: all 0.15s ease;
+        }
+        .view-toggle-btn.active {
+            background: #ffffff;
+            color: #0f172a;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Mini Milestone Stepper for Table Rows */
+        .milestone-stepper-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 3px;
+            padding: 2px 0;
+            min-width: 420px;
+        }
+        .milestone-step {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 6px;
+            border-radius: 0.625rem;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+        .milestone-step .step-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+        }
+        .milestone-step .step-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+        .milestone-step .step-name {
+            font-size: 10px;
+            font-weight: 600;
+            color: #475569;
+        }
+        .milestone-step .step-date {
+            font-size: 9.5px;
+            color: #64748b;
+        }
+        .milestone-step.is-active {
+            background: #eff6ff;
+            border-color: #93c5fd;
+        }
+        .milestone-step.is-active .step-icon {
+            background: #3b82f6;
+            color: #ffffff;
+            animation: pulse-ring 2s infinite;
+        }
+        .milestone-step.is-active .step-name {
+            color: #1d4ed8;
+            font-weight: 700;
+        }
+        .milestone-step.is-done .step-icon {
+            background: #10b981;
+            color: #ffffff;
+        }
+        .milestone-step.is-na {
+            opacity: 0.45;
+            background: #f1f5f9;
+        }
+        .step-connector {
+            flex-grow: 1;
+            height: 2px;
+            background: #e2e8f0;
+            min-width: 8px;
+            margin: 0 1px;
+        }
+        .step-connector.is-done {
+            background: #10b981;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
+            70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(59, 130, 246, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+    </style>
+
     <!-- Scripts Fragment -->
     <div th:replace="~{fragments/scripts :: scripts}"></div>
 
     <script>
-        function handlePeriodTypeChange(type) {
-            const revField = document.getElementById('fieldReviewerDeadline');
-            const defField = document.getElementById('fieldCouncilDefenseDate');
-            const revInput = document.getElementById('inputRevDead');
-            const defInput = document.getElementById('inputDefenseDate');
+        let currentPeriodStageFilter = 'ALL';
+        let currentPeriodViewMode = 'table';
+
+        // View Mode Switcher: Table vs Cards
+        function setPeriodViewMode(mode) {
+            currentPeriodViewMode = mode;
+            const btnTable = document.getElementById('viewBtnTable');
+            const btnCards = document.getElementById('viewBtnCards');
+            const tableView = document.getElementById('periodTableView');
+            const cardsView = document.getElementById('periodCardsView');
+
+            if (mode === 'table') {
+                btnTable.classList.add('active');
+                btnTable.classList.remove('text-slate-600');
+                btnCards.classList.remove('active');
+                btnCards.classList.add('text-slate-600');
+                tableView.classList.remove('d-none');
+                cardsView.classList.add('d-none');
+            } else {
+                btnCards.classList.add('active');
+                btnCards.classList.remove('text-slate-600');
+                btnTable.classList.remove('active');
+                btnTable.classList.add('text-slate-600');
+                tableView.classList.add('d-none');
+                cardsView.classList.remove('d-none');
+            }
+            applyAllPeriodFilters();
+        }
+
+        // KPI Filter Cards click handler
+        function filterByPeriodStage(stage, element) {
+            currentPeriodStageFilter = stage;
+            document.querySelectorAll('.period-kpi-card').forEach(c => c.classList.remove('active'));
+            if (element) element.classList.add('active');
+            applyAllPeriodFilters();
+        }
+
+        // Master Filter for Search, Type, Status and KPI Stage
+        function applyAllPeriodFilters() {
+            const searchVal = (document.getElementById('periodSearchInput')?.value || '').toLowerCase().trim();
+            const typeFilter = document.getElementById('periodTypeSelectFilter')?.value || 'all';
+            const statusFilter = document.getElementById('periodStatusSelectFilter')?.value || 'all';
+
+            const tableRows = document.querySelectorAll('#periodTableBody .period-row');
+            const cards = document.querySelectorAll('#periodCardsGrid .period-card');
+
+            let visibleCount = 0;
+
+            const checkMatch = (rowOrCard) => {
+                const name = (rowOrCard.getAttribute('data-period-name') || '').toLowerCase();
+                const type = rowOrCard.getAttribute('data-period-type') || '';
+                const year = (rowOrCard.getAttribute('data-academic-year') || '').toLowerCase();
+                const status = rowOrCard.getAttribute('data-status') || '';
+                const displayStatus = rowOrCard.getAttribute('data-display-status') || '';
+
+                // 1. Text Search Filter
+                const matchSearch = !searchVal || name.includes(searchVal) || year.includes(searchVal) || type.toLowerCase().includes(searchVal);
+
+                // 2. Type Filter
+                const matchType = (typeFilter === 'all') || (type === typeFilter);
+
+                // 3. Status Select Filter
+                let matchStatusSelect = true;
+                if (statusFilter !== 'all') {
+                    matchStatusSelect = (displayStatus === statusFilter) || (status === statusFilter);
+                }
+
+                // 4. KPI Card Filter
+                let matchKpi = true;
+                if (currentPeriodStageFilter === 'PROPOSAL_OPEN') {
+                    matchKpi = (displayStatus === 'PROPOSAL_OPEN');
+                } else if (currentPeriodStageFilter === 'REGISTRATION_OPEN') {
+                    matchKpi = (displayStatus === 'REGISTRATION_OPEN');
+                } else if (currentPeriodStageFilter === 'REVIEWING_DEFENSE') {
+                    matchKpi = (displayStatus === 'REVIEWING' || displayStatus === 'DEFENSE_WAITING');
+                } else if (currentPeriodStageFilter === 'CLOSED_ENDED') {
+                    matchKpi = (displayStatus === 'CLOSED' || displayStatus === 'COMPLETED' || displayStatus === 'REGISTRATION_ENDED' || status === 'CLOSED');
+                }
+
+                return matchSearch && matchType && matchStatusSelect && matchKpi;
+            };
+
+            // Filter Table Rows
+            tableRows.forEach(row => {
+                const match = checkMatch(row);
+                row.style.display = match ? '' : 'none';
+                if (match) visibleCount++;
+            });
+
+            // Filter Cards
+            let cardVisibleCount = 0;
+            cards.forEach(card => {
+                const match = checkMatch(card);
+                card.style.display = match ? '' : 'none';
+                if (match) cardVisibleCount++;
+            });
+
+            const countBadge = document.getElementById('periodFilteredCountBadge');
+            const totalCount = tableRows.length;
+            const currentShown = currentPeriodViewMode === 'table' ? visibleCount : cardVisibleCount;
+            if (countBadge) {
+                countBadge.textContent = `Tổng: ${currentShown} / ${totalCount} đợt`;
+            }
+        }
+
+        function handlePeriodTypeChange(type, suffix = '') {
+            const revField = document.getElementById('fieldReviewerDeadline' + suffix);
+            const defField = document.getElementById('fieldCouncilDefenseDate' + suffix);
+            const revInput = document.getElementById(suffix === 'Edit' ? 'editRevDead' : 'inputRevDead');
+            const defInput = document.getElementById(suffix === 'Edit' ? 'editDefenseDate' : 'inputDefenseDate');
+            const stepRev = document.getElementById('stepIndicatorReviewer' + suffix);
+            const stepDef = document.getElementById('stepIndicatorDefense' + suffix);
+            const arrowDef = document.getElementById('stepArrowDefense' + suffix);
 
             if (type === 'KLTN') {
                 if (revField) revField.style.display = 'block';
                 if (defField) defField.style.display = 'block';
                 if (revInput) revInput.disabled = false;
                 if (defInput) defInput.disabled = false;
+                if (stepRev) stepRev.style.display = 'inline-flex';
+                if (stepDef) stepDef.style.display = 'inline-flex';
+                if (arrowDef) arrowDef.style.display = 'inline-block';
             } else if (type === 'TLCN') {
                 if (revField) revField.style.display = 'block';
                 if (defField) defField.style.display = 'none';
                 if (revInput) revInput.disabled = false;
                 if (defInput) { defInput.disabled = true; defInput.value = ''; }
+                if (stepRev) stepRev.style.display = 'inline-flex';
+                if (stepDef) stepDef.style.display = 'none';
+                if (arrowDef) arrowDef.style.display = 'none';
             } else {
                 // NCKH, MON_HOC
                 if (revField) revField.style.display = 'none';
                 if (defField) defField.style.display = 'none';
                 if (revInput) { revInput.disabled = true; revInput.value = ''; }
                 if (defInput) { defInput.disabled = true; defInput.value = ''; }
+                if (stepRev) stepRev.style.display = 'none';
+                if (stepDef) stepDef.style.display = 'none';
+                if (arrowDef) arrowDef.style.display = 'none';
             }
         }
+
+        function showModalError(msg, inputName, modalId = 'createPeriodModal') {
+            const alertId = modalId === 'editPeriodModal' ? 'editPeriodErrorAlert' : 'createPeriodErrorAlert';
+            const textId = modalId === 'editPeriodModal' ? 'editPeriodErrorText' : 'createPeriodErrorText';
+            const alertBox = document.getElementById(alertId);
+            const textSpan = document.getElementById(textId);
+            if (alertBox && textSpan) {
+                textSpan.textContent = msg;
+                alertBox.classList.remove('d-none');
+            }
+            if (inputName) {
+                const input = document.querySelector(`#${modalId} [name="${inputName}"]`);
+                if (input) {
+                    input.classList.add('is-invalid');
+                    input.focus();
+                }
+            }
+        }
+
+        function clearModalError(modalId = 'createPeriodModal') {
+            const alertId = modalId === 'editPeriodModal' ? 'editPeriodErrorAlert' : 'createPeriodErrorAlert';
+            const alertBox = document.getElementById(alertId);
+            if (alertBox) alertBox.classList.add('d-none');
+            document.querySelectorAll(`#${modalId} .is-invalid`).forEach(el => el.classList.remove('is-invalid'));
+        }
+
+        async function openEditPeriodModal(periodId) {
+            clearModalError('editPeriodModal');
+            try {
+                const res = await fetch(`/department-head/periods/${periodId}/json`);
+                if (!res.ok) {
+                    alert('Không thể tải dữ liệu của đợt này!');
+                    return;
+                }
+                const p = await res.json();
+                document.getElementById('editPeriodId').value = p.id;
+                document.getElementById('editName').value = p.name || '';
+                document.getElementById('editPeriodTypeSelect').value = p.periodType || 'KLTN';
+                document.getElementById('editAcademicYear').value = p.academicYear || '2026-2027';
+                document.getElementById('editSemester').value = p.semester || 1;
+                document.getElementById('editStatus').value = p.status || 'OPEN';
+
+                document.getElementById('editPropStart').value = p.propStart || '';
+                document.getElementById('editPropEnd').value = p.propEnd || '';
+                document.getElementById('editRegStart').value = p.regStart || '';
+                document.getElementById('editRegEnd').value = p.regEnd || '';
+                document.getElementById('editRevDead').value = p.revDead || '';
+                document.getElementById('editDefenseDate').value = p.defenseDate || '';
+
+                handlePeriodTypeChange(p.periodType || 'KLTN', 'Edit');
+
+                // Cascading min-dates for Edit Form
+                if (p.propStart) document.getElementById('editPropEnd').setAttribute('min', p.propStart);
+                if (p.propEnd) document.getElementById('editRegStart').setAttribute('min', p.propEnd);
+                if (p.regStart) document.getElementById('editRegEnd').setAttribute('min', p.regStart);
+                if (p.regEnd) document.getElementById('editRevDead').setAttribute('min', p.regEnd);
+                if (p.revDead) document.getElementById('editDefenseDate').setAttribute('min', p.revDead);
+
+                const formEdit = document.getElementById('formEditPeriod');
+                formEdit.action = `/department-head/periods/${p.id}/update`;
+
+                const editModal = new bootstrap.Modal(document.getElementById('editPeriodModal'));
+                editModal.show();
+            } catch(e) {
+                console.error(e);
+                alert('Có lỗi khi mở cửa sổ chỉnh sửa đợt!');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const sel = document.getElementById('createPeriodTypeSelect');
-            if (sel) handlePeriodTypeChange(sel.value);
+            if (sel) handlePeriodTypeChange(sel.value, '');
 
-            const form = document.querySelector('#createPeriodModal form');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    const pStart = form.querySelector('[name="propStart"]')?.value;
-                    const pEnd = form.querySelector('[name="propEnd"]')?.value;
-                    const rStart = form.querySelector('[name="regStart"]')?.value;
-                    const rEnd = form.querySelector('[name="regEnd"]')?.value;
-                    const revDead = form.querySelector('[name="revDead"]')?.value;
-                    const defenseDate = form.querySelector('[name="defenseDate"]')?.value;
+            const pStartInput = document.getElementById('inputPropStart');
+            const pEndInput = document.getElementById('inputPropEnd');
+            const rStartInput = document.getElementById('inputRegStart');
+            const rEndInput = document.getElementById('inputRegEnd');
+            const revDeadInput = document.getElementById('inputRevDead');
+            const defDateInput = document.getElementById('inputDefenseDate');
 
-                    if (pStart && pEnd && pEnd < pStart) {
-                        alert('Lỗi: Hạn chót GV đề xuất phải sau ngày bắt đầu đề xuất!');
-                        e.preventDefault();
-                        return;
+            // Setup Create Modal Cascading Min-Dates
+            if (pStartInput && pEndInput) {
+                pStartInput.addEventListener('change', function() {
+                    if (this.value) {
+                        pEndInput.setAttribute('min', this.value);
+                        if (pEndInput.value && pEndInput.value < this.value) pEndInput.value = this.value;
                     }
-                    if (rStart && rEnd && rEnd < rStart) {
-                        alert('Lỗi: Hạn chót SV đăng ký phải sau ngày bắt đầu đăng ký!');
-                        e.preventDefault();
-                        return;
+                });
+            }
+            if (pEndInput && rStartInput) {
+                pEndInput.addEventListener('change', function() {
+                    if (this.value) {
+                        rStartInput.setAttribute('min', this.value);
+                        if (rStartInput.value && rStartInput.value < this.value) rStartInput.value = this.value;
                     }
-                    if (pStart && rStart && rStart < pStart) {
-                        alert('Lỗi: Thời gian SV đăng ký không được diễn ra trước thời gian GV đề xuất!');
-                        e.preventDefault();
-                        return;
+                });
+            }
+            if (rStartInput && rEndInput) {
+                rStartInput.addEventListener('change', function() {
+                    if (this.value) {
+                        rEndInput.setAttribute('min', this.value);
+                        if (rEndInput.value && rEndInput.value < this.value) rEndInput.value = this.value;
                     }
-                    if (rEnd && revDead && revDead < rEnd) {
-                        alert('Lỗi: Hạn nộp điểm GVPB phải sau hạn chót SV đăng ký đề tài!');
-                        e.preventDefault();
-                        return;
+                });
+            }
+            if (rEndInput && revDeadInput) {
+                rEndInput.addEventListener('change', function() {
+                    if (this.value) {
+                        revDeadInput.setAttribute('min', this.value);
+                        if (revDeadInput.value && revDeadInput.value < this.value) revDeadInput.value = this.value;
                     }
-                    if (revDead && defenseDate && defenseDate < revDead) {
-                        alert('Lỗi: Ngày báo cáo Hội đồng phải diễn ra sau hạn nộp điểm GVPB!');
-                        e.preventDefault();
-                        return;
+                });
+            }
+            if (revDeadInput && defDateInput) {
+                revDeadInput.addEventListener('change', function() {
+                    if (this.value) {
+                        defDateInput.setAttribute('min', this.value);
+                        if (defDateInput.value && defDateInput.value < this.value) defDateInput.value = this.value;
+                    }
+                });
+            }
+
+            // Setup Edit Modal Cascading Min-Dates
+            const editPStart = document.getElementById('editPropStart');
+            const editPEnd = document.getElementById('editPropEnd');
+            const editRStart = document.getElementById('editRegStart');
+            const editREnd = document.getElementById('editRegEnd');
+            const editRDead = document.getElementById('editRevDead');
+            const editDDate = document.getElementById('editDefenseDate');
+
+            if (editPStart && editPEnd) {
+                editPStart.addEventListener('change', function() {
+                    if (this.value) {
+                        editPEnd.setAttribute('min', this.value);
+                        if (editPEnd.value && editPEnd.value < this.value) editPEnd.value = this.value;
+                    }
+                });
+            }
+            if (editPEnd && editRStart) {
+                editPEnd.addEventListener('change', function() {
+                    if (this.value) {
+                        editRStart.setAttribute('min', this.value);
+                        if (editRStart.value && editRStart.value < this.value) editRStart.value = this.value;
+                    }
+                });
+            }
+            if (editRStart && editREnd) {
+                editRStart.addEventListener('change', function() {
+                    if (this.value) {
+                        editREnd.setAttribute('min', this.value);
+                        if (editREnd.value && editREnd.value < this.value) editREnd.value = this.value;
+                    }
+                });
+            }
+            if (editREnd && editRDead) {
+                editREnd.addEventListener('change', function() {
+                    if (this.value) {
+                        editRDead.setAttribute('min', this.value);
+                        if (editRDead.value && editRDead.value < this.value) editRDead.value = this.value;
+                    }
+                });
+            }
+            if (editRDead && editDDate) {
+                editRDead.addEventListener('change', function() {
+                    if (this.value) {
+                        editDDate.setAttribute('min', this.value);
+                        if (editDDate.value && editDDate.value < this.value) editDDate.value = this.value;
+                    }
+                });
+            }
+
+            // Validation Helper
+            function validatePeriodForm(form, modalId) {
+                clearModalError(modalId);
+                const pStart = form.querySelector('[name="propStart"]')?.value;
+                const pEnd = form.querySelector('[name="propEnd"]')?.value;
+                const rStart = form.querySelector('[name="regStart"]')?.value;
+                const rEnd = form.querySelector('[name="regEnd"]')?.value;
+                const revDead = form.querySelector('[name="revDead"]')?.value;
+                const defenseDate = form.querySelector('[name="defenseDate"]')?.value;
+
+                if (pStart && pEnd && pEnd < pStart) {
+                    showModalError('Hạn chót GV đề xuất phải sau ngày bắt đầu đề xuất!', 'propEnd', modalId);
+                    return false;
+                }
+                if (pEnd && rStart && rStart < pEnd) {
+                    showModalError('Thời gian SV bắt đầu đăng ký phải diễn ra từ ngày hoặc sau khi GV kết thúc hạn đề xuất đề tài!', 'regStart', modalId);
+                    return false;
+                }
+                if (rStart && rEnd && rEnd < rStart) {
+                    showModalError('Hạn chót SV đăng ký phải sau ngày bắt đầu đăng ký!', 'regEnd', modalId);
+                    return false;
+                }
+                if (rEnd && revDead && revDead < rEnd) {
+                    showModalError('Hạn nộp điểm GVPB phải sau khi kết thúc hạn SV đăng ký đề tài!', 'revDead', modalId);
+                    return false;
+                }
+                if (revDead && defenseDate && defenseDate < revDead) {
+                    showModalError('Ngày báo cáo Hội đồng phải diễn ra sau hạn nộp điểm GVPB!', 'defenseDate', modalId);
+                    return false;
+                }
+                return true;
+            }
+
+            // Create Period AJAX Submit
+            const formCreate = document.getElementById('formCreatePeriod');
+            if (formCreate) {
+                formCreate.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    if (!validatePeriodForm(formCreate, 'createPeriodModal')) return;
+
+                    const submitBtn = formCreate.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang xử lý...';
+                    }
+
+                    try {
+                        const formData = new FormData(formCreate);
+                        const params = new URLSearchParams(formData);
+                        const res = await fetch('/department-head/periods/create', {
+                            method: 'POST',
+                            body: params,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            }
+                        });
+
+                        const data = await res.json();
+                        if (res.ok && data.success) {
+                            window.location.reload();
+                        } else {
+                            showModalError(data.message || 'Đã xảy ra lỗi khi tạo đợt đăng ký!', null, 'createPeriodModal');
+                        }
+                    } catch(err) {
+                        window.location.reload();
+                    } finally {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = 'Tạo đợt';
+                        }
+                    }
+                });
+            }
+
+            // Edit Period AJAX Submit
+            const formEdit = document.getElementById('formEditPeriod');
+            if (formEdit) {
+                formEdit.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    if (!validatePeriodForm(formEdit, 'editPeriodModal')) return;
+
+                    const submitBtn = formEdit.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang lưu...';
+                    }
+
+                    try {
+                        const formData = new FormData(formEdit);
+                        const params = new URLSearchParams(formData);
+                        const res = await fetch(formEdit.action, {
+                            method: 'POST',
+                            body: params,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            }
+                        });
+
+                        const data = await res.json();
+                        if (res.ok && data.success) {
+                            window.location.reload();
+                        } else {
+                            showModalError(data.message || 'Đã xảy ra lỗi khi cập nhật đợt!', null, 'editPeriodModal');
+                        }
+                    } catch(err) {
+                        window.location.reload();
+                    } finally {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = 'Lưu thay đổi';
+                        }
                     }
                 });
             }

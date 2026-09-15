@@ -116,4 +116,11 @@ public class AuthService {
             System.out.println("  -> [AUTO-UPGRADE] Đã chuẩn hóa và cập nhật BCrypt hash mới vào Database cho user: " + user.getUsername());
         }
     }
+
+    public AppUser findUserByUsername(String username) {
+        if (username == null || username.trim().isEmpty()) return null;
+        return userRepository.findByUsernameIgnoreCase(username.trim())
+                .or(() -> userRepository.findByUsername(username.trim()))
+                .orElse(null);
+    }
 }

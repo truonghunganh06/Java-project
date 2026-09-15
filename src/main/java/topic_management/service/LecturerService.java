@@ -75,8 +75,12 @@ public class LecturerService {
     }
 
     public List<Lecturer> getOtherLecturers(Long currentLecturerId) {
+        if (currentLecturerId == null) return lecturerRepository.findAll();
+        Lecturer current = lecturerRepository.findById(currentLecturerId).orElse(null);
+        Long deptId = current != null && current.getDepartment() != null ? current.getDepartment().getId() : null;
         return lecturerRepository.findAll().stream()
                 .filter(l -> !l.getId().equals(currentLecturerId))
+                .filter(l -> deptId == null || (l.getDepartment() != null && deptId.equals(l.getDepartment().getId())))
                 .toList();
     }
 
@@ -299,14 +303,34 @@ public class LecturerService {
         return false;
     }
 
-    public List<RegistrationPeriod> getOpenProposalPeriods() {
-        return periodRepository.findByIsActiveTrueOrderByIdDesc().stream()
+    public List<RegistrationPeriod> getOpenProposalPeriods(Lecturer lecturer) {
+        List<RegistrationPeriod> list;
+        if (lecturer != null && lecturer.getDepartment() != null) {
+            list = periodRepository.findByDepartmentId(lecturer.getDepartment().getId());
+        } else {
+            list = periodRepository.findByIsActiveTrueOrderByIdDesc();
+        }
+        return list.stream()
                 .filter(RegistrationPeriod::isLecturerProposalOpen)
                 .toList();
     }
 
+    public List<RegistrationPeriod> getOpenProposalPeriods() {
+        return getOpenProposalPeriods(null);
+    }
+
+    public List<Major> getMajorsForLecturer(Lecturer lecturer) {
+        if (lecturer != null && lecturer.getDepartment() != null) {
+            List<Major> deptMajors = majorRepository.findByDepartmentId(lecturer.getDepartment().getId());
+            if (!deptMajors.isEmpty()) {
+                return deptMajors.stream().filter(m -> Boolean.TRUE.equals(m.getIsActive())).toList();
+            }
+        }
+        return majorRepository.findByIsActiveTrue();
+    }
+
     public List<Major> getAllMajors() {
-        return majorRepository.findAll();
+        return majorRepository.findByIsActiveTrue();
     }
 
     public List<RegistrationPeriod> getAllPeriods() {

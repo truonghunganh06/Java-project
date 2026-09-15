@@ -86,10 +86,14 @@
                                 </td>
                                 <td>
                                     <span class="badge-pill-pending font-semibold" th:text="${t.period != null && t.period.reviewerDeadline != null ? #temporals.format(t.period.reviewerDeadline, 'dd/MM/yyyy') : 'Theo lịch'}"></span>
+                                    <div th:if="${existingEvaluationsMap != null && existingEvaluationsMap.get(t.id) != null}" class="mt-1">
+                                        <span class="score-pill score-high font-bold text-xs" th:text="${#numbers.formatDecimal(existingEvaluationsMap.get(t.id).score, 1, 1)} + ' đ'">8.5 đ</span>
+                                    </div>
                                 </td>
                                 <td class="text-end">
                                     <button class="btn btn-sm btn-dark rounded-xl px-3 py-1.5 text-xs font-semibold" data-bs-toggle="modal" th:data-bs-target="'#gradeReviewModal-' + ${t.id}">
-                                        <i class="fa-solid fa-pen-to-square me-1"></i> Chấm điểm
+                                        <i class="fa-solid fa-pen-to-square me-1"></i> 
+                                        <span th:text="${existingEvaluationsMap != null && existingEvaluationsMap.get(t.id) != null ? 'Sửa điểm' : 'Chấm điểm'}">Chấm điểm</span>
                                     </button>
 
                                     <!-- Modal Grade Review -->
@@ -110,11 +114,11 @@
                                                         </div>
                                                         <div>
                                                             <label class="form-label text-xs font-semibold text-slate-700">Điểm phản biện (Thang điểm 10) *</label>
-                                                            <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" placeholder="Ví dụ: 8.5" required>
+                                                            <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" placeholder="Ví dụ: 8.5" th:value="${existingEvaluationsMap != null && existingEvaluationsMap.get(t.id) != null ? existingEvaluationsMap.get(t.id).score : ''}" required>
                                                         </div>
                                                         <div>
                                                             <label class="form-label text-xs font-semibold text-slate-700">Nhận xét & Đánh giá chi tiết *</label>
-                                                            <textarea name="comments" class="form-control text-xs rounded-xl" rows="5" placeholder="Nhận xét về tính mới, khối lượng công việc, điểm mạnh, điểm yếu và câu hỏi dành cho sinh viên..." required></textarea>
+                                                            <textarea name="comments" class="form-control text-xs rounded-xl" rows="5" placeholder="Nhận xét về tính mới, khối lượng công việc, điểm mạnh, điểm yếu và câu hỏi dành cho sinh viên..." th:text="${existingEvaluationsMap != null && existingEvaluationsMap.get(t.id) != null ? existingEvaluationsMap.get(t.id).comments : ''}" required></textarea>
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer border-t border-slate-100 p-3">

@@ -17,6 +17,13 @@
                         Tài</span>
                 </div>
             </a>
+            <!-- Desktop collapse button -->
+            <button id="sidebarDesktopCollapseBtn" class="btn btn-sm btn-light border d-none d-lg-flex rounded-xl ms-2" type="button"
+                onclick="toggleDesktopSidebar()" aria-label="Ẩn menu" title="Ẩn menu bên trái (Sidebar)"
+                style="flex-shrink:0; width:30px; height:30px; padding:0; align-items:center; justify-content:center; transition: all 0.2s ease;">
+                <i class="fa-solid fa-chevron-left text-secondary" style="font-size:0.8rem;"></i>
+            </button>
+
             <!-- Close button: only visible on mobile -->
             <button id="sidebarCloseBtn" class="btn btn-sm btn-light border d-lg-none rounded-xl ms-2" type="button"
                 onclick="toggleSidebar()" aria-label="Đóng menu" title="Đóng menu"

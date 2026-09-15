@@ -101,11 +101,24 @@ public class AuthController {
         return "redirect:/login?logout=true";
     }
 
-    @GetMapping("/")
-    public String home(HttpSession session) {
-        if (session.getAttribute("currentUser") != null) {
+    @GetMapping("/auth/switch-role")
+    public String switchRole(
+            @RequestParam("username") String username,
+            @RequestParam(value = "redirect", required = false) String redirectUrl,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = authService.findUserByUsername(username);
+        if (user != null) {
+            session.setAttribute("currentUser", user);
+            System.out.println("[ROLE-SWITCHER] Đã chuyển đổi nhanh sang tài khoản: " + user.getUsername() + " (" + (user.getRole() != null ? user.getRole().getCode() : "NO_ROLE") + ")");
+            if (redirectUrl != null && !redirectUrl.trim().isEmpty() && redirectUrl.startsWith("/")) {
+                return "redirect:" + redirectUrl;
+            }
             return "redirect:/dashboard";
         }
+
+        redirectAttributes.addFlashAttribute("error", "Không tìm thấy tài khoản kiểm thử: " + username);
         return "redirect:/login";
     }
 }

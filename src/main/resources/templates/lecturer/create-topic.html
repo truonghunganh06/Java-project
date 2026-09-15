@@ -48,17 +48,17 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Giảng viên hướng dẫn chính (GVHD 1)</label>
-                                <input type="text" class="form-control text-xs rounded-xl bg-slate-50 text-slate-700" th:value="${lecturer.academicTitle + ' ' + user.fullName + ' (Bạn)'}" readonly>
-                            </div>
+                                 <label class="form-label text-xs font-semibold text-slate-700">Giảng viên hướng dẫn chính (GVHD 1)</label>
+                                 <input type="text" class="form-control text-xs rounded-xl bg-slate-50 text-slate-700 font-medium" th:value="${user.fullName + ' (Bạn)'}" readonly>
+                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Giảng viên hướng dẫn phụ (GVHD 2 - Tùy chọn)</label>
-                                <select name="coSupervisorId" class="form-select text-xs rounded-xl">
-                                    <option value="">-- Không có GVHD phụ --</option>
-                                    <option th:each="l : ${coSupervisors}" th:value="${l.id}" th:text="${l.academicTitle + ' ' + l.user.fullName + ' (' + l.lecturerCode + ')'}"></option>
-                                </select>
-                            </div>
+                             <div class="col-md-6">
+                                 <label class="form-label text-xs font-semibold text-slate-700">Giảng viên hướng dẫn phụ (GVHD 2 - Tùy chọn)</label>
+                                 <select name="coSupervisorId" class="form-select text-xs rounded-xl">
+                                     <option value="">-- Không có GVHD phụ --</option>
+                                     <option th:each="l : ${coSupervisors}" th:value="${l.id}" th:text="${(l.user != null ? l.user.fullName : '') + ' (' + l.lecturerCode + ')'}"></option>
+                                 </select>
+                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Số lượng sinh viên tối đa trong nhóm</label>

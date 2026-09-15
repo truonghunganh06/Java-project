@@ -45,4 +45,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/topics/**"
                 );
     }
+
+    @Override
+    public void addResourceHandlers(org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations(
+                        "classpath:/static/images/",
+                        "file:./src/main/resources/static/images/",
+                        "file:./target/classes/static/images/"
+                );
+    }
 }

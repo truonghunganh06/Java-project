@@ -35,64 +35,102 @@
             </div>
 
             <!-- Page Header -->
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-                <div>
-                    <div class="d-flex align-items-center gap-2">
-                        <h1 class="text-xl font-bold text-slate-900 mb-0">Quản Lý & Phê Duyệt Đề Tài</h1>
-                        <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200"
-                            th:text="${department != null ? department.name : 'Khoa CNTT'}">Khoa CNTT</span>
-                    </div>
-                    <p class="text-xs text-slate-500 mb-0 mt-1">Xét duyệt đề xuất từ Giảng viên, phân công Giảng viên
-                        phản biện (GVPB) và Hội đồng chấm điểm.</p>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <h1 class="text-lg font-bold text-slate-900 mb-0">Quản Lý & Phê Duyệt Đề Tài</h1>
+                    <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200"
+                        th:text="${department != null ? department.name : 'Khoa CNTT'}">Khoa CNTT</span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge-pill-pending font-bold text-xs"
-                        th:if="${pendingCount != null && pendingCount > 0}">
-                        <i class="fa-regular fa-clock text-amber-500"></i> <span th:text="${pendingCount}"></span> đề
-                        tài chờ duyệt
-                    </span>
                     <span id="filteredRowCount" class="badge-pill-neutral font-medium text-xs"
                         th:text="'Tổng số: ' + (${topics != null ? topics.size() : 0}) + ' đề tài'"></span>
                 </div>
             </div>
 
-            <!-- Universal 1-Row Toolbar -->
+            <!-- Workflow Stage KPI Quick Filter Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2.5 mb-3">
+                <!-- KPI 1: All Topics -->
+                <div class="workflow-kpi-card active" onclick="filterByWorkflowStage('ALL', this)">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="text-xs font-semibold text-slate-600">Tất cả đề tài</span>
+                        <div class="kpi-icon-badge bg-slate-100 text-slate-600">
+                            <i class="fa-solid fa-folder-open text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-xl font-bold text-slate-900" th:text="${stats != null && stats['totalTopics'] != null ? stats['totalTopics'] : (topics != null ? topics.size() : 0)}">0</div>
+                    <div class="kpi-highlight-bar bg-slate-400"></div>
+                </div>
+
+                <!-- KPI 2: Pending Approval -->
+                <div class="workflow-kpi-card" onclick="filterByWorkflowStage('PENDING', this)">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="text-xs font-semibold text-amber-700">1. Chờ duyệt</span>
+                        <div class="kpi-icon-badge bg-amber-100 text-amber-600">
+                            <i class="fa-regular fa-clock text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-xl font-bold text-amber-600" th:text="${stats != null && stats['pendingTopics'] != null ? stats['pendingTopics'] : 0}">0</div>
+                    <div class="kpi-highlight-bar bg-amber-500"></div>
+                </div>
+
+                <!-- KPI 3: Needs Reviewer -->
+                <div class="workflow-kpi-card" onclick="filterByWorkflowStage('NEEDS_REVIEWER', this)">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="text-xs font-semibold text-blue-700">2. Cần phân GVPB</span>
+                        <div class="kpi-icon-badge bg-blue-100 text-blue-600">
+                            <i class="fa-solid fa-user-shield text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-xl font-bold text-blue-600" th:text="${stats != null && stats['needsReviewerTopics'] != null ? stats['needsReviewerTopics'] : 0}">0</div>
+                    <div class="kpi-highlight-bar bg-blue-500"></div>
+                </div>
+
+                <!-- KPI 4: Needs Council -->
+                <div class="workflow-kpi-card" onclick="filterByWorkflowStage('NEEDS_COUNCIL', this)">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="text-xs font-semibold text-purple-700">3. Cần phân Hội đồng</span>
+                        <div class="kpi-icon-badge bg-purple-100 text-purple-600">
+                            <i class="fa-solid fa-users-rectangle text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-xl font-bold text-purple-600" th:text="${stats != null && stats['needsCouncilTopics'] != null ? stats['needsCouncilTopics'] : 0}">0</div>
+                    <div class="kpi-highlight-bar bg-purple-500"></div>
+                </div>
+
+                <!-- KPI 5: Ready / Completed -->
+                <div class="workflow-kpi-card col-span-2 md:col-span-1" onclick="filterByWorkflowStage('READY', this)">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="text-xs font-semibold text-emerald-700">4. Đã sẵn sàng</span>
+                        <div class="kpi-icon-badge bg-emerald-100 text-emerald-600">
+                            <i class="fa-solid fa-circle-check text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-xl font-bold text-emerald-600" th:text="${stats != null && stats['readyTopics'] != null ? stats['readyTopics'] : 0}">0</div>
+                    <div class="kpi-highlight-bar bg-emerald-500"></div>
+                </div>
+            </div>
+
+            <!-- Clean 1-Row Toolbar with View Switcher & Filters -->
             <div class="saas-card p-3 mb-4">
-                <form th:action="@{/department-head/topics}" method="get"
-                    class="d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-3">
-                    <!-- Segmented Control Tabs -->
-                    <div class="segmented-control">
-                        <button type="button" class="segmented-tab"
-                            th:classappend="${selectedStatus == null || selectedStatus == 'ALL' || selectedStatus == '' ? 'active' : ''}"
-                            onclick="filterTableByStatus('ALL', this)">
-                            Tất cả
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                    <!-- Left: View Mode Toggle (Table / Kanban) -->
+                    <div class="view-mode-toggle bg-slate-100 p-1 rounded-xl d-inline-flex border border-slate-200">
+                        <button type="button" id="viewBtnTable" class="btn btn-xs rounded-lg px-3 py-1 text-xs font-semibold view-toggle-btn active" onclick="setViewMode('table')">
+                            <i class="fa-solid fa-table-list me-1.5"></i> Dạng Bảng
                         </button>
-                        <button type="button" class="segmented-tab"
-                            th:classappend="${selectedStatus == 'PENDING' ? 'active' : ''}"
-                            onclick="filterTableByStatus('PENDING', this)">
-                            <i class="fa-regular fa-clock text-amber-500"></i> Chờ duyệt
-                        </button>
-                        <button type="button" class="segmented-tab"
-                            th:classappend="${selectedStatus == 'APPROVED' ? 'active' : ''}"
-                            onclick="filterTableByStatus('APPROVED', this)">
-                            <i class="fa-solid fa-check text-emerald-500"></i> Đã duyệt
-                        </button>
-                        <button type="button" class="segmented-tab"
-                            th:classappend="${selectedStatus == 'REJECTED' ? 'active' : ''}"
-                            onclick="filterTableByStatus('REJECTED', this)">
-                            <i class="fa-solid fa-xmark text-rose-500"></i> Từ chối
+                        <button type="button" id="viewBtnKanban" class="btn btn-xs rounded-lg px-3 py-1 text-xs font-semibold view-toggle-btn text-slate-600" onclick="setViewMode('kanban')">
+                            <i class="fa-solid fa-table-columns me-1.5"></i> Kanban Board
                         </button>
                     </div>
 
-                    <!-- Dropdowns & Quick Search -->
-                    <div class="topics-filter-controls d-flex align-items-center gap-2 flex-grow-1 justify-content-xl-end">
+                    <!-- Right: Dropdowns & Quick Search -->
+                    <form th:action="@{/department-head/topics}" method="get" class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 max-w-3xl justify-content-lg-end mb-0">
                         <div class="relative flex-grow-1" style="min-width: 200px;">
-                            <input type="text" name="keyword"
+                            <input type="text" name="keyword" id="topicKeywordInput"
                                 class="form-control form-control-sm rounded-xl pl-8 text-xs"
-                                placeholder="Tìm tên đề tài, mã, GVHD..." th:value="${keyword}"
-                                onkeyup="filterTableByKeyword(this.value)">
-                            <i
-                                class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none"></i>
+                                placeholder="Tìm kiếm theo tên đề tài, mã, GVHD..." th:value="${keyword}"
+                                onkeyup="filterTopicsByKeyword(this.value)">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none"></i>
                         </div>
                         <select name="periodId" class="form-select form-select-sm rounded-xl text-xs"
                             style="width: 170px;" onchange="this.form.submit()">
@@ -111,49 +149,56 @@
                             title="Đặt lại bộ lọc">
                             <i class="fa-solid fa-rotate-left text-xs"></i>
                         </a>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
 
-            <!-- Topics Data Table with Overflow Protection -->
-            <div class="table-saas-container mb-2">
+            <!-- VIEW 1: TOPICS DATA TABLE -->
+            <div id="tableViewContainer" class="table-saas-container mb-4">
                 <div class="w-full overflow-x-auto">
                     <table class="table table-saas mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 32%;">Mã & Tên đề tài</th>
+                                <th style="width: 30%;">Mã & Tên đề tài</th>
                                 <th style="width: 16%;">Bộ môn / Đợt</th>
                                 <th style="width: 18%;">GV Hướng dẫn</th>
-                                <th style="width: 16%;">GVPB / Hội đồng</th>
+                                <th style="width: 18%;">GVPB / Hội đồng</th>
                                 <th style="width: 10%;">Trạng thái</th>
-                                <th style="width: 8%;" class="text-end">Chi tiết</th>
+                                <th style="width: 8%;" class="text-end">Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="topicsTableBody">
                             <tr th:if="${topicsPage == null || #lists.isEmpty(topicsPage.content)}">
                                 <td colspan="6" class="text-center py-5 text-muted text-xs">
                                     <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
                                     Không tìm thấy đề tài nào phù hợp với bộ lọc.
                                 </td>
                             </tr>
-                            <tr th:each="t : ${topicsPage.content}" class="filterable-row" th:data-status="${t.status}"
+                            <tr th:each="t : ${topicsPage.content}" class="filterable-row topic-item-row"
+                                th:data-status="${t.status}"
+                                th:data-has-reviewer="${t.reviewer != null ? 'true' : 'false'}"
+                                th:data-has-council="${t.council != null ? 'true' : 'false'}"
                                 th:data-topic-id="${t.id}" th:data-topic-code="${t.code}"
                                 th:data-topic-title="${t.title}"
                                 th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
-                                th:data-topic-major="${t.major != null ? t.major.name : 'CNTT'}"
-                                th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? (t.supervisor.academicTitle != null ? t.supervisor.academicTitle + ' ' : '') + t.supervisor.user.fullName : 'Chưa phân công'}"
-                                th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? (t.coSupervisor.academicTitle != null ? t.coSupervisor.academicTitle + ' ' : '') + t.coSupervisor.user.fullName : 'Không có'}"
-                                th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? (t.reviewer.academicTitle != null ? t.reviewer.academicTitle + ' ' : '') + t.reviewer.user.fullName : 'Chưa phân công'}"
+                                th:data-topic-major="${t.division != null ? t.division.name : (t.major != null ? t.major.name : 'CNTT')}"
+                                th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}"
+                                th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
+                                th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
                                 th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
-                                th:data-topic-max-students="${t.maxStudents}" th:data-topic-status="${t.status}"
+                                th:data-topic-max-students="${t.maxStudents}"
                                 th:data-topic-description="${t.description}"
-                                th:data-topic-requirements="${t.requirements}" th:data-topic-role="DEPARTMENT_HEAD">
+                                th:data-topic-requirements="${t.requirements}"
+                                data-topic-role="DEPARTMENT_HEAD">
+                                
                                 <!-- Cột 1: Mã & Tên đề tài -->
                                 <td>
                                     <div class="d-flex align-items-center gap-1.5 mb-1">
-                                        <span
-                                            class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold"
+                                        <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold"
                                             th:text="${t.code}">DT-01</span>
+                                        <span th:if="${t.status == 'APPROVED' && t.reviewer != null && t.council != null}" class="badge bg-emerald-50 text-emerald-700 border border-emerald-200 text-2xs px-1.5 py-0.5 rounded font-medium">
+                                            <i class="fa-solid fa-check me-0.5"></i> Sẵn sàng
+                                        </span>
                                     </div>
                                     <div class="font-bold text-slate-900 text-xs line-clamp-1 hover:text-blue-600 transition cursor-pointer"
                                         th:text="${t.title}" onclick="openTopicDrawer(this.closest('tr'))">Tên đề tài
@@ -183,145 +228,36 @@
 
                                 <!-- Cột 4: GVPB / Hội đồng -->
                                 <td>
-                                    <div class="d-flex flex-column gap-1">
+                                    <div class="d-flex flex-column gap-1.5">
                                         <!-- Reviewer Status -->
-                                        <div>
+                                        <div class="d-flex align-items-center gap-1">
                                             <span th:if="${t.reviewer != null && t.reviewer.user != null}"
                                                 class="badge bg-blue-50 text-blue-700 border border-blue-200 text-xs font-medium truncate-cell d-inline-block max-w-xs"
-                                                th:title="'GVPB: ' + ${t.reviewer.user.fullName}"
-                                                th:text="'GVPB: ' + ${t.reviewer.user.fullName}">
-                                                GVPB: ThS. Lê Văn C
+                                                th:title="'GVPB: ' + ${t.reviewer.user.fullName}">
+                                                <i class="fa-solid fa-user-shield me-1"></i><span th:text="${t.reviewer.user.fullName}">ThS. Lê Văn C</span>
                                             </span>
                                             <button th:if="${t.reviewer == null && t.status == 'APPROVED'}"
                                                 type="button"
-                                                class="topic-assignment-btn btn btn-xs btn-outline-primary rounded-lg text-xs py-0.5 px-1.5"
+                                                class="btn btn-xs bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 rounded-lg text-xs py-0.5 px-2 font-medium"
                                                 data-bs-toggle="modal"
                                                 th:data-bs-target="'#assignReviewerModal-' + ${t.id}">
-                                                <i class="fa-solid fa-user-plus text-xs"></i> Phân GVPB
+                                                <i class="fa-solid fa-user-plus text-xs me-1"></i> Phân GVPB
                                             </button>
                                         </div>
 
                                         <!-- Council Status -->
-                                        <div>
+                                        <div class="d-flex align-items-center gap-1">
                                             <span th:if="${t.council != null}"
                                                 class="badge bg-purple-50 text-purple-700 border border-purple-200 text-xs font-medium truncate-cell d-inline-block max-w-xs"
-                                                th:title="'Hội đồng: ' + ${t.council.name}"
-                                                th:text="'HĐ: ' + ${t.council.name}">
-                                                HĐ: Hội đồng KTPM 01
+                                                th:title="'Hội đồng: ' + ${t.council.name}">
+                                                <i class="fa-solid fa-users-rectangle me-1"></i><span th:text="${t.council.name}">Hội đồng KTPM 01</span>
                                             </span>
                                             <button th:if="${t.council == null && t.status == 'APPROVED'}" type="button"
-                                                class="topic-assignment-btn btn btn-xs btn-outline-purple rounded-lg text-xs py-0.5 px-1.5"
-                                                style="color: #7c3aed; border-color: #ddd6fe;" data-bs-toggle="modal"
+                                                class="btn btn-xs bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 rounded-lg text-xs py-0.5 px-2 font-medium"
+                                                data-bs-toggle="modal"
                                                 th:data-bs-target="'#assignCouncilModal-' + ${t.id}">
-                                                <i class="fa-solid fa-users text-xs"></i> Phân HĐ
+                                                <i class="fa-solid fa-users text-xs me-1"></i> Phân HĐ
                                             </button>
-                                        </div>
-                                    </div>
-
-                                    <!-- Modal Assign Reviewer -->
-                                    <div class="modal fade text-start" th:id="'assignReviewerModal-' + ${t.id}"
-                                        tabindex="-1">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content rounded-2xl border-0 shadow-xl">
-                                                <form
-                                                    th:action="@{/department-head/topics/{id}/assign-reviewer(id=${t.id})}"
-                                                    method="post">
-                                                    <div class="modal-header border-b border-slate-100 p-4">
-                                                        <h6 class="modal-title font-bold text-slate-900 text-sm">Phân
-                                                            công Cán bộ Phản biện (GVPB)</h6>
-                                                        <button type="button" class="btn-close"
-                                                            data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body p-4">
-                                                        <div
-                                                            class="p-3 bg-slate-50 rounded-xl mb-3 border border-slate-100">
-                                                            <div class="text-xs text-slate-500 font-mono mb-1"
-                                                                th:text="${t.code}">DT-01</div>
-                                                            <div class="text-xs font-bold text-slate-800"
-                                                                th:text="${t.title}">Tên đề tài</div>
-                                                            <div class="text-xs text-slate-500 mt-1">GVHD: <strong
-                                                                    th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'N/A'}"></strong>
-                                                            </div>
-                                                        </div>
-                                                        <label
-                                                            class="form-label text-xs font-semibold text-slate-700">Chọn
-                                                            Cán bộ Phản biện *</label>
-                                                        <select name="reviewerId" class="form-select text-xs rounded-xl"
-                                                            required>
-                                                            <option value="">-- Chọn Giảng viên Phản biện --</option>
-                                                            <option th:each="l : ${lecturers}"
-                                                                th:if="${(t.supervisor == null || !l.id.equals(t.supervisor.id)) && (t.coSupervisor == null || !l.id.equals(t.coSupervisor.id))}"
-                                                                th:value="${l.id}"
-                                                                th:text="${(l.academicTitle != null ? l.academicTitle + ' ' : '') + (l.user != null ? l.user.fullName : '')}"
-                                                                th:selected="${t.reviewer != null && t.reviewer.id.equals(l.id)}">
-                                                            </option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="modal-footer border-t border-slate-100 p-3">
-                                                        <button type="button"
-                                                            class="btn btn-sm btn-light border rounded-xl px-3 text-xs"
-                                                            data-bs-dismiss="modal">Hủy</button>
-                                                        <button type="submit"
-                                                            class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">Lưu
-                                                            phân công</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Modal Assign Council -->
-                                    <div class="modal fade text-start" th:id="'assignCouncilModal-' + ${t.id}"
-                                        tabindex="-1">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content rounded-2xl border-0 shadow-xl">
-                                                <form
-                                                    th:action="@{/department-head/topics/{id}/assign-council(id=${t.id})}"
-                                                    method="post">
-                                                    <div class="modal-header border-b border-slate-100 p-4">
-                                                        <h6 class="modal-title font-bold text-slate-900 text-sm">Phân
-                                                            công Hội đồng Đánh giá / Bảo vệ</h6>
-                                                        <button type="button" class="btn-close"
-                                                            data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body p-4">
-                                                        <div
-                                                            class="p-3 bg-slate-50 rounded-xl mb-3 border border-slate-100">
-                                                            <div class="text-xs text-slate-500 font-mono mb-1"
-                                                                th:text="${t.code}">DT-01</div>
-                                                            <div class="text-xs font-bold text-slate-800"
-                                                                th:text="${t.title}">Tên đề tài</div>
-                                                            <div class="text-xs text-slate-500 mt-1">GVHD: <strong
-                                                                    th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'N/A'}"></strong>
-                                                            </div>
-                                                        </div>
-                                                        <label
-                                                            class="form-label text-xs font-semibold text-slate-700">Chọn
-                                                            Hội đồng chấm *</label>
-                                                        <select name="councilId" class="form-select text-xs rounded-xl"
-                                                            required>
-                                                            <option value="">-- Chọn Hội đồng --</option>
-                                                            <option th:each="c : ${councils}"
-                                                                th:if="${councilLecturerIdsMap[c.id] == null || ((t.supervisor == null || !councilLecturerIdsMap[c.id].contains(t.supervisor.id)) && (t.coSupervisor == null || !councilLecturerIdsMap[c.id].contains(t.coSupervisor.id)))}"
-                                                                th:value="${c.id}"
-                                                                th:text="${c.name + ' (' + (c.major != null ? c.major.name : (c.division != null ? c.division.name : (c.department != null ? c.department.name : 'Chung'))) + ')'}"
-                                                                th:selected="${t.council != null && t.council.id.equals(c.id)}">
-                                                            </option>
-                                                        </select>
-                                                        <span class="text-xs text-slate-400 mt-1.5 d-block italic">* Các
-                                                            hội đồng có thành viên là GVHD chính/phụ của đề tài đã tự
-                                                            động được lọc bỏ.</span>
-                                                    </div>
-                                                    <div class="modal-footer border-t border-slate-100 p-3">
-                                                        <button type="button"
-                                                            class="btn btn-sm btn-light border rounded-xl px-3 text-xs"
-                                                            data-bs-dismiss="modal">Hủy</button>
-                                                        <button type="submit"
-                                                            class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">Lưu
-                                                            phân công</button>
-                                                    </div>
-                                                </form>
-                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -377,11 +313,342 @@
                 </div>
             </div>
 
+            <!-- VIEW 2: KANBAN BOARD VIEW -->
+            <div id="kanbanViewContainer" class="kanban-board-container mb-4" style="display: none;">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
+                    
+                    <!-- COLUMN 1: PENDING APPROVAL -->
+                    <div class="kanban-column bg-slate-50 border border-slate-200 rounded-2xl p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                                <h6 class="font-bold text-xs uppercase tracking-wider text-slate-800 mb-0">1. Chờ Phê Duyệt</h6>
+                            </div>
+                            <span class="badge bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full font-bold kanban-col-count" id="kanbanPendingCount">0</span>
+                        </div>
+                        <div class="kanban-cards-wrapper space-y-3" id="kanbanColPending">
+                            <th:block th:each="t : ${topicsPage.content}" th:if="${t.status == 'PENDING'}">
+                                <div class="kanban-card bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-amber-300 transition duration-200"
+                                    th:data-status="${t.status}"
+                                    th:data-has-reviewer="${t.reviewer != null ? 'true' : 'false'}"
+                                    th:data-has-council="${t.council != null ? 'true' : 'false'}"
+                                    th:data-topic-id="${t.id}" th:data-topic-code="${t.code}"
+                                    th:data-topic-title="${t.title}"
+                                    th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
+                                    th:data-topic-major="${t.division != null ? t.division.name : (t.major != null ? t.major.name : 'CNTT')}"
+                                    th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}"
+                                    th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
+                                    th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
+                                    th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
+                                    th:data-topic-max-students="${t.maxStudents}"
+                                    th:data-topic-description="${t.description}"
+                                    th:data-topic-requirements="${t.requirements}"
+                                    data-topic-role="DEPARTMENT_HEAD">
+                                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                        <span class="badge bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded font-semibold" th:text="${t.code}">DT-01</span>
+                                        <span class="badge bg-amber-50 text-amber-700 border border-amber-200 text-2xs px-1.5 py-0.5 rounded font-medium">Chờ duyệt</span>
+                                    </div>
+                                    <h6 class="text-xs font-bold text-slate-900 mb-1.5 leading-snug cursor-pointer hover:text-blue-600 transition line-clamp-2"
+                                        th:text="${t.title}" onclick="openTopicDrawer(this.closest('.kanban-card'))">Tên đề tài</h6>
+                                    <div class="text-xs text-slate-500 mb-3 space-y-1">
+                                        <div class="d-flex align-items-center gap-1 truncate-cell">
+                                            <i class="fa-solid fa-chalkboard-user text-slate-400 w-3.5"></i>
+                                            <span th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa rõ'}">GVHD</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1 text-slate-400 truncate-cell">
+                                            <i class="fa-solid fa-building-columns text-slate-400 w-3.5"></i>
+                                            <span th:text="${t.division != null ? t.division.name : (t.major != null ? t.major.name : 'CNTT')}">Bộ môn</span>
+                                        </div>
+                                    </div>
+                                    <div class="pt-2 border-t border-slate-100 d-flex align-items-center justify-content-between gap-1.5">
+                                        <form th:action="@{/department-head/topics/{id}/approve(id=${t.id})}" method="post" class="flex-grow-1" onsubmit="return confirm('Xác nhận PHÊ DUYỆT đề tài này?');">
+                                            <button type="submit" class="btn btn-xs w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-1 font-semibold text-xs shadow-sm">
+                                                <i class="fa-solid fa-check me-1"></i> Duyệt
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-xs bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-lg px-2 py-1 font-semibold text-xs"
+                                            data-bs-toggle="modal" data-bs-target="#rejectModal"
+                                            th:onclick="'prepareRejectModal(' + ${t.id} + ', \'' + ${#strings.replace(t.title, '\'', '\\\'')} + '\')'">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-xs btn-light border border-slate-200 rounded-lg px-2 py-1 text-slate-600" onclick="openTopicDrawer(this.closest('.kanban-card'))" title="Chi tiết">
+                                            <i class="fa-solid fa-arrow-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </th:block>
+                        </div>
+                    </div>
+
+                    <!-- COLUMN 2: NEEDS REVIEWER (APPROVED, NO REVIEWER) -->
+                    <div class="kanban-column bg-slate-50 border border-slate-200 rounded-2xl p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                                <h6 class="font-bold text-xs uppercase tracking-wider text-slate-800 mb-0">2. Cần Phân GVPB</h6>
+                            </div>
+                            <span class="badge bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-bold kanban-col-count" id="kanbanReviewerCount">0</span>
+                        </div>
+                        <div class="kanban-cards-wrapper space-y-3" id="kanbanColReviewer">
+                            <th:block th:each="t : ${topicsPage.content}" th:if="${t.status == 'APPROVED' && t.reviewer == null}">
+                                <div class="kanban-card bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition duration-200"
+                                    th:data-status="${t.status}"
+                                    th:data-has-reviewer="false"
+                                    th:data-has-council="${t.council != null ? 'true' : 'false'}"
+                                    th:data-topic-id="${t.id}" th:data-topic-code="${t.code}"
+                                    th:data-topic-title="${t.title}"
+                                    th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
+                                    th:data-topic-major="${t.division != null ? t.division.name : (t.major != null ? t.major.name : 'CNTT')}"
+                                    th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}"
+                                    th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
+                                    data-topic-reviewer="Chưa phân công"
+                                    th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
+                                    th:data-topic-max-students="${t.maxStudents}"
+                                    th:data-topic-description="${t.description}"
+                                    th:data-topic-requirements="${t.requirements}"
+                                    data-topic-role="DEPARTMENT_HEAD">
+                                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                        <span class="badge bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded font-semibold" th:text="${t.code}">DT-01</span>
+                                        <span class="badge bg-blue-50 text-blue-700 border border-blue-200 text-2xs px-1.5 py-0.5 rounded font-medium">Thiếu GVPB</span>
+                                    </div>
+                                    <h6 class="text-xs font-bold text-slate-900 mb-1.5 leading-snug cursor-pointer hover:text-blue-600 transition line-clamp-2"
+                                        th:text="${t.title}" onclick="openTopicDrawer(this.closest('.kanban-card'))">Tên đề tài</h6>
+                                    <div class="text-xs text-slate-500 mb-3 space-y-1">
+                                        <div class="d-flex align-items-center gap-1 truncate-cell">
+                                            <i class="fa-solid fa-chalkboard-user text-slate-400 w-3.5"></i>
+                                            <span th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa rõ'}">GVHD</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1 text-slate-400 truncate-cell">
+                                            <i class="fa-solid fa-calendar-check text-slate-400 w-3.5"></i>
+                                            <span th:text="${t.period != null ? t.period.name : 'KLTN'}">Đợt</span>
+                                        </div>
+                                    </div>
+                                    <div class="pt-2 border-t border-slate-100 d-flex align-items-center justify-content-between gap-2">
+                                        <button type="button" class="btn btn-xs flex-grow-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-1 font-semibold text-xs shadow-sm"
+                                            data-bs-toggle="modal" th:data-bs-target="'#assignReviewerModal-' + ${t.id}">
+                                            <i class="fa-solid fa-user-plus me-1"></i> Phân GVPB
+                                        </button>
+                                        <button type="button" class="btn btn-xs btn-light border border-slate-200 rounded-lg px-2 py-1 text-slate-600" onclick="openTopicDrawer(this.closest('.kanban-card'))" title="Chi tiết">
+                                            <i class="fa-solid fa-arrow-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </th:block>
+                        </div>
+                    </div>
+
+                    <!-- COLUMN 3: NEEDS COUNCIL (APPROVED, HAS REVIEWER, NO COUNCIL) -->
+                    <div class="kanban-column bg-slate-50 border border-slate-200 rounded-2xl p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                                <h6 class="font-bold text-xs uppercase tracking-wider text-slate-800 mb-0">3. Cần Phân Hội Đồng</h6>
+                            </div>
+                            <span class="badge bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded-full font-bold kanban-col-count" id="kanbanCouncilCount">0</span>
+                        </div>
+                        <div class="kanban-cards-wrapper space-y-3" id="kanbanColCouncil">
+                            <th:block th:each="t : ${topicsPage.content}" th:if="${t.status == 'APPROVED' && t.reviewer != null && t.council == null}">
+                                <div class="kanban-card bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-purple-300 transition duration-200"
+                                    th:data-status="${t.status}"
+                                    th:data-has-reviewer="true"
+                                    th:data-has-council="false"
+                                                           th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}"
+                                    th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
+                                    th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
+                                    data-topic-council="Chưa phân hội đồng"
+                                    th:data-topic-max-students="${t.maxStudents}"
+                                    th:data-topic-description="${t.description}"
+                                    th:data-topic-requirements="${t.requirements}"
+                                    data-topic-role="DEPARTMENT_HEAD">
+                                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                         <span class="badge bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded font-semibold" th:text="${t.code}">DT-01</span>
+                                         <span class="badge bg-purple-50 text-purple-700 border border-purple-200 text-2xs px-1.5 py-0.5 rounded font-medium">Thiếu HĐ</span>
+                                     </div>
+                                     <h6 class="text-xs font-bold text-slate-900 mb-1.5 leading-snug cursor-pointer hover:text-blue-600 transition line-clamp-2"
+                                         th:text="${t.title}" onclick="openTopicDrawer(this.closest('.kanban-card'))">Tên đề tài</h6>
+                                     <div class="text-xs text-slate-500 mb-3 space-y-1">
+                                         <div class="d-flex align-items-center gap-1 truncate-cell">
+                                             <i class="fa-solid fa-chalkboard-user text-slate-400 w-3.5"></i>
+                                             <span th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa rõ'}">GVHD</span>
+                                         </div>
+                                         <div class="d-flex align-items-center gap-1 text-blue-600 truncate-cell font-medium">
+                                             <i class="fa-solid fa-user-shield w-3.5"></i>
+                                             <span th:text="'GVPB: ' + (${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa rõ'})">GVPB</span>
+                                         </div>
+                                     </div>
+                                     <div class="pt-2 border-t border-slate-100 d-flex align-items-center justify-content-between gap-2">
+                                         <button type="button" class="btn btn-xs flex-grow-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg py-1 font-semibold text-xs shadow-sm"
+                                             data-bs-toggle="modal" th:data-bs-target="'#assignCouncilModal-' + ${t.id}">
+                                             <i class="fa-solid fa-users me-1"></i> Phân Hội đồng
+                                         </button>
+                                         <button type="button" class="btn btn-xs btn-light border border-slate-200 rounded-lg px-2 py-1 text-slate-600" onclick="openTopicDrawer(this.closest('.kanban-card'))" title="Chi tiết">
+                                             <i class="fa-solid fa-arrow-right"></i>
+                                         </button>
+                                     </div>
+                                 </div>
+                             </th:block>
+                         </div>
+                     </div>
+
+                     <!-- COLUMN 4: READY / COMPLETED -->
+                     <div class="kanban-column bg-slate-50 border border-slate-200 rounded-2xl p-3">
+                         <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+                             <div class="d-flex align-items-center gap-2">
+                                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                 <h6 class="font-bold text-xs uppercase tracking-wider text-slate-800 mb-0">4. Đã Sẵn Sàng</h6>
+                             </div>
+                             <span class="badge bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold kanban-col-count" id="kanbanReadyCount">0</span>
+                         </div>
+                         <div class="kanban-cards-wrapper space-y-3" id="kanbanColReady">
+                             <th:block th:each="t : ${topicsPage.content}" th:if="${t.status == 'APPROVED' && t.reviewer != null && t.council != null}">
+                                 <div class="kanban-card bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 transition duration-200"
+                                     th:data-status="${t.status}"
+                                     th:data-has-reviewer="true"
+                                     th:data-has-council="true"
+                                     th:data-topic-id="${t.id}" th:data-topic-code="${t.code}"
+                                     th:data-topic-title="${t.title}"
+                                     th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
+                                     th:data-topic-major="${t.division != null ? t.division.name : (t.major != null ? t.major.name : 'CNTT')}"
+                                     th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}"
+                                     th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
+                                     th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
+                                     th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
+                                     th:data-topic-max-students="${t.maxStudents}"
+                                     th:data-topic-description="${t.description}"
+                                     th:data-topic-requirements="${t.requirements}"
+                                     data-topic-role="DEPARTMENT_HEAD">
+                                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                        <span class="badge bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded font-semibold" th:text="${t.code}">DT-01</span>
+                                        <span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200 text-2xs px-1.5 py-0.5 rounded font-semibold">
+                                            <i class="fa-solid fa-circle-check me-0.5"></i> Hoàn tất
+                                        </span>
+                                    </div>
+                                    <h6 class="text-xs font-bold text-slate-900 mb-1.5 leading-snug cursor-pointer hover:text-blue-600 transition line-clamp-2"
+                                        th:text="${t.title}" onclick="openTopicDrawer(this.closest('.kanban-card'))">Tên đề tài</h6>
+                                    <div class="text-xs text-slate-500 mb-3 space-y-1">
+                                        <div class="d-flex align-items-center gap-1 truncate-cell">
+                                            <i class="fa-solid fa-chalkboard-user text-slate-400 w-3.5"></i>
+                                            <span th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa rõ'}">GVHD</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1 text-blue-600 truncate-cell">
+                                            <i class="fa-solid fa-user-shield w-3.5"></i>
+                                            <span th:text="'GVPB: ' + (${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa rõ'})">GVPB</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1 text-purple-600 truncate-cell">
+                                            <i class="fa-solid fa-users-rectangle w-3.5"></i>
+                                            <span th:text="'HĐ: ' + (${t.council != null ? t.council.name : 'Chưa rõ'})">Hội đồng</span>
+                                        </div>
+                                    </div>
+                                    <div class="pt-2 border-t border-slate-100">
+                                        <button type="button" class="btn btn-xs w-full btn-light border border-slate-200 rounded-lg py-1 text-slate-700 hover:text-blue-600 hover:bg-slate-100 font-medium text-xs"
+                                            onclick="openTopicDrawer(this.closest('.kanban-card'))">
+                                            <i class="fa-regular fa-eye me-1"></i> Xem chi tiết
+                                        </button>
+                                    </div>
+                                </div>
+                            </th:block>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
             <!-- Server-Side Pagination -->
             <div th:replace="~{fragments/pagination :: pager(${topicsPage}, '/department-head/topics')}"></div>
 
         </main>
     </div>
+
+    <!-- Modals for Assign Reviewer and Assign Council (outside table to avoid stacking context / backdrop bugs) -->
+    <th:block th:each="t : ${topicsPage.content}">
+        <!-- Modal Assign Reviewer -->
+        <div class="modal fade text-start" th:id="'assignReviewerModal-' + ${t.id}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-white rounded-2xl border-0 shadow-2xl overflow-hidden">
+                    <form th:action="@{/department-head/topics/{id}/assign-reviewer(id=${t.id})}" method="post">
+                        <div class="modal-header border-b border-slate-100 bg-slate-50/50 p-4">
+                            <h6 class="modal-title font-bold text-slate-900 text-sm d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-user-shield text-blue-600"></i>
+                                Phân công Cán bộ Phản biện (GVPB)
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="p-3.5 bg-slate-50 rounded-xl mb-3.5 border border-slate-200/80">
+                                <div class="text-xs text-blue-600 font-mono font-semibold mb-1" th:text="${t.code}">DT-01</div>
+                                <div class="text-sm font-bold text-slate-800 leading-snug" th:text="${t.title}">Tên đề tài</div>
+                                <div class="text-xs text-slate-600 mt-2 d-flex align-items-center gap-1.5">
+                                    <i class="fa-solid fa-chalkboard-user text-slate-400"></i>
+                                    <span>GVHD: <strong class="text-slate-800" th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'N/A'}"></strong></span>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label text-xs font-semibold text-slate-700 mb-1.5">Chọn Cán bộ Phản biện <span class="text-rose-500">*</span></label>
+                                <select name="reviewerId" class="form-select text-xs rounded-xl py-2 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                                    <option value="">-- Chọn Giảng viên Phản biện --</option>
+                                    <option th:each="l : ${lecturers}"
+                                        th:if="${(t.supervisor == null || !l.id.equals(t.supervisor.id)) && (t.coSupervisor == null || !l.id.equals(t.coSupervisor.id))}"
+                                        th:value="${l.id}"
+                                        th:text="${l.user != null ? l.user.fullName : ''}"
+                                        th:selected="${t.reviewer != null && t.reviewer.id.equals(l.id)}">
+                                    </option>
+                                </select>
+                                <span class="text-xs text-slate-400 mt-1.5 d-block italic">* Giảng viên hướng dẫn của đề tài đã tự động được lọc bỏ.</span>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-t border-slate-100 bg-slate-50/50 p-3">
+                            <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-100" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 text-xs font-semibold shadow-sm transition">Lưu phân công</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Assign Council -->
+        <div class="modal fade text-start" th:id="'assignCouncilModal-' + ${t.id}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-white rounded-2xl border-0 shadow-2xl overflow-hidden">
+                    <form th:action="@{/department-head/topics/{id}/assign-council(id=${t.id})}" method="post">
+                        <div class="modal-header border-b border-slate-100 bg-slate-50/50 p-4">
+                            <h6 class="modal-title font-bold text-slate-900 text-sm d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-users-rectangle text-purple-600"></i>
+                                Phân công Hội đồng Đánh giá / Bảo vệ
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="p-3.5 bg-slate-50 rounded-xl mb-3.5 border border-slate-200/80">
+                                <div class="text-xs text-purple-600 font-mono font-semibold mb-1" th:text="${t.code}">DT-01</div>
+                                <div class="text-sm font-bold text-slate-800 leading-snug" th:text="${t.title}">Tên đề tài</div>
+                                <div class="text-xs text-slate-600 mt-2 d-flex align-items-center gap-1.5">
+                                    <i class="fa-solid fa-chalkboard-user text-slate-400"></i>
+                                    <span>GVHD: <strong class="text-slate-800" th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'N/A'}"></strong></span>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label text-xs font-semibold text-slate-700 mb-1.5">Chọn Hội đồng chấm <span class="text-rose-500">*</span></label>
+                                <select name="councilId" class="form-select text-xs rounded-xl py-2 border-slate-300 shadow-sm focus:border-purple-500 focus:ring-purple-500" required>
+                                    <option value="">-- Chọn Hội đồng --</option>
+                                    <option th:each="c : ${councils}"
+                                        th:if="${councilLecturerIdsMap[c.id] == null || ((t.supervisor == null || !councilLecturerIdsMap[c.id].contains(t.supervisor.id)) && (t.coSupervisor == null || !councilLecturerIdsMap[c.id].contains(t.coSupervisor.id)))}"
+                                        th:value="${c.id}"
+                                        th:text="${c.name + ' (' + (c.major != null ? c.major.name : (c.division != null ? c.division.name : (c.department != null ? c.department.name : 'Chung'))) + ')'}"
+                                        th:selected="${t.council != null && t.council.id.equals(c.id)}">
+                                    </option>
+                                </select>
+                                <span class="text-xs text-slate-400 mt-1.5 d-block italic">* Các hội đồng có thành viên là GVHD chính/phụ của đề tài đã tự động được lọc bỏ.</span>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-t border-slate-100 bg-slate-50/50 p-3">
+                            <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-100" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-3.5 text-xs font-semibold shadow-sm transition">Lưu phân công</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </th:block>
 
     <!-- Reject Topic Modal -->
     <div class="modal fade" id="rejectModal" tabindex="-1">
@@ -502,8 +769,238 @@
         </div>
     </div>
 
+    <!-- Inline Styles for Workflow KPI Cards & Kanban Board -->
+    <style>
+        .workflow-kpi-card {
+            position: relative;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 0.875rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+        .workflow-kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px -4px rgba(15, 23, 42, 0.08);
+            border-color: #cbd5e1;
+        }
+        .workflow-kpi-card.active {
+            border-color: #3b82f6;
+            background: #f8fafc;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .kpi-icon-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+        .workflow-kpi-card:hover .kpi-icon-badge {
+            transform: scale(1.1);
+        }
+        .kpi-highlight-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            opacity: 0.85;
+        }
+        .view-toggle-btn {
+            color: #64748b;
+            background: transparent;
+            border: none;
+            transition: all 0.15s ease;
+        }
+        .view-toggle-btn.active {
+            background-color: #ffffff;
+            color: #1e293b;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .kanban-column {
+            min-height: 480px;
+            background-color: #f8fafc;
+        }
+        .kanban-cards-wrapper {
+            max-height: calc(100vh - 340px);
+            overflow-y: auto;
+            padding-right: 2px;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+        .kanban-card {
+            background-color: #ffffff;
+            transition: all 0.2s ease;
+        }
+        .kanban-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px -4px rgba(15, 23, 42, 0.08);
+        }
+    </style>
+
     <!-- Scripts Fragment -->
     <div th:replace="~{fragments/scripts :: scripts}"></div>
+
+    <!-- Enhanced Topic Management Script -->
+    <script>
+        // View Mode Switcher (Table vs Kanban)
+        function setViewMode(mode) {
+            const tableView = document.getElementById('tableViewContainer');
+            const kanbanView = document.getElementById('kanbanViewContainer');
+            const btnTable = document.getElementById('viewBtnTable');
+            const btnKanban = document.getElementById('viewBtnKanban');
+
+            if (mode === 'kanban') {
+                if (tableView) tableView.style.display = 'none';
+                if (kanbanView) kanbanView.style.display = 'block';
+                if (btnTable) { btnTable.classList.remove('active'); btnTable.classList.add('text-slate-600'); }
+                if (btnKanban) { btnKanban.classList.add('active'); btnKanban.classList.remove('text-slate-600'); }
+                localStorage.setItem('topichub_dept_topic_view', 'kanban');
+                updateKanbanColumnCounters();
+            } else {
+                if (tableView) tableView.style.display = 'block';
+                if (kanbanView) kanbanView.style.display = 'none';
+                if (btnTable) { btnTable.classList.add('active'); btnTable.classList.remove('text-slate-600'); }
+                if (btnKanban) { btnKanban.classList.remove('active'); btnKanban.classList.add('text-slate-600'); }
+                localStorage.setItem('topichub_dept_topic_view', 'table');
+            }
+        }
+
+        // Filter by Workflow Stage across Table & Kanban
+        let currentWorkflowStage = 'ALL';
+        function filterByWorkflowStage(stage, element) {
+            currentWorkflowStage = stage || 'ALL';
+
+            // Update KPI cards active state
+            document.querySelectorAll('.workflow-kpi-card').forEach(c => c.classList.remove('active'));
+            if (element && element.classList.contains('workflow-kpi-card')) {
+                element.classList.add('active');
+            }
+
+            applyCombinedFilters();
+        }
+
+        // Quick Keyword Search
+        function filterTopicsByKeyword(kw) {
+            applyCombinedFilters();
+        }
+
+        // Apply filters to Table Rows and Kanban Cards simultaneously
+        function applyCombinedFilters() {
+            const kwInput = document.getElementById('topicKeywordInput');
+            const keyword = (kwInput ? kwInput.value : '').toLowerCase().trim();
+            const stage = currentWorkflowStage;
+
+            // 1. Filter Table Rows
+            const tableRows = document.querySelectorAll('.topic-item-row');
+            let visibleRowCount = 0;
+
+            tableRows.forEach(row => {
+                const status = (row.getAttribute('data-status') || '').toUpperCase();
+                const hasReviewer = row.getAttribute('data-has-reviewer') === 'true';
+                const hasCouncil = row.getAttribute('data-has-council') === 'true';
+                const text = row.textContent.toLowerCase();
+
+                let matchesStage = false;
+                if (stage === 'ALL') {
+                    matchesStage = true;
+                } else if (stage === 'PENDING') {
+                    matchesStage = (status === 'PENDING');
+                } else if (stage === 'APPROVED') {
+                    matchesStage = (status === 'APPROVED');
+                } else if (stage === 'REJECTED') {
+                    matchesStage = (status === 'REJECTED');
+                } else if (stage === 'NEEDS_REVIEWER') {
+                    matchesStage = (status === 'APPROVED' && !hasReviewer);
+                } else if (stage === 'NEEDS_COUNCIL') {
+                    matchesStage = (status === 'APPROVED' && !hasCouncil);
+                } else if (stage === 'READY') {
+                    matchesStage = (status === 'APPROVED' && hasReviewer && hasCouncil);
+                }
+
+                const matchesKeyword = !keyword || text.includes(keyword);
+
+                if (matchesStage && matchesKeyword) {
+                    row.style.display = '';
+                    visibleRowCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // 2. Filter Kanban Cards
+            const kanbanCards = document.querySelectorAll('.kanban-card');
+            kanbanCards.forEach(card => {
+                const status = (card.getAttribute('data-status') || '').toUpperCase();
+                const hasReviewer = card.getAttribute('data-has-reviewer') === 'true';
+                const hasCouncil = card.getAttribute('data-has-council') === 'true';
+                const text = card.textContent.toLowerCase();
+
+                let matchesStage = false;
+                if (stage === 'ALL' || stage === 'APPROVED') {
+                    matchesStage = true; // In Kanban, each column has its own semantic group
+                } else if (stage === 'PENDING') {
+                    matchesStage = (status === 'PENDING');
+                } else if (stage === 'NEEDS_REVIEWER') {
+                    matchesStage = (status === 'APPROVED' && !hasReviewer);
+                } else if (stage === 'NEEDS_COUNCIL') {
+                    matchesStage = (status === 'APPROVED' && !hasCouncil);
+                } else if (stage === 'READY') {
+                    matchesStage = (status === 'APPROVED' && hasReviewer && hasCouncil);
+                }
+
+                const matchesKeyword = !keyword || text.includes(keyword);
+
+                if (matchesStage && matchesKeyword) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Update Total Row Count Display
+            const counter = document.getElementById('filteredRowCount');
+            if (counter) {
+                counter.textContent = 'Hiển thị: ' + visibleRowCount + ' đề tài';
+            }
+
+            updateKanbanColumnCounters();
+        }
+
+        // Count visible cards per column
+        function updateKanbanColumnCounters() {
+            const countVisible = (colId) => {
+                const col = document.getElementById(colId);
+                if (!col) return 0;
+                return Array.from(col.querySelectorAll('.kanban-card')).filter(c => c.style.display !== 'none').length;
+            };
+
+            const pCount = document.getElementById('kanbanPendingCount');
+            const rCount = document.getElementById('kanbanReviewerCount');
+            const cCount = document.getElementById('kanbanCouncilCount');
+            const rdCount = document.getElementById('kanbanReadyCount');
+
+            if (pCount) pCount.textContent = countVisible('kanbanColPending');
+            if (rCount) rCount.textContent = countVisible('kanbanColReviewer');
+            if (cCount) cCount.textContent = countVisible('kanbanColCouncil');
+            if (rdCount) rdCount.textContent = countVisible('kanbanColReady');
+        }
+
+        // Initialize on DOM Ready
+        document.addEventListener('DOMContentLoaded', function () {
+            const savedView = localStorage.getItem('topichub_dept_topic_view');
+            if (savedView === 'kanban') {
+                setViewMode('kanban');
+            }
+            updateKanbanColumnCounters();
+        });
+    </script>
 </body>
 
 </html>

@@ -424,6 +424,42 @@ public class DataSeederService {
             );
             Lecturer lec2 = findOrCreateLecturer(gv2User, cnttDept, divKhmt, "GV_IT_02", "TS", "Tiến sĩ");
             map.put("gv_cntt02", lec2);
+
+            // Giảng viên CNTT 3 (Bộ môn KTPM)
+            AppUser gv3User = findOrCreateUser(
+                    "gv_cntt03",
+                    "123456",
+                    "nam.tv@university.edu.vn",
+                    "TS. Trần Văn Nam",
+                    "0912345613",
+                    lecturerRole
+            );
+            Lecturer lec3 = findOrCreateLecturer(gv3User, cnttDept, divKtpm, "GV_IT_03", "TS", "Tiến sĩ");
+            map.put("gv_cntt03", lec3);
+
+            // Giảng viên CNTT 4 (Bộ môn KTPM)
+            AppUser gv4User = findOrCreateUser(
+                    "gv_cntt04",
+                    "123456",
+                    "ha.ntt@university.edu.vn",
+                    "ThS. Nguyễn Thị Thu Hà",
+                    "0912345614",
+                    lecturerRole
+            );
+            Lecturer lec4 = findOrCreateLecturer(gv4User, cnttDept, divKtpm, "GV_IT_04", "ThS", "Thạc sĩ");
+            map.put("gv_cntt04", lec4);
+
+            // Giảng viên CNTT 5 (Bộ môn KHMT & HTTT)
+            AppUser gv5User = findOrCreateUser(
+                    "gv_cntt05",
+                    "123456",
+                    "hung.dq@university.edu.vn",
+                    "PGS.TS. Đỗ Quốc Hưng",
+                    "0912345615",
+                    lecturerRole
+            );
+            Lecturer lec5 = findOrCreateLecturer(gv5User, cnttDept, divKhmt, "GV_IT_05", "PGS.TS", "Phó Giáo sư");
+            map.put("gv_cntt05", lec5);
         }
 
         Department qtkdDept = deptMap.get("QTKD");

@@ -42,13 +42,13 @@ public class TopicApiController {
         data.put("period", t.getPeriod() != null ? t.getPeriod().getName() : "Chung");
         data.put("major", t.getMajor() != null ? t.getMajor().getName() : "CNTT");
         data.put("supervisor", t.getSupervisor() != null && t.getSupervisor().getUser() != null 
-                ? (t.getSupervisor().getAcademicTitle() != null ? t.getSupervisor().getAcademicTitle() + " " : "") + t.getSupervisor().getUser().getFullName() 
+                ? t.getSupervisor().getUser().getFullName() 
                 : "Chưa phân công");
         data.put("coSupervisor", t.getCoSupervisor() != null && t.getCoSupervisor().getUser() != null 
-                ? (t.getCoSupervisor().getAcademicTitle() != null ? t.getCoSupervisor().getAcademicTitle() + " " : "") + t.getCoSupervisor().getUser().getFullName() 
+                ? t.getCoSupervisor().getUser().getFullName() 
                 : "Không có");
         data.put("reviewer", t.getReviewer() != null && t.getReviewer().getUser() != null 
-                ? (t.getReviewer().getAcademicTitle() != null ? t.getReviewer().getAcademicTitle() + " " : "") + t.getReviewer().getUser().getFullName() 
+                ? t.getReviewer().getUser().getFullName() 
                 : "Chưa phân công");
         data.put("council", t.getCouncil() != null ? t.getCouncil().getName() : "Chưa phân hội đồng");
         data.put("maxStudents", t.getMaxStudents() != null ? t.getMaxStudents() : 3);
