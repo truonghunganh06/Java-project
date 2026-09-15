@@ -48,7 +48,9 @@ public class DepartmentHeadController {
 
     private AppUser getAuthenticatedDeptHead(HttpSession session) {
         AppUser user = (AppUser) session.getAttribute("currentUser");
-        if (user == null) return null;
+        if (user == null) {
+            return null;
+        }
         if (user.getRole() == null || (!"DEPARTMENT_HEAD".equalsIgnoreCase(user.getRole().getCode())
                 && !"DIVISION_HEAD".equalsIgnoreCase(user.getRole().getCode())
                 && !"ADMIN".equalsIgnoreCase(user.getRole().getCode()))) {
@@ -58,11 +60,12 @@ public class DepartmentHeadController {
     }
 
     // ==================== DASHBOARD ====================
-
     @GetMapping("/dashboard")
     public String showDashboard(HttpSession session, Model model) {
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
         Division division = departmentHeadService.getDivisionForUser(user);
@@ -120,11 +123,12 @@ public class DepartmentHeadController {
     }
 
     // ==================== REGISTRATION PERIODS ====================
-
     @GetMapping("/periods")
     public String listPeriods(HttpSession session, Model model) {
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
@@ -268,7 +272,9 @@ public class DepartmentHeadController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         // BUG-06 FIX: Truyền departmentId để kiểm tra cross-department
         Department dept = departmentHeadService.getDepartmentForUser(user);
@@ -396,7 +402,9 @@ public class DepartmentHeadController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
         boolean success = departmentHeadService.deletePeriod(id, dept.getId());
@@ -409,7 +417,6 @@ public class DepartmentHeadController {
     }
 
     // ==================== TOPICS MANAGEMENT ====================
-
     @GetMapping("/topics")
     public String listTopics(
             @RequestParam(value = "status", required = false) String status,
@@ -422,7 +429,9 @@ public class DepartmentHeadController {
             Model model) {
 
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
         Division division = departmentHeadService.getDivisionForUser(user);
@@ -485,7 +494,9 @@ public class DepartmentHeadController {
     @PostMapping("/topics/{id}/approve")
     public String approveTopic(@PathVariable("id") Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
         Division division = departmentHeadService.getDivisionForUser(user);
@@ -511,7 +522,9 @@ public class DepartmentHeadController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
         Division division = departmentHeadService.getDivisionForUser(user);
@@ -562,7 +575,9 @@ public class DepartmentHeadController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         boolean ok = councilService.assignReviewer(topicId, reviewerId);
         if (ok) {
@@ -581,7 +596,9 @@ public class DepartmentHeadController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         boolean ok = councilService.assignTopicToCouncil(topicId, councilId);
         if (ok) {
@@ -593,11 +610,12 @@ public class DepartmentHeadController {
     }
 
     // ==================== COUNCILS ====================
-
     @GetMapping("/councils")
     public String listCouncils(HttpSession session, Model model) {
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
         Division division = departmentHeadService.getDivisionForUser(user);
@@ -638,7 +656,9 @@ public class DepartmentHeadController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
         Division division = departmentHeadService.getDivisionForUser(user);
@@ -699,7 +719,6 @@ public class DepartmentHeadController {
     }
 
     // ==================== RESULTS & FINALIZING ====================
-
     @GetMapping("/results")
     public String listResults(
             @RequestParam(value = "periodId", required = false) Long periodId,
@@ -708,7 +727,9 @@ public class DepartmentHeadController {
             Model model) {
 
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
         List<Topic> allTopics = departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, periodId, null);
@@ -752,7 +773,9 @@ public class DepartmentHeadController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         councilService.publishTopicResults(topicId, isFinalized);
         redirectAttributes.addFlashAttribute("successMessage", Boolean.TRUE.equals(isFinalized) ? "Đã công bố kết quả điểm số cho sinh viên!" : "Đã chuyển về trạng thái dự thảo điểm.");
@@ -767,14 +790,16 @@ public class DepartmentHeadController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
         int count = councilService.publishAllResults(dept.getId(), periodId, isFinalized);
         redirectAttributes.addFlashAttribute("successMessage",
                 Boolean.TRUE.equals(isFinalized)
-                        ? "Đã công bố kết quả điểm chính thức cho toàn bộ " + count + " đề tài trong đợt!"
-                        : "Đã chuyển " + count + " đề tài về trạng thái dự thảo điểm.");
+                ? "Đã công bố kết quả điểm chính thức cho toàn bộ " + count + " đề tài trong đợt!"
+                : "Đã chuyển " + count + " đề tài về trạng thái dự thảo điểm.");
         return "redirect:/department-head/results" + (periodId != null ? "?periodId=" + periodId : "");
     }
 
@@ -836,16 +861,19 @@ public class DepartmentHeadController {
     }
 
     private String escapeCsv(String str) {
-        if (str == null) return "\"\"";
+        if (str == null) {
+            return "\"\"";
+        }
         return "\"" + str.replace("\"", "\"\"") + "\"";
     }
 
     // ==================== ANNOUNCEMENTS ====================
-
     @GetMapping("/announcements")
     public String listAnnouncements(HttpSession session, Model model) {
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
         List<Announcement> announcements = announcementService.getAnnouncementsByDepartment(dept.getId());
@@ -870,7 +898,9 @@ public class DepartmentHeadController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
         announcementService.createAnnouncement(user, dept, periodId, title, content, category, isPinned, null);
@@ -882,7 +912,9 @@ public class DepartmentHeadController {
     @PostMapping("/announcements/{id}/delete")
     public String deleteAnnouncement(@PathVariable("id") Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         announcementService.deleteAnnouncement(id);
         redirectAttributes.addFlashAttribute("successMessage", "Đã xóa thông báo!");
@@ -890,7 +922,6 @@ public class DepartmentHeadController {
     }
 
     // ==================== UNIFIED PERSONNEL HUB ====================
-
     @GetMapping("/personnel")
     public String showPersonnelHub(
             @RequestParam(value = "tab", defaultValue = "lecturers") String tab,
@@ -901,7 +932,9 @@ public class DepartmentHeadController {
             Model model) {
 
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
         List<Lecturer> lecturers = departmentHeadService.getLecturersInDepartment(dept.getId());
@@ -977,7 +1010,9 @@ public class DepartmentHeadController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         StudentGroup group = studentGroupRepository.findById(groupId).orElse(null);
         if (group != null) {
@@ -998,7 +1033,9 @@ public class DepartmentHeadController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedDeptHead(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         try {
             topic_management.dto.RegistrationDtos.ApiResponse<?> res = groupRegistrationService.mergeGroups(user, sourceGroupId, targetGroupId);
@@ -1015,7 +1052,9 @@ public class DepartmentHeadController {
     }
 
     private OffsetDateTime parseDate(String dateStr, boolean isEndOfDay) {
-        if (dateStr == null || dateStr.trim().isEmpty()) return null;
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return null;
+        }
         try {
             if (dateStr.length() == 10) { // yyyy-MM-dd
                 String timePart = isEndOfDay ? "T23:59:59+07:00" : "T00:00:00+07:00";
