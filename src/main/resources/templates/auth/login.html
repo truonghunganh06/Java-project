@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - Quản lý Đề tài Sinh viên</title>
-    
+
     <!-- Preconnect & DNS Prefetch -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,13 +15,18 @@
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
     <!-- Bootstrap 5.3 & FontAwesome 6 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    </noscript>
+
     <style>
         body {
             background-color: #f8fafc;
@@ -32,6 +38,7 @@
             margin: 0;
             padding: 20px;
         }
+
         .login-card {
             width: 100%;
             max-width: 420px;
@@ -41,6 +48,7 @@
             box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
             background: #ffffff;
         }
+
         .login-logo {
             width: 52px;
             height: 52px;
@@ -54,6 +62,7 @@
             margin-bottom: 1rem;
             box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
         }
+
         .btn-google {
             background-color: #ffffff;
             color: #1e293b;
@@ -71,6 +80,7 @@
             text-decoration: none;
             width: 100%;
         }
+
         .btn-google:hover {
             background-color: #f8fafc;
             border-color: #94a3b8;
@@ -78,9 +88,11 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
             transform: translateY(-1px);
         }
+
         .btn-google:active {
             transform: translateY(0);
         }
+
         .divider {
             display: flex;
             align-items: center;
@@ -92,121 +104,167 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
-        .divider::before, .divider::after {
+
+        .divider::before,
+        .divider::after {
             content: '';
             flex: 1;
             border-bottom: 1px solid #e2e8f0;
         }
+
         .divider:not(:empty)::before {
             margin-right: .75em;
         }
+
         .divider:not(:empty)::after {
             margin-left: .75em;
         }
-        .btn-login {
-            background-color: #0f172a;
-            color: white;
-            font-weight: 600;
-            font-size: 0.875rem;
-            border-radius: 10px;
-            padding: 0.65rem;
-            border: 1px solid #0f172a;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-            transition: all 0.15s ease;
+
+        /* From Uiverse.io by CristianMontoya98 - Skew Sweep Animation for Login Button */
+        .btn.btn-login {
+            background-color: #0f172a !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            font-size: 0.9375rem !important;
+            border-radius: 10px !important;
+            padding: 0.75rem 1rem !important;
+            border: 1px solid #0f172a !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15) !important;
+            cursor: pointer !important;
+            position: relative !important;
+            z-index: 1 !important;
+            overflow: hidden !important;
+            transition: color 0.4s ease, border-color 0.4s ease !important;
         }
-        .btn-login:hover {
-            background-color: #1e293b;
-            color: white;
+
+        .btn.btn-login:hover {
+            color: #0f172a !important;
+            border-color: #0f172a !important;
+            background-color: #0f172a !important;
         }
+
+        .btn.btn-login::after {
+            content: "" !important;
+            background: #ffffff !important;
+            position: absolute !important;
+            z-index: -1 !important;
+            left: -20% !important;
+            right: -20% !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            transform: skewX(-45deg) scale(0, 1) !important;
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+
+        .btn.btn-login:hover::after {
+            transform: skewX(-45deg) scale(1, 1) !important;
+        }
+
         .form-control {
             border-color: #cbd5e1;
             font-size: 0.875rem;
             border-radius: 10px;
             padding: 0.6rem 0.75rem;
         }
+
         .form-control:focus {
             border-color: #64748b;
             box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
         }
+
         .input-group-text {
             background-color: #f8fafc;
             border-color: #cbd5e1;
             border-radius: 10px 0 0 10px;
         }
+
         .form-control {
             border-radius: 0 10px 10px 0;
         }
-
     </style>
 </head>
+
 <body>
 
-<div class="login-card">
-    <div class="text-center mb-4">
-        <div class="login-logo">
-            <i class="fa-solid fa-graduation-cap"></i>
+    <div class="login-card">
+        <div class="text-center mb-4">
+            <div class="login-logo">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <h4 class="fw-bold text-dark mb-1" style="letter-spacing: -0.02em;">TopicHub</h4>
+            <p class="text-muted small mb-0">Hệ thống Quản lý Đề tài Khoa CNTT</p>
         </div>
-        <h4 class="fw-bold text-dark mb-1" style="letter-spacing: -0.02em;">TopicHub</h4>
-        <p class="text-muted small mb-0">Hệ thống Quản lý Đề tài Khoa CNTT</p>
-    </div>
 
-    <!-- Alert notifications -->
-    <div th:if="${error != null}" class="alert alert-danger py-2 px-3 mb-3 small d-flex align-items-center rounded-3" role="alert">
-        <i class="fa-solid fa-circle-exclamation me-2 flex-shrink-0"></i>
-        <span th:text="${error}"></span>
-    </div>
-    <div th:if="${param.logout != null}" class="alert alert-success py-2 px-3 mb-3 small d-flex align-items-center rounded-3" role="alert">
-        <i class="fa-solid fa-circle-check me-2 flex-shrink-0"></i>
-        <span>Bạn đã đăng xuất thành công.</span>
-    </div>
-
-    <!-- Nút Đăng nhập Google (Dành cho Sinh viên) -->
-    <div class="mb-3">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-secondary small fw-semibold">Sinh viên trường</span>
-            <span class="badge-student"><i class="fa-solid fa-bolt me-1"></i>Đăng nhập nhanh</span>
+        <!-- Alert notifications -->
+        <div th:if="${error != null}"
+            class="alert alert-danger py-2 px-3 mb-3 small d-flex align-items-center rounded-3" role="alert">
+            <i class="fa-solid fa-circle-exclamation me-2 flex-shrink-0"></i>
+            <span th:text="${error}"></span>
         </div>
-        
-        <a th:href="@{/auth/google}" class="btn-google">
-            <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-                <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z" fill="#4285F4"/>
-                <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
-                <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.59.102-1.167.282-1.707V4.961H.957C.347 6.173 0 7.548 0 9s.347 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
-                <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
-            </svg>
-            <span>Đăng nhập với Google</span>
-        </a>
-        <div class="text-muted text-center mt-1" style="font-size: 11px;">
-            Sử dụng email sinh viên do nhà trường cấp (@student...)
+        <div th:if="${param.logout != null}"
+            class="alert alert-success py-2 px-3 mb-3 small d-flex align-items-center rounded-3" role="alert">
+            <i class="fa-solid fa-circle-check me-2 flex-shrink-0"></i>
+            <span>Bạn đã đăng xuất thành công.</span>
         </div>
-    </div>
 
-    <!-- Phân cách -->
-    <div class="divider">Hoặc tài khoản hệ thống</div>
-
-    <!-- Form Đăng nhập truyền thống -->
-    <form th:action="@{/login}" method="post">
+        <!-- Nút Đăng nhập Google (Dành cho Sinh viên) -->
         <div class="mb-3">
-            <label class="form-label fw-semibold text-secondary small mb-1">Tên đăng nhập / Mã số</label>
-            <div class="input-group">
-                <span class="input-group-text"><i class="fa-regular fa-user text-muted"></i></span>
-                <input type="text" name="username" th:value="${username}" class="form-control" placeholder="Nhập username hoặc mã số" required autofocus>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-secondary small fw-semibold">Sinh viên trường</span>
+                <span class="badge-student"><i class="fa-solid fa-bolt me-1"></i>Đăng nhập nhanh</span>
+            </div>
+
+            <a th:href="@{/auth/google}" class="btn-google">
+                <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"
+                        fill="#4285F4" />
+                    <path
+                        d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"
+                        fill="#34A853" />
+                    <path
+                        d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.59.102-1.167.282-1.707V4.961H.957C.347 6.173 0 7.548 0 9s.347 2.827.957 4.039l3.007-2.332z"
+                        fill="#FBBC05" />
+                    <path
+                        d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"
+                        fill="#EA4335" />
+                </svg>
+                <span>Đăng nhập với Google</span>
+            </a>
+            <div class="text-muted text-center mt-1" style="font-size: 11px;">
+                Sử dụng email sinh viên do nhà trường cấp (@student...)
             </div>
         </div>
 
-        <div class="mb-4">
-            <label class="form-label fw-semibold text-secondary small mb-1">Mật khẩu</label>
-            <div class="input-group">
-                <span class="input-group-text"><i class="fa-solid fa-lock text-muted"></i></span>
-                <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu của bạn" required>
+        <!-- Phân cách -->
+        <div class="divider">Hoặc tài khoản hệ thống</div>
+
+        <!-- Form Đăng nhập truyền thống -->
+        <form th:action="@{/login}" method="post">
+            <div class="mb-3">
+                <label class="form-label fw-semibold text-secondary small mb-1">Tên đăng nhập / Mã số</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fa-regular fa-user text-muted"></i></span>
+                    <input type="text" name="username" th:value="${username}" class="form-control"
+                        placeholder="Nhập username hoặc mã số" required autofocus>
+                </div>
             </div>
-        </div>
 
-        <button type="submit" class="btn btn-login w-100 mb-3">Đăng nhập</button>
-    </form>
+            <div class="mb-4">
+                <label class="form-label fw-semibold text-secondary small mb-1">Mật khẩu</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-lock text-muted"></i></span>
+                    <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu của bạn"
+                        required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-login w-100 mb-3">Đăng nhập</button>
+        </form>
 
 
-</div>
+    </div>
 
 </body>
+
 </html>
