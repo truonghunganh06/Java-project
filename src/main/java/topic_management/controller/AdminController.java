@@ -54,6 +54,11 @@ public class AdminController {
         return "admin/dashboard";
     }
 
+    @GetMapping("/schedule")
+    public String showSchedule() {
+        return "redirect:/department-head/schedule";
+    }
+
     // ==================== USER MANAGEMENT ====================
 
     @GetMapping("/users")

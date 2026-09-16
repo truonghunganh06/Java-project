@@ -29,49 +29,49 @@
 
     <style>
         body {
-            background-color: #f8fafc;
+            background-color: #F4F8F7;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 24px;
         }
 
         .login-card {
             width: 100%;
-            max-width: 420px;
-            padding: 36px 32px;
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
-            background: #ffffff;
+            max-width: 440px;
+            padding: 40px 36px;
+            border-radius: 28px;
+            border: 1px solid #E8F0EE;
+            box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+            background: #FFFFFF;
         }
 
         .login-logo {
-            width: 52px;
-            height: 52px;
-            background-color: #0f172a;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #2DD4BF, #0D9488);
             color: #ffffff;
-            border-radius: 12px;
+            border-radius: 18px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.35rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+            font-size: 1.4rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 8px 20px rgba(45, 212, 191, 0.3);
         }
 
         .btn-google {
-            background-color: #ffffff;
-            color: #1e293b;
-            font-weight: 600;
-            font-size: 0.9rem;
-            border-radius: 10px;
-            padding: 0.65rem 1rem;
-            border: 1px solid #cbd5e1;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            background-color: #FFFFFF;
+            color: #1E293B;
+            font-weight: 700;
+            font-size: 0.875rem;
+            border-radius: 9999px;
+            padding: 0.75rem 1.25rem;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
@@ -82,15 +82,11 @@
         }
 
         .btn-google:hover {
-            background-color: #f8fafc;
-            border-color: #94a3b8;
-            color: #0f172a;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            background-color: #F8FAFC;
+            border-color: #2DD4BF;
+            color: #0F172A;
+            box-shadow: 0 4px 12px rgba(45, 212, 191, 0.15);
             transform: translateY(-1px);
-        }
-
-        .btn-google:active {
-            transform: translateY(0);
         }
 
         .divider {
@@ -98,18 +94,18 @@
             align-items: center;
             text-align: center;
             margin: 1.5rem 0;
-            color: #94a3b8;
-            font-size: 0.78rem;
-            font-weight: 500;
+            color: #94A3B8;
+            font-size: 0.75rem;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
         }
 
         .divider::before,
         .divider::after {
             content: '';
             flex: 1;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #E8F0EE;
         }
 
         .divider:not(:empty)::before {
@@ -120,66 +116,43 @@
             margin-left: .75em;
         }
 
-        /* From Uiverse.io by CristianMontoya98 - Skew Sweep Animation for Login Button */
-        .btn.btn-login {
-            background-color: #0f172a !important;
-            color: #ffffff !important;
+        .btn-login {
+            background-color: #0F172A !important;
+            color: #5EEAD4 !important;
             font-weight: 700 !important;
             font-size: 0.9375rem !important;
-            border-radius: 10px !important;
-            padding: 0.75rem 1rem !important;
-            border: 1px solid #0f172a !important;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15) !important;
+            border-radius: 9999px !important;
+            padding: 0.8rem 1.25rem !important;
+            border: 0 !important;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.15) !important;
             cursor: pointer !important;
-            position: relative !important;
-            z-index: 1 !important;
-            overflow: hidden !important;
-            transition: color 0.4s ease, border-color 0.4s ease !important;
+            transition: all 0.2s ease !important;
         }
 
-        .btn.btn-login:hover {
-            color: #0f172a !important;
-            border-color: #0f172a !important;
-            background-color: #0f172a !important;
-        }
-
-        .btn.btn-login::after {
-            content: "" !important;
-            background: #ffffff !important;
-            position: absolute !important;
-            z-index: -1 !important;
-            left: -20% !important;
-            right: -20% !important;
-            top: 0 !important;
-            bottom: 0 !important;
-            transform: skewX(-45deg) scale(0, 1) !important;
-            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
-        }
-
-        .btn.btn-login:hover::after {
-            transform: skewX(-45deg) scale(1, 1) !important;
-        }
-
-        .form-control {
-            border-color: #cbd5e1;
-            font-size: 0.875rem;
-            border-radius: 10px;
-            padding: 0.6rem 0.75rem;
-        }
-
-        .form-control:focus {
-            border-color: #64748b;
-            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+        .btn-login:hover {
+            background-color: #1E293B !important;
+            color: #99F6E4 !important;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.2) !important;
+            transform: translateY(-1px) !important;
         }
 
         .input-group-text {
-            background-color: #f8fafc;
-            border-color: #cbd5e1;
-            border-radius: 10px 0 0 10px;
+            background-color: #F8FAFC;
+            border-color: #E2E8F0;
+            border-radius: 9999px 0 0 9999px !important;
+            padding-left: 1.15rem;
         }
 
         .form-control {
-            border-radius: 0 10px 10px 0;
+            border-color: #E2E8F0;
+            font-size: 0.875rem;
+            border-radius: 0 9999px 9999px 0 !important;
+            padding: 0.65rem 1.15rem 0.65rem 0.5rem;
+        }
+
+        .form-control:focus {
+            border-color: #2DD4BF;
+            box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.15);
         }
     </style>
 </head>
@@ -189,29 +162,29 @@
     <div class="login-card">
         <div class="text-center mb-4">
             <div class="login-logo">
-                <i class="fa-solid fa-graduation-cap"></i>
+                <i class="fa-solid fa-shapes"></i>
             </div>
-            <h4 class="fw-bold text-dark mb-1" style="letter-spacing: -0.02em;">TopicHub</h4>
-            <p class="text-muted small mb-0">Hệ thống Quản lý Đề tài Khoa CNTT</p>
+            <h4 class="fw-extrabold text-slate-900 mb-1" style="font-size: 1.4rem; letter-spacing: -0.03em;">TopicHub</h4>
+            <p class="text-slate-400 small mb-0 font-medium">Hệ thống Quản lý Đề tài Khoa CNTT</p>
         </div>
 
         <!-- Alert notifications -->
         <div th:if="${error != null}"
-            class="alert alert-danger py-2 px-3 mb-3 small d-flex align-items-center rounded-3" role="alert">
-            <i class="fa-solid fa-circle-exclamation me-2 flex-shrink-0"></i>
+            class="alert alert-danger py-2.5 px-3 mb-3 small d-flex align-items-center rounded-2xl border border-rose-200" role="alert">
+            <i class="fa-solid fa-circle-exclamation me-2 flex-shrink-0 text-rose-600"></i>
             <span th:text="${error}"></span>
         </div>
         <div th:if="${param.logout != null}"
-            class="alert alert-success py-2 px-3 mb-3 small d-flex align-items-center rounded-3" role="alert">
-            <i class="fa-solid fa-circle-check me-2 flex-shrink-0"></i>
+            class="alert alert-success py-2.5 px-3 mb-3 small d-flex align-items-center rounded-2xl border border-teal-200" role="alert">
+            <i class="fa-solid fa-circle-check me-2 flex-shrink-0 text-teal-600"></i>
             <span>Bạn đã đăng xuất thành công.</span>
         </div>
 
         <!-- Nút Đăng nhập Google (Dành cho Sinh viên) -->
         <div class="mb-3">
             <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-secondary small fw-semibold">Sinh viên trường</span>
-                <span class="badge-student"><i class="fa-solid fa-bolt me-1"></i>Đăng nhập nhanh</span>
+                <span class="text-slate-500 small fw-bold">Sinh viên trường</span>
+                <span class="badge bg-teal-100 text-teal-800 font-bold rounded-full px-2.5 py-0.5 text-2xs"><i class="fa-solid fa-bolt me-1"></i>Đăng nhập nhanh</span>
             </div>
 
             <a th:href="@{/auth/google}" class="btn-google">
@@ -231,7 +204,7 @@
                 </svg>
                 <span>Đăng nhập với Google</span>
             </a>
-            <div class="text-muted text-center mt-1" style="font-size: 11px;">
+            <div class="text-slate-400 text-center mt-1" style="font-size: 11px;">
                 Sử dụng email sinh viên do nhà trường cấp (@student...)
             </div>
         </div>
@@ -242,26 +215,25 @@
         <!-- Form Đăng nhập truyền thống -->
         <form th:action="@{/login}" method="post">
             <div class="mb-3">
-                <label class="form-label fw-semibold text-secondary small mb-1">Tên đăng nhập / Mã số</label>
+                <label class="form-label fw-bold text-slate-700 small mb-1">Tên đăng nhập / Mã số</label>
                 <div class="input-group">
-                    <span class="input-group-text"><i class="fa-regular fa-user text-muted"></i></span>
+                    <span class="input-group-text"><i class="fa-regular fa-user text-slate-400"></i></span>
                     <input type="text" name="username" th:value="${username}" class="form-control"
                         placeholder="Nhập username hoặc mã số" required autofocus>
                 </div>
             </div>
 
             <div class="mb-4">
-                <label class="form-label fw-semibold text-secondary small mb-1">Mật khẩu</label>
+                <label class="form-label fw-bold text-slate-700 small mb-1">Mật khẩu</label>
                 <div class="input-group">
-                    <span class="input-group-text"><i class="fa-solid fa-lock text-muted"></i></span>
+                    <span class="input-group-text"><i class="fa-solid fa-lock text-slate-400"></i></span>
                     <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu của bạn"
                         required>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-login w-100 mb-3">Đăng nhập</button>
+            <button type="submit" class="btn btn-login w-100 mb-2">Đăng nhập</button>
         </form>
-
 
     </div>
 

@@ -4,15 +4,15 @@
 <head th:replace="~{fragments/head :: head('Không tìm thấy trang (404) - TopicHub')}"></head>
 
 <body
-    class="bg-slate-50 min-h-screen d-flex align-items-center justify-content-center p-3 p-md-4 position-relative overflow-x-hidden">
+    class="min-h-screen d-flex align-items-center justify-content-center p-3 p-md-4 position-relative overflow-x-hidden" style="background-color: #F4F8F7;">
 
-    <!-- Ambient Glowing Background Circles -->
+    <!-- Ambient Glowing Background Circles (WellNest Mint/Sage) -->
     <div class="ambient-glow glow-1"></div>
     <div class="ambient-glow glow-2"></div>
 
     <!-- Main 404 Card Container -->
     <div
-        class="error-404-card saas-card max-w-lg w-100 p-4 p-md-5 text-center shadow-2xl border border-slate-200/80 rounded-3xl bg-white position-relative z-10">
+        class="error-404-card saas-card max-w-lg w-100 p-4 p-md-5 text-center shadow-wellnest border border-slate-200/80 rounded-3xl bg-white position-relative z-10" style="border-radius: 28px;">
 
         <!-- Big Animated 404 Badge & Mascot Hero Unit -->
         <div class="error-hero-container mb-4">
@@ -27,32 +27,31 @@
                 <div class="mascot-404-shadow"></div>
 
                 <!-- Mascot Speech Bubble -->
-                <div class="mascot-speech-bubble shadow-sm">
+                <div class="mascot-speech-bubble shadow-wellnest-sm">
                     <span>Meow! Black Dot tìm hoài không thấy trang này... 🐾</span>
                 </div>
             </div>
         </div>
 
         <!-- Title & Description -->
-        <h1 class="text-xl text-md-2xl font-black text-slate-900 mb-2 tracking-tight">404 - Không tìm thấy trang</h1>
+        <h1 class="text-xl text-md-2xl font-black text-slate-900 mb-2 tracking-tight" style="font-family: 'Plus Jakarta Sans', sans-serif;">404 – Không tìm thấy trang</h1>
         <p class="text-xs text-slate-500 mb-4 leading-relaxed max-w-sm mx-auto">
             Đường dẫn bạn truy cập có thể đã bị thay đổi, xóa bỏ hoặc không tồn tại trên hệ thống TopicHub.
         </p>
 
-        <!-- Main CTA Action Buttons -->
-        <div class="d-flex flex-column flex-sm-row align-items-center justify-content-center gap-2.5 mb-4">
+        <!-- Main CTA Action Buttons (WellNest Rounded-Full Pills) -->
+        <div class="d-flex flex-column flex-sm-row align-items-center justify-content-center gap-2.5 mb-2">
             <a th:href="@{/}"
-                class="btn-motion-primary btn-error-primary w-100 w-sm-auto d-inline-flex align-items-center justify-content-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white shadow-md">
-                <i class="fa-solid fa-house-chimney text-xs"></i>
+                class="btn bg-slate-900 hover:bg-slate-800 text-teal-300 w-100 w-sm-auto d-inline-flex align-items-center justify-content-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold shadow-wellnest border-0 transition">
+                <i class="fa-solid fa-house text-xs"></i>
                 <span>Trở về Trang chủ</span>
             </a>
             <button type="button" onclick="goBackOrLogin()"
-                class="btn-motion-secondary btn-error-secondary w-100 w-sm-auto d-inline-flex align-items-center justify-content-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200">
+                class="btn bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 w-100 w-sm-auto d-inline-flex align-items-center justify-content-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold shadow-2xs transition">
                 <i class="fa-solid fa-arrow-left text-xs"></i>
                 <span>Quay lại trang trước</span>
             </button>
         </div>
-
 
     </div>
 
@@ -81,7 +80,7 @@
         .glow-1 {
             width: 320px;
             height: 320px;
-            background: rgba(37, 99, 235, 0.25);
+            background: rgba(45, 212, 191, 0.25);
             top: 15%;
             left: 20%;
             animation: glowFloat 8s infinite alternate ease-in-out;
@@ -90,7 +89,7 @@
         .glow-2 {
             width: 350px;
             height: 350px;
-            background: rgba(99, 102, 241, 0.2);
+            background: rgba(20, 184, 166, 0.18);
             bottom: 15%;
             right: 20%;
             animation: glowFloat 10s infinite alternate-reverse ease-in-out;

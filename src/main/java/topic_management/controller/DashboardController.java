@@ -34,4 +34,27 @@ public class DashboardController {
 
         return "redirect:/login";
     }
+
+    @GetMapping("/schedule")
+    public String redirectSchedule(HttpSession session) {
+        AppUser currentUser = (AppUser) session.getAttribute("currentUser");
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+
+        if (currentUser.getRole() != null) {
+            String roleCode = currentUser.getRole().getCode();
+            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode) || "DIVISION_HEAD".equalsIgnoreCase(roleCode)) {
+                return "redirect:/department-head/schedule";
+            }
+            if ("LECTURER".equalsIgnoreCase(roleCode)) {
+                return "redirect:/lecturer/schedule";
+            }
+            if ("STUDENT".equalsIgnoreCase(roleCode)) {
+                return "redirect:/student/schedule";
+            }
+        }
+
+        return "redirect:/login";
+    }
 }

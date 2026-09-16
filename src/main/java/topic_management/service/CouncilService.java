@@ -404,6 +404,23 @@ public class CouncilService {
         return councilMemberRepository.findByCouncilId(councilId);
     }
 
+    public Map<Long, Set<Long>> getCouncilLecturerIdsMap(List<Long> councilIds) {
+        if (councilIds == null || councilIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<CouncilMember> allMembers = councilMemberRepository.findByCouncilIdIn(councilIds);
+        Map<Long, Set<Long>> result = new HashMap<>();
+        for (Long cId : councilIds) {
+            result.put(cId, new HashSet<>());
+        }
+        for (CouncilMember m : allMembers) {
+            if (m.getCouncil() != null && m.getLecturer() != null) {
+                result.computeIfAbsent(m.getCouncil().getId(), k -> new HashSet<>()).add(m.getLecturer().getId());
+            }
+        }
+        return result;
+    }
+
     public List<CouncilMember> getMembersByCouncil(Long councilId) {
         return councilMemberRepository.findByCouncilId(councilId);
     }

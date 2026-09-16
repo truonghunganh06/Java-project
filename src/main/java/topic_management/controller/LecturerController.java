@@ -113,6 +113,33 @@ public class LecturerController {
         return "lecturer/dashboard";
     }
 
+    // ==================== FULL SCHEDULE / CALENDAR ====================
+
+    @GetMapping("/schedule")
+    public String showSchedule(HttpSession session, Model model) {
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Lecturer lecturer = lecturerService.getLecturerByUser(user);
+        List<Topic> topics = lecturerService.getTopicsByLecturer(lecturer);
+        List<Topic> reviewerTopics = lecturerService.getReviewerTopics(lecturer);
+        List<Council> councils = lecturerService.getCouncilsForLecturer(lecturer);
+        List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
+        List<Submission> submissions = lecturerService.getSubmissionsByLecturer(lecturer);
+        List<Announcement> announcements = announcementService.getAllAnnouncements();
+
+        model.addAttribute("user", user);
+        model.addAttribute("lecturer", lecturer);
+        model.addAttribute("topics", topics);
+        model.addAttribute("reviewerTopics", reviewerTopics);
+        model.addAttribute("councils", councils);
+        model.addAttribute("periods", periods);
+        model.addAttribute("submissions", submissions);
+        model.addAttribute("announcements", announcements.stream().limit(5).toList());
+
+        return "lecturer/schedule";
+    }
+
     // ==================== TOPICS ====================
 
     @GetMapping("/topics")

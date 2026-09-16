@@ -122,6 +122,34 @@ public class DepartmentHeadController {
         return "department-head/dashboard";
     }
 
+    // ==================== FULL SCHEDULE / CALENDAR ====================
+
+    @GetMapping("/schedule")
+    public String showSchedule(HttpSession session, Model model) {
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        Department dept = departmentHeadService.getDepartmentForUser(user);
+        Division division = departmentHeadService.getDivisionForUser(user);
+        List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept != null ? dept.getId() : null);
+        List<Council> councils = (division != null)
+                ? councilService.getCouncilsByDivision(division.getId())
+                : (dept != null ? councilService.getCouncilsByDepartment(dept.getId()) : councilService.getAllCouncils());
+        List<Announcement> announcements = dept != null ? announcementService.getAnnouncementsByDepartment(dept.getId()) : announcementService.getAllAnnouncements();
+
+        model.addAttribute("user", user);
+        model.addAttribute("department", dept);
+        model.addAttribute("division", division);
+        model.addAttribute("periods", periods);
+        model.addAttribute("allPeriods", periods);
+        model.addAttribute("councils", councils);
+        model.addAttribute("announcements", announcements.stream().limit(5).toList());
+
+        return "department-head/schedule";
+    }
+
     // ==================== REGISTRATION PERIODS ====================
     @GetMapping("/periods")
     public String listPeriods(HttpSession session, Model model) {
@@ -460,16 +488,9 @@ public class DepartmentHeadController {
                 ? departmentHeadService.getDivisionStats(division.getId(), dept.getId())
                 : departmentHeadService.getDepartmentStats(dept.getId());
 
-        // Lập bản đồ thành viên từng hội đồng để tự động lọc bỏ hội đồng xung đột với GVHD
-        Map<Long, Set<Long>> councilLecturerIdsMap = new HashMap<>();
-        for (Council c : councils) {
-            List<CouncilMember> members = councilService.getCouncilMembers(c.getId());
-            Set<Long> lIds = members.stream()
-                    .filter(m -> m.getLecturer() != null)
-                    .map(m -> m.getLecturer().getId())
-                    .collect(Collectors.toSet());
-            councilLecturerIdsMap.put(c.getId(), lIds);
-        }
+        // Lập bản đồ thành viên từng hội đồng để tự động lọc bỏ hội đồng xung đột với GVHD (batch load)
+        List<Long> councilIds = councils.stream().map(Council::getId).toList();
+        Map<Long, Set<Long>> councilLecturerIdsMap = councilService.getCouncilLecturerIdsMap(councilIds);
 
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
@@ -962,13 +983,16 @@ public class DepartmentHeadController {
         }
         Map<Long, List<Evaluation>> topicEvaluationsMap = councilService.getEvaluationsMapForTopics(pagedTopics);
 
-        // Map topic count for each lecturer
+        // Map topic count for each lecturer (in-memory aggregation to avoid N+1 remote DB queries)
+        List<Topic> approvedDeptTopics = departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, null, null);
         Map<Long, Long> lecturerTopicCountMap = new HashMap<>();
         for (Lecturer lec : lecturers) {
-            long count = lecturerService.getTopicsByLecturer(lec).stream()
-                    .filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus()))
-                    .count();
-            lecturerTopicCountMap.put(lec.getId(), count);
+            lecturerTopicCountMap.put(lec.getId(), 0L);
+        }
+        for (Topic t : approvedDeptTopics) {
+            if (t.getSupervisor() != null) {
+                lecturerTopicCountMap.merge(t.getSupervisor().getId(), 1L, Long::sum);
+            }
         }
 
         model.addAttribute("user", user);

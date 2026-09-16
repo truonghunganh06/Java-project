@@ -67,6 +67,29 @@ public class StudentController {
         return "student/dashboard";
     }
 
+    // ==================== FULL SCHEDULE / CALENDAR ====================
+
+    @GetMapping("/schedule")
+    public String showSchedule(HttpSession session, Model model) {
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Student student = studentService.getStudentByUser(user);
+        StudentGroup group = studentService.getMyActiveGroup(student, null);
+        List<RegistrationPeriod> activePeriods = studentService.getAllActivePeriods();
+        List<Submission> submissions = studentService.getGroupSubmissions(group);
+        List<Announcement> announcements = announcementService.getAllAnnouncements();
+
+        model.addAttribute("user", user);
+        model.addAttribute("student", student);
+        model.addAttribute("group", group);
+        model.addAttribute("activePeriods", activePeriods);
+        model.addAttribute("submissions", submissions);
+        model.addAttribute("announcements", announcements.stream().limit(5).toList());
+
+        return "student/schedule";
+    }
+
     // ==================== GROUP MANAGEMENT ====================
 
     @GetMapping("/group")
