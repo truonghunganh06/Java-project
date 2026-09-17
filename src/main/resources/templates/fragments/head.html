@@ -231,7 +231,30 @@
             flex-direction: column;
             background-color: var(--bg-body);
             transition: margin-left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            will-change: margin-left;
+        }
+
+        /* ===== GLOBAL BOOTSTRAP MODAL & BACKDROP STACKING CONTEXT FIX ===== */
+        .modal-backdrop {
+            --bs-backdrop-zindex: 1050;
+            z-index: 1050 !important;
+        }
+
+        .modal {
+            --bs-modal-zindex: 1060;
+            z-index: 1060 !important;
+        }
+
+        .modal-dialog {
+            z-index: 1065 !important;
+        }
+
+        .modal-content {
+            background-color: #ffffff !important;
+        }
+
+        [data-theme="dark"] .modal-content {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
         }
 
         /* Desktop / Laptop Collapsed Sidebar Styles */

@@ -34,6 +34,9 @@ public interface StudentGroupRepository extends JpaRepository<StudentGroup, Long
     List<StudentGroup> findByPeriodId(Long periodId);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    List<StudentGroup> findByLeaderId(Long leaderId);
+
+    @EntityGraph(attributePaths = {"period", "leader", "topic"})
     List<StudentGroup> findByTopicId(Long topicId);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})

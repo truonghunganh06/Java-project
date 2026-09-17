@@ -240,94 +240,6 @@
                                             </span>
                                         </div>
                                     </div>
-
-                                    <!-- Modal Detailed Evaluations for this Topic -->
-                                    <div class="modal fade results-modal text-start" th:id="'evalDetailModal-' + ${t.id}" tabindex="-1" aria-hidden="true"
-                                         th:if="${topicGroupsMap != null && topicGroupsMap.get(t.id) != null}">
-                                        <div class="modal-dialog modal-dialog-centered modal-lg">
-                                            <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
-                                                <div class="modal-header border-b border-slate-100 p-4 bg-slate-50/70">
-                                                    <div>
-                                                        <div class="d-flex align-items-center gap-2 mb-1">
-                                                            <span class="badge font-mono text-[11px] font-semibold bg-slate-200/80 text-slate-700 px-2 py-0.5 rounded" th:text="${t.code}">DT-01</span>
-                                                            <h6 class="modal-title font-bold text-slate-900 text-sm mb-0">Chi Tiết Phiếu Chấm & Đánh Giá</h6>
-                                                        </div>
-                                                        <p class="text-xs text-slate-500 mb-0 line-clamp-1" th:text="${t.title}"></p>
-                                                    </div>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-
-                                                <div class="modal-body p-4 space-y-3">
-                                                    <!-- Summary Bar -->
-                                                    <div class="p-3.5 bg-gradient-to-r from-blue-50/60 to-indigo-50/40 rounded-xl border border-blue-100/80 d-flex align-items-center justify-content-between">
-                                                        <div>
-                                                            <span class="text-slate-500 text-[11px] font-medium d-block">Điểm Tổng Kết (Trung Bình):</span>
-                                                            <span class="text-2xl font-black text-blue-700 font-mono tracking-tight" th:text="${t.finalScore != null ? #numbers.formatDecimal(t.finalScore, 1, 2) + ' / 10' : 'Chưa đủ điểm'}">8.65 / 10</span>
-                                                        </div>
-                                                        <div class="text-end">
-                                                            <span class="text-slate-500 text-[11px] font-medium d-block">Trạng thái công bố:</span>
-                                                            <span th:if="${t.isFinalized}" class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full mt-0.5">
-                                                                <i class="fa-solid fa-circle-check text-[10px]"></i> Đã xuất bản cho SV
-                                                            </span>
-                                                            <span th:unless="${t.isFinalized}" class="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full mt-0.5">
-                                                                <i class="fa-regular fa-clock text-[10px]"></i> Dự thảo nội bộ
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- Discrepancy Alert Banner if max - min > 2.0 -->
-                                                    <div th:with="discrepancy=${topicEvaluationsMap != null && topicEvaluationsMap.get(t.id) != null ? T(topic_management.entity.Evaluation).calculateCouncilDiscrepancy(topicEvaluationsMap.get(t.id)) : 0.0}"
-                                                         th:if="${discrepancy > 2.0}"
-                                                         class="p-3 bg-amber-50/90 border border-amber-200 rounded-xl text-xs text-amber-900 d-flex align-items-center gap-2.5">
-                                                        <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 d-flex align-items-center justify-content-center flex-shrink-0">
-                                                            <i class="fa-solid fa-triangle-exclamation text-sm"></i>
-                                                        </div>
-                                                        <div>
-                                                            <strong class="font-semibold d-block">Cảnh báo độ lệch điểm Hội đồng:</strong>
-                                                            <span>Chênh lệch giữa điểm cao nhất và thấp nhất là </span>
-                                                            <strong class="font-bold font-mono" th:text="${discrepancy} + ' đ'"></strong>
-                                                            <span> (&gt; 2.0 đ). Hội đồng cần xem xét hội ý trước khi duyệt công bố chính thức!</span>
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- List of individual evaluation sheets -->
-                                                    <div class="pt-2">
-                                                        <h6 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5">Danh sách các phiếu đánh giá thành phần:</h6>
-                                                        <div class="d-flex flex-column gap-2.5">
-                                                            <div th:each="e : ${topicEvaluationsMap != null && topicEvaluationsMap.get(t.id) != null ? topicEvaluationsMap.get(t.id) : #lists.emptyList()}" 
-                                                                 class="eval-card p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-xs transition hover:border-slate-300">
-                                                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                                                    <div class="d-flex align-items-center gap-2">
-                                                                        <span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md"
-                                                                              th:classappend="${e.evaluationType == 'SUPERVISOR' ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : (e.evaluationType == 'REVIEWER' ? 'text-indigo-700 bg-indigo-50 border border-indigo-200' : 'text-purple-700 bg-purple-50 border border-purple-200')}"
-                                                                              th:text="${e.getEvaluationTypeName()}">GVPB</span>
-                                                                        <strong class="text-slate-900 text-xs" th:text="${e.lecturer != null && e.lecturer.user != null ? e.lecturer.user.fullName : 'Giảng viên'}">TS. Nguyễn Văn A</strong>
-                                                                    </div>
-                                                                    <span class="font-black text-blue-700 text-sm font-mono" th:text="${e.score != null ? #numbers.formatDecimal(e.score, 1, 1) + ' đ' : '--'}">8.5 đ</span>
-                                                                </div>
-                                                                <div class="text-xs text-slate-600 bg-slate-50/60 p-2.5 rounded-lg border border-slate-100 leading-relaxed italic" th:text="${e.comments != null && !e.comments.isEmpty() ? e.comments : 'Không có nhận xét chi tiết.'}"></div>
-                                                                <div class="d-flex justify-content-end mt-1.5">
-                                                                    <span class="text-slate-400 text-[11px]" th:text="${e.evaluatedAt != null ? #temporals.format(e.evaluatedAt, 'dd/MM/yyyy HH:mm') : ''}"></span>
-                                                                </div>
-                                                            </div>
-                                                            <div th:if="${topicEvaluationsMap == null || topicEvaluationsMap.get(t.id) == null || topicEvaluationsMap.get(t.id).isEmpty()}" class="p-4 text-center text-slate-400 text-xs border border-dashed border-slate-200 rounded-xl">
-                                                                Chưa có giảng viên nào gửi phiếu chấm điểm cho đề tài này.
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="modal-footer border-t border-slate-100 p-3.5 bg-slate-50/70 d-flex justify-content-between">
-                                                    <button type="button" class="btn-motion-secondary btn-sm rounded-xl px-3 py-1.5 text-xs font-semibold d-inline-flex align-items-center gap-1.5 text-slate-700 bg-white border border-slate-200" 
-                                                            th:onclick="'printTopicReport(' + ${t.id} + ')'">
-                                                        <i class="fa-solid fa-file-pdf text-rose-600"></i>
-                                                        <span>In / Xuất PDF Phiếu Đánh Giá</span>
-                                                    </button>
-                                                    <button type="button" class="btn-motion-secondary btn-sm rounded-xl px-4 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200" data-bs-dismiss="modal">Đóng</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -428,6 +340,96 @@
             <div id="drawerActionButtons" class="d-flex align-items-center gap-2"></div>
         </div>
     </div>
+
+    <!-- Modal Detailed Evaluations for each Topic (Placed directly in <body> outside saas-main-wrapper to prevent stacking context & backdrop bugs) -->
+    <th:block th:each="t : ${topics}">
+        <div class="modal fade results-modal text-start" th:id="'evalDetailModal-' + ${t.id}" tabindex="-1" aria-hidden="true"
+             th:if="${topicGroupsMap != null && topicGroupsMap.get(t.id) != null}">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
+                    <div class="modal-header border-b border-slate-100 p-4 bg-slate-50/70">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge font-mono text-[11px] font-semibold bg-slate-200/80 text-slate-700 px-2 py-0.5 rounded" th:text="${t.code}">DT-01</span>
+                                <h6 class="modal-title font-bold text-slate-900 text-sm mb-0">Chi Tiết Phiếu Chấm & Đánh Giá</h6>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-0 line-clamp-1" th:text="${t.title}"></p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body p-4 space-y-3">
+                        <!-- Summary Bar -->
+                        <div class="p-3.5 bg-gradient-to-r from-blue-50/60 to-indigo-50/40 rounded-xl border border-blue-100/80 d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="text-slate-500 text-[11px] font-medium d-block">Điểm Tổng Kết (Trung Bình):</span>
+                                <span class="text-2xl font-black text-blue-700 font-mono tracking-tight" th:text="${t.finalScore != null ? #numbers.formatDecimal(t.finalScore, 1, 2) + ' / 10' : 'Chưa đủ điểm'}">8.65 / 10</span>
+                            </div>
+                            <div class="text-end">
+                                <span class="text-slate-500 text-[11px] font-medium d-block">Trạng thái công bố:</span>
+                                <span th:if="${t.isFinalized}" class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full mt-0.5">
+                                    <i class="fa-solid fa-circle-check text-[10px]"></i> Đã xuất bản cho SV
+                                </span>
+                                <span th:unless="${t.isFinalized}" class="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full mt-0.5">
+                                    <i class="fa-regular fa-clock text-[10px]"></i> Dự thảo nội bộ
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Discrepancy Alert Banner if max - min > 2.0 -->
+                        <div th:with="discrepancy=${topicEvaluationsMap != null && topicEvaluationsMap.get(t.id) != null ? T(topic_management.entity.Evaluation).calculateCouncilDiscrepancy(topicEvaluationsMap.get(t.id)) : 0.0}"
+                             th:if="${discrepancy > 2.0}"
+                             class="p-3 bg-amber-50/90 border border-amber-200 rounded-xl text-xs text-amber-900 d-flex align-items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 d-flex align-items-center justify-content-center flex-shrink-0">
+                                <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+                            </div>
+                            <div>
+                                <strong class="font-semibold d-block">Cảnh báo độ lệch điểm Hội đồng:</strong>
+                                <span>Chênh lệch giữa điểm cao nhất và thấp nhất là </span>
+                                <strong class="font-bold font-mono" th:text="${discrepancy} + ' đ'"></strong>
+                                <span> (&gt; 2.0 đ). Hội đồng cần xem xét hội ý trước khi duyệt công bố chính thức!</span>
+                            </div>
+                        </div>
+
+                        <!-- List of individual evaluation sheets -->
+                        <div class="pt-2">
+                            <h6 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5">Danh sách các phiếu đánh giá thành phần:</h6>
+                            <div class="d-flex flex-column gap-2.5">
+                                <div th:each="e : ${topicEvaluationsMap != null && topicEvaluationsMap.get(t.id) != null ? topicEvaluationsMap.get(t.id) : #lists.emptyList()}" 
+                                     class="eval-card p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-xs transition hover:border-slate-300">
+                                     <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md"
+                                                  th:classappend="${e.evaluationType == 'SUPERVISOR' ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : (e.evaluationType == 'REVIEWER' ? 'text-indigo-700 bg-indigo-50 border border-indigo-200' : 'text-purple-700 bg-purple-50 border border-purple-200')}"
+                                                  th:text="${e.getEvaluationTypeName()}">GVPB</span>
+                                            <strong class="text-slate-900 text-xs" th:text="${e.lecturer != null && e.lecturer.user != null ? e.lecturer.user.fullName : 'Giảng viên'}">TS. Nguyễn Văn A</strong>
+                                        </div>
+                                        <span class="font-black text-blue-700 text-sm font-mono" th:text="${e.score != null ? #numbers.formatDecimal(e.score, 1, 1) + ' đ' : '--'}">8.5 đ</span>
+                                    </div>
+                                    <div class="text-xs text-slate-600 bg-slate-50/60 p-2.5 rounded-lg border border-slate-100 leading-relaxed italic" th:text="${e.comments != null && !e.comments.isEmpty() ? e.comments : 'Không có nhận xét chi tiết.'}"></div>
+                                    <div class="d-flex justify-content-end mt-1.5">
+                                        <span class="text-slate-400 text-[11px]" th:text="${e.evaluatedAt != null ? #temporals.format(e.evaluatedAt, 'dd/MM/yyyy HH:mm') : ''}"></span>
+                                    </div>
+                                </div>
+                                <div th:if="${topicEvaluationsMap == null || topicEvaluationsMap.get(t.id) == null || topicEvaluationsMap.get(t.id).isEmpty()}" class="p-4 text-center text-slate-400 text-xs border border-dashed border-slate-200 rounded-xl">
+                                    Chưa có giảng viên nào gửi phiếu chấm điểm cho đề tài này.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-t border-slate-100 p-3.5 bg-slate-50/70 d-flex justify-content-between">
+                        <button type="button" class="btn-motion-secondary btn-sm rounded-xl px-3 py-1.5 text-xs font-semibold d-inline-flex align-items-center gap-1.5 text-slate-700 bg-white border border-slate-200" 
+                                th:onclick="'printTopicReport(' + ${t.id} + ')'">
+                            <i class="fa-solid fa-file-pdf text-rose-600"></i>
+                            <span>In / Xuất PDF Phiếu Đánh Giá</span>
+                        </button>
+                        <button type="button" class="btn-motion-secondary btn-sm rounded-xl px-4 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
 
     <!-- Scoped Custom Styling for Results View -->
     <style>
@@ -632,7 +634,11 @@
             cursor: not-allowed;
         }
 
-        /* Fluid Modal Animation with Spring & Backdrop Blur */
+        /* Fluid Modal Animation with Spring */
+        .results-modal {
+            z-index: 1055 !important;
+        }
+
         .modal.fade .modal-dialog {
             transform: scale(0.95) translateY(12px);
             opacity: 0;
@@ -642,11 +648,6 @@
         .modal.show .modal-dialog {
             transform: scale(1) translateY(0);
             opacity: 1;
-        }
-
-        .modal-backdrop.show {
-            backdrop-filter: blur(4px);
-            background-color: rgba(15, 23, 42, 0.4);
         }
 
         .eval-card {

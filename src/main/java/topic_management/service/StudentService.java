@@ -303,7 +303,7 @@ public class StudentService {
 
     /**
      * Lấy danh sách đề tài APPROVED, ưu tiên lọc theo Khoa của sinh viên (departmentId).
-     * Nếu departmentId != null: chỉ trả về đề tài thuộc Khoa đó (major.department.id == departmentId).
+     * Nếu departmentId != null: chỉ trả về đề tài thuộc Khoa đó (major.department.id == departmentId hoặc period.department.id == departmentId).
      * Kết hợp thêm bộ lọc periodId, majorId, keyword.
      */
     public List<Topic> getAvailableTopics(Long periodId, Long majorId, String keyword, Long departmentId) {
@@ -315,7 +315,10 @@ public class StudentService {
                 .filter(t -> departmentId == null
                         || (t.getMajor() != null
                             && t.getMajor().getDepartment() != null
-                            && departmentId.equals(t.getMajor().getDepartment().getId())))
+                            && departmentId.equals(t.getMajor().getDepartment().getId()))
+                        || (t.getPeriod() != null
+                            && t.getPeriod().getDepartment() != null
+                            && departmentId.equals(t.getPeriod().getDepartment().getId())))
                 .filter(t -> majorId == null || (t.getMajor() != null && majorId.equals(t.getMajor().getId())))
                 // BUG-02 FIX: Chỉ hiển thị đề tài trong đợt đang mở đăng ký cho sinh viên
                 .filter(t -> t.getPeriod() == null || t.getPeriod().isStudentRegistrationOpen())
@@ -361,9 +364,21 @@ public class StudentService {
             return "Đề tài không tồn tại hoặc chưa được duyệt!";
         }
 
-        // LỖI 1 FIX: Bắt buộc sinh viên phải thuộc một nhóm hợp lệ và là nhóm trưởng
+        Long topicPeriodId = (topic.getPeriod() != null) ? topic.getPeriod().getId() : null;
+
+        // Nếu nhóm truyền vào là null, tìm nhóm của sinh viên trong đợt của đề tài
         if (group == null) {
-            return "Bạn chưa thuộc nhóm sinh viên nào! Vui lòng tạo nhóm hoặc tham gia nhóm trước khi đăng ký đề tài.";
+            group = getMyActiveGroup(student, topicPeriodId);
+        }
+
+        // Nếu sinh viên vẫn chưa có nhóm trong đợt này, tự động tạo nhóm mới cho sinh viên làm Trưởng nhóm
+        if (group == null) {
+            try {
+                String groupName = "Nhóm " + (student.getUser() != null && student.getUser().getFullName() != null ? student.getUser().getFullName() : student.getStudentCode());
+                group = createGroup(student, topicPeriodId, groupName);
+            } catch (Exception ex) {
+                return "Không thể khởi tạo nhóm: " + (ex.getMessage() != null ? ex.getMessage() : "Lỗi hệ thống");
+            }
         }
 
         // Kiểm tra quyền Trưởng nhóm: Chỉ Trưởng nhóm mới có quyền chọn và đăng ký đề tài
@@ -398,7 +413,6 @@ public class StudentService {
         // BUG-B FIX: Kiểm tra hạn mức hướng dẫn (maxTopicsQuota) của GVHD chính
         // Quota tính theo đợt: đếm số nhóm REGISTERED/APPROVED mà GVHD đang nhận trong đợt này
         List<String> excludedStatuses = List.of("DRAFT", "REJECTED");
-        Long topicPeriodId = (topic.getPeriod() != null) ? topic.getPeriod().getId() : null;
 
         if (topic.getSupervisor() != null) {
             Integer quota = topic.getSupervisor().getMaxTopicsQuota();

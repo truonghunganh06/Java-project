@@ -171,12 +171,16 @@
                                             </div>
                                         </div>
                                         <div th:if="${group == null}">
-                                            <a th:href="@{/student/group}" class="text-blue-600 text-xs font-medium hover:underline">
-                                                Tạo nhóm &rarr;
-                                            </a>
+                                            <form th:action="@{/student/topics/{id}/register(id=${t.id})}" method="post" onsubmit="return confirm('Bạn chưa tạo nhóm. Hệ thống sẽ tự động khởi tạo nhóm mới và đăng ký đề tài này cho bạn. Bạn có muốn tiếp tục?');">
+                                                <button type="submit" class="btn btn-xs btn-dark rounded-xl px-2.5 py-1 text-xs font-semibold">
+                                                    <i class="fa-solid fa-paper-plane me-1"></i> Đăng ký
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
                     </div>
 
         </main>
