@@ -35,121 +35,138 @@
             </div>
 
             <!-- Page Header -->
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
-                <div class="d-flex align-items-center gap-2">
-                    <h1 class="text-lg font-bold text-slate-900 mb-0">Quản Lý & Phê Duyệt Đề Tài</h1>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                <div class="d-flex align-items-center gap-2.5">
+                    <h1 class="text-xl font-bold text-slate-900 mb-0">Quản Lý & Phê Duyệt Đề Tài</h1>
                     <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200"
                         th:text="${department != null ? department.name : 'Khoa CNTT'}">Khoa CNTT</span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <span id="filteredRowCount" class="badge-pill-neutral font-medium text-xs"
+                    <span id="filteredRowCount" class="badge-pill-neutral font-medium text-xs text-slate-600 bg-slate-100"
                         th:text="'Tổng số: ' + (${topics != null ? topics.size() : 0}) + ' đề tài'"></span>
                 </div>
             </div>
 
-            <!-- Workflow Stage KPI Quick Filter Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-2.5 mb-3">
+            <!-- Workflow Stage KPI Quick Filter Cards (Full-Width Responsive 5 Cards) -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
                 <!-- KPI 1: All Topics -->
                 <div class="workflow-kpi-card active" onclick="filterByWorkflowStage('ALL', this)">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div class="d-flex align-items-center justify-content-between mb-1.5">
                         <span class="text-xs font-semibold text-slate-600">Tất cả đề tài</span>
                         <div class="kpi-icon-badge bg-slate-100 text-slate-600">
                             <i class="fa-solid fa-folder-open text-xs"></i>
                         </div>
                     </div>
-                    <div class="text-xl font-bold text-slate-900" th:text="${stats != null && stats['totalTopics'] != null ? stats['totalTopics'] : (topics != null ? topics.size() : 0)}">0</div>
+                    <div class="text-2xl font-bold text-slate-900" th:text="${stats != null && stats['totalTopics'] != null ? stats['totalTopics'] : (topics != null ? topics.size() : 0)}">0</div>
                     <div class="kpi-highlight-bar bg-slate-400"></div>
                 </div>
 
                 <!-- KPI 2: Pending Approval -->
                 <div class="workflow-kpi-card" onclick="filterByWorkflowStage('PENDING', this)">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div class="d-flex align-items-center justify-content-between mb-1.5">
                         <span class="text-xs font-semibold text-amber-700">1. Chờ duyệt</span>
                         <div class="kpi-icon-badge bg-amber-100 text-amber-600">
                             <i class="fa-regular fa-clock text-xs"></i>
                         </div>
                     </div>
-                    <div class="text-xl font-bold text-amber-600" th:text="${stats != null && stats['pendingTopics'] != null ? stats['pendingTopics'] : 0}">0</div>
+                    <div class="text-2xl font-bold text-amber-600" th:text="${stats != null && stats['pendingTopics'] != null ? stats['pendingTopics'] : 0}">0</div>
                     <div class="kpi-highlight-bar bg-amber-500"></div>
                 </div>
 
                 <!-- KPI 3: Needs Reviewer -->
                 <div class="workflow-kpi-card" onclick="filterByWorkflowStage('NEEDS_REVIEWER', this)">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div class="d-flex align-items-center justify-content-between mb-1.5">
                         <span class="text-xs font-semibold text-blue-700">2. Cần phân GVPB</span>
                         <div class="kpi-icon-badge bg-blue-100 text-blue-600">
                             <i class="fa-solid fa-user-shield text-xs"></i>
                         </div>
                     </div>
-                    <div class="text-xl font-bold text-blue-600" th:text="${stats != null && stats['needsReviewerTopics'] != null ? stats['needsReviewerTopics'] : 0}">0</div>
+                    <div class="text-2xl font-bold text-blue-600" th:text="${stats != null && stats['needsReviewerTopics'] != null ? stats['needsReviewerTopics'] : 0}">0</div>
                     <div class="kpi-highlight-bar bg-blue-500"></div>
                 </div>
 
                 <!-- KPI 4: Needs Council -->
                 <div class="workflow-kpi-card" onclick="filterByWorkflowStage('NEEDS_COUNCIL', this)">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div class="d-flex align-items-center justify-content-between mb-1.5">
                         <span class="text-xs font-semibold text-purple-700">3. Cần phân Hội đồng</span>
                         <div class="kpi-icon-badge bg-purple-100 text-purple-600">
                             <i class="fa-solid fa-users-rectangle text-xs"></i>
                         </div>
                     </div>
-                    <div class="text-xl font-bold text-purple-600" th:text="${stats != null && stats['needsCouncilTopics'] != null ? stats['needsCouncilTopics'] : 0}">0</div>
+                    <div class="text-2xl font-bold text-purple-600" th:text="${stats != null && stats['needsCouncilTopics'] != null ? stats['needsCouncilTopics'] : 0}">0</div>
                     <div class="kpi-highlight-bar bg-purple-500"></div>
                 </div>
 
                 <!-- KPI 5: Ready / Completed -->
                 <div class="workflow-kpi-card col-span-2 md:col-span-1" onclick="filterByWorkflowStage('READY', this)">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div class="d-flex align-items-center justify-content-between mb-1.5">
                         <span class="text-xs font-semibold text-emerald-700">4. Đã sẵn sàng</span>
                         <div class="kpi-icon-badge bg-emerald-100 text-emerald-600">
                             <i class="fa-solid fa-circle-check text-xs"></i>
                         </div>
                     </div>
-                    <div class="text-xl font-bold text-emerald-600" th:text="${stats != null && stats['readyTopics'] != null ? stats['readyTopics'] : 0}">0</div>
+                    <div class="text-2xl font-bold text-emerald-600" th:text="${stats != null && stats['readyTopics'] != null ? stats['readyTopics'] : 0}">0</div>
                     <div class="kpi-highlight-bar bg-emerald-500"></div>
                 </div>
             </div>
 
-            <!-- Clean 1-Row Toolbar with View Switcher & Filters -->
+            <!-- Unified Horizontal Toolbar (View Switcher + Multi-Filter Dropdowns + Search) -->
             <div class="saas-card p-3 mb-4">
-                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-                    <!-- Left: View Mode Toggle (Table / Kanban) -->
-                    <div class="view-mode-toggle bg-slate-100 p-1 rounded-xl d-inline-flex border border-slate-200">
-                        <button type="button" id="viewBtnTable" class="btn btn-xs rounded-lg px-3 py-1 text-xs font-semibold view-toggle-btn active" onclick="setViewMode('table')">
-                            <i class="fa-solid fa-table-list me-1.5"></i> Dạng Bảng
-                        </button>
-                        <button type="button" id="viewBtnKanban" class="btn btn-xs rounded-lg px-3 py-1 text-xs font-semibold view-toggle-btn text-slate-600" onclick="setViewMode('kanban')">
-                            <i class="fa-solid fa-table-columns me-1.5"></i> Kanban Board
-                        </button>
+                <div class="d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-3">
+                    <!-- Left: View Mode Toggle -->
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="view-mode-toggle bg-slate-100 p-1 rounded-xl d-inline-flex border border-slate-200">
+                            <button type="button" id="viewBtnTable" class="btn btn-xs rounded-lg px-3 py-1.5 text-xs font-semibold view-toggle-btn active" onclick="setViewMode('table')">
+                                <i class="fa-solid fa-table-list me-1.5"></i> Dạng Bảng
+                            </button>
+                            <button type="button" id="viewBtnKanban" class="btn btn-xs rounded-lg px-3 py-1.5 text-xs font-semibold view-toggle-btn text-slate-600" onclick="setViewMode('kanban')">
+                                <i class="fa-solid fa-table-columns me-1.5"></i> Kanban Board
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Right: Dropdowns & Quick Search -->
-                    <form th:action="@{/department-head/topics}" method="get" class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 max-w-3xl justify-content-lg-end mb-0">
-                        <div class="relative flex-grow-1" style="min-width: 200px;">
-                            <input type="text" name="keyword" id="topicKeywordInput"
-                                class="form-control form-control-sm rounded-xl pl-8 text-xs"
-                                placeholder="Tìm kiếm theo tên đề tài, mã, GVHD..." th:value="${keyword}"
-                                onkeyup="filterTopicsByKeyword(this.value)">
+                    <!-- Right: Dropdown Filters & Search -->
+                    <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 justify-content-xl-end">
+                        <!-- Filter: Period -->
+                        <div style="min-width: 160px;">
+                            <select id="filterPeriodSelect" class="form-select form-select-sm text-xs rounded-xl border-slate-200" onchange="applyCombinedFilters()">
+                                <option value="ALL">Tất cả đợt đăng ký</option>
+                                <option th:each="p : ${periods}" th:value="${p.name}" th:text="${p.name}">Đợt 1</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter: Major / Division -->
+                        <div style="min-width: 170px;">
+                            <select id="filterMajorSelect" class="form-select form-select-sm text-xs rounded-xl border-slate-200" onchange="applyCombinedFilters()">
+                                <option value="ALL">Tất cả chuyên ngành</option>
+                                <option th:each="m : ${majors}" th:value="${m.name}" th:text="${m.name}">Kỹ thuật Phần mềm</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter: Supervisor -->
+                        <div th:if="${lecturers != null && !lecturers.isEmpty()}" style="min-width: 170px;">
+                            <select id="filterSupervisorSelect" class="form-select form-select-sm text-xs rounded-xl border-slate-200" onchange="applyCombinedFilters()">
+                                <option value="ALL">Tất cả GV hướng dẫn</option>
+                                <option th:each="l : ${lecturers}" th:value="${l.user != null ? l.user.fullName : l.id}" th:text="${l.user != null ? l.user.fullName : 'GV'}">TS. Nguyễn Văn A</option>
+                            </select>
+                        </div>
+
+                        <!-- Search Input -->
+                        <div class="relative" style="min-width: 220px; flex-grow: 1; max-width: 320px;">
+                            <input type="text" id="topicKeywordInput"
+                                class="form-control form-control-sm rounded-xl pl-8 text-xs bg-slate-50 focus:bg-white"
+                                placeholder="Tìm theo tên đề tài, mã, GVHD..."
+                                onkeyup="applyCombinedFilters()">
                             <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none"></i>
                         </div>
-                        <select name="periodId" class="form-select form-select-sm rounded-xl text-xs"
-                            style="width: 170px;" onchange="this.form.submit()">
-                            <option value="">-- Tất cả các đợt --</option>
-                            <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}"
-                                th:selected="${selectedPeriodId == p.id}"></option>
-                        </select>
-                        <select name="majorId" class="form-select form-select-sm rounded-xl text-xs"
-                            style="width: 160px;" onchange="this.form.submit()">
-                            <option value="">-- Tất cả bộ môn --</option>
-                            <option th:each="m : ${majors}" th:value="${m.id}" th:text="${m.name}"
-                                th:selected="${selectedMajorId == m.id}"></option>
-                        </select>
-                        <a th:href="@{/department-head/topics}"
+
+                        <!-- Reset Filter Button -->
+                        <button type="button" onclick="resetAllFilters()"
                             class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2.5 text-slate-600 hover:bg-slate-100"
-                            title="Đặt lại bộ lọc">
+                            title="Đặt lại toàn bộ bộ lọc">
                             <i class="fa-solid fa-rotate-left text-xs"></i>
-                        </a>
-                    </form>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -290,11 +307,21 @@
                                             </button>
                                         </form>
 
+                                        <!-- Quick Edit & Approve Button for PENDING / REJECTED -->
+                                        <button th:if="${t.status == 'PENDING' || t.status == 'REJECTED'}" type="button"
+                                            class="btn btn-sm bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-xl px-2 py-1 text-xs font-semibold transition"
+                                            data-bs-toggle="modal" data-bs-target="#quickEditApproveModal"
+                                            th:onclick="'prepareQuickEditModal(' + ${t.id} + ', this.closest(\'tr\'))'"
+                                            title="Hiệu chỉnh nhanh và Duyệt luôn (kịp tiến độ)">
+                                            <i class="fa-solid fa-wand-magic-sparkles text-xs me-1"></i> Sửa & Duyệt
+                                        </button>
+
                                         <!-- Quick Reject Button for PENDING -->
                                         <button th:if="${t.status == 'PENDING'}" type="button"
                                             class="btn btn-sm bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-xl px-2 py-1 text-xs font-semibold transition"
                                             data-bs-toggle="modal" data-bs-target="#rejectModal"
-                                            th:onclick="'prepareRejectModal(' + ${t.id} + ', \'' + ${#strings.replace(t.title, '\'', '\\\'')} + '\')'"
+                                            th:data-topic-id="${t.id}" th:data-topic-title="${t.title}"
+                                            onclick="prepareRejectModalFromBtn(this)"
                                             title="Từ chối đề tài">
                                             <i class="fa-solid fa-xmark me-1 text-xs"></i> Từ chối
                                         </button>
@@ -368,7 +395,8 @@
                                         </form>
                                         <button type="button" class="btn btn-xs bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-lg px-2 py-1 font-semibold text-xs"
                                             data-bs-toggle="modal" data-bs-target="#rejectModal"
-                                            th:onclick="'prepareRejectModal(' + ${t.id} + ', \'' + ${#strings.replace(t.title, '\'', '\\\'')} + '\')'">
+                                            th:data-topic-id="${t.id}" th:data-topic-title="${t.title}"
+                                            onclick="prepareRejectModalFromBtn(this)">
                                             <i class="fa-solid fa-xmark"></i>
                                         </button>
                                         <button type="button" class="btn btn-xs btn-light border border-slate-200 rounded-lg px-2 py-1 text-slate-600" onclick="openTopicDrawer(this.closest('.kanban-card'))" title="Chi tiết">
@@ -650,6 +678,49 @@
         </div>
     </th:block>
 
+    <!-- Quick Edit & Direct Approve Modal -->
+    <div class="modal fade" id="quickEditApproveModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-2xl border-0 shadow-xl">
+                <form id="quickEditApproveForm" method="post">
+                    <div class="modal-header border-b border-slate-100 p-4">
+                        <h6 class="modal-title font-bold text-slate-900 text-sm">
+                            <i class="fa-solid fa-wand-magic-sparkles text-blue-600 me-1.5"></i> Hiệu Chỉnh Nhanh & Phê Duyệt Trực Tiếp
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-3">
+                        <div class="p-3 bg-blue-50/70 border border-blue-200/80 rounded-xl text-xs text-blue-900">
+                            <i class="fa-solid fa-info-circle text-blue-600 me-1"></i>
+                            <strong>Mục đích:</strong> Trưởng khoa/Bộ môn hiệu chỉnh lại tên, mô tả hoặc yêu cầu của đề tài cho chuẩn mực và bấm Duyệt ngay (`APPROVED`) để kịp công bố cho sinh viên mà không cần trả về làm lại sát ngày.
+                        </div>
+
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700">Tên đề tài *</label>
+                            <input type="text" id="quickEditTitle" name="title" class="form-control text-xs rounded-xl" required>
+                        </div>
+
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700">Mô tả mục tiêu & phạm vi đề tài</label>
+                            <textarea id="quickEditDescription" name="description" class="form-control text-xs rounded-xl" rows="4"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700">Yêu cầu kiến thức đối với sinh viên</label>
+                            <textarea id="quickEditRequirements" name="requirements" class="form-control text-xs rounded-xl" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 p-3">
+                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs font-medium" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-success rounded-xl px-4 text-xs font-semibold">
+                            <i class="fa-solid fa-check me-1"></i> Lưu & Phê duyệt ngay
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Reject Topic Modal -->
     <div class="modal fade" id="rejectModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -849,6 +920,34 @@
 
     <!-- Enhanced Topic Management Script -->
     <script>
+        function prepareQuickEditModal(topicId, trElement) {
+            const form = document.getElementById('quickEditApproveForm');
+            form.action = '/department-head/topics/' + topicId + '/quick-edit-approve';
+            if (trElement) {
+                const title = trElement.getAttribute('data-topic-title') || '';
+                const desc = trElement.getAttribute('data-topic-description') || '';
+                const req = trElement.getAttribute('data-topic-requirements') || '';
+                document.getElementById('quickEditTitle').value = title;
+                document.getElementById('quickEditDescription').value = desc;
+                document.getElementById('quickEditRequirements').value = req;
+            }
+        }
+
+        function prepareRejectModalFromBtn(btn) {
+            const topicId = btn.getAttribute('data-topic-id');
+            const title = btn.getAttribute('data-topic-title') || '';
+            const form = document.getElementById('rejectForm');
+            if (form) form.action = '/department-head/topics/' + topicId + '/reject';
+            const titleEl = document.getElementById('rejectTopicTitle');
+            if (titleEl) titleEl.textContent = title;
+        }
+
+        function prepareRejectModal(topicId, title) {
+            const form = document.getElementById('rejectForm');
+            form.action = '/department-head/topics/' + topicId + '/reject';
+            document.getElementById('rejectTopicTitle').textContent = title || '';
+        }
+
         // View Mode Switcher (Table vs Kanban)
         function setViewMode(mode) {
             const tableView = document.getElementById('tableViewContainer');
@@ -891,11 +990,33 @@
             applyCombinedFilters();
         }
 
+        // Reset all filters to default
+        function resetAllFilters() {
+            const kw = document.getElementById('topicKeywordInput');
+            if (kw) kw.value = '';
+            const pSel = document.getElementById('filterPeriodSelect');
+            if (pSel) pSel.value = 'ALL';
+            const mSel = document.getElementById('filterMajorSelect');
+            if (mSel) mSel.value = 'ALL';
+            const sSel = document.getElementById('filterSupervisorSelect');
+            if (sSel) sSel.value = 'ALL';
+            filterByWorkflowStage('ALL', document.querySelector('.workflow-kpi-card'));
+        }
+
         // Apply filters to Table Rows and Kanban Cards simultaneously
         function applyCombinedFilters() {
             const kwInput = document.getElementById('topicKeywordInput');
             const keyword = (kwInput ? kwInput.value : '').toLowerCase().trim();
             const stage = currentWorkflowStage;
+
+            const pSel = document.getElementById('filterPeriodSelect');
+            const selectedPeriod = pSel ? pSel.value : 'ALL';
+
+            const mSel = document.getElementById('filterMajorSelect');
+            const selectedMajor = mSel ? mSel.value : 'ALL';
+
+            const sSel = document.getElementById('filterSupervisorSelect');
+            const selectedSupervisor = sSel ? sSel.value : 'ALL';
 
             // 1. Filter Table Rows
             const tableRows = document.querySelectorAll('.topic-item-row');
@@ -905,6 +1026,9 @@
                 const status = (row.getAttribute('data-status') || '').toUpperCase();
                 const hasReviewer = row.getAttribute('data-has-reviewer') === 'true';
                 const hasCouncil = row.getAttribute('data-has-council') === 'true';
+                const rowPeriod = row.getAttribute('data-topic-period') || '';
+                const rowMajor = row.getAttribute('data-topic-major') || '';
+                const rowSupervisor = row.getAttribute('data-topic-supervisor') || '';
                 const text = row.textContent.toLowerCase();
 
                 let matchesStage = false;
@@ -924,9 +1048,12 @@
                     matchesStage = (status === 'APPROVED' && hasReviewer && hasCouncil);
                 }
 
+                const matchesPeriod = (selectedPeriod === 'ALL' || rowPeriod === selectedPeriod);
+                const matchesMajor = (selectedMajor === 'ALL' || rowMajor.includes(selectedMajor) || selectedMajor.includes(rowMajor));
+                const matchesSupervisor = (selectedSupervisor === 'ALL' || rowSupervisor.includes(selectedSupervisor) || selectedSupervisor.includes(rowSupervisor));
                 const matchesKeyword = !keyword || text.includes(keyword);
 
-                if (matchesStage && matchesKeyword) {
+                if (matchesStage && matchesPeriod && matchesMajor && matchesSupervisor && matchesKeyword) {
                     row.style.display = '';
                     visibleRowCount++;
                 } else {
@@ -940,11 +1067,14 @@
                 const status = (card.getAttribute('data-status') || '').toUpperCase();
                 const hasReviewer = card.getAttribute('data-has-reviewer') === 'true';
                 const hasCouncil = card.getAttribute('data-has-council') === 'true';
+                const cardPeriod = card.getAttribute('data-topic-period') || '';
+                const cardMajor = card.getAttribute('data-topic-major') || '';
+                const cardSupervisor = card.getAttribute('data-topic-supervisor') || '';
                 const text = card.textContent.toLowerCase();
 
                 let matchesStage = false;
                 if (stage === 'ALL' || stage === 'APPROVED') {
-                    matchesStage = true; // In Kanban, each column has its own semantic group
+                    matchesStage = true;
                 } else if (stage === 'PENDING') {
                     matchesStage = (status === 'PENDING');
                 } else if (stage === 'NEEDS_REVIEWER') {
@@ -955,9 +1085,12 @@
                     matchesStage = (status === 'APPROVED' && hasReviewer && hasCouncil);
                 }
 
+                const matchesPeriod = (selectedPeriod === 'ALL' || cardPeriod === selectedPeriod);
+                const matchesMajor = (selectedMajor === 'ALL' || cardMajor.includes(selectedMajor) || selectedMajor.includes(cardMajor));
+                const matchesSupervisor = (selectedSupervisor === 'ALL' || cardSupervisor.includes(selectedSupervisor) || selectedSupervisor.includes(cardSupervisor));
                 const matchesKeyword = !keyword || text.includes(keyword);
 
-                if (matchesStage && matchesKeyword) {
+                if (matchesStage && matchesPeriod && matchesMajor && matchesSupervisor && matchesKeyword) {
                     card.style.display = '';
                 } else {
                     card.style.display = 'none';

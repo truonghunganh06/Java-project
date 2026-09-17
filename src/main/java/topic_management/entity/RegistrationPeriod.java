@@ -51,6 +51,9 @@ public class RegistrationPeriod {
     @Column(name = "max_students")
     private Integer maxStudents = 3;
 
+    @Column(name = "min_topics_per_lecturer")
+    private Integer minTopicsPerLecturer = 3;
+
     @Column(nullable = false, length = 50)
     private String status = "OPEN"; // DRAFT, OPEN, IN_PROGRESS, COMPLETED, CLOSED
 
@@ -188,6 +191,14 @@ public class RegistrationPeriod {
 
     public void setMaxStudents(Integer maxStudents) {
         this.maxStudents = maxStudents;
+    }
+
+    public Integer getMinTopicsPerLecturer() {
+        return minTopicsPerLecturer != null && minTopicsPerLecturer > 0 ? minTopicsPerLecturer : 3;
+    }
+
+    public void setMinTopicsPerLecturer(Integer minTopicsPerLecturer) {
+        this.minTopicsPerLecturer = minTopicsPerLecturer;
     }
 
     public String getStatus() {

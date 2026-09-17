@@ -85,10 +85,12 @@ public class LecturerController {
                 .toList();
 
         List<RegistrationPeriod> openProposalPeriods = lecturerService.getOpenProposalPeriods(lecturer);
+        List<LecturerService.ProposalProgressDto> proposalProgressList = lecturerService.getProposalProgressList(lecturer);
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("openProposalPeriods", openProposalPeriods);
+        model.addAttribute("proposalProgressList", proposalProgressList);
         model.addAttribute("topics", topics);
         model.addAttribute("reviewerTopics", reviewerTopics);
         model.addAttribute("councils", councils);
@@ -109,6 +111,33 @@ public class LecturerController {
         model.addAttribute("pendingDissolveRequests", pendingDissolveRequests);
 
         return "lecturer/dashboard";
+    }
+
+    // ==================== FULL SCHEDULE / CALENDAR ====================
+
+    @GetMapping("/schedule")
+    public String showSchedule(HttpSession session, Model model) {
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Lecturer lecturer = lecturerService.getLecturerByUser(user);
+        List<Topic> topics = lecturerService.getTopicsByLecturer(lecturer);
+        List<Topic> reviewerTopics = lecturerService.getReviewerTopics(lecturer);
+        List<Council> councils = lecturerService.getCouncilsForLecturer(lecturer);
+        List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
+        List<Submission> submissions = lecturerService.getSubmissionsByLecturer(lecturer);
+        List<Announcement> announcements = announcementService.getAllAnnouncements();
+
+        model.addAttribute("user", user);
+        model.addAttribute("lecturer", lecturer);
+        model.addAttribute("topics", topics);
+        model.addAttribute("reviewerTopics", reviewerTopics);
+        model.addAttribute("councils", councils);
+        model.addAttribute("periods", periods);
+        model.addAttribute("submissions", submissions);
+        model.addAttribute("announcements", announcements.stream().limit(5).toList());
+
+        return "lecturer/schedule";
     }
 
     // ==================== TOPICS ====================
@@ -139,6 +168,7 @@ public class LecturerController {
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         List<RegistrationPeriod> openPeriods = lecturerService.getOpenProposalPeriods(lecturer);
+        List<LecturerService.ProposalProgressDto> proposalProgressList = lecturerService.getProposalProgressList(lecturer);
         List<Lecturer> coSupervisors = lecturerService.getOtherLecturers(lecturer.getId());
         List<Major> majors = lecturerService.getMajorsForLecturer(lecturer);
 
@@ -146,6 +176,7 @@ public class LecturerController {
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("topic", new Topic());
         model.addAttribute("openPeriods", openPeriods);
+        model.addAttribute("proposalProgressList", proposalProgressList);
         model.addAttribute("coSupervisors", coSupervisors);
         model.addAttribute("majors", majors);
 

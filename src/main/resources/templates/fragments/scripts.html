@@ -84,6 +84,8 @@
 
         <!-- Bootstrap 5.3 JS Bundle -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Chart.js 4.4.2 -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 
         <script>
             // Robust Unicode String Decoder (fixes any \uXXXX or \xXX escape artifacts)
@@ -960,6 +962,771 @@
                 window.addEventListener('pageshow', finishPL);
                 window.addEventListener('load', finishPL);
             })();
+
+            // ================= SMART CALENDAR & QUICK NOTES CONTROLLER =================
+            (function () {
+                var calDate = new Date();
+                var selectedDate = new Date();
+
+                function renderCalendar() {
+                    var grid = document.getElementById('calMonthGrid');
+                    var title = document.getElementById('calCurrentMonthYear');
+                    if (!grid || !title) return;
+
+                    var year = calDate.getFullYear();
+                    var month = calDate.getMonth();
+                    
+                    var monthNames = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+                    title.textContent = monthNames[month] + ', ' + year;
+
+                    var firstDay = new Date(year, month, 1).getDay();
+                    var daysInMonth = new Date(year, month + 1, 0).getDate();
+                    var prevMonthDays = new Date(year, month, 0).getDate();
+
+                    var today = new Date();
+                    grid.innerHTML = '';
+
+                    // Prev month padding
+                    for (var i = firstDay - 1; i >= 0; i--) {
+                        var d = prevMonthDays - i;
+                        var el = document.createElement('span');
+                        el.className = 'text-3xs text-slate-300 py-1.5 rounded-full';
+                        el.textContent = d;
+                        grid.appendChild(el);
+                    }
+
+                    // Current month days
+                    for (var day = 1; day <= daysInMonth; day++) {
+                        var btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'text-xs font-semibold py-1.5 rounded-full transition d-flex align-items-center justify-content-center mx-auto';
+                        btn.style.width = '30px';
+                        btn.style.height = '30px';
+                        btn.textContent = day;
+
+                        var isToday = (today.getFullYear() === year && today.getMonth() === month && today.getDate() === day);
+                        var isSelected = (selectedDate.getFullYear() === year && selectedDate.getMonth() === month && selectedDate.getDate() === day);
+
+                        if (isSelected) {
+                            btn.className += ' bg-slate-900 text-teal-300 font-bold shadow-xs';
+                        } else if (isToday) {
+                            btn.className += ' bg-teal-100 text-teal-900 font-bold';
+                        } else {
+                            btn.className += ' text-slate-700 hover:bg-slate-100';
+                        }
+
+                        (function (d) {
+                            btn.onclick = function () {
+                                selectedDate = new Date(year, month, d);
+                                var dayText = document.getElementById('calSelectedDayText');
+                                if (dayText) {
+                                    var dayOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'][selectedDate.getDay()];
+                                    dayText.textContent = dayOfWeek + ', ' + d + ' ' + monthNames[month];
+                                }
+                                renderCalendar();
+                                loadQuickNotes();
+                            };
+                        })(day);
+
+                        grid.appendChild(btn);
+                    }
+                }
+
+                window.navigateCalendarMonth = function (offset) {
+                    calDate.setMonth(calDate.getMonth() + offset);
+                    renderCalendar();
+                };
+
+                window.toggleQuickNoteInput = function () {
+                    var box = document.getElementById('quickNoteInputBox');
+                    if (box) {
+                        box.classList.toggle('d-none');
+                        if (!box.classList.contains('d-none')) {
+                            var input = document.getElementById('quickNoteText');
+                            if (input) input.focus();
+                        }
+                    }
+                };
+
+                window.saveQuickNote = function () {
+                    var input = document.getElementById('quickNoteText');
+                    if (!input || !input.value.trim()) return;
+                    var dateKey = 'topichub_note_' + selectedDate.toISOString().slice(0, 10);
+                    var notes = [];
+                    try { notes = JSON.parse(localStorage.getItem(dateKey) || '[]'); } catch (e) { }
+                    notes.push({ id: Date.now(), text: input.value.trim(), done: false });
+                    try { localStorage.setItem(dateKey, JSON.stringify(notes)); } catch (e) { }
+                    input.value = '';
+                    window.toggleQuickNoteInput();
+                    loadQuickNotes();
+                    if (window.showToast) window.showToast('Đã lưu ghi chú mới!', 'success');
+                };
+
+                window.deleteQuickNote = function (id) {
+                    var dateKey = 'topichub_note_' + selectedDate.toISOString().slice(0, 10);
+                    var notes = [];
+                    try { notes = JSON.parse(localStorage.getItem(dateKey) || '[]'); } catch (e) { }
+                    notes = notes.filter(function (n) { return n.id !== id; });
+                    try { localStorage.setItem(dateKey, JSON.stringify(notes)); } catch (e) { }
+                    loadQuickNotes();
+                };
+
+                function loadQuickNotes() {
+                    var container = document.getElementById('userQuickNotesList');
+                    if (!container) return;
+                    var dateKey = 'topichub_note_' + selectedDate.toISOString().slice(0, 10);
+                    var notes = [];
+                    try { notes = JSON.parse(localStorage.getItem(dateKey) || '[]'); } catch (e) { }
+                    container.innerHTML = '';
+
+                    notes.forEach(function (n) {
+                        var item = document.createElement('div');
+                        item.className = 'p-2.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 d-flex align-items-center justify-content-between gap-2';
+                        item.innerHTML = '<div class="d-flex align-items-center gap-2 overflow-hidden">' +
+                            '<i class="fa-solid fa-note-sticky text-amber-600 text-xs flex-shrink-0"></i>' +
+                            '<span class="text-xs text-slate-800 font-medium truncate">' + escapeHtml(n.text) + '</span>' +
+                            '</div>' +
+                            '<button type="button" class="btn btn-link p-0 text-slate-400 hover:text-rose-600 text-3xs border-0" onclick="deleteQuickNote(' + n.id + ')" title="Xóa">' +
+                            '<i class="fa-solid fa-trash-can"></i>' +
+                            '</button>';
+                        container.appendChild(item);
+                    });
+                }
+
+                function escapeHtml(str) {
+                    var div = document.createElement('div');
+                    div.appendChild(document.createTextNode(str));
+                    return div.innerHTML;
+                }
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    renderCalendar();
+                    loadQuickNotes();
+                });
+            })();
+
+            /* =========================================================
+             *  FULL CALENDAR CONTROLLER (DOCTORS' SCHEDULE SPECIFICATION)
+             * ========================================================= */
+            window.fullCalendarApp = (function() {
+                var currentDate = new Date();
+                var currentView = 'month'; // 'day', 'week', 'month'
+                var currentFilter = 'ALL';
+                var selectedEvent = null;
+                var serverEvents = [];
+
+                function init() {
+                    serverEvents = [];
+                    var eventNodes = document.querySelectorAll('.server-cal-event');
+                    if (eventNodes && eventNodes.length > 0) {
+                        eventNodes.forEach(function(node) {
+                            var date = node.dataset.date;
+                            if (date) {
+                                serverEvents.push({
+                                    id: node.dataset.id || ('event-' + Math.random()),
+                                    type: node.dataset.type || 'PERIOD',
+                                    typeName: node.dataset.typeName || 'Sự kiện',
+                                    title: node.dataset.title || 'Mốc sự kiện',
+                                    date: date,
+                                    time: node.dataset.time || '08:00',
+                                    location: node.dataset.location || 'Tại Trường',
+                                    code: node.dataset.code || '',
+                                    colorClass: node.dataset.colorClass || 'cal-event-teal',
+                                    icon: node.dataset.icon || 'fa-calendar-check',
+                                    actionUrl: node.dataset.actionUrl || '#'
+                                });
+                            }
+                        });
+                    }
+
+                    // Prepopulate with a few demonstration milestones if empty
+                    if (serverEvents.length === 0) {
+                        var y = currentDate.getFullYear();
+                        var m = String(currentDate.getMonth() + 1).padStart(2, '0');
+                        serverEvents = [
+                            { id: "demo-1", type: "COUNCIL", typeName: "Hội đồng chấm bảo vệ", title: "HĐ: Bảo vệ KLTN CNTT 01", date: y + "-" + m + "-20", time: "09:00 AM", location: "Phòng H6.1", colorClass: "cal-event-teal", icon: "fa-scale-balanced", actionUrl: "#" },
+                            { id: "demo-2", type: "REVIEW", typeName: "Chấm phản biện", title: "GVPB: Đề tài AI Chatbot", date: y + "-" + m + "-11", time: "14:00 PM", location: "Hệ thống trực tuyến", colorClass: "cal-event-cyan", icon: "fa-clipboard-check", actionUrl: "#" },
+                            { id: "demo-3", type: "PERIOD", typeName: "Hạn đề xuất đề tài", title: "Hạn nộp đề xuất đề tài HK1", date: y + "-" + m + "-05", time: "17:00 PM", location: "Cổng TopicHub", colorClass: "cal-event-indigo", icon: "fa-book-bookmark", actionUrl: "#" },
+                            { id: "demo-4", type: "REGISTRATION", typeName: "Hạn SV chọn đề tài", title: "Hạn sinh viên chốt nhóm", date: y + "-" + m + "-14", time: "23:59 PM", location: "Cổng TopicHub", colorClass: "cal-event-amber", icon: "fa-users", actionUrl: "#" },
+                            { id: "demo-5", type: "SUBMISSION", typeName: "Báo cáo tiến độ", title: "Hạn nộp Báo cáo Giữa kỳ", date: y + "-" + m + "-18", time: "23:59 PM", location: "Nộp file PDF", colorClass: "cal-event-rose", icon: "fa-file-arrow-up", actionUrl: "#" }
+                        ];
+                    }
+
+                    render();
+                }
+
+                function getCustomNotes() {
+                    try {
+                        return JSON.parse(localStorage.getItem('topichub_fullcal_notes') || '[]');
+                    } catch (e) {
+                        return [];
+                    }
+                }
+
+                function saveCustomNotes(notes) {
+                    try {
+                        localStorage.setItem('topichub_fullcal_notes', JSON.stringify(notes));
+                    } catch (e) { }
+                }
+
+                function getAllEvents() {
+                    var custom = getCustomNotes().map(function(n) {
+                        return {
+                            id: "custom-" + n.id,
+                            rawId: n.id,
+                            isCustom: true,
+                            type: "NOTE",
+                            typeName: "Ghi chú cá nhân",
+                            title: n.title,
+                            date: n.date,
+                            time: n.time || "09:00",
+                            location: n.location || "Cá nhân",
+                            desc: n.desc || "",
+                            colorClass: n.colorClass || "cal-event-amber",
+                            icon: "fa-note-sticky",
+                            actionUrl: ""
+                        };
+                    });
+                    return serverEvents.concat(custom);
+                }
+
+                function getFilteredEvents() {
+                    var events = getAllEvents();
+                    if (currentFilter === 'ALL') return events;
+                    return events.filter(function(ev) {
+                        return ev.type === currentFilter;
+                    });
+                }
+
+                function render() {
+                    updateHeader();
+                    if (currentView === 'month') {
+                        renderMonthView();
+                    } else if (currentView === 'week') {
+                        renderWeekView();
+                    } else if (currentView === 'day') {
+                        renderDayView();
+                    }
+                }
+
+                function updateHeader() {
+                    var titleEl = document.getElementById('fullCalMonthYearTitle');
+                    if (!titleEl) return;
+                    var monthNames = ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"];
+                    titleEl.textContent = monthNames[currentDate.getMonth()] + " " + currentDate.getFullYear();
+                }
+
+                function formatDateYMD(d) {
+                    var year = d.getFullYear();
+                    var month = String(d.getMonth() + 1).padStart(2, '0');
+                    var day = String(d.getDate()).padStart(2, '0');
+                    return year + '-' + month + '-' + day;
+                }
+
+                function renderMonthView() {
+                    var grid = document.getElementById('fullCalMonthGrid');
+                    if (!grid) return;
+                    grid.innerHTML = '';
+
+                    var year = currentDate.getFullYear();
+                    var month = currentDate.getMonth();
+
+                    var firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sunday
+                    var totalDays = new Date(year, month + 1, 0).getDate();
+                    var prevMonthTotalDays = new Date(year, month, 0).getDate();
+
+                    var todayStr = formatDateYMD(new Date());
+                    var allEvents = getFilteredEvents();
+
+                    // 1. Previous Month Tail Days
+                    for (var i = firstDayIndex - 1; i >= 0; i--) {
+                        var pDay = prevMonthTotalDays - i;
+                        var pDate = new Date(year, month - 1, pDay);
+                        var pDateStr = formatDateYMD(pDate);
+                        var cell = createCell(pDay, pDateStr, true, pDateStr === todayStr, allEvents);
+                        grid.appendChild(cell);
+                    }
+
+                    // 2. Current Month Days
+                    for (var day = 1; day <= totalDays; day++) {
+                        var cDate = new Date(year, month, day);
+                        var cDateStr = formatDateYMD(cDate);
+                        var cell = createCell(day, cDateStr, false, cDateStr === todayStr, allEvents);
+                        grid.appendChild(cell);
+                    }
+
+                    // 3. Next Month Leading Days to complete 35 or 42 grid cells
+                    var totalCells = firstDayIndex + totalDays;
+                    var nextDaysCount = (totalCells % 7 === 0) ? 0 : 7 - (totalCells % 7);
+                    for (var nDay = 1; nDay <= nextDaysCount; nDay++) {
+                        var nDate = new Date(year, month + 1, nDay);
+                        var nDateStr = formatDateYMD(nDate);
+                        var cell = createCell(nDay, nDateStr, true, nDateStr === todayStr, allEvents);
+                        grid.appendChild(cell);
+                    }
+                }
+
+                function createCell(dayNum, dateStr, isOtherMonth, isToday, eventsList) {
+                    var cell = document.createElement('div');
+                    cell.className = 'calendar-cell' + (isOtherMonth ? ' other-month' : '') + (isToday ? ' today' : '');
+                    
+                    var header = document.createElement('div');
+                    header.className = 'day-header';
+                    var numSpan = document.createElement('span');
+                    numSpan.className = 'day-number';
+                    numSpan.textContent = dayNum;
+                    header.appendChild(numSpan);
+                    cell.appendChild(header);
+
+                    var evContainer = document.createElement('div');
+                    evContainer.className = 'events-container';
+
+                    var dayEvents = eventsList.filter(function(e) {
+                        return e.date === dateStr;
+                    });
+
+                    var maxVisible = 3;
+                    dayEvents.slice(0, maxVisible).forEach(function(ev) {
+                        var pill = document.createElement('a');
+                        pill.href = "javascript:void(0)";
+                        pill.className = 'cal-event-pill ' + (ev.colorClass || 'cal-event-teal');
+                        pill.title = ev.title + ' (' + (ev.time || '') + ')';
+                        pill.innerHTML = '<span class="fw-bold">' + escapeHtml(ev.title) + '</span>' + 
+                                         (ev.time ? '<span class="d-block opacity-80" style="font-size:0.6rem; font-weight:500;">🕒 ' + escapeHtml(ev.time) + '</span>' : '');
+                        pill.onclick = function(e) {
+                            e.stopPropagation();
+                            showEventDetail(ev);
+                        };
+                        evContainer.appendChild(pill);
+                    });
+
+                    if (dayEvents.length > maxVisible) {
+                        var moreBtn = document.createElement('span');
+                        moreBtn.className = 'badge bg-slate-100 text-slate-600 rounded-full px-2 py-0.5 text-3xs font-bold cursor-pointer hover:bg-slate-200 mt-1';
+                        moreBtn.textContent = '+' + (dayEvents.length - maxVisible) + ' sự kiện nữa';
+                        moreBtn.onclick = function(e) {
+                            e.stopPropagation();
+                            currentDate = new Date(dateStr + 'T00:00:00');
+                            setView('day');
+                        };
+                        evContainer.appendChild(moreBtn);
+                    }
+
+                    cell.appendChild(evContainer);
+
+                    cell.ondblclick = function() {
+                        openAddModal(dateStr);
+                    };
+
+                    return cell;
+                }
+
+                function renderWeekView() {
+                    var grid = document.getElementById('fullCalWeekGrid');
+                    if (!grid) return;
+                    grid.innerHTML = '';
+
+                    var curr = new Date(currentDate);
+                    var firstDay = curr.getDate() - curr.getDay(); // First day is Sunday
+                    var allEvents = getFilteredEvents();
+                    var todayStr = formatDateYMD(new Date());
+
+                    var shortDayLabels = ["CN", "THỨ 2", "THỨ 3", "THỨ 4", "THỨ 5", "THỨ 6", "THỨ 7"];
+
+                    for (var i = 0; i < 7; i++) {
+                        var d = new Date(curr.getFullYear(), curr.getMonth(), firstDay + i);
+                        var dStr = formatDateYMD(d);
+                        var isToday = dStr === todayStr;
+
+                        var col = document.createElement('div');
+                        col.className = 'cal-week-col' + (isToday ? ' is-today' : '');
+                        
+                        var headerHtml = '<div class="cal-week-header">' +
+                                         '<span class="cal-week-day-name">' + shortDayLabels[i] + '</span>' +
+                                         '<div class="cal-week-date-num">' + d.getDate() + '</div>' +
+                                         (isToday ? '<span class="badge bg-teal-500 text-white rounded-full px-2 py-0.5 mt-1" style="font-size: 0.6rem; font-weight: 800; letter-spacing: 0.04em;">HÔM NAY</span>' : '<span class="text-3xs text-slate-400 font-semibold d-block mt-0.5">Thg ' + (d.getMonth() + 1) + '</span>') +
+                                         '</div>';
+                        
+                        col.innerHTML = headerHtml;
+
+                        var evBox = document.createElement('div');
+                        evBox.className = 'd-flex flex-column gap-2 flex-grow-1 overflow-y-auto';
+
+                        var dayEvents = allEvents.filter(function(e) { return e.date === dStr; });
+                        if (dayEvents.length === 0) {
+                            var emptySlot = document.createElement('div');
+                            emptySlot.className = 'cal-empty-week-slot';
+                            emptySlot.innerHTML = '<i class="fa-regular fa-calendar-plus text-slate-300 text-lg mb-1.5"></i>' +
+                                                  '<span class="text-3xs font-bold text-slate-400 block">Trống lịch</span>' +
+                                                  '<span class="text-3xs text-teal-600 font-extrabold mt-1 opacity-90">+ Thêm việc</span>';
+                            emptySlot.onclick = (function(targetDate) {
+                                return function() { openAddModal(targetDate); };
+                            })(dStr);
+                            evBox.appendChild(emptySlot);
+                        } else {
+                            dayEvents.forEach(function(ev) {
+                                var item = document.createElement('div');
+                                var borderClass = 'border-teal';
+                                if (ev.colorClass === 'cal-event-cyan') borderClass = 'border-cyan';
+                                else if (ev.colorClass === 'cal-event-indigo') borderClass = 'border-indigo';
+                                else if (ev.colorClass === 'cal-event-amber') borderClass = 'border-amber';
+                                else if (ev.colorClass === 'cal-event-rose') borderClass = 'border-rose';
+
+                                item.className = 'cal-week-event-card ' + borderClass;
+                                item.innerHTML = '<div class="d-flex align-items-center justify-content-between mb-1">' +
+                                                 '<span class="badge bg-white text-slate-700 font-bold border border-slate-200/80 rounded-full px-2 py-0.5 text-3xs" style="font-size: 0.58rem;">' + escapeHtml(ev.typeName || ev.type) + '</span>' +
+                                                 (ev.time ? '<span class="text-3xs text-slate-500 font-bold">' + escapeHtml(ev.time) + '</span>' : '') +
+                                                 '</div>' +
+                                                 '<div class="fw-extrabold text-slate-900 text-xs line-clamp-2 mb-1" style="line-height: 1.35;">' + escapeHtml(ev.title) + '</div>' +
+                                                 (ev.location ? '<div class="text-3xs text-slate-500 font-medium d-flex align-items-center gap-1"><i class="fa-solid fa-location-dot text-teal-600" style="font-size: 0.65rem;"></i><span class="truncate">' + escapeHtml(ev.location) + '</span></div>' : '');
+                                
+                                item.onclick = function(e) {
+                                    e.stopPropagation();
+                                    showEventDetail(ev);
+                                };
+                                evBox.appendChild(item);
+                            });
+
+                            var addMiniBtn = document.createElement('button');
+                            addMiniBtn.type = 'button';
+                            addMiniBtn.className = 'btn btn-xs w-100 mt-2 py-1.5 rounded-xl border border-dashed border-slate-200 text-slate-400 hover:text-teal-700 hover:border-teal-400 hover:bg-teal-50/50 text-3xs font-bold transition d-flex align-items-center justify-content-center gap-1';
+                            addMiniBtn.innerHTML = '<i class="fa-solid fa-plus text-3xs"></i> <span>Thêm việc</span>';
+                            addMiniBtn.onclick = (function(targetDate) {
+                                return function() { openAddModal(targetDate); };
+                            })(dStr);
+                            evBox.appendChild(addMiniBtn);
+                        }
+
+                        col.appendChild(evBox);
+
+                        col.ondblclick = (function(targetDate) {
+                            return function() { openAddModal(targetDate); };
+                        })(dStr);
+
+                        grid.appendChild(col);
+                    }
+                }
+
+                function renderDayView() {
+                    var container = document.getElementById('fullCalDayContent');
+                    if (!container) return;
+                    var dStr = formatDateYMD(currentDate);
+                    var allEvents = getFilteredEvents().filter(function(e) { return e.date === dStr; });
+
+                    var dayNames = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
+                    var dayName = dayNames[currentDate.getDay()];
+
+                    var html = '<div class="d-flex align-items-center justify-content-between pb-3 mb-4 border-b border-slate-100">' +
+                               '<div>' +
+                               '<span class="badge bg-teal-100 text-teal-800 rounded-full px-3 py-1 text-xs font-bold mb-1">' + dayName + '</span>' +
+                               '<h3 class="text-xl font-extrabold text-slate-900 mb-0">Lịch trình ngày ' + currentDate.getDate() + '/' + (currentDate.getMonth() + 1) + '/' + currentDate.getFullYear() + '</h3>' +
+                               '</div>' +
+                               '<button type="button" class="btn btn-sm btn-dark rounded-full px-3.5 py-1.5 text-xs font-bold" onclick="fullCalendarApp.openAddModal(\'' + dStr + '\')">' +
+                               '<i class="fa-solid fa-plus me-1"></i> Thêm việc ngày này' +
+                               '</button>' +
+                               '</div>';
+
+                    if (allEvents.length === 0) {
+                        html += '<div class="p-5 text-center text-slate-400">' +
+                                '<i class="fa-regular fa-calendar-check text-4xl mb-2 opacity-30"></i>' +
+                                '<p class="text-xs mb-0">Không có sự kiện hay hạn chót nào trong ngày này.</p>' +
+                                '</div>';
+                    } else {
+                        html += '<div class="space-y-3">';
+                        allEvents.forEach(function(ev) {
+                            html += '<div class="p-3.5 rounded-2xl border border-slate-200/80 hover:border-teal-300 bg-white transition d-flex align-items-center justify-content-between gap-3 shadow-2xs">' +
+                                    '<div class="d-flex align-items-center gap-3">' +
+                                    '<div class="w-10 h-10 rounded-2xl ' + (ev.colorClass || 'cal-event-teal') + ' d-flex align-items-center justify-content-center flex-shrink-0 text-sm">' +
+                                    '<i class="fa-solid ' + (ev.icon || 'fa-calendar-check') + '"></i>' +
+                                    '</div>' +
+                                    '<div>' +
+                                    '<div class="d-flex align-items-center gap-2">' +
+                                    '<span class="badge bg-slate-100 text-slate-700 font-bold rounded-full px-2 py-0.5 text-3xs">' + escapeHtml(ev.typeName || ev.type) + '</span>' +
+                                    '<span class="text-xs font-bold text-slate-900">' + escapeHtml(ev.title) + '</span>' +
+                                    '</div>' +
+                                    '<div class="text-3xs text-slate-500 mt-1 d-flex gap-3">' +
+                                    '<span><i class="fa-regular fa-clock text-teal-600 me-1"></i>' + escapeHtml(ev.time || 'Cả ngày') + '</span>' +
+                                    (ev.location ? '<span><i class="fa-solid fa-location-dot text-teal-600 me-1"></i>' + escapeHtml(ev.location) + '</span>' : '') +
+                                    '</div>' +
+                                    '</div>' +
+                                    '</div>' +
+                                    '<button type="button" class="btn btn-sm btn-light border border-slate-200/80 rounded-full px-3 py-1 text-xs font-bold" onclick=\'fullCalendarApp.showEventDetail(' + JSON.stringify(ev) + ')\'>Chi tiết</button>' +
+                                    '</div>';
+                        });
+                        html += '</div>';
+                    }
+
+                    container.innerHTML = html;
+                }
+
+                function prevMonth() {
+                    if (currentView === 'month') {
+                        currentDate.setMonth(currentDate.getMonth() - 1);
+                    } else if (currentView === 'week') {
+                        currentDate.setDate(currentDate.getDate() - 7);
+                    } else if (currentView === 'day') {
+                        currentDate.setDate(currentDate.getDate() - 1);
+                    }
+                    render();
+                }
+
+                function nextMonth() {
+                    if (currentView === 'month') {
+                        currentDate.setMonth(currentDate.getMonth() + 1);
+                    } else if (currentView === 'week') {
+                        currentDate.setDate(currentDate.getDate() + 7);
+                    } else if (currentView === 'day') {
+                        currentDate.setDate(currentDate.getDate() + 1);
+                    }
+                    render();
+                }
+
+                function goToToday() {
+                    currentDate = new Date();
+                    render();
+                }
+
+                function setView(view) {
+                    currentView = view;
+                    ['day', 'week', 'month'].forEach(function(v) {
+                        var btn = document.getElementById('viewBtn' + v.charAt(0).toUpperCase() + v.slice(1));
+                        if (btn) {
+                            if (v === view) {
+                                btn.classList.add('active-cal-view', 'font-extrabold', 'shadow-2xs');
+                            } else {
+                                btn.classList.remove('active-cal-view', 'font-extrabold', 'shadow-2xs');
+                            }
+                        }
+                    });
+
+                    var monthPanel = document.getElementById('calendarMonthViewContainer');
+                    var weekPanel = document.getElementById('calendarWeekViewContainer');
+                    var dayPanel = document.getElementById('calendarDayViewContainer');
+
+                    if (monthPanel) monthPanel.classList.toggle('d-none', view !== 'month');
+                    if (weekPanel) weekPanel.classList.toggle('d-none', view !== 'week');
+                    if (dayPanel) dayPanel.classList.toggle('d-none', view !== 'day');
+
+                    render();
+                }
+
+                function setFilter(type, label) {
+                    currentFilter = type;
+                    var labelEl = document.getElementById('agendaFilterLabel');
+                    if (labelEl) labelEl.textContent = label;
+                    render();
+                }
+
+                function showEventDetail(ev) {
+                    selectedEvent = ev;
+                    var modalEl = document.getElementById('eventDetailModal');
+                    if (!modalEl) return;
+
+                    document.getElementById('eventDetailTitle').textContent = ev.title || 'Sự kiện';
+                    document.getElementById('eventDetailType').textContent = ev.typeName || ev.type || 'Lịch trình';
+                    document.getElementById('eventDetailDate').textContent = ev.date || '--';
+                    document.getElementById('eventDetailTime').textContent = ev.time || 'Cả ngày';
+                    document.getElementById('eventDetailLocation').textContent = ev.location || 'Tại Trường / Trực tuyến';
+                    
+                    var descEl = document.getElementById('eventDetailDesc');
+                    var descRow = document.getElementById('eventDetailDescRow');
+                    if (ev.desc || ev.location) {
+                        descEl.textContent = ev.desc || ('Sự kiện được đồng bộ tự động từ hệ thống quản lý đề tài TopicHub. Vui lòng theo dõi đúng thời gian và địa điểm: ' + (ev.location || ''));
+                        descRow.classList.remove('d-none');
+                    } else {
+                        descRow.classList.add('d-none');
+                    }
+
+                    var deleteBtn = document.getElementById('eventDetailDeleteBtn');
+                    if (deleteBtn) {
+                        deleteBtn.classList.toggle('d-none', !ev.isCustom);
+                    }
+
+                    var actionBtn = document.getElementById('eventDetailActionBtn');
+                    if (actionBtn) {
+                        if (ev.actionUrl && ev.actionUrl !== '#' && !ev.isCustom) {
+                            actionBtn.href = ev.actionUrl;
+                            actionBtn.classList.remove('d-none');
+                        } else {
+                            actionBtn.classList.add('d-none');
+                        }
+                    }
+
+                    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                }
+
+                function openAddModal(prefillDate) {
+                    var modalEl = document.getElementById('addScheduleModal');
+                    if (!modalEl) return;
+                    var dateInput = document.getElementById('noteDate');
+                    if (dateInput) {
+                        dateInput.value = prefillDate || formatDateYMD(currentDate);
+                    }
+                    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                }
+
+                function saveCustomNote(e) {
+                    if (e) e.preventDefault();
+                    var title = document.getElementById('noteTitle').value;
+                    var date = document.getElementById('noteDate').value;
+                    var time = document.getElementById('noteTime').value;
+                    var location = document.getElementById('noteLocation').value;
+                    var desc = document.getElementById('noteDesc').value;
+                    var colorEl = document.querySelector('input[name="noteColor"]:checked');
+                    var colorClass = colorEl ? colorEl.value : 'cal-event-teal';
+
+                    if (!title || !date) return;
+
+                    var notes = getCustomNotes();
+                    notes.push({
+                        id: Date.now(),
+                        title: title.trim(),
+                        date: date,
+                        time: time,
+                        location: location ? location.trim() : '',
+                        desc: desc ? desc.trim() : '',
+                        colorClass: colorClass
+                    });
+                    saveCustomNotes(notes);
+
+                    var modalEl = document.getElementById('addScheduleModal');
+                    if (modalEl) {
+                        var modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                    }
+
+                    document.getElementById('addScheduleForm').reset();
+                    if (window.showToast) window.showToast('Đã thêm lịch hẹn / ghi chú mới thành công!', 'success');
+                    render();
+                }
+
+                function deleteCurrentNote() {
+                    if (!selectedEvent || !selectedEvent.isCustom) return;
+                    if (!confirm('Bạn có chắc muốn xóa ghi chú lịch này không?')) return;
+
+                    var notes = getCustomNotes();
+                    notes = notes.filter(function(n) { return n.id !== selectedEvent.rawId; });
+                    saveCustomNotes(notes);
+
+                    var modalEl = document.getElementById('eventDetailModal');
+                    if (modalEl) {
+                        var modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                    }
+
+                    if (window.showToast) window.showToast('Đã xóa ghi chú khỏi lịch!', 'info');
+                    render();
+                }
+
+                function escapeHtml(str) {
+                    if (!str) return '';
+                    var div = document.createElement('div');
+                    div.appendChild(document.createTextNode(str));
+                    return div.innerHTML;
+                }
+
+                document.addEventListener('DOMContentLoaded', init);
+
+                return {
+                    init: init,
+                    render: render,
+                    prevMonth: prevMonth,
+                    nextMonth: nextMonth,
+                    goToToday: goToToday,
+                    setView: setView,
+                    setFilter: setFilter,
+                    showEventDetail: showEventDetail,
+                    openAddModal: openAddModal,
+                    saveCustomNote: saveCustomNote,
+                    deleteCurrentNote: deleteCurrentNote
+                };
+            })();
+
+            /* =========================================================
+             *  WELLNEST ACCORDION CATEGORY TREE FILTER CONTROLLER
+             * ========================================================= */
+            window.toggleTreeGroup = function(headerBtn) {
+                var group = headerBtn.closest('.tree-group');
+                if (!group) return;
+                var subList = group.querySelector('.tree-sub-list');
+                var isOpen = group.classList.contains('is-open');
+                
+                if (isOpen) {
+                    group.classList.remove('is-open');
+                    if (subList) subList.classList.add('d-none');
+                } else {
+                    group.classList.add('is-open');
+                    if (subList) subList.classList.remove('d-none');
+                }
+            };
+
+            window.filterByTreeCriteria = function(type, value, el) {
+                document.querySelectorAll('.tree-sub-item').forEach(function(item) {
+                    item.classList.remove('active');
+                });
+                if (el) el.classList.add('active');
+
+                var rows = document.querySelectorAll('.topic-item-row, .kanban-card, .student-topic-card');
+                var visibleCount = 0;
+
+                rows.forEach(function(row) {
+                    var match = true;
+                    if (type === 'ALL') {
+                        match = true;
+                    } else if (type === 'STATUS') {
+                        var status = (row.dataset.status || '').toUpperCase();
+                        match = (value === 'ALL' || status === value);
+                    } else if (type === 'WORKFLOW') {
+                        var status = (row.dataset.status || '').toUpperCase();
+                        var hasReviewer = row.dataset.hasReviewer === 'true';
+                        var hasCouncil = row.dataset.hasCouncil === 'true';
+                        if (value === 'PENDING') match = (status === 'PENDING');
+                        else if (value === 'NEEDS_REVIEWER') match = (status === 'APPROVED' && !hasReviewer);
+                        else if (value === 'NEEDS_COUNCIL') match = (status === 'APPROVED' && hasReviewer && !hasCouncil);
+                        else if (value === 'READY') match = (status === 'APPROVED' && hasReviewer && hasCouncil);
+                    } else if (type === 'PERIOD') {
+                        var period = (row.dataset.topicPeriod || '').toLowerCase();
+                        match = (value === 'ALL' || period.includes(value.toLowerCase()));
+                    } else if (type === 'MAJOR') {
+                        var major = (row.dataset.topicMajor || '').toLowerCase();
+                        match = (value === 'ALL' || major.includes(value.toLowerCase()));
+                    } else if (type === 'SUPERVISOR') {
+                        var supervisor = (row.dataset.topicSupervisor || '').toLowerCase();
+                        match = (value === 'ALL' || supervisor.includes(value.toLowerCase()));
+                    } else if (type === 'AVAILABILITY') {
+                        var isTaken = row.dataset.topicIsTaken === 'true';
+                        if (value === 'AVAILABLE') match = !isTaken;
+                        else if (value === 'TAKEN') match = isTaken;
+                        else match = true;
+                    }
+
+                    if (match) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                var countBadge = document.getElementById('filteredRowCount');
+                if (countBadge) {
+                    countBadge.textContent = 'Hiển thị: ' + visibleCount + ' đề tài';
+                }
+            };
+
+            window.searchTreeItems = function(keyword) {
+                var term = (keyword || '').toLowerCase().trim();
+                document.querySelectorAll('.tree-sub-item').forEach(function(item) {
+                    var text = item.textContent.toLowerCase();
+                    if (!term || text.includes(term)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            };
         </script>
     </div>
 </body>

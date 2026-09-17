@@ -89,41 +89,6 @@
                                                 </form>
                                             </div>
 
-                                            <!-- Modal Edit Department -->
-                                            <div class="modal fade text-start" th:id="'editDeptModal-' + ${d.id}" tabindex="-1" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-centered">
-                                                    <div class="modal-content rounded-2xl border-0 shadow-xl">
-                                                        <form th:action="@{/admin/departments/{id}/edit(id=${d.id})}" method="post">
-                                                            <div class="modal-header border-b border-slate-100 p-4">
-                                                                <h6 class="modal-title font-bold text-slate-900 text-sm">Chỉnh sửa Khoa: <span th:text="${d.code}"></span></h6>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                            </div>
-                                                            <div class="modal-body p-4 space-y-3">
-                                                                <div>
-                                                                    <label class="form-label text-xs font-semibold text-slate-700">Mã khoa</label>
-                                                                    <input type="text" name="code" th:value="${d.code}" class="form-control text-xs rounded-xl" required>
-                                                                </div>
-                                                                <div>
-                                                                    <label class="form-label text-xs font-semibold text-slate-700">Tên khoa</label>
-                                                                    <input type="text" name="name" th:value="${d.name}" class="form-control text-xs rounded-xl" required>
-                                                                </div>
-                                                                <div>
-                                                                    <label class="form-label text-xs font-semibold text-slate-700">Mô tả</label>
-                                                                    <textarea name="description" th:text="${d.description}" rows="3" class="form-control text-xs rounded-xl"></textarea>
-                                                                </div>
-                                                                <div class="form-check form-switch pt-1">
-                                                                    <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${d.isActive}" id="activeDeptCheck">
-                                                                    <label class="form-check-label text-xs font-semibold text-slate-700" for="activeDeptCheck">Kích hoạt khoa</label>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer border-t border-slate-100 p-3">
-                                                                <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
-                                                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu thay đổi</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -178,44 +143,6 @@
                                                     </button>
                                                 </form>
                                             </div>
-
-                                            <!-- Modal Edit Major -->
-                                            <div class="modal fade text-start" th:id="'editMajorModal-' + ${m.id}" tabindex="-1" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-centered">
-                                                    <div class="modal-content rounded-2xl border-0 shadow-xl">
-                                                        <form th:action="@{/admin/majors/{id}/edit(id=${m.id})}" method="post">
-                                                            <div class="modal-header border-b border-slate-100 p-4">
-                                                                <h6 class="modal-title font-bold text-slate-900 text-sm">Chỉnh sửa Chuyên ngành: <span th:text="${m.code}"></span></h6>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                            </div>
-                                                            <div class="modal-body p-4 space-y-3">
-                                                                <div>
-                                                                    <label class="form-label text-xs font-semibold text-slate-700">Mã chuyên ngành</label>
-                                                                    <input type="text" name="code" th:value="${m.code}" class="form-control text-xs rounded-xl" required>
-                                                                </div>
-                                                                <div>
-                                                                    <label class="form-label text-xs font-semibold text-slate-700">Tên chuyên ngành</label>
-                                                                    <input type="text" name="name" th:value="${m.name}" class="form-control text-xs rounded-xl" required>
-                                                                </div>
-                                                                <div>
-                                                                    <label class="form-label text-xs font-semibold text-slate-700">Khoa trực thuộc</label>
-                                                                    <select name="departmentId" class="form-select text-xs rounded-xl" required>
-                                                                        <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name}" th:selected="${m.department != null and m.department.id == d.id}"></option>
-                                                                    </select>
-                                                                </div>
-                                                                <div class="form-check form-switch pt-1">
-                                                                    <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${m.isActive}" id="activeMajorCheck">
-                                                                    <label class="form-check-label text-xs font-semibold text-slate-700" for="activeMajorCheck">Kích hoạt chuyên ngành</label>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer border-t border-slate-100 p-3">
-                                                                <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
-                                                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu thay đổi</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -225,6 +152,86 @@
                 </div>
 
             </div>
+
+            <!-- Modals for Departments & Majors (outside table to prevent backdrop stacking bugs) -->
+            <th:block th:each="d : ${departments}">
+                <!-- Modal Edit Department -->
+                <div class="modal fade text-start" th:id="'editDeptModal-' + ${d.id}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content rounded-2xl border-0 shadow-xl">
+                            <form th:action="@{/admin/departments/{id}/edit(id=${d.id})}" method="post">
+                                <div class="modal-header border-b border-slate-100 p-4">
+                                    <h6 class="modal-title font-bold text-slate-900 text-sm">Chỉnh sửa Khoa: <span th:text="${d.code}"></span></h6>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-4 space-y-3">
+                                    <div>
+                                        <label class="form-label text-xs font-semibold text-slate-700">Mã khoa</label>
+                                        <input type="text" name="code" th:value="${d.code}" class="form-control text-xs rounded-xl" required>
+                                    </div>
+                                    <div>
+                                        <label class="form-label text-xs font-semibold text-slate-700">Tên khoa</label>
+                                        <input type="text" name="name" th:value="${d.name}" class="form-control text-xs rounded-xl" required>
+                                    </div>
+                                    <div>
+                                        <label class="form-label text-xs font-semibold text-slate-700">Mô tả</label>
+                                        <textarea name="description" th:text="${d.description}" rows="3" class="form-control text-xs rounded-xl"></textarea>
+                                    </div>
+                                    <div class="form-check form-switch pt-1">
+                                        <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${d.isActive}" id="activeDeptCheck">
+                                        <label class="form-check-label text-xs font-semibold text-slate-700" for="activeDeptCheck">Kích hoạt khoa</label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-t border-slate-100 p-3">
+                                    <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                                    <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu thay đổi</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </th:block>
+
+            <th:block th:each="m : ${majors}">
+                <!-- Modal Edit Major -->
+                <div class="modal fade text-start" th:id="'editMajorModal-' + ${m.id}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content rounded-2xl border-0 shadow-xl">
+                            <form th:action="@{/admin/majors/{id}/edit(id=${m.id})}" method="post">
+                                <div class="modal-header border-b border-slate-100 p-4">
+                                    <h6 class="modal-title font-bold text-slate-900 text-sm">Chỉnh sửa Chuyên ngành: <span th:text="${m.code}"></span></h6>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-4 space-y-3">
+                                    <div>
+                                        <label class="form-label text-xs font-semibold text-slate-700">Mã chuyên ngành</label>
+                                        <input type="text" name="code" th:value="${m.code}" class="form-control text-xs rounded-xl" required>
+                                    </div>
+                                    <div>
+                                        <label class="form-label text-xs font-semibold text-slate-700">Tên chuyên ngành</label>
+                                        <input type="text" name="name" th:value="${m.name}" class="form-control text-xs rounded-xl" required>
+                                    </div>
+                                    <div>
+                                        <label class="form-label text-xs font-semibold text-slate-700">Khoa trực thuộc</label>
+                                        <select name="departmentId" class="form-select text-xs rounded-xl" required>
+                                            <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name}" th:selected="${m.department != null and m.department.id == d.id}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-check form-switch pt-1">
+                                        <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${m.isActive}" id="activeMajorCheck">
+                                        <label class="form-check-label text-xs font-semibold text-slate-700" for="activeMajorCheck">Kích hoạt chuyên ngành</label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-t border-slate-100 p-3">
+                                    <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                                    <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu thay đổi</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </th:block>
+
         </main>
     </div>
 
