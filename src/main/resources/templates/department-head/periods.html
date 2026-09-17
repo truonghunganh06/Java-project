@@ -1230,14 +1230,19 @@
                             }
                         });
 
-                        const data = await res.json();
+                        let data;
+                        try {
+                            data = await res.json();
+                        } catch(e) {
+                            data = { success: false, message: 'Lỗi phản hồi từ máy chủ (' + res.status + ')' };
+                        }
                         if (res.ok && data.success) {
                             window.location.reload();
                         } else {
                             showModalError(data.message || 'Đã xảy ra lỗi khi tạo đợt đăng ký!', null, 'createPeriodModal');
                         }
                     } catch(err) {
-                        window.location.reload();
+                        showModalError('Không thể kết nối máy chủ: ' + err.message, null, 'createPeriodModal');
                     } finally {
                         if (submitBtn) {
                             submitBtn.disabled = false;
@@ -1273,14 +1278,19 @@
                             }
                         });
 
-                        const data = await res.json();
+                        let data;
+                        try {
+                            data = await res.json();
+                        } catch(e) {
+                            data = { success: false, message: 'Lỗi phản hồi từ máy chủ (' + res.status + ')' };
+                        }
                         if (res.ok && data.success) {
                             window.location.reload();
                         } else {
                             showModalError(data.message || 'Đã xảy ra lỗi khi cập nhật đợt!', null, 'editPeriodModal');
                         }
                     } catch(err) {
-                        window.location.reload();
+                        showModalError('Không thể kết nối máy chủ: ' + err.message, null, 'editPeriodModal');
                     } finally {
                         if (submitBtn) {
                             submitBtn.disabled = false;

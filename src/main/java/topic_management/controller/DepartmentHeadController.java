@@ -219,31 +219,18 @@ public class DepartmentHeadController {
         OffsetDateTime rDead = parseDate(revDead, true);
         OffsetDateTime dDate = parseDate(defenseDate, false);
 
-        // Validation logic: Không cho phép thiết lập các hạn chót kết thúc là ngày trong quá khứ
-        java.time.LocalDate today = java.time.LocalDate.now();
-        java.time.ZoneId zone = java.time.ZoneId.systemDefault();
-        OffsetDateTime startOfToday = today.atStartOfDay(zone).toOffsetDateTime();
-
         String validationError = null;
 
-        if (pEnd != null && pEnd.isBefore(startOfToday)) {
-            validationError = "Hạn chót GV đề xuất không thể là ngày trong quá khứ!";
-        } else if (rEnd != null && rEnd.isBefore(startOfToday)) {
-            validationError = "Hạn chót SV đăng ký không thể là ngày trong quá khứ!";
-        } else if (rDead != null && rDead.isBefore(startOfToday)) {
-            validationError = "Hạn nộp điểm GVPB không thể là ngày trong quá khứ!";
-        } else if (dDate != null && dDate.isBefore(startOfToday)) {
-            validationError = "Ngày báo cáo Hội đồng không thể là ngày trong quá khứ!";
-        } else if (pStart != null && pEnd != null && pEnd.isBefore(pStart)) {
-            validationError = "Hạn chót GV đề xuất phải diễn ra sau ngày bắt đầu đề xuất!";
-        } else if (pEnd != null && rStart != null && rStart.isBefore(pEnd)) {
+        if (pStart != null && pEnd != null && pEnd.toLocalDate().isBefore(pStart.toLocalDate())) {
+            validationError = "Hạn chót GV đề xuất phải diễn ra từ ngày hoặc sau ngày bắt đầu đề xuất!";
+        } else if (pEnd != null && rStart != null && rStart.toLocalDate().isBefore(pEnd.toLocalDate())) {
             validationError = "Thời gian SV bắt đầu đăng ký phải diễn ra từ ngày hoặc sau khi GV kết thúc hạn đề xuất đề tài!";
-        } else if (rStart != null && rEnd != null && rEnd.isBefore(rStart)) {
-            validationError = "Hạn chót SV đăng ký phải diễn ra sau ngày bắt đầu đăng ký!";
-        } else if (rEnd != null && rDead != null && rDead.isBefore(rEnd)) {
-            validationError = "Hạn nộp điểm GVPB phải diễn ra sau khi kết thúc hạn SV đăng ký đề tài!";
-        } else if (rDead != null && dDate != null && dDate.isBefore(rDead)) {
-            validationError = "Ngày báo cáo Hội đồng phải diễn ra sau hạn nộp điểm GVPB!";
+        } else if (rStart != null && rEnd != null && rEnd.toLocalDate().isBefore(rStart.toLocalDate())) {
+            validationError = "Hạn chót SV đăng ký phải diễn ra từ ngày hoặc sau ngày bắt đầu đăng ký!";
+        } else if (rEnd != null && rDead != null && rDead.toLocalDate().isBefore(rEnd.toLocalDate())) {
+            validationError = "Hạn nộp điểm GVPB phải diễn ra từ ngày hoặc sau khi kết thúc hạn SV đăng ký đề tài!";
+        } else if (rDead != null && dDate != null && dDate.toLocalDate().isBefore(rDead.toLocalDate())) {
+            validationError = "Ngày báo cáo Hội đồng phải diễn ra từ ngày hoặc sau hạn nộp điểm GVPB!";
         }
 
         if (validationError != null) {
@@ -254,42 +241,50 @@ public class DepartmentHeadController {
             return "redirect:/department-head/periods";
         }
 
-        RegistrationPeriod savedPeriod = departmentHeadService.createPeriod(dept, name, periodType, academicYear, semester, pStart, pEnd, rStart, rEnd, rDead, dDate, minTopicsPerLecturer);
-
-        // Tự động ban hành Thông báo chính thức cho toàn Khoa / Giảng viên / Sinh viên
         try {
-            java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            StringBuilder sb = new StringBuilder();
-            sb.append("Kính gửi toàn thể Giảng viên và Sinh viên thuộc ").append(dept != null ? dept.getName() : "Khoa").append(",\n\n");
-            sb.append("Khoa/Bộ môn xin thông báo chính thức ban hành kế hoạch tổ chức: **").append(name).append("** (Học kỳ ").append(semester).append(" - Năm học ").append(academicYear).append(").\n\n");
-            sb.append("### 📅 CÁC MỐC THỜI GIAN QUAN TRỌNG:\n");
-            if (pStart != null && pEnd != null) {
-                sb.append("- **1. Giảng viên đề xuất đề tài:** từ ").append(pStart.format(dtf)).append(" đến ").append(pEnd.format(dtf))
-                        .append(" (Chỉ tiêu tối thiểu: **").append(savedPeriod.getMinTopicsPerLecturer()).append(" đề tài/GV**)\n");
-            }
-            if (rStart != null && rEnd != null) {
-                sb.append("- **2. Sinh viên đăng ký đề tài:** từ ").append(rStart.format(dtf)).append(" đến ").append(rEnd.format(dtf)).append("\n");
-            }
-            if (rDead != null) {
-                sb.append("- **3. Hạn nộp điểm GVPB:** ").append(rDead.format(dtf)).append("\n");
-            }
-            if (dDate != null) {
-                sb.append("- **4. Báo cáo Hội đồng đánh giá:** ").append(dDate.format(dtf)).append("\n");
-            }
-            sb.append("\nKính đề nghị các Thầy/Cô và các bạn Sinh viên theo dõi sát các mốc thời gian để thực hiện đúng quy định.");
+            RegistrationPeriod savedPeriod = departmentHeadService.createPeriod(dept, name, periodType, academicYear, semester, pStart, pEnd, rStart, rEnd, rDead, dDate, minTopicsPerLecturer);
 
-            String noticeTitle = "[THÔNG BÁO BAN HÀNH] Kế hoạch " + name + " (HK" + semester + " " + academicYear + ")";
-            announcementService.createAnnouncement(user, dept, savedPeriod.getId(), noticeTitle, sb.toString(), "PERIOD", true, null);
+            // Tự động ban hành Thông báo chính thức cho toàn Khoa / Giảng viên / Sinh viên
+            try {
+                java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                StringBuilder sb = new StringBuilder();
+                sb.append("Kính gửi toàn thể Giảng viên và Sinh viên thuộc ").append(dept != null ? dept.getName() : "Khoa").append(",\n\n");
+                sb.append("Khoa/Bộ môn xin thông báo chính thức ban hành kế hoạch tổ chức: **").append(name).append("** (Học kỳ ").append(semester).append(" - Năm học ").append(academicYear).append(").\n\n");
+                sb.append("### 📅 CÁC MỐC THỜI GIAN QUAN TRỌNG:\n");
+                if (pStart != null && pEnd != null) {
+                    sb.append("- **1. Giảng viên đề xuất đề tài:** từ ").append(pStart.format(dtf)).append(" đến ").append(pEnd.format(dtf))
+                            .append(" (Chỉ tiêu tối thiểu: **").append(savedPeriod.getMinTopicsPerLecturer()).append(" đề tài/GV**)\n");
+                }
+                if (rStart != null && rEnd != null) {
+                    sb.append("- **2. Sinh viên đăng ký đề tài:** từ ").append(rStart.format(dtf)).append(" đến ").append(rEnd.format(dtf)).append("\n");
+                }
+                if (rDead != null) {
+                    sb.append("- **3. Hạn nộp điểm GVPB:** ").append(rDead.format(dtf)).append("\n");
+                }
+                if (dDate != null) {
+                    sb.append("- **4. Báo cáo Hội đồng đánh giá:** ").append(dDate.format(dtf)).append("\n");
+                }
+                sb.append("\nKính đề nghị các Thầy/Cô và các bạn Sinh viên theo dõi sát các mốc thời gian để thực hiện đúng quy định.");
+
+                String noticeTitle = "[THÔNG BÁO BAN HÀNH] Kế hoạch " + name + " (HK" + semester + " " + academicYear + ")";
+                announcementService.createAnnouncement(user, dept, savedPeriod.getId(), noticeTitle, sb.toString(), "PERIOD", true, null);
+            } catch (Exception e) {
+                System.err.println("[ANNOUNCEMENT-AUTO-CREATE-ERROR] " + e.getMessage());
+            }
+
+            if (isAjax) {
+                return ResponseEntity.ok(Map.of("success", true, "message", "Tạo đợt đăng ký và ban hành thông báo '" + name + "' thành công!"));
+            }
+
+            redirectAttributes.addFlashAttribute("successMessage", "Tạo đợt đăng ký và ban hành thông báo '" + name + "' thành công!");
+            return "redirect:/department-head/periods";
         } catch (Exception e) {
-            System.err.println("[ANNOUNCEMENT-AUTO-CREATE-ERROR] " + e.getMessage());
+            if (isAjax) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Lỗi tạo đợt đăng ký: " + e.getMessage()));
+            }
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi tạo đợt đăng ký: " + e.getMessage());
+            return "redirect:/department-head/periods";
         }
-
-        if (isAjax) {
-            return ResponseEntity.ok(Map.of("success", true, "message", "Tạo đợt đăng ký và ban hành thông báo '" + name + "' thành công!"));
-        }
-
-        redirectAttributes.addFlashAttribute("successMessage", "Tạo đợt đăng ký và ban hành thông báo '" + name + "' thành công!");
-        return "redirect:/department-head/periods";
     }
 
     @PostMapping("/periods/{id}/status")
@@ -384,16 +379,16 @@ public class DepartmentHeadController {
 
         String validationError = null;
 
-        if (pStart != null && pEnd != null && pEnd.isBefore(pStart)) {
-            validationError = "Hạn chót GV đề xuất phải diễn ra sau ngày bắt đầu đề xuất!";
-        } else if (pEnd != null && rStart != null && rStart.isBefore(pEnd)) {
+        if (pStart != null && pEnd != null && pEnd.toLocalDate().isBefore(pStart.toLocalDate())) {
+            validationError = "Hạn chót GV đề xuất phải diễn ra từ ngày hoặc sau ngày bắt đầu đề xuất!";
+        } else if (pEnd != null && rStart != null && rStart.toLocalDate().isBefore(pEnd.toLocalDate())) {
             validationError = "Thời gian SV bắt đầu đăng ký phải diễn ra từ ngày hoặc sau khi GV kết thúc hạn đề xuất đề tài!";
-        } else if (rStart != null && rEnd != null && rEnd.isBefore(rStart)) {
-            validationError = "Hạn chót SV đăng ký phải diễn ra sau ngày bắt đầu đăng ký!";
-        } else if (rEnd != null && rDead != null && rDead.isBefore(rEnd)) {
-            validationError = "Hạn nộp điểm GVPB phải diễn ra sau khi kết thúc hạn SV đăng ký đề tài!";
-        } else if (rDead != null && dDate != null && dDate.isBefore(rDead)) {
-            validationError = "Ngày báo cáo Hội đồng phải diễn ra sau hạn nộp điểm GVPB!";
+        } else if (rStart != null && rEnd != null && rEnd.toLocalDate().isBefore(rStart.toLocalDate())) {
+            validationError = "Hạn chót SV đăng ký phải diễn ra từ ngày hoặc sau ngày bắt đầu đăng ký!";
+        } else if (rEnd != null && rDead != null && rDead.toLocalDate().isBefore(rEnd.toLocalDate())) {
+            validationError = "Hạn nộp điểm GVPB phải diễn ra từ ngày hoặc sau khi kết thúc hạn SV đăng ký đề tài!";
+        } else if (rDead != null && dDate != null && dDate.toLocalDate().isBefore(rDead.toLocalDate())) {
+            validationError = "Ngày báo cáo Hội đồng phải diễn ra từ ngày hoặc sau hạn nộp điểm GVPB!";
         }
 
         if (validationError != null) {
