@@ -20,4 +20,5 @@ public interface MajorRepository extends JpaRepository<Major, Long> {
     List<Major> findByDivisionIdAndIsActiveTrue(@Param("divisionId") Long divisionId);
     
     Optional<Major> findByCode(String code);
+    Optional<Major> findByCodeIgnoreCase(String code);
 }

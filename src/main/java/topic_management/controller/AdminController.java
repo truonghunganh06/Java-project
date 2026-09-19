@@ -44,12 +44,14 @@ public class AdminController {
         List<AppUser> users = adminService.getAllUsers();
         List<Department> departments = adminService.getAllDepartments();
         List<Major> majors = adminService.getAllMajors();
+        List<Role> roles = adminService.getAllRoles();
 
         model.addAttribute("user", user);
         model.addAttribute("stats", stats);
         model.addAttribute("recentUsers", users.stream().limit(5).collect(Collectors.toList()));
         model.addAttribute("departments", departments);
         model.addAttribute("majors", majors);
+        model.addAttribute("roles", roles);
 
         return "admin/dashboard";
     }
@@ -108,18 +110,39 @@ public class AdminController {
     @PostMapping("/users/create")
     public String createUser(
             @ModelAttribute AppUser newUser,
-            @RequestParam("roleId") Long roleId,
+            @RequestParam(value = "roleId", required = false) Long roleId,
+            @RequestParam(value = "roleCode", required = false) String roleCode,
+            @RequestParam(value = "password", required = false) String password,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
         AppUser admin = getAuthenticatedAdmin(session);
         if (admin == null) return "redirect:/login";
 
+        if (password != null && !password.trim().isEmpty() && (newUser.getPasswordHash() == null || newUser.getPasswordHash().trim().isEmpty())) {
+            newUser.setPasswordHash(password.trim());
+        }
+
+        if (roleId == null && roleCode != null && !roleCode.trim().isEmpty()) {
+            List<Role> allRoles = adminService.getAllRoles();
+            for (Role r : allRoles) {
+                if (roleCode.equalsIgnoreCase(r.getCode())) {
+                    roleId = r.getId();
+                    break;
+                }
+            }
+        }
+
         String err = adminService.createUser(newUser, roleId);
         if (err == null) {
             redirectAttributes.addFlashAttribute("successMessage", "Thêm mới tài khoản '" + newUser.getUsername() + "' thành công!");
         } else {
             redirectAttributes.addFlashAttribute("errorMessage", err);
+        }
+
+        if (redirectUrl != null && !redirectUrl.trim().isEmpty() && redirectUrl.startsWith("/admin")) {
+            return "redirect:" + redirectUrl;
         }
 
         return "redirect:/admin/users";
@@ -132,18 +155,24 @@ public class AdminController {
             @RequestParam("email") String email,
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam("roleId") Long roleId,
-            @RequestParam(value = "isActive", defaultValue = "true") Boolean isActive,
+            @RequestParam(value = "isActive", required = false) Boolean isActive,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
         AppUser admin = getAuthenticatedAdmin(session);
         if (admin == null) return "redirect:/login";
 
-        boolean success = adminService.updateUser(id, fullName, email, phone, roleId, isActive);
-        if (success) {
+        boolean activeStatus = Boolean.TRUE.equals(isActive);
+        String err = adminService.updateUser(id, fullName, email, phone, roleId, activeStatus);
+        if (err == null) {
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin tài khoản thành công!");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Cập nhật tài khoản thất bại!");
+            redirectAttributes.addFlashAttribute("errorMessage", err);
+        }
+
+        if (redirectUrl != null && !redirectUrl.trim().isEmpty() && redirectUrl.startsWith("/admin")) {
+            return "redirect:" + redirectUrl;
         }
 
         return "redirect:/admin/users";
@@ -152,6 +181,7 @@ public class AdminController {
     @PostMapping("/users/{id}/toggle-status")
     public String toggleUserStatus(
             @PathVariable("id") Long id,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
@@ -160,6 +190,9 @@ public class AdminController {
 
         if (admin.getId() != null && admin.getId().equals(id)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Không thể tự khóa tài khoản quản trị đang đăng nhập!");
+            if (redirectUrl != null && !redirectUrl.trim().isEmpty() && redirectUrl.startsWith("/admin")) {
+                return "redirect:" + redirectUrl;
+            }
             return "redirect:/admin/users";
         }
 
@@ -170,6 +203,10 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy người dùng!");
         }
 
+        if (redirectUrl != null && !redirectUrl.trim().isEmpty() && redirectUrl.startsWith("/admin")) {
+            return "redirect:" + redirectUrl;
+        }
+
         return "redirect:/admin/users";
     }
 
@@ -177,6 +214,7 @@ public class AdminController {
     public String resetPassword(
             @PathVariable("id") Long id,
             @RequestParam(value = "newPassword", defaultValue = "123456") String newPassword,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
@@ -188,6 +226,10 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("successMessage", "Đặt lại mật khẩu thành công! Mật khẩu mới là: " + newPassword);
         } else {
             redirectAttributes.addFlashAttribute("errorMessage", "Không thể đặt lại mật khẩu!");
+        }
+
+        if (redirectUrl != null && !redirectUrl.trim().isEmpty() && redirectUrl.startsWith("/admin")) {
+            return "redirect:" + redirectUrl;
         }
 
         return "redirect:/admin/users";
@@ -223,11 +265,11 @@ public class AdminController {
         AppUser admin = getAuthenticatedAdmin(session);
         if (admin == null) return "redirect:/login";
 
-        boolean success = adminService.createDepartment(department);
-        if (success) {
+        String error = adminService.createDepartment(department);
+        if (error == null) {
             redirectAttributes.addFlashAttribute("successMessage", "Thêm mới Khoa/Bộ môn '" + department.getName() + "' thành công!");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể tạo Khoa/Bộ môn!");
+            redirectAttributes.addFlashAttribute("errorMessage", error);
         }
 
         return "redirect:/admin/departments";
@@ -239,18 +281,19 @@ public class AdminController {
             @RequestParam("name") String name,
             @RequestParam("code") String code,
             @RequestParam(value = "description", required = false) String description,
-            @RequestParam(value = "isActive", defaultValue = "true") Boolean isActive,
+            @RequestParam(value = "isActive", required = false) Boolean isActive,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
         AppUser admin = getAuthenticatedAdmin(session);
         if (admin == null) return "redirect:/login";
 
-        boolean success = adminService.updateDepartment(id, name, code, description, isActive);
-        if (success) {
+        boolean activeStatus = Boolean.TRUE.equals(isActive);
+        String error = adminService.updateDepartment(id, name, code, description, activeStatus);
+        if (error == null) {
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật Khoa thành công!");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy Khoa!");
+            redirectAttributes.addFlashAttribute("errorMessage", error);
         }
 
         return "redirect:/admin/departments";
@@ -285,11 +328,11 @@ public class AdminController {
         AppUser admin = getAuthenticatedAdmin(session);
         if (admin == null) return "redirect:/login";
 
-        boolean success = adminService.createMajor(major, departmentId);
-        if (success) {
+        String error = adminService.createMajor(major, departmentId);
+        if (error == null) {
             redirectAttributes.addFlashAttribute("successMessage", "Thêm mới Chuyên ngành '" + major.getName() + "' thành công!");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể tạo Chuyên ngành!");
+            redirectAttributes.addFlashAttribute("errorMessage", error);
         }
 
         return "redirect:/admin/departments";
@@ -301,18 +344,19 @@ public class AdminController {
             @RequestParam("name") String name,
             @RequestParam("code") String code,
             @RequestParam("departmentId") Long departmentId,
-            @RequestParam(value = "isActive", defaultValue = "true") Boolean isActive,
+            @RequestParam(value = "isActive", required = false) Boolean isActive,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
         AppUser admin = getAuthenticatedAdmin(session);
         if (admin == null) return "redirect:/login";
 
-        boolean success = adminService.updateMajor(id, name, code, departmentId, isActive);
-        if (success) {
+        boolean activeStatus = Boolean.TRUE.equals(isActive);
+        String error = adminService.updateMajor(id, name, code, departmentId, activeStatus);
+        if (error == null) {
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật Chuyên ngành thành công!");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy Chuyên ngành!");
+            redirectAttributes.addFlashAttribute("errorMessage", error);
         }
 
         return "redirect:/admin/departments";
