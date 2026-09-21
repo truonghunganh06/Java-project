@@ -64,4 +64,4 @@ Write-Host "[*] Truy cap sau khi khoi dong xong: http://localhost:8080" -Foregro
 Write-Host "===================================================" -ForegroundColor Green
 Write-Host ""
 
-& "$javaHome\bin\java.exe" "-Dfile.encoding=UTF-8" -jar "target\topic_management-0.0.1-SNAPSHOT.jar"
+& "$javaHome\bin\java.exe" "-Dfile.encoding=UTF-8" -jar "target\topicmanagement-0.0.1-SNAPSHOT.jar"

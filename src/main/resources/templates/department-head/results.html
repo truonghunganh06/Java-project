@@ -377,7 +377,7 @@
                         </div>
 
                         <!-- Discrepancy Alert Banner if max - min > 2.0 -->
-                        <div th:with="discrepancy=${topicEvaluationsMap != null && topicEvaluationsMap.get(t.id) != null ? T(topic_management.entity.Evaluation).calculateCouncilDiscrepancy(topicEvaluationsMap.get(t.id)) : 0.0}"
+                        <div th:with="discrepancy=${topicEvaluationsMap != null && topicEvaluationsMap.get(t.id) != null ? T(topicmanagement.entity.Evaluation).calculateCouncilDiscrepancy(topicEvaluationsMap.get(t.id)) : 0.0}"
                              th:if="${discrepancy > 2.0}"
                              class="p-3 bg-amber-50/90 border border-amber-200 rounded-xl text-xs text-amber-900 d-flex align-items-center gap-2.5">
                             <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 d-flex align-items-center justify-content-center flex-shrink-0">

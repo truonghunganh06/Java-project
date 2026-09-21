@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>group12</groupId>
-	<artifactId>topic_management</artifactId>
+	<artifactId>topicmanagement</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>topic_management</name>
+	<name>topicmanagement</name>
 	<description/>
 	<url/>
 	<licenses>
@@ -95,7 +95,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<mainClass>topic_management.TopicManagementApplication</mainClass>
+					<mainClass>topicmanagement.TopicManagementApplication</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>
