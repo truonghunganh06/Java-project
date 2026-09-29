@@ -771,7 +771,7 @@
                     <div class="modal-footer border-t border-slate-100 p-3">
                         <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs"
                             data-bs-dismiss="modal">Hủy</button>
-                        <button type="button" onclick="submitCreatePeriod()"
+                        <button type="button" id="btnCreatePeriod" onclick="doCreatePeriod()"
                             class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-semibold">Tạo
                             đợt</button>
                     </div>
@@ -1015,7 +1015,7 @@
                     <div class="modal-footer border-t border-slate-100 p-3">
                         <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs"
                             data-bs-dismiss="modal">Hủy</button>
-                        <button type="button" onclick="submitEditPeriod()"
+                        <button type="button" id="btnEditPeriod" onclick="doEditPeriod()"
                             class="btn btn-sm btn-blue rounded-xl px-4 text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700">Lưu
                             thay đổi</button>
                     </div>
@@ -1520,7 +1520,15 @@
                 const revDead = form.querySelector('[name="revDead"]')?.value;
                 const defenseDate = form.querySelector('[name="defenseDate"]')?.value;
 
-                if (pStart && pEnd && pEnd < pStart) {
+                // Check duplicate dates
+                const allDates = [pStart, pEnd, rStart, rEnd, revDead, defenseDate].filter(v => v);
+                const uniqueDates = new Set(allDates);
+                if (allDates.length !== uniqueDates.size) {
+                    showModalError('Các ngày không được trùng nhau. Vui lòng kiểm tra lại.', null, modalId);
+                    return false;
+                }
+
+                if (pStart && pEnd && pEnd <= pStart) {
                     showModalError('Hạn chót GV đề xuất phải sau ngày bắt đầu đề xuất!', 'propEnd', modalId);
                     return false;
                 }
@@ -1528,116 +1536,77 @@
                     showModalError('Thời gian SV bắt đầu đăng ký phải diễn ra từ ngày hoặc sau khi GV kết thúc hạn đề xuất đề tài!', 'regStart', modalId);
                     return false;
                 }
-                if (rStart && rEnd && rEnd < rStart) {
+                if (rStart && rEnd && rEnd <= rStart) {
                     showModalError('Hạn chót SV đăng ký phải sau ngày bắt đầu đăng ký!', 'regEnd', modalId);
                     return false;
                 }
-                if (rEnd && revDead && revDead < rEnd) {
+                if (rEnd && revDead && revDead <= rEnd) {
                     showModalError('Hạn nộp điểm GVPB phải sau khi kết thúc hạn SV đăng ký đề tài!', 'revDead', modalId);
                     return false;
                 }
-                if (revDead && defenseDate && defenseDate < revDead) {
+                if (revDead && defenseDate && defenseDate <= revDead) {
                     showModalError('Ngày báo cáo Hội đồng phải diễn ra sau hạn nộp điểm GVPB!', 'defenseDate', modalId);
                     return false;
                 }
                 return true;
             }
 
-            // Create Period AJAX Submit
-            const formCreate = document.getElementById('formCreatePeriod');
-            if (formCreate) {
-                formCreate.addEventListener('submit', async function (e) {
-                    e.preventDefault();
-                    if (!validatePeriodForm(formCreate, 'createPeriodModal')) return;
+            // Auto-clear error when user changes any date input (Create Modal)
+            ['inputPropStart', 'inputPropEnd', 'inputRegStart', 'inputRegEnd', 'inputRevDead', 'inputDefenseDate'].forEach(function (id) {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', function () { clearModalError('createPeriodModal'); });
+            });
 
-                    const submitBtn = formCreate.querySelector('button[type="submit"]');
-                    if (submitBtn) {
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang xử lý...';
-                    }
+            // Auto-clear error when user changes any date input (Edit Modal)
+            ['editPropStart', 'editPropEnd', 'editRegStart', 'editRegEnd', 'editRevDead', 'editDefenseDate'].forEach(function (id) {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', function () { clearModalError('editPeriodModal'); });
+            });
 
-                    try {
-                        const formData = new FormData(formCreate);
-                        const params = new URLSearchParams(formData);
-                        const res = await fetch('/department-head/periods/create', {
-                            method: 'POST',
-                            body: params,
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/x-www-form-urlencoded'
-                            }
-                        });
+            // Expose AJAX submit functions globally (called from button onclick)
+            window.doCreatePeriod = async function () {
+                const form = document.getElementById('formCreatePeriod');
+                if (!validatePeriodForm(form, 'createPeriodModal')) return;
+                const btn = document.getElementById('btnCreatePeriod');
+                if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang xử lý...'; }
+                try {
+                    const params = new URLSearchParams(new FormData(form));
+                    const res = await fetch('/department-head/periods/create', {
+                        method: 'POST', body: params,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+                    });
+                    let data;
+                    try { data = await res.json(); } catch (e) { data = { success: false, message: 'Lỗi phản hồi từ máy chủ (' + res.status + ')' }; }
+                    if (res.ok && data.success) { window.location.reload(); }
+                    else { showModalError(data.message || 'Đã xảy ra lỗi khi tạo đợt đăng ký!', null, 'createPeriodModal'); }
+                } catch (err) {
+                    showModalError('Không thể kết nối máy chủ: ' + err.message, null, 'createPeriodModal');
+                } finally {
+                    if (btn) { btn.disabled = false; btn.innerHTML = 'Tạo đợt'; }
+                }
+            };
 
-                        let data;
-                        try {
-                            data = await res.json();
-                        } catch (e) {
-                            data = { success: false, message: 'Lỗi phản hồi từ máy chủ (' + res.status + ')' };
-                        }
-                        if (res.ok && data.success) {
-                            window.location.reload();
-                        } else {
-                            showModalError(data.message || 'Đã xảy ra lỗi khi tạo đợt đăng ký!', null, 'createPeriodModal');
-                        }
-                    } catch (err) {
-                        showModalError('Không thể kết nối máy chủ: ' + err.message, null, 'createPeriodModal');
-                    } finally {
-                        if (submitBtn) {
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = 'Tạo đợt';
-                        }
-                    }
-                });
-            }
-
-            // Edit Period AJAX Submit
-            const formEdit = document.getElementById('formEditPeriod');
-            if (formEdit) {
-                formEdit.addEventListener('submit', async function (e) {
-                    e.preventDefault();
-                    if (!validatePeriodForm(formEdit, 'editPeriodModal')) return;
-
-                    const submitBtn = formEdit.querySelector('button[type="submit"]');
-                    if (submitBtn) {
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang lưu...';
-                    }
-
-                    try {
-                        const formData = new FormData(formEdit);
-                        const params = new URLSearchParams(formData);
-                        const res = await fetch(formEdit.action, {
-                            method: 'POST',
-                            body: params,
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/x-www-form-urlencoded'
-                            }
-                        });
-
-                        let data;
-                        try {
-                            data = await res.json();
-                        } catch (e) {
-                            data = { success: false, message: 'Lỗi phản hồi từ máy chủ (' + res.status + ')' };
-                        }
-                        if (res.ok && data.success) {
-                            window.location.reload();
-                        } else {
-                            showModalError(data.message || 'Đã xảy ra lỗi khi cập nhật đợt!', null, 'editPeriodModal');
-                        }
-                    } catch (err) {
-                        showModalError('Không thể kết nối máy chủ: ' + err.message, null, 'editPeriodModal');
-                    } finally {
-                        if (submitBtn) {
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = 'Lưu thay đổi';
-                        }
-                    }
-                });
-            }
+            window.doEditPeriod = async function () {
+                const form = document.getElementById('formEditPeriod');
+                if (!validatePeriodForm(form, 'editPeriodModal')) return;
+                const btn = document.getElementById('btnEditPeriod');
+                if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang lưu...'; }
+                try {
+                    const params = new URLSearchParams(new FormData(form));
+                    const res = await fetch(form.action, {
+                        method: 'POST', body: params,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+                    });
+                    let data;
+                    try { data = await res.json(); } catch (e) { data = { success: false, message: 'Lỗi phản hồi từ máy chủ (' + res.status + ')' }; }
+                    if (res.ok && data.success) { window.location.reload(); }
+                    else { showModalError(data.message || 'Đã xảy ra lỗi khi cập nhật đợt!', null, 'editPeriodModal'); }
+                } catch (err) {
+                    showModalError('Không thể kết nối máy chủ: ' + err.message, null, 'editPeriodModal');
+                } finally {
+                    if (btn) { btn.disabled = false; btn.innerHTML = 'Lưu thay đổi'; }
+                }
+            };
         });
     </script>
 </body>
