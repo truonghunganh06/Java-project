@@ -311,23 +311,39 @@
                                 <table class="table table-saas mb-0">
                                     <thead>
                                         <tr>
-                                            <th style="width: 45%;">Tên đề tài &amp; Mã</th>
+                                            <th style="width: 55%;">Tên đề tài &amp; Mã</th>
                                             <th style="width: 25%;">Chuyên ngành</th>
-                                            <th style="width: 15%;">Trạng thái</th>
-                                            <th style="width: 15%;" class="text-end">Thao tác</th>
+                                            <th style="width: 20%;" class="text-end">Trạng thái</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr th:each="t : ${topics}" class="hover:bg-slate-50/60 transition">
+                                        <tr th:each="t : ${topics}" class="hover:bg-slate-50/60 transition cursor-pointer"
+                                            th:data-topic-id="${t.id}"
+                                            th:data-topic-code="${t.code}"
+                                            th:data-topic-title="${t.title}"
+                                            th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
+                                            th:data-topic-major="${t.major != null ? t.major.name : 'CNTT'}"
+                                            th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Tôi'}"
+                                            th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
+                                            th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
+                                            th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
+                                            th:data-topic-max-students="${t.maxStudents}"
+                                            th:data-topic-status="${t.status}"
+                                            th:data-topic-rejection-reason="${t.rejectionReason}"
+                                            th:data-topic-description="${t.description}"
+                                            th:data-topic-requirements="${t.requirements}"
+                                            th:data-topic-role="LECTURER"
+                                            onclick="openTopicDrawer(this)"
+                                            title="Nhấp để xem chi tiết & thao tác">
                                             <td>
-                                                <div class="font-bold text-slate-900 text-xs mb-0.5 line-clamp-1" th:text="${t.title}">Tên đề tài</div>
+                                                <div class="font-bold text-slate-900 text-xs mb-0.5 line-clamp-1 hover:text-teal-700 transition" th:text="${t.title}">Tên đề tài</div>
                                                 <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-full font-mono" th:text="${t.code != null ? t.code : 'DT-NEW'}">DT01</span>
                                                 <span class="text-xs text-slate-400 ms-1" th:text="${t.period != null ? '· ' + t.period.name : ''}"></span>
                                             </td>
                                             <td>
                                                 <span class="badge bg-teal-50 text-teal-800 border border-teal-200 font-semibold text-xs px-2.5 py-1 rounded-full" th:text="${t.major != null ? t.major.name : 'CNTT'}">CNTT</span>
                                             </td>
-                                            <td>
+                                            <td class="text-end">
                                                 <span th:if="${t.status == 'APPROVED'}" class="badge bg-emerald-100 text-emerald-800 font-bold text-xs px-2.5 py-1 rounded-full">
                                                     <i class="fa-solid fa-check text-xs me-1"></i> Đã duyệt
                                                 </span>
@@ -338,15 +354,9 @@
                                                     <i class="fa-solid fa-xmark text-xs me-1"></i> Từ chối
                                                 </span>
                                             </td>
-                                            <td class="text-end">
-                                                <a th:href="@{/lecturer/topics/{id}/edit(id=${t.id})}"
-                                                    class="btn btn-sm btn-light border border-slate-200/80 rounded-full px-2.5 py-1 text-slate-700 hover:bg-slate-100 hover:text-teal-700 transition text-xs font-bold">
-                                                    <i class="fa-solid fa-pen-to-square text-xs me-1"></i> Sửa
-                                                </a>
-                                            </td>
                                         </tr>
                                         <tr th:if="${topics == null || topics.isEmpty()}">
-                                            <td colspan="4" class="text-center py-5 text-slate-400 text-xs">
+                                            <td colspan="3" class="text-center py-5 text-slate-400 text-xs">
                                                 Bạn chưa đề xuất đề tài nào trong đợt này.
                                             </td>
                                         </tr>
@@ -481,6 +491,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Topic Detail Drawer Fragment -->
+    <div th:replace="~{fragments/drawer :: topicDrawer}"></div>
 
     <!-- Scripts Fragment -->
     <div th:replace="~{fragments/scripts :: scripts}"></div>

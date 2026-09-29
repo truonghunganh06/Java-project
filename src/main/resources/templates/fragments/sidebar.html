@@ -6,8 +6,9 @@
         <!-- Brand Header -->
         <div class="sidebar-brand-row d-flex align-items-center justify-content-between px-3" style="height: var(--topbar-height); border-bottom: 1px solid var(--sidebar-border);">
             <a class="sidebar-brand flex-grow-1 p-0 border-0 d-flex align-items-center gap-2.5 text-decoration-none"
+                onclick="handleSidebarBrandClick(event)"
                 th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
-                <div class="sidebar-brand-logo flex-shrink-0">
+                <div class="sidebar-brand-logo flex-shrink-0" style="cursor: pointer;" title="Bấm để thu gọn/mở rộng menu">
                     <i class="fa-solid fa-shapes"></i>
                 </div>
                 <div class="d-flex flex-column">

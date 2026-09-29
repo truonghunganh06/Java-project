@@ -86,184 +86,86 @@
                 </div>
             </div>
 
-                    <!-- Topics Table Card with Overflow Protection -->
-                    <div class="table-saas-container mb-4">
-                        <div class="w-full overflow-x-auto">
-                            <table class="table table-saas mb-0">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 12%;">Mã đề tài</th>
-                                        <th style="width: 32%;">Tên đề tài & Mô tả</th>
-                                        <th style="width: 16%;">Chuyên ngành / Đợt</th>
-                                        <th style="width: 10%;">Chỉ tiêu</th>
-                                        <th style="width: 12%;">Trạng thái</th>
-                                        <th style="width: 18%;" class="text-end">Thao tác</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:if="${topics == null or topics.isEmpty()}">
-                                        <td colspan="6" class="text-center py-5 text-muted text-xs">
-                                            <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
-                                            Bạn chưa tạo đề tài nào trong đợt này.
-                                            <div class="mt-2">
-                                                <a th:href="@{/lecturer/topics/create}" class="btn btn-sm btn-dark rounded-xl px-3 text-xs">Đề xuất đề tài ngay</a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr th:each="t : ${topics}" class="filterable-row topic-item-row" th:data-status="${t.status}" th:data-period="${t.period != null ? t.period.id : 'all'}"
-                                        th:data-topic-id="${t.id}"
-                                        th:data-topic-code="${t.code}"
-                                        th:data-topic-title="${t.title}"
-                                        th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
-                                        th:data-topic-major="${t.major != null ? t.major.name : 'CNTT'}"
-                                        th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Tôi'}"
-                                        th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
-                                        th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
-                                        th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
-                                        th:data-topic-max-students="${t.maxStudents}"
-                                        th:data-topic-status="${t.status}"
-                                        th:data-topic-rejection-reason="${t.rejectionReason}"
-                                        th:data-topic-description="${t.description}"
-                                        th:data-topic-requirements="${t.requirements}"
-                                        th:data-topic-role="LECTURER">
-                                        <td>
-                                            <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold" th:text="${t.code}">DT-001</span>
-                                        </td>
-                                        <td>
-                                            <div class="font-bold text-slate-900 text-xs line-clamp-1 hover:text-blue-600 transition cursor-pointer" th:text="${t.title}" onclick="openTopicDrawer(this.closest('tr'))">Xây dựng ứng dụng quản lý</div>
-                                            <span class="text-xs text-slate-400 line-clamp-1 truncate-cell" th:text="${t.description}">Mô tả tóm tắt</span>
-                                            <!-- Rejection Reason mini tag -->
-                                            <div th:if="${t.status == 'REJECTED' && t.rejectionReason != null}" class="mt-1 text-xs text-rose-600 font-medium line-clamp-1">
-                                                <i class="fa-solid fa-triangle-exclamation me-1"></i> <span th:text="'Lý do: ' + ${t.rejectionReason}"></span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="font-medium text-slate-800 text-xs truncate-cell" th:text="${t.major != null ? t.major.name : 'CNTT'}">Kỹ thuật phần mềm</div>
-                                            <span class="text-xs text-slate-400 d-block truncate-cell" th:text="${t.period != null ? t.period.name : 'Chung'}">KLTN</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge-pill-neutral font-semibold text-xs" th:text="'Tối đa ' + ${t.maxStudents} + ' SV'">3 SV</span>
-                                        </td>
-                                        <td>
-                                            <span th:if="${t.status == 'APPROVED'}" class="badge-pill-approved font-semibold">
-                                                <i class="fa-solid fa-check text-xs"></i> Đã duyệt
-                                            </span>
-                                            <span th:if="${t.status == 'PENDING'}" class="badge-pill-pending font-semibold">
-                                                <i class="fa-regular fa-clock text-xs"></i> Chờ duyệt
-                                            </span>
-                                            <span th:if="${t.status == 'REJECTED'}" class="badge-pill-rejected font-semibold">
-                                                <i class="fa-solid fa-xmark text-xs"></i> Từ chối
-                                            </span>
-                                        </td>
-                                        <td class="text-end">
-                                            <div class="d-inline-flex align-items-center gap-1.5">
-                                                <!-- Edit Button -->
-                                                <a th:href="@{/lecturer/topics/{id}/edit(id=${t.id})}" 
-                                                   class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2 py-1 text-slate-700 hover:bg-slate-100 hover:text-blue-600 transition text-xs font-semibold"
-                                                   title="Chỉnh sửa đề tài">
-                                                    <i class="fa-solid fa-pen-to-square text-xs me-1"></i> Sửa
-                                                </a>
-
-                                                <!-- Delete Button (for PENDING or REJECTED) -->
-                                                <form th:if="${t.status == 'PENDING' || t.status == 'REJECTED'}" 
-                                                      th:action="@{/lecturer/topics/{id}/delete(id=${t.id})}" 
-                                                      method="post" class="d-inline"
-                                                      onsubmit="return confirm('Bạn có chắc chắn muốn xóa đề xuất đề tài này?');">
-                                                    <button type="submit" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2 py-1 text-slate-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition text-xs"
-                                                            title="Xóa đề xuất">
-                                                        <i class="fa-solid fa-trash-can text-xs"></i>
-                                                    </button>
-                                                </form>
-
-                                                <!-- Detail Drawer Button -->
-                                                <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2 py-1 text-slate-700 hover:bg-slate-100 hover:text-blue-600 transition"
-                                                        title="Xem chi tiết đề tài" onclick="openTopicDrawer(this.closest('tr'))">
-                                                    <i class="fa-solid fa-chevron-right text-xs"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+            <!-- Topics Table Card with Overflow Protection -->
+            <div class="table-saas-container mb-4">
+                <div class="w-full overflow-x-auto">
+                    <table class="table table-saas mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 14%;">Mã đề tài</th>
+                                <th style="width: 46%;">Tên đề tài & Mô tả</th>
+                                <th style="width: 20%;">Chuyên ngành / Đợt</th>
+                                <th style="width: 10%;">Chỉ tiêu</th>
+                                <th style="width: 10%;" class="text-end">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${topics == null or topics.isEmpty()}">
+                                <td colspan="5" class="text-center py-5 text-muted text-xs">
+                                    <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
+                                    Bạn chưa tạo đề tài nào trong đợt này.
+                                    <div class="mt-2">
+                                        <a th:href="@{/lecturer/topics/create}" class="btn btn-sm btn-dark rounded-xl px-3 text-xs">Đề xuất đề tài ngay</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:each="t : ${topics}" class="filterable-row topic-item-row hover:bg-slate-50/80 transition cursor-pointer" th:data-status="${t.status}" th:data-period="${t.period != null ? t.period.id : 'all'}"
+                                th:data-topic-id="${t.id}"
+                                th:data-topic-code="${t.code}"
+                                th:data-topic-title="${t.title}"
+                                th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
+                                th:data-topic-major="${t.major != null ? t.major.name : 'CNTT'}"
+                                th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Tôi'}"
+                                th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
+                                th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
+                                th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
+                                th:data-topic-max-students="${t.maxStudents}"
+                                th:data-topic-status="${t.status}"
+                                th:data-topic-rejection-reason="${t.rejectionReason}"
+                                th:data-topic-description="${t.description}"
+                                th:data-topic-requirements="${t.requirements}"
+                                th:data-topic-role="LECTURER"
+                                onclick="openTopicDrawer(this)"
+                                title="Nhấp để xem chi tiết & thao tác">
+                                <td>
+                                    <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold" th:text="${t.code}">DT-001</span>
+                                </td>
+                                <td>
+                                    <div class="font-bold text-slate-900 text-xs line-clamp-1 hover:text-blue-600 transition" th:text="${t.title}">Xây dựng ứng dụng quản lý</div>
+                                    <span class="text-xs text-slate-400 line-clamp-1 truncate-cell" th:text="${t.description}">Mô tả tóm tắt</span>
+                                    <!-- Rejection Reason mini tag -->
+                                    <div th:if="${t.status == 'REJECTED' && t.rejectionReason != null}" class="mt-1 text-xs text-rose-600 font-medium line-clamp-1">
+                                        <i class="fa-solid fa-triangle-exclamation me-1"></i> <span th:text="'Lý do: ' + ${t.rejectionReason}"></span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="font-medium text-slate-800 text-xs truncate-cell" th:text="${t.major != null ? t.major.name : 'CNTT'}">Kỹ thuật phần mềm</div>
+                                    <span class="text-xs text-slate-400 d-block truncate-cell" th:text="${t.period != null ? t.period.name : 'Chung'}">KLTN</span>
+                                </td>
+                                <td>
+                                    <span class="badge-pill-neutral font-semibold text-xs" th:text="'Tối đa ' + ${t.maxStudents} + ' SV'">3 SV</span>
+                                </td>
+                                <td class="text-end">
+                                    <span th:if="${t.status == 'APPROVED'}" class="badge-pill-approved font-semibold">
+                                        <i class="fa-solid fa-check text-xs"></i> Đã duyệt
+                                    </span>
+                                    <span th:if="${t.status == 'PENDING'}" class="badge-pill-pending font-semibold">
+                                        <i class="fa-regular fa-clock text-xs"></i> Chờ duyệt
+                                    </span>
+                                    <span th:if="${t.status == 'REJECTED'}" class="badge-pill-rejected font-semibold">
+                                        <i class="fa-solid fa-xmark text-xs"></i> Từ chối
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
         </main>
     </div>
 
-    <!-- Slide-over Topic Drawer Structure -->
-    <div id="topicDrawerBackdrop" class="saas-drawer-backdrop" onclick="closeTopicDrawer()"></div>
-    <div id="topicDrawerPanel" class="saas-drawer-panel">
-        <div class="drawer-header">
-            <div class="d-flex align-items-center gap-2">
-                <span id="drawerTopicCode" class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-bold">DT-01</span>
-                <span id="drawerTopicStatusBadge" class="badge-pill-pending">Chờ duyệt</span>
-            </div>
-            <button type="button" class="btn-close text-xs" onclick="closeTopicDrawer()" aria-label="Close"></button>
-        </div>
-
-        <div class="drawer-body">
-            <div>
-                <h5 id="drawerTopicTitle" class="text-base font-bold text-slate-900 mb-2 leading-snug">Tiêu đề đề tài</h5>
-                <div class="d-flex flex-wrap gap-2 text-xs text-slate-500">
-                    <div><i class="fa-solid fa-building-columns text-slate-400 me-1"></i> Bộ môn: <strong id="drawerTopicMajor" class="text-slate-700">CNTT</strong></div>
-                    <div class="ms-2"><i class="fa-solid fa-calendar-check text-slate-400 me-1"></i> Đợt: <strong id="drawerTopicPeriod" class="text-slate-700">KLTN</strong></div>
-                    <div class="ms-2"><i class="fa-solid fa-users text-slate-400 me-1"></i> <strong id="drawerTopicQuota" class="text-slate-700">Tối đa 3 SV</strong></div>
-                </div>
-            </div>
-
-            <!-- Lecturers in Charge -->
-            <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-100 space-y-2 text-xs">
-                <div class="d-flex justify-content-between">
-                    <span class="text-slate-500"><i class="fa-solid fa-chalkboard-user text-blue-600 me-1"></i> GV Hướng dẫn chính:</span>
-                    <strong id="drawerTopicSupervisor" class="text-slate-900">TS. Nguyễn Văn A</strong>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <span class="text-slate-500"><i class="fa-solid fa-user-plus text-slate-400 me-1"></i> GV Hướng dẫn phụ:</span>
-                    <strong id="drawerTopicCoSupervisor" class="text-slate-900">Không có</strong>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <span class="text-slate-500"><i class="fa-solid fa-user-check text-indigo-600 me-1"></i> GV Phản biện:</span>
-                    <strong id="drawerTopicReviewer" class="text-slate-900">Chưa phân công</strong>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <span class="text-slate-500"><i class="fa-solid fa-users-rectangle text-purple-600 me-1"></i> Hội đồng:</span>
-                    <strong id="drawerTopicCouncil" class="text-slate-900">Chưa phân hội đồng</strong>
-                </div>
-            </div>
-
-            <!-- Group Registered -->
-            <div>
-                <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Nhóm sinh viên thực hiện:</h6>
-                <div id="drawerTopicGroupInfo" class="text-xs text-slate-600">
-                    Chưa có nhóm nào đăng ký.
-                </div>
-            </div>
-
-            <!-- Description -->
-            <div>
-                <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Mô tả mục tiêu & Nội dung:</h6>
-                <div id="drawerTopicDescription" class="text-xs text-slate-700 leading-relaxed p-3 bg-white border border-slate-100 rounded-xl" style="white-space: pre-line;">
-                    Chưa có mô tả chi tiết.
-                </div>
-            </div>
-
-            <!-- Requirements -->
-            <div>
-                <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Yêu cầu & Công nghệ:</h6>
-                <div id="drawerTopicRequirements" class="text-xs text-slate-700 leading-relaxed p-3 bg-white border border-slate-100 rounded-xl" style="white-space: pre-line;">
-                    Theo hướng dẫn của Giảng viên.
-                </div>
-            </div>
-        </div>
-
-        <div class="drawer-footer">
-            <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs font-medium" onclick="closeTopicDrawer()">Đóng</button>
-            <div id="drawerActionButtons" class="d-flex align-items-center gap-2"></div>
-        </div>
-    </div>
-
-    <!-- Scripts Fragment -->
+    <!-- Scripts Fragment (Includes Global Centered Topic Detail Modal) -->
     <div th:replace="~{fragments/scripts :: scripts}"></div>
 
     <script>

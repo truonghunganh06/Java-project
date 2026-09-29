@@ -43,9 +43,117 @@
                             Nội dung chi tiết thông báo...
                         </div>
                     </div>
-                    <div class="modal-footer border-t border-slate-100 p-3">
-                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-4 text-xs font-semibold"
-                            data-bs-dismiss="modal">Đóng</button>
+                    <div class="modal-footer border-t border-slate-100 p-3 d-flex justify-content-between align-items-center">
+                        <div id="modalAnnouncementSecondaryActionWrap"></div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-sm btn-light border rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                                data-bs-dismiss="modal">Đóng</button>
+                            <a id="modalAnnouncementPrimaryActionBtn" href="#" class="btn btn-sm bg-slate-900 hover:bg-slate-800 text-teal-300 rounded-xl px-4 py-2 text-xs font-bold shadow-sm d-inline-flex align-items-center gap-1.5 transition border-0 d-none">
+                                <i id="modalAnnouncementActionIcon" class="fa-solid fa-plus text-xs"></i>
+                                <span id="modalAnnouncementActionText">Đề xuất đề tài ngay</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <!-- Global Topic Detail Modal (Centered popup across all pages) -->
+        <div class="modal fade" id="topicDetailModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                <div class="modal-content rounded-2xl border-0 shadow-2xl">
+                    <div class="modal-header border-b border-slate-100 p-4">
+                        <div class="d-flex align-items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0">
+                                <i class="fa-solid fa-book-bookmark text-base"></i>
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-0.5">
+                                    <span id="drawerTopicCode" class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-bold">DT-01</span>
+                                    <span id="drawerTopicStatusBadge" class="badge-pill-pending">Chờ duyệt</span>
+                                </div>
+                                <h5 id="drawerTopicTitle" class="modal-title font-bold text-slate-900 text-sm md:text-base mb-0 line-clamp-1">Tiêu đề đề tài</h5>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-3">
+                        <!-- Rejection Reason Alert if any -->
+                        <div id="drawerTopicRejectionAlert" class="alert alert-danger p-3 rounded-2xl mb-3 border border-rose-200 shadow-sm" style="display: none;">
+                            <div class="fw-bold text-rose-900 text-xs mb-1"><i class="fa-solid fa-triangle-exclamation text-rose-600 me-1"></i> Lý do Trưởng khoa từ chối:</div>
+                            <div id="drawerTopicRejectionText" class="text-rose-700 text-xs"></div>
+                        </div>
+
+                        <!-- Period & Major & Quota Badges Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                            <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/70">
+                                <span class="text-xs text-slate-400 d-block mb-0.5"><i class="fa-solid fa-building-columns me-1"></i> Chuyên ngành / Khoa</span>
+                                <strong class="text-xs text-slate-800" id="drawerTopicMajor">CNTT</strong>
+                            </div>
+                            <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/70">
+                                <span class="text-xs text-slate-400 d-block mb-0.5"><i class="fa-regular fa-calendar-check me-1"></i> Đợt đăng ký</span>
+                                <strong class="text-xs text-slate-800" id="drawerTopicPeriod">KLTN 2026-2027</strong>
+                            </div>
+                            <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/70">
+                                <span class="text-xs text-slate-400 d-block mb-0.5"><i class="fa-solid fa-users me-1"></i> Chỉ tiêu</span>
+                                <strong class="text-xs text-slate-800" id="drawerTopicQuota">Tối đa 3 SV</strong>
+                            </div>
+                        </div>
+
+                        <!-- Supervisors & Reviewers Grid -->
+                        <div class="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-2 text-xs">
+                            <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
+                                <i class="fa-solid fa-user-tie text-blue-600 me-1.5"></i> Cán bộ Hướng dẫn &amp; Phản biện
+                            </h6>
+                            <div class="d-flex justify-content-between py-1 border-b border-slate-100">
+                                <span class="text-slate-500"><i class="fa-solid fa-chalkboard-user text-blue-600 me-1"></i> GV Hướng dẫn chính:</span>
+                                <strong id="drawerTopicSupervisor" class="text-slate-900">TS. Nguyễn Văn A</strong>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-b border-slate-100">
+                                <span class="text-slate-500"><i class="fa-solid fa-user-plus text-slate-400 me-1"></i> GV Hướng dẫn phụ:</span>
+                                <strong id="drawerTopicCoSupervisor" class="text-slate-900">Không có</strong>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-b border-slate-100">
+                                <span class="text-slate-500"><i class="fa-solid fa-user-check text-indigo-600 me-1"></i> GV Phản biện:</span>
+                                <strong id="drawerTopicReviewer" class="text-slate-900">Chưa phân công</strong>
+                            </div>
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-slate-500"><i class="fa-solid fa-users-rectangle text-purple-600 me-1"></i> Hội đồng:</span>
+                                <strong id="drawerTopicCouncil" class="text-slate-900">Chưa phân hội đồng</strong>
+                            </div>
+                        </div>
+
+                        <!-- Group Registered Info -->
+                        <div>
+                            <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5">
+                                <i class="fa-solid fa-users text-blue-600 me-1.5"></i> Nhóm sinh viên thực hiện:
+                            </h6>
+                            <div id="drawerTopicGroupInfo" class="text-xs text-slate-600">
+                                Chưa có nhóm nào đăng ký.
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div>
+                            <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5">
+                                <i class="fa-regular fa-file-lines text-blue-600 me-1.5"></i> Mục tiêu &amp; Mô tả nội dung:
+                            </h6>
+                            <div id="drawerTopicDescription" class="text-xs text-slate-700 leading-relaxed p-3 bg-slate-50/70 border border-slate-100 rounded-xl" style="white-space: pre-line;">
+                                Chưa có mô tả chi tiết.
+                            </div>
+                        </div>
+
+                        <!-- Requirements -->
+                        <div>
+                            <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5">
+                                <i class="fa-solid fa-list-check text-blue-600 me-1.5"></i> Yêu cầu &amp; Công nghệ:
+                            </h6>
+                            <div id="drawerTopicRequirements" class="text-xs text-slate-700 leading-relaxed p-3 bg-slate-50/70 border border-slate-100 rounded-xl" style="white-space: pre-line;">
+                                Theo hướng dẫn của Giảng viên.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 p-3 d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100" data-bs-dismiss="modal">Đóng</button>
+                        <div id="drawerActionButtons" class="d-inline-flex align-items-center gap-2"></div>
                     </div>
                 </div>
             </div>
@@ -198,6 +306,17 @@
                 if (overlay) overlay.classList.toggle('show');
             }
 
+            // Handle click on Sidebar Brand / Logo
+            function handleSidebarBrandClick(event) {
+                if (document.body.classList.contains('sidebar-collapsed')) {
+                    if (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    toggleDesktopSidebar();
+                }
+            }
+
             // Desktop / Laptop Sidebar Toggle with smooth motion
             function toggleDesktopSidebar() {
                 const isCollapsed = document.body.classList.toggle('sidebar-collapsed');
@@ -205,14 +324,14 @@
                     localStorage.setItem('topichub_sidebar_collapsed', isCollapsed ? 'true' : 'false');
                 } catch (e) { }
 
-                const icon = document.getElementById('desktopSidebarToggleIcon');
-                if (icon) {
+                const icons = document.querySelectorAll('#desktopSidebarToggleIcon, .desktopSidebarToggleIcon');
+                icons.forEach(icon => {
                     if (isCollapsed) {
                         icon.className = 'fa-solid fa-bars text-secondary';
                     } else {
-                        icon.className = 'fa-solid fa-indent text-secondary';
+                        icon.className = 'fa-solid fa-bars-staggered text-secondary';
                     }
-                }
+                });
             }
 
             // Restore Desktop Sidebar collapse state on page load
@@ -222,10 +341,10 @@
                         const savedState = localStorage.getItem('topichub_sidebar_collapsed');
                         if (savedState === 'true') {
                             document.body.classList.add('sidebar-collapsed');
-                            const icon = document.getElementById('desktopSidebarToggleIcon');
-                            if (icon) {
+                            const icons = document.querySelectorAll('#desktopSidebarToggleIcon, .desktopSidebarToggleIcon');
+                            icons.forEach(icon => {
                                 icon.className = 'fa-solid fa-bars text-secondary';
-                            }
+                            });
                         }
                     }
                 } catch (e) { }
@@ -355,23 +474,12 @@
 
                 // Rejection Alert Box
                 let rejAlert = document.getElementById('drawerTopicRejectionAlert');
+                let rejText = document.getElementById('drawerTopicRejectionText');
                 const rejReason = data.rejectionReason || '';
                 if (data.status === 'REJECTED' && rejReason) {
-                    if (!rejAlert) {
-                        const drawerBody = document.querySelector('.drawer-body');
-                        if (drawerBody) {
-                            rejAlert = document.createElement('div');
-                            rejAlert.id = 'drawerTopicRejectionAlert';
-                            rejAlert.className = 'alert alert-danger p-3 rounded-2xl mb-3 border border-rose-200 shadow-sm';
-                            drawerBody.insertBefore(rejAlert, drawerBody.firstChild);
-                        }
-                    }
                     if (rejAlert) {
                         rejAlert.style.display = 'block';
-                        rejAlert.innerHTML = `
-                            <div class="fw-bold text-rose-900 text-xs mb-1"><i class="fa-solid fa-triangle-exclamation text-rose-600 me-1"></i> Lý do Trưởng khoa từ chối:</div>
-                            <div class="text-rose-700 text-xs">${rejReason}</div>
-                        `;
+                        if (rejText) rejText.textContent = rejReason;
                     }
                 } else if (rejAlert) {
                     rejAlert.style.display = 'none';
@@ -399,24 +507,34 @@
                     if ((data.role === 'DEPARTMENT_HEAD' || data.role === 'DIVISION_HEAD') && data.status === 'PENDING') {
                         actionContainer.innerHTML = `
                             <form action="/department-head/topics/${data.id}/approve" method="post" class="d-inline" onsubmit="return confirm('Xác nhận PHÊ DUYỆT đề tài này?');">
-                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">
+                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm">
                                     <i class="fa-solid fa-check me-1"></i> Phê duyệt
                                 </button>
                             </form>
-                            <button type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3 text-xs font-semibold" data-bs-toggle="modal" data-bs-target="#rejectModal" onclick="prepareRejectModal(${data.id}, '${title.replace(/'/g, "\\'")}')">
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3.5 py-1.5 text-xs font-semibold" data-bs-toggle="modal" data-bs-target="#rejectModal" onclick="prepareRejectModal(${data.id}, '${title.replace(/'/g, "\\'")}')">
                                 <i class="fa-solid fa-xmark me-1"></i> Từ chối
                             </button>
                         `;
-                    } else if (data.role === 'LECTURER' && (data.status === 'PENDING' || data.status === 'REJECTED')) {
-                        actionContainer.innerHTML = `
-                            <a href="/lecturer/topics/${data.id}/edit" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">
-                                <i class="fa-solid fa-pen-to-square me-1"></i> Chỉnh sửa đề tài
+                    } else if (data.role === 'LECTURER') {
+                        let lecButtons = `
+                            <a href="/lecturer/topics/${data.id}/edit" class="btn btn-sm btn-dark rounded-xl px-3.5 py-1.5 text-xs font-semibold d-inline-flex align-items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa đề tài
                             </a>
                         `;
+                        if (data.status === 'PENDING' || data.status === 'REJECTED') {
+                            lecButtons += `
+                                <form action="/lecturer/topics/${data.id}/delete" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đề xuất đề tài này?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-3.5 py-1.5 text-xs font-semibold d-inline-flex align-items-center gap-1.5">
+                                        <i class="fa-solid fa-trash-can"></i> Xóa đề tài
+                                    </button>
+                                </form>
+                            `;
+                        }
+                        actionContainer.innerHTML = lecButtons;
                     } else if (data.role === 'STUDENT' && data.status === 'APPROVED' && !data.hasGroupTopic) {
                         actionContainer.innerHTML = `
                             <form action="/student/topics/${data.id}/register" method="post" class="d-inline" onsubmit="return confirm('Xác nhận đăng ký đề tài này cho nhóm của bạn?');">
-                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">
+                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm">
                                     <i class="fa-solid fa-bookmark me-1"></i> Đăng ký ngay
                                 </button>
                             </form>
@@ -424,13 +542,26 @@
                     }
                 }
 
-                // Show drawer
-                if (backdrop) backdrop.classList.add('show');
-                if (panel) panel.classList.add('show');
-                document.body.style.overflow = 'hidden';
+                // Show centered modal (or fallback to side-drawer)
+                const modalEl = document.getElementById('topicDetailModal');
+                if (modalEl) {
+                    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    bsModal.show();
+                } else {
+                    const backdrop = document.getElementById('topicDrawerBackdrop');
+                    const panel = document.getElementById('topicDrawerPanel');
+                    if (backdrop) backdrop.classList.add('show');
+                    if (panel) panel.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                }
             }
 
             function closeTopicDrawer() {
+                const modalEl = document.getElementById('topicDetailModal');
+                if (modalEl) {
+                    const bsModal = bootstrap.Modal.getInstance(modalEl);
+                    if (bsModal) bsModal.hide();
+                }
                 const backdrop = document.getElementById('topicDrawerBackdrop');
                 const panel = document.getElementById('topicDrawerPanel');
                 if (backdrop) backdrop.classList.remove('show');
@@ -533,6 +664,23 @@
                 }
             }
 
+            // Safe Markdown Formatter for modal text
+            function renderSafeAnnouncementMarkdown(raw) {
+                if (!raw) return '';
+                let safe = raw
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;");
+                
+                // Format ### Headers
+                safe = safe.replace(/###\s*(.*?)(\n|$)/g, '<div class="fw-bold text-slate-900 mt-2.5 mb-1.5 fs-7">$1</div>');
+                // Format **bold**
+                safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900 font-semibold">$1</strong>');
+                // Format line breaks
+                safe = safe.replace(/\n/g, '<br>');
+                return safe;
+            }
+
             // Global Announcement Detail Modal Opener
             function showAnnouncementDetail(element) {
                 if (!element) return;
@@ -560,7 +708,7 @@
                 if (modalCategory) modalCategory.textContent = category;
                 if (modalAuthor) modalAuthor.textContent = author;
                 if (modalTime) modalTime.textContent = time;
-                if (modalContent) modalContent.textContent = content;
+                if (modalContent) modalContent.innerHTML = renderSafeAnnouncementMarkdown(content);
 
                 if (periodWrap && modalPeriod) {
                     if (period && period.trim() !== '') {
@@ -568,6 +716,61 @@
                         periodWrap.classList.remove('d-none');
                     } else {
                         periodWrap.classList.add('d-none');
+                    }
+                }
+
+                // Dynamic Action Buttons based on User Role & Notice Context
+                const path = window.location.pathname;
+                const isLecturer = path.startsWith('/lecturer');
+                const isStudent = path.startsWith('/student');
+                const isDeptHead = path.startsWith('/department-head');
+
+                const primaryBtn = document.getElementById('modalAnnouncementPrimaryActionBtn');
+                const actionText = document.getElementById('modalAnnouncementActionText');
+                const actionIcon = document.getElementById('modalAnnouncementActionIcon');
+                const secondaryWrap = document.getElementById('modalAnnouncementSecondaryActionWrap');
+
+                if (primaryBtn) primaryBtn.classList.add('d-none');
+                if (secondaryWrap) secondaryWrap.innerHTML = '';
+
+                const isPeriodNotice = category.toUpperCase() === 'PERIOD' || (title && (title.toLowerCase().includes('kế hoạch') || title.toLowerCase().includes('đợt')));
+
+                if (isPeriodNotice) {
+                    if (isLecturer) {
+                        if (primaryBtn && actionText && actionIcon) {
+                            primaryBtn.href = '/lecturer/topics/create';
+                            actionText.textContent = 'Đề xuất đề tài ngay';
+                            actionIcon.className = 'fa-solid fa-plus text-xs';
+                            primaryBtn.classList.remove('d-none');
+                        }
+                        if (secondaryWrap) {
+                            secondaryWrap.innerHTML = `
+                                <a href="/lecturer/schedule" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 d-inline-flex align-items-center gap-1.5 transition text-decoration-none">
+                                    <i class="fa-regular fa-calendar-days text-xs text-blue-600"></i> Xem lịch trình đợt
+                                </a>
+                            `;
+                        }
+                    } else if (isStudent) {
+                        if (primaryBtn && actionText && actionIcon) {
+                            primaryBtn.href = '/student/topics';
+                            actionText.textContent = 'Xem danh sách đề tài';
+                            actionIcon.className = 'fa-solid fa-list-check text-xs';
+                            primaryBtn.classList.remove('d-none');
+                        }
+                        if (secondaryWrap) {
+                            secondaryWrap.innerHTML = `
+                                <a href="/student/schedule" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 d-inline-flex align-items-center gap-1.5 transition text-decoration-none">
+                                    <i class="fa-regular fa-calendar-days text-xs text-blue-600"></i> Xem lịch trình
+                                </a>
+                            `;
+                        }
+                    } else if (isDeptHead) {
+                        if (primaryBtn && actionText && actionIcon) {
+                            primaryBtn.href = '/department-head/periods';
+                            actionText.textContent = 'Quản lý các đợt';
+                            actionIcon.className = 'fa-solid fa-calendar-check text-xs';
+                            primaryBtn.classList.remove('d-none');
+                        }
                     }
                 }
 
