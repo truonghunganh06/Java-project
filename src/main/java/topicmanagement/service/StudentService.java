@@ -1,5 +1,6 @@
 package topicmanagement.service;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -579,10 +580,12 @@ public class StudentService {
         return evaluationRepository.findByTopicId(freshTopic.getId());
     }
 
+    @Cacheable("activePeriods")
     public List<RegistrationPeriod> getAllActivePeriods() {
         return periodRepository.findByIsActiveTrueOrderByIdDesc();
     }
 
+    @Cacheable("allMajors")
     public List<Major> getAllMajors() {
         return majorRepository.findAll();
     }
@@ -591,6 +594,7 @@ public class StudentService {
      * Lấy danh sách Chuyên ngành theo Khoa (dùng để populate dropdown filter
      * chỉ hiện chuyên ngành thuộc Khoa của sinh viên đang đăng nhập).
      */
+    @Cacheable(value = "departmentMajors", key = "#departmentId != null ? #departmentId : 0L")
     public List<Major> getMajorsByDepartment(Long departmentId) {
         if (departmentId == null) return majorRepository.findAll();
         return majorRepository.findByDepartmentId(departmentId);

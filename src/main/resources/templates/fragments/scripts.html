@@ -324,14 +324,10 @@
                     localStorage.setItem('topichub_sidebar_collapsed', isCollapsed ? 'true' : 'false');
                 } catch (e) { }
 
-                const icons = document.querySelectorAll('#desktopSidebarToggleIcon, .desktopSidebarToggleIcon');
-                icons.forEach(icon => {
-                    if (isCollapsed) {
-                        icon.className = 'fa-solid fa-bars text-secondary';
-                    } else {
-                        icon.className = 'fa-solid fa-bars-staggered text-secondary';
-                    }
-                });
+                const chevron = document.getElementById('sidebarCollapseChevronIcon');
+                if (chevron) {
+                    chevron.className = isCollapsed ? 'fa-solid fa-chevron-right text-slate-400' : 'fa-solid fa-chevron-left text-slate-400';
+                }
             }
 
             // Restore Desktop Sidebar collapse state on page load
@@ -341,10 +337,10 @@
                         const savedState = localStorage.getItem('topichub_sidebar_collapsed');
                         if (savedState === 'true') {
                             document.body.classList.add('sidebar-collapsed');
-                            const icons = document.querySelectorAll('#desktopSidebarToggleIcon, .desktopSidebarToggleIcon');
-                            icons.forEach(icon => {
-                                icon.className = 'fa-solid fa-bars text-secondary';
-                            });
+                            const chevron = document.getElementById('sidebarCollapseChevronIcon');
+                            if (chevron) {
+                                chevron.className = 'fa-solid fa-chevron-right text-slate-400';
+                            }
                         }
                     }
                 } catch (e) { }
@@ -774,6 +770,16 @@
                     }
                 }
 
+                if (isDeptHead && annId && secondaryWrap && secondaryWrap.innerHTML.trim() === '') {
+                    secondaryWrap.innerHTML = `
+                        <form action="/department-head/announcements/${annId}/delete" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa thông báo này?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-3 py-2 text-xs font-semibold d-inline-flex align-items-center gap-1.5 transition">
+                                <i class="fa-regular fa-trash-can text-xs"></i> Xóa thông báo này
+                            </button>
+                        </form>
+                    `;
+                }
+
                 const modalEl = document.getElementById('announcementDetailModal');
                 if (modalEl) {
                     const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
@@ -1117,50 +1123,55 @@
                 });
             });
 
-            // === PAGE TRANSITION LOADER & OVERLAY ===
+            // === SLIM TOP PROGRESS BAR (NON-BLOCKING) ===
             (function () {
-                var overlay = document.createElement('div');
-                overlay.id = 'page-loader';
-                overlay.innerHTML = '<div class="spinner"></div><span class="page-loader-text">Đang tải dữ liệu...</span>';
-                if (document.body) {
-                    document.body.appendChild(overlay);
-                } else {
-                    document.addEventListener('DOMContentLoaded', function () { document.body.appendChild(overlay); });
-                }
-
                 var bar = document.createElement('div');
                 bar.className = 'page-loader-bar';
                 document.documentElement.appendChild(bar);
-                var w = 0, iv = null;
+                var w = 0, iv = null, safetyTimeout = null;
 
                 function startPL() {
-                    w = 0; bar.style.opacity = '1'; bar.style.width = '0%';
-                    if (overlay) overlay.classList.add('is-loading');
+                    w = 0;
+                    bar.style.opacity = '1';
+                    bar.style.width = '0%';
                     clearInterval(iv);
+                    clearTimeout(safetyTimeout);
                     iv = setInterval(function () {
-                        if (w < 85) { w += (85 - w) * 0.08 + 0.5; bar.style.width = Math.min(w, 85) + '%'; }
+                        if (w < 85) { w += (85 - w) * 0.12 + 1; bar.style.width = Math.min(w, 85) + '%'; }
                     }, 40);
+
+                    // Safety auto-dismiss: if no navigation occurs within 1s, dismiss smoothly
+                    safetyTimeout = setTimeout(finishPL, 1000);
                 }
 
                 function finishPL() {
-                    clearInterval(iv); bar.style.width = '100%';
-                    if (overlay) overlay.classList.remove('is-loading');
-                    setTimeout(function () { bar.style.opacity = '0'; setTimeout(function () { bar.style.width = '0%'; }, 350); }, 250);
+                    clearInterval(iv);
+                    clearTimeout(safetyTimeout);
+                    bar.style.width = '100%';
+                    setTimeout(function () {
+                        bar.style.opacity = '0';
+                        setTimeout(function () { bar.style.width = '0%'; }, 200);
+                    }, 150);
                 }
 
                 document.addEventListener('click', function (e) {
+                    if (e.defaultPrevented) return;
                     var a = e.target.closest('a[href]');
                     if (!a) return;
                     var h = a.getAttribute('href');
                     if (!h || h.charAt(0) === '#' || h.indexOf('javascript') === 0 || h.indexOf('mailto') === 0 || h.indexOf('tel') === 0 ||
                         a.target === '_blank' || a.hasAttribute('data-bs-toggle') || a.hasAttribute('data-bs-dismiss') ||
                         e.ctrlKey || e.metaKey || e.shiftKey) return;
+                    // Skip if navigating to the exact same URL hash/page
+                    if (a.href === window.location.href) return;
                     startPL();
-                }, true);
+                });
 
                 document.addEventListener('submit', function (e) {
-                    if (e.target && e.target.method && e.target.method.toLowerCase() !== 'get') startPL();
-                }, true);
+                    if (!e.defaultPrevented && e.target && e.target.method && e.target.method.toLowerCase() !== 'get') {
+                        startPL();
+                    }
+                });
 
                 window.addEventListener('pageshow', finishPL);
                 window.addEventListener('load', finishPL);

@@ -5,91 +5,90 @@
         <!-- 1. Global Quick Role Switcher Banner for Dev/Testing -->
         <div th:replace="~{fragments/role_switcher :: roleSwitcher(${user})}"></div>
 
-        <!-- 2. Main Topbar Navbar -->
-        <header class="saas-topbar px-4 d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-3">
-                <!-- Laptop / Desktop Toggle Button -->
-                <button class="btn btn-sm btn-light border border-slate-200/80 rounded-full d-none d-lg-inline-flex align-items-center justify-content-center" 
-                        type="button" 
-                        onclick="toggleDesktopSidebar()" 
-                        id="desktopSidebarToggleBtn" 
-                        title="Ẩn/Hiện thanh menu (Sidebar)"
-                        aria-label="Thu gọn hoặc mở rộng Sidebar"
-                        style="width: 38px; height: 38px; padding: 0; flex-shrink: 0; transition: all 0.2s ease;">
-                    <i class="fa-solid fa-bars-staggered text-slate-500" id="desktopSidebarToggleIcon" style="font-size: 0.9rem;"></i>
-                </button>
-
-                <!-- Mobile Toggle -->
-                <button class="btn btn-sm btn-light border border-slate-200/80 d-lg-none rounded-full" type="button" onclick="toggleSidebar()" aria-label="Toggle navigation" style="width: 38px; height: 38px;">
+        <!-- 2. Main Topbar with Floating Island Capsules (Image 3 Style) -->
+        <header class="saas-topbar px-3 px-lg-4 d-flex align-items-center justify-content-between">
+            <!-- Left Island: Brand / Logo Badge & Mobile Toggle -->
+            <div class="topbar-island topbar-island-brand d-flex align-items-center gap-2">
+                <!-- Mobile Toggle Only (No 3-bars on Desktop) -->
+                <button class="btn btn-sm btn-light border-0 d-lg-none rounded-full" type="button" onclick="toggleSidebar()" aria-label="Toggle navigation" style="width: 34px; height: 34px; padding: 0;">
                     <i class="fa-solid fa-bars text-slate-600"></i>
                 </button>
 
-                <!-- WellNest Pill Search Bar -->
-                <div class="position-relative d-none d-sm-block" style="width: 280px; max-width: 100%;">
-                    <i class="fa-solid fa-magnifying-glass position-absolute text-slate-400" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 0.85rem;"></i>
-                    <input type="text" 
-                           class="form-control form-control-sm border-0 bg-slate-100/90 text-slate-800 rounded-full ps-5 pe-3 py-2 text-xs placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-teal-400 focus:shadow-xs transition" 
-                           placeholder="Tìm kiếm nhanh hệ thống..." 
-                           style="height: 38px;">
-                </div>
+                <a class="d-flex align-items-center gap-2 text-decoration-none"
+                   th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
+                    <div class="topbar-brand-icon">
+                        <i class="fa-solid fa-shapes"></i>
+                    </div>
+                    <div class="d-flex flex-column">
+                        <span class="fw-bold text-slate-900 tracking-tight" style="font-size: 0.95rem; font-family: 'Plus Jakarta Sans', sans-serif;">TopicHub</span>
+                    </div>
+                </a>
 
-                <!-- Breadcrumbs (D-none on very small screens) -->
-                <nav aria-label="breadcrumb" class="d-none d-xl-block ms-2">
-                    <ol class="breadcrumb topbar-breadcrumb mb-0">
-                        <li class="breadcrumb-item">
-                            <a th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
-                                <i class="fa-solid fa-house text-slate-400 me-1" style="font-size: 0.8rem;"></i> Trang chủ
-                            </a>
-                        </li>
-                        <li class="breadcrumb-item" th:if="${breadcrumbParent != null}">
-                            <a th:href="@{${breadcrumbParentUrl != null ? breadcrumbParentUrl : '#'}}" th:text="${breadcrumbParent}">Quản lý</a>
-                        </li>
-                        <li class="breadcrumb-item active text-slate-900 font-bold" aria-current="page" th:text="${pageTitle != null ? pageTitle : 'Bảng điều khiển'}">Bảng điều khiển</li>
-                    </ol>
-                </nav>
+                <!-- Breadcrumb tag -->
+                <div class="topbar-breadcrumb-tag d-none d-sm-inline-flex align-items-center gap-1.5 ms-1.5">
+                    <span class="text-slate-300">/</span>
+                    <span class="text-slate-600 font-semibold text-xs truncate" style="max-width: 140px;" th:text="${pageTitle != null ? pageTitle : 'Bảng điều khiển'}">Bảng điều khiển</span>
+                </div>
             </div>
 
-            <!-- Topbar Right Actions -->
-            <div class="d-flex align-items-center gap-2.5">
-                
-                <!-- Academic Session Pill Tag -->
-                <div class="d-none d-md-flex align-items-center gap-2 px-3.5 py-1.5 bg-teal-50/80 border border-teal-200/60 rounded-full" style="font-size: 0.8rem;">
-                    <i class="fa-regular fa-calendar text-teal-600"></i>
-                    <span class="text-teal-700 font-medium">Học kỳ:</span>
-                    <strong class="text-teal-950 font-bold">HK1 2026-2027</strong>
-                </div>
+            <!-- Center Island: Quick Navigation Pills (Image 3 Style) -->
+            <div class="topbar-island topbar-island-nav d-none d-md-flex align-items-center gap-1">
+                <!-- Admin Quick Pills -->
+                <th:block th:if="${user != null && user.role != null && user.role.code == 'ADMIN'}">
+                    <a th:href="@{/admin/dashboard}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Bảng điều khiển' ? 'active' : ''}">Bảng điều khiển</a>
+                    <a th:href="@{/admin/users}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Quản lý tài khoản' ? 'active' : ''}">Tài khoản</a>
+                    <a th:href="@{/admin/departments}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Khoa & Chuyên ngành' ? 'active' : ''}">Khoa &amp; Ngành</a>
+                </th:block>
 
-                <!-- Dark / Light Mode Toggle Button -->
-                <button class="btn btn-sm btn-light border border-slate-200/80 rounded-full d-flex align-items-center justify-content-center text-slate-500 hover:text-slate-800" 
-                        id="themeToggleBtn"
-                        type="button" 
-                        onclick="toggleTheme()" 
-                        style="width: 38px; height: 38px;" 
-                        title="Chuyển đổi Sáng / Tối">
-                    <i class="fa-regular fa-moon" id="themeToggleIcon"></i>
-                </button>
+                <!-- Department Head Quick Pills -->
+                <th:block th:if="${user != null && user.role != null && (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD')}">
+                    <a th:href="@{/department-head/dashboard}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Bảng điều khiển' ? 'active' : ''}">Bảng điều khiển</a>
+                    <a th:href="@{/department-head/topics}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Quản lý Đề tài' ? 'active' : ''}">Đề tài</a>
+                    <a th:href="@{/department-head/periods}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Đợt đăng ký' ? 'active' : ''}">Đợt KLTN</a>
+                    <a th:href="@{/department-head/councils}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Hội đồng chấm' ? 'active' : ''}">Hội đồng</a>
+                    <a th:href="@{/department-head/personnel}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Quản lý Nhân sự' ? 'active' : ''}">Nhân sự</a>
+                </th:block>
 
+                <!-- Lecturer Quick Pills -->
+                <th:block th:if="${user != null && user.role != null && user.role.code == 'LECTURER'}">
+                    <a th:href="@{/lecturer/dashboard}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Bảng điều khiển' ? 'active' : ''}">Bảng điều khiển</a>
+                    <a th:href="@{/lecturer/topics}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Đề tài của tôi' || pageTitle == 'Đề xuất đề tài mới' ? 'active' : ''}">Đề tài</a>
+                    <a th:href="@{/lecturer/registrations}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Nhóm SV hướng dẫn' ? 'active' : ''}">Nhóm SV</a>
+                    <a th:href="@{/lecturer/submissions}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Bài nộp tiến độ' ? 'active' : ''}">Tiến độ</a>
+                    <a th:href="@{/lecturer/reviews}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Chấm phản biện' ? 'active' : ''}">Phản biện</a>
+                </th:block>
+
+                <!-- Student Quick Pills -->
+                <th:block th:if="${user != null && user.role != null && user.role.code == 'STUDENT'}">
+                    <a th:href="@{/student/dashboard}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Bảng điều khiển' ? 'active' : ''}">Bảng điều khiển</a>
+                    <a th:href="@{/student/group}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Nhóm sinh viên' ? 'active' : ''}">Nhóm</a>
+                    <a th:href="@{/student/topics}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Tra cứu đề tài' ? 'active' : ''}">Đề tài</a>
+                    <a th:href="@{/student/submissions}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Nộp báo cáo' ? 'active' : ''}">Báo cáo</a>
+                    <a th:href="@{/student/results}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Kết quả đánh giá' ? 'active' : ''}">Kết quả</a>
+                </th:block>
+            </div>
+
+            <!-- Right Island: Action Pills (Image 3 Style: Notifications, Theme/Settings, User Avatar) -->
+            <div class="topbar-island topbar-island-actions d-flex align-items-center gap-1.5">
                 <!-- Notifications Dropdown -->
                 <div class="dropdown">
-                    <button class="btn btn-sm btn-light border border-slate-200/80 rounded-full position-relative d-flex align-items-center justify-content-center text-slate-500 hover:text-slate-800" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 38px; height: 38px;" title="Thông báo hệ thống">
+                    <button class="topbar-action-btn position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Thông báo hệ thống">
                         <i class="fa-regular fa-bell"></i>
-                        <!-- Notification Counter Badge -->
+                        <!-- Red Notification Dot Indicator -->
                         <span th:if="${announcements != null && !announcements.isEmpty()}" 
-                              class="position-absolute -top-1 -end-1 badge rounded-full bg-rose-500 text-white d-flex align-items-center justify-content-center shadow-xs" 
-                              id="topbarNotificationCount"
-                              style="font-size: 0.65rem; min-width: 18px; height: 18px; padding: 0 4px; border: 2px solid #ffffff; z-index: 2;"
-                              th:text="${#lists.size(announcements) > 9 ? '9+' : #lists.size(announcements)}">1</span>
+                              class="position-absolute top-1.5 end-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" 
+                              id="topbarNotificationCount"></span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-100 rounded-3xl p-0 mt-2" style="width: 340px; z-index: 1050;">
                         <div class="p-3.5 border-b border-slate-100 bg-slate-50/70 rounded-t-3xl d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center gap-2">
                                 <span class="fw-bold text-slate-900 text-sm">Thông báo</span>
-                                <span class="badge bg-teal-100 text-teal-800 font-bold rounded-full px-2 py-0.5 text-xs" 
+                                <span class="badge bg-blue-100 text-blue-800 font-bold rounded-full px-2 py-0.5 text-xs" 
                                       id="topbarNotificationHeaderCount"
                                       th:if="${announcements != null && !announcements.isEmpty()}"
                                       th:text="${#lists.size(announcements)} + ' mới'">1 mới</span>
                             </div>
-                            <button type="button" class="btn btn-link p-0 text-xs text-teal-600 text-decoration-none hover:underline font-semibold" 
+                            <button type="button" class="btn btn-link p-0 text-xs text-blue-600 text-decoration-none hover:underline font-semibold" 
                                      onclick="markAllAnnouncementsAsRead()" 
                                      th:if="${announcements != null && !announcements.isEmpty()}">
                                 Đã đọc tất cả
@@ -107,14 +106,14 @@
                                      th:data-created-at="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm') : ''}"
                                      th:data-period="${a.period != null ? a.period.name : ''}"
                                      th:data-content="${a.content}">
-                                    <div class="w-8 h-8 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
                                         <i class="fa-solid fa-bullhorn text-xs"></i>
                                     </div>
                                     <div class="text-xs overflow-hidden flex-grow-1">
                                         <p class="mb-0.5 fw-semibold text-slate-800 text-truncate" th:text="${a.title}">Tiêu đề thông báo</p>
                                         <span class="text-slate-400" th:text="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy') : 'Hôm nay'}">Hôm nay</span>
                                     </div>
-                                    <span class="unread-dot w-2 h-2 rounded-full bg-teal-500 flex-shrink-0 mt-1.5" title="Chưa đọc"></span>
+                                    <span class="unread-dot w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1.5" title="Chưa đọc"></span>
                                 </div>
                             </th:block>
                             <div th:if="${announcements == null || announcements.isEmpty()}" class="p-4 text-center text-slate-400 text-xs">
@@ -125,25 +124,33 @@
                     </div>
                 </div>
 
-                <!-- Minimalist User Avatar Button -->
+                <!-- Theme / Settings Toggle Button -->
+                <button class="topbar-action-btn" 
+                        id="themeToggleBtn"
+                        type="button" 
+                        onclick="toggleTheme()" 
+                        title="Chuyển đổi Sáng / Tối">
+                    <i class="fa-regular fa-moon" id="themeToggleIcon"></i>
+                </button>
+
+                <!-- User Profile Avatar Pill -->
                 <div class="dropdown">
-                    <button class="btn p-0 border border-slate-200/80 rounded-full d-flex align-items-center justify-content-center bg-white hover:bg-slate-50 transition shadow-2xs" 
+                    <button class="topbar-user-avatar-btn" 
                             type="button" 
                             data-bs-toggle="dropdown" 
                             aria-expanded="false" 
-                            style="width: 38px; height: 38px;" 
                             title="Tài khoản cá nhân">
-                        <div class="rounded-full bg-slate-900 text-teal-300 d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                        <div class="w-8 h-8 rounded-full bg-emerald-500 text-white d-flex align-items-center justify-content-center fw-bold shadow-xs" style="font-size: 0.85rem;">
                             <span th:text="${user != null && user.fullName != null && user.fullName.length() > 0 ? user.fullName.substring(0, 1) : 'U'}">U</span>
                         </div>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-100 rounded-3xl p-1.5 mt-2" style="min-width: 220px;">
                         <li class="px-3.5 py-2.5 border-b border-slate-100 mb-1">
-                            <p class="mb-0 fw-bold text-slate-900 text-sm" th:text="${user != null ? user.fullName : 'Tài khoản'}">Họ Tên</p>
+                            <p class="mb-0 fw-bold text-slate-900 text-sm" th:text="${user != null ? user.fullName : 'Họ Tên'}">Họ Tên</p>
                             <p class="mb-0 text-slate-400 text-xs" th:text="${user != null && user.role != null ? user.role.name : 'Vai trò'}">Trưởng bộ môn</p>
                         </li>
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2xl text-xs font-semibold text-slate-700 hover:bg-teal-50 hover:text-teal-900" th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2xl text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-900" th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
                                 <i class="fa-solid fa-chart-pie text-slate-400"></i>
                                 <span>Bảng điều khiển</span>
                             </a>

@@ -29,7 +29,7 @@
                 <div>
                     <div class="d-flex align-items-center gap-2.5">
                         <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-0">Bảng điều khiển</h1>
-                        <span class="badge bg-teal-100 text-teal-800 font-bold text-xs px-2.5 py-1 rounded-full"
+                        <span class="badge bg-blue-50 text-blue-700 border border-blue-200 font-bold text-xs px-2.5 py-1 rounded-full"
                             th:text="${lecturer != null ? ((lecturer.academicTitle != null ? lecturer.academicTitle + ' ' : '') + (lecturer.degree != null ? lecturer.degree : 'Giảng viên')) : 'Giảng viên'}">ThS</span>
                     </div>
                 </div>
@@ -38,7 +38,7 @@
                         <i class="fa-solid fa-users text-amber-500 text-xs"></i>
                         <span>Duyệt nhóm SV</span>
                     </a>
-                    <a th:href="@{/lecturer/topics/create}" class="btn bg-slate-900 hover:bg-slate-800 text-teal-300 rounded-full px-4 py-2 text-xs font-bold shadow-wellnest d-inline-flex align-items-center gap-2 transition border-0">
+                    <a th:href="@{/lecturer/topics/create}" class="btn bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 py-2 text-xs font-bold shadow-xs d-inline-flex align-items-center gap-2 transition border-0">
                         <i class="fa-solid fa-circle-plus text-xs"></i>
                         <span>+ Đề xuất đề tài</span>
                     </a>
@@ -51,7 +51,7 @@
                     <div class="stat-card">
                         <div>
                             <div class="stat-label">
-                                <i class="fa-solid fa-book-bookmark text-teal-600"></i> Đề tài Hướng dẫn
+                                <i class="fa-solid fa-book-bookmark text-blue-600"></i> Đề tài Hướng dẫn
                             </div>
                             <div class="stat-value" data-counter th:text="${totalTopics != null ? totalTopics : 0}">0</div>
                             <div class="mt-2">
@@ -132,15 +132,15 @@
 
                     <!-- Active Proposal Period Alert Banner -->
                     <div th:if="${openProposalPeriods != null && !openProposalPeriods.isEmpty()}" class="anim-fade-up" style="animation-delay:0.06s;">
-                        <div class="p-3 px-4 rounded-3xl bg-gradient-to-r from-teal-500/10 via-teal-50 to-white border border-teal-200/80 shadow-wellnest d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                        <div class="p-3 px-4 rounded-3xl bg-gradient-to-r from-blue-500/10 via-blue-50 to-white border border-blue-200/80 shadow-wellnest d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                             <div class="d-flex align-items-center gap-3 overflow-hidden">
-                                <div class="w-9 h-9 rounded-2xl bg-teal-500 text-white flex items-center justify-center flex-shrink-0 text-sm shadow-xs">
+                                <div class="w-9 h-9 rounded-2xl bg-blue-600 text-white flex items-center justify-center flex-shrink-0 text-sm shadow-xs">
                                     <i class="fa-solid fa-bullhorn"></i>
                                 </div>
                                 <div class="d-flex align-items-center gap-2 min-w-0 w-100">
                                     <span class="text-xs font-bold text-slate-800 flex-shrink-0 d-none d-sm-inline">Đợt đề xuất:</span>
                                     <select id="periodSelector" 
-                                            class="form-select form-select-sm rounded-full text-xs font-bold text-slate-800 border-slate-200/80 bg-white py-1.5 ps-3.5 pe-8 cursor-pointer hover:border-teal-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-100 transition truncate shadow-2xs"
+                                            class="form-select form-select-sm rounded-full text-xs font-bold text-slate-800 border-slate-200/80 bg-white py-1.5 ps-3.5 pe-8 cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition truncate shadow-2xs"
                                             onchange="onPeriodChange(this.value)">
                                         <option th:each="prog, iter : ${proposalProgressList}" 
                                                 th:value="${prog.period.id}"
@@ -168,14 +168,14 @@
                                     </span>
                                 </div>
                                 <div id="progBadgeContainer">
-                                    <span th:if="${proposalProgressList[0].targetReached}" class="badge bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold px-2.5 py-1 rounded-full">
+                                    <span th:if="${proposalProgressList[0].targetReached}" class="badge bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold px-2.5 py-1 rounded-full">
                                         <i class="fa-solid fa-check me-1"></i> Đạt chỉ tiêu
                                     </span>
                                     <span th:unless="${proposalProgressList[0].targetReached}" class="badge bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold px-2.5 py-1 rounded-full">
                                         Thiếu <strong th:text="${proposalProgressList[0].remainingNeeded}">3</strong>
                                     </span>
                                 </div>
-                                <a th:href="@{/lecturer/topics/create}" class="btn btn-sm bg-slate-900 hover:bg-slate-800 text-teal-300 rounded-full px-3 py-1.5 text-xs font-bold shadow-xs transition border-0">
+                                <a th:href="@{/lecturer/topics/create}" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-full px-3.5 py-1.5 text-xs font-bold shadow-xs transition border-0">
                                     <span>Nộp ngay</span>
                                 </a>
                             </div>

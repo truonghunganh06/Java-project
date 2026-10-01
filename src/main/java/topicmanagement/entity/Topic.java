@@ -30,15 +30,15 @@ public class Topic {
     @JoinColumn(name = "supervisor_id")
     private Lecturer supervisor; // GVHD chính
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "co_supervisor_id")
     private Lecturer coSupervisor; // GVHD phụ (nếu có)
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewer_id")
     private Lecturer reviewer; // GVPB (Giảng viên phản biện do Trưởng bộ môn phân công)
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "council_id")
     private Council council; // Hội đồng bảo vệ (nếu là KLTN / TLCN)
 
