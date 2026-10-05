@@ -279,7 +279,7 @@ public class DataSeederService {
                     cnttDept,
                     now.minusDays(20),
                     now.minusDays(5),
-                    now.minusDays(10),
+                    now.minusDays(4),
                     now.plusDays(30)
             );
             map.put("CNTT_KLTN", pKltn);
@@ -291,7 +291,7 @@ public class DataSeederService {
                     cnttDept,
                     now.minusDays(20),
                     now.minusDays(5),
-                    now.minusDays(10),
+                    now.minusDays(4),
                     now.plusDays(30)
             );
             map.put("CNTT_NCKH", pNckh);
@@ -303,7 +303,7 @@ public class DataSeederService {
                     cnttDept,
                     now.minusDays(20),
                     now.minusDays(5),
-                    now.minusDays(10),
+                    now.minusDays(4),
                     now.plusDays(30)
             );
             map.put("CNTT_TLCN", pTlcn);
@@ -315,7 +315,7 @@ public class DataSeederService {
                     cnttDept,
                     now.minusDays(20),
                     now.minusDays(5),
-                    now.minusDays(10),
+                    now.minusDays(4),
                     now.plusDays(30)
             );
             map.put("CNTT_MON_HOC", pMonHoc);
@@ -330,7 +330,7 @@ public class DataSeederService {
                     qtkdDept,
                     now.minusDays(20),
                     now.minusDays(5),
-                    now.minusDays(10),
+                    now.minusDays(4),
                     now.plusDays(30)
             );
             map.put("QTKD_KLTN", pKltnQtkd);
@@ -342,7 +342,7 @@ public class DataSeederService {
                     qtkdDept,
                     now.minusDays(20),
                     now.minusDays(5),
-                    now.minusDays(10),
+                    now.minusDays(4),
                     now.plusDays(30)
             );
             map.put("QTKD_NCKH", pNckhQtkd);
