@@ -1,0 +1,709 @@
+/* ==========================================================================
+   SKYLEARN DESIGN SYSTEM - CORE STYLESHEET
+   Kids Edtech & Family-Friendly Learning Platform Design System
+   ========================================================================== */
+
+:root {
+    /* 1. BRAND COLORS */
+    --color-sky: #3B82F6;
+    --color-sky-bright: #60A5FA;
+    --color-sky-deep: #1D4ED8;
+    --color-sky-soft: #DBEAFE;
+
+    --color-sun: #FBBF24;
+    --color-sun-bright: #FCD34D;
+    --color-sun-deep: #D97706;
+    --color-sun-soft: #FEF3C7;
+
+    --color-leaf: #22C55E;
+    --color-leaf-bright: #4ADE80;
+    --color-leaf-deep: #16A34A;
+    --color-leaf-soft: #DCFCE7;
+
+    --color-coral: #F87171;
+    --color-coral-bright: #FCA5A5;
+    --color-coral-deep: #DC2626;
+    --color-coral-soft: #FEE2E2;
+
+    --color-berry: #A855F7;
+    --color-berry-bright: #C084FC;
+    --color-berry-deep: #7E22CE;
+    --color-berry-soft: #F3E8FF;
+
+    /* 2. SURFACES & BACKGROUNDS */
+    --color-bg: #FFFFFF;
+    --color-surface: #F8FAFC;
+    --color-surface-elevated: #FFFFFF;
+    --color-surface-sunken: #F1F5F9;
+
+    /* 3. INK & TEXT */
+    --color-ink: #0F172A;
+    --color-ink-muted: #475569;
+    --color-ink-subtle: #94A3B8;
+    --color-ink-faint: #CBD5E1;
+
+    /* 4. OUTLINES & DIVIDERS */
+    --color-outline: #E2E8F0;
+    --color-outline-strong: #94A3B8;
+
+    /* 5. TYPOGRAPHY FAMILIES */
+    --font-display: 'Hubot Sans', 'Nunito', 'Quicksand', -apple-system, sans-serif;
+    --font-body: 'Atkinson Hyperlegible', 'Nunito Sans', 'Inter', -apple-system, sans-serif;
+    --font-reading: 'Lexend Deca', 'Source Serif 4', serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    /* 6. RADII */
+    --radius-sm: 8px;       /* Inputs, chips */
+    --radius-input: 12px;   /* Standard inputs */
+    --radius-btn: 16px;     /* Buttons & tiles */
+    --radius-card: 20px;    /* Lesson cards */
+    --radius-panel: 28px;   /* Modals & large panels */
+    --radius-full: 9999px;  /* Pills, avatar circles, streak badges */
+
+    /* 7. ELEVATION & SHADOWS */
+    --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.06);
+    --shadow-active: 0 12px 32px rgba(59, 130, 246, 0.15);
+    --shadow-sun-glow: 0 0 24px rgba(252, 211, 77, 0.4);
+    --shadow-modal: 0 24px 48px rgba(15, 23, 42, 0.12);
+
+    /* 8. MOTIONS & TIMINGS */
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --duration-standard: 240ms;
+    --duration-progress: 480ms;
+
+    /* App Shell Aliases */
+    --bg-body: #F8FAFC;
+    --sidebar-bg: #FFFFFF;
+    --sidebar-border: #E2E8F0;
+    --sidebar-text: #475569;
+    --sidebar-text-active: #1D4ED8;
+    --sidebar-hover: #DBEAFE;
+    --sidebar-active-bg: #DBEAFE;
+
+    --topbar-bg: #FFFFFF;
+    --topbar-height: 72px;
+    --sidebar-width: 270px;
+
+    --text-main: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+    --border-color: #E2E8F0;
+    --card-bg: #FFFFFF;
+    --card-radius: 20px;
+    --card-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+
+    /* Brand references */
+    --brand-primary: #3B82F6;
+    --brand-primary-light: #DBEAFE;
+    --brand-accent: #60A5FA;
+    --brand-dark: #0F172A;
+}
+
+/* ==========================================================================
+   GLOBAL TYPOGRAPHY & RESET
+   ========================================================================== */
+
+body {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6,
+.font-display,
+.skylearn-title {
+    font-family: var(--font-display);
+    color: var(--color-ink);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+h1, .text-hero {
+    font-size: 2.5rem;
+    line-height: 1.2;
+}
+
+h2, .text-h2 {
+    font-size: 2rem;
+    line-height: 1.25;
+}
+
+h3, .text-h3 {
+    font-size: 1.5rem;
+    line-height: 1.35;
+    font-weight: 600;
+}
+
+h4, .text-h4 {
+    font-size: 1.1875rem;
+    line-height: 1.45;
+    font-weight: 600;
+}
+
+.body-instruction {
+    font-size: 1.125rem; /* 18px */
+    line-height: 1.7;
+    color: var(--color-ink-muted);
+}
+
+.score-number {
+    font-family: var(--font-display);
+    font-size: 3.5rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
+.font-mono-score {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   SKYLEARN BUTTONS - BIG FRIENDLY BUTTON
+   ========================================================================== */
+
+.btn-skylearn,
+.btn-skylearn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-height: 56px;
+    padding: 0.85rem 1.75rem;
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    background-color: var(--color-sky);
+    border: none;
+    border-radius: var(--radius-btn);
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--duration-standard) var(--ease-spring);
+    user-select: none;
+}
+
+.btn-skylearn:hover,
+.btn-skylearn-primary:hover {
+    background-color: var(--color-sky-deep);
+    box-shadow: 0 6px 20px rgba(29, 78, 216, 0.4), inset 0 -2px 0 var(--color-sky-bright);
+    color: #FFFFFF;
+    transform: translateY(-2px);
+}
+
+.btn-skylearn:active,
+.btn-skylearn-primary:active {
+    transform: scale(0.97);
+    transition-duration: 120ms;
+}
+
+.btn-skylearn-lg {
+    min-height: 64px;
+    padding: 1rem 2.5rem;
+    font-size: 1.25rem;
+}
+
+.btn-skylearn-sm {
+    min-height: 44px;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.95rem;
+    border-radius: 12px;
+}
+
+.btn-skylearn-leaf {
+    background-color: var(--color-leaf);
+    box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
+}
+
+.btn-skylearn-leaf:hover {
+    background-color: var(--color-leaf-deep);
+    box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4), inset 0 -2px 0 var(--color-leaf-bright);
+    color: #FFFFFF;
+}
+
+.btn-skylearn-sun {
+    background-color: var(--color-sun);
+    color: var(--color-ink);
+    box-shadow: 0 4px 14px rgba(251, 191, 36, 0.35);
+}
+
+.btn-skylearn-sun:hover {
+    background-color: var(--color-sun-deep);
+    color: #FFFFFF;
+    box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4), inset 0 -2px 0 var(--color-sun-bright);
+}
+
+.btn-skylearn-outline {
+    background-color: #FFFFFF;
+    color: var(--color-sky-deep);
+    border: 2px solid var(--color-outline);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.btn-skylearn-outline:hover {
+    border-color: var(--color-sky);
+    background-color: var(--color-sky-soft);
+    color: var(--color-sky-deep);
+    transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   SKYLEARN LESSON CARD
+   ========================================================================== */
+
+.skylearn-card,
+.skylearn-lesson-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-outline);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    padding: 1.5rem;
+    transition: all var(--duration-standard) var(--ease-spring);
+    position: relative;
+    overflow: hidden;
+}
+
+.skylearn-lesson-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+    border-color: var(--color-sky-bright);
+}
+
+.skylearn-lesson-card.active {
+    border: 3px solid var(--color-sky);
+    box-shadow: var(--shadow-active);
+}
+
+.skylearn-lesson-card.locked {
+    opacity: 0.65;
+    background-color: var(--color-surface);
+    cursor: not-allowed;
+}
+
+.skylearn-card-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    background-color: var(--color-sky-soft);
+    color: var(--color-sky);
+    margin-bottom: 1rem;
+    transition: transform var(--duration-standard) var(--ease-spring);
+}
+
+.skylearn-lesson-card:hover .skylearn-card-icon {
+    transform: scale(1.08) rotate(3deg);
+}
+
+/* ==========================================================================
+   PROGRESS BAR
+   ========================================================================== */
+
+.skylearn-progress-track {
+    width: 100%;
+    height: 10px;
+    background-color: var(--color-sky-soft);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    position: relative;
+}
+
+.skylearn-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-leaf-bright), var(--color-leaf));
+    border-radius: var(--radius-full);
+    transition: width var(--duration-progress) ease-out;
+    position: relative;
+}
+
+.skylearn-progress-fill.sun {
+    background: linear-gradient(90deg, var(--color-sun-bright), var(--color-sun));
+}
+
+.skylearn-progress-fill.sky {
+    background: linear-gradient(90deg, var(--color-sky-bright), var(--color-sky));
+}
+
+/* ==========================================================================
+   ANSWER TILES
+   ========================================================================== */
+
+.skylearn-answer-tile {
+    min-height: 96px;
+    padding: 1.25rem 1.5rem;
+    background-color: var(--color-surface-elevated);
+    border: 2px solid var(--color-outline);
+    border-radius: var(--radius-btn);
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    cursor: pointer;
+    transition: all var(--duration-standard) var(--ease-spring);
+    position: relative;
+    user-select: none;
+}
+
+.skylearn-answer-tile:hover {
+    border-color: var(--color-sky);
+    background-color: #FFFFFF;
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.12);
+    transform: translateY(-2px);
+}
+
+.skylearn-answer-tile.is-correct {
+    border-color: var(--color-leaf);
+    background-color: var(--color-leaf-soft);
+    color: var(--color-leaf-deep);
+    animation: leafBurst 320ms var(--ease-spring);
+}
+
+.skylearn-answer-tile.is-incorrect {
+    border-color: var(--color-coral);
+    background-color: var(--color-coral-soft);
+    animation: tileShake 240ms ease-in-out 2;
+}
+
+@keyframes tileShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+
+@keyframes leafBurst {
+    0% { transform: scale(0.98); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
+
+/* ==========================================================================
+   STAR BADGES & STREAK COUNTER
+   ========================================================================== */
+
+.skylearn-star-badge {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--color-sun-bright), var(--color-sun));
+    color: #FFFFFF;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    box-shadow: 0 6px 16px rgba(251, 191, 36, 0.4);
+    animation: starScaleIn 480ms var(--ease-spring);
+}
+
+.skylearn-star-badge.glowing {
+    box-shadow: var(--shadow-sun-glow);
+}
+
+@keyframes starScaleIn {
+    0% { transform: scale(0); opacity: 0; }
+    80% { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.skylearn-streak-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    background-color: var(--color-sun-soft);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    border-radius: var(--radius-full);
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--color-sun-deep);
+    font-size: 0.95rem;
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.15);
+}
+
+.skylearn-streak-counter i {
+    color: #F59E0B;
+    font-size: 1.1rem;
+    animation: flamePulse 1.8s ease-in-out infinite;
+}
+
+@keyframes flamePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.18); }
+}
+
+/* ==========================================================================
+   TAG PILLS
+   ========================================================================== */
+
+.skylearn-tag-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-full);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.tag-subject {
+    background-color: var(--color-sky-soft);
+    color: var(--color-sky-deep);
+}
+
+.tag-easy {
+    background-color: var(--color-leaf-soft);
+    color: var(--color-leaf-deep);
+}
+
+.tag-medium {
+    background-color: var(--color-sun-soft);
+    color: var(--color-sun-deep);
+}
+
+.tag-hard {
+    background-color: var(--color-berry-soft);
+    color: var(--color-berry-deep);
+}
+
+.tag-coral {
+    background-color: var(--color-coral-soft);
+    color: var(--color-coral-deep);
+}
+
+/* ==========================================================================
+   HELP BUBBLE (MASCOT / HINTS)
+   ========================================================================== */
+
+.skylearn-help-bubble {
+    background-color: var(--color-sky-soft);
+    color: var(--color-sky-deep);
+    border-radius: var(--radius-card);
+    padding: 1.25rem 1.5rem;
+    position: relative;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.08);
+}
+
+.skylearn-help-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 28px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid var(--color-sky-soft);
+}
+
+/* ==========================================================================
+   INPUTS & FORM CONTROLS
+   ========================================================================== */
+
+.skylearn-input,
+.form-control.skylearn-input {
+    min-height: 52px;
+    padding: 0.85rem 1.25rem;
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    color: var(--color-ink);
+    background-color: var(--color-surface);
+    border: 1.5px solid var(--color-outline);
+    border-radius: var(--radius-input);
+    transition: all var(--duration-standard) ease;
+}
+
+.skylearn-input:focus,
+.form-control.skylearn-input:focus {
+    background-color: #FFFFFF;
+    border-color: var(--color-sky);
+    outline: none;
+    box-shadow: 0 0 0 4px var(--color-sky-soft);
+}
+
+.skylearn-input.is-invalid {
+    border-color: var(--color-coral);
+    background-color: var(--color-coral-soft);
+}
+
+.skylearn-helper-coral {
+    color: var(--color-coral-deep);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-top: 0.35rem;
+}
+
+/* ==========================================================================
+   READING PASSAGE & ACCESSIBILITY READING RULER
+   ========================================================================== */
+
+.skylearn-reading-passage {
+    font-family: var(--font-body);
+    font-size: 1.1875rem; /* 19px */
+    line-height: 2;      /* 32px leading */
+    color: var(--color-ink);
+    position: relative;
+    padding: 1.5rem;
+    background-color: #FFFFFF;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--color-outline);
+}
+
+.skylearn-reading-ruler {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 38px;
+    background-color: rgba(59, 130, 246, 0.12);
+    border-top: 2px solid var(--color-sky-bright);
+    border-bottom: 2px solid var(--color-sky-bright);
+    pointer-events: none;
+    transition: top 80ms ease-out;
+    display: none;
+}
+
+.reading-ruler-active .skylearn-reading-ruler {
+    display: block;
+}
+
+/* ==========================================================================
+   DRAG AND DROP WELL
+   ========================================================================== */
+
+.skylearn-dropzone {
+    background-color: var(--color-surface-sunken);
+    border: 2px dashed var(--color-outline-strong);
+    border-radius: var(--radius-card);
+    padding: 2.5rem;
+    text-align: center;
+    color: var(--color-ink-muted);
+    transition: all var(--duration-standard) var(--ease-spring);
+    cursor: pointer;
+}
+
+.skylearn-dropzone.drag-active,
+.skylearn-dropzone:hover {
+    border-color: var(--color-sky);
+    background-color: var(--color-sky-soft);
+    color: var(--color-sky-deep);
+}
+
+/* ==========================================================================
+   SIDEBAR & TOPBAR STYLES (SKYLEARN THEMED)
+   ========================================================================== */
+
+.saas-sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-border);
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1040;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s var(--ease-spring), transform 0.35s var(--ease-spring), left 0.35s var(--ease-spring);
+}
+
+.sidebar-brand-logo {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, var(--color-sky), var(--color-sky-deep));
+    color: #FFFFFF;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+}
+
+.saas-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--sidebar-text);
+    border-radius: var(--radius-full);
+    text-decoration: none;
+    transition: all var(--duration-standard) var(--ease-spring);
+    margin-bottom: 4px;
+}
+
+.saas-nav-link i {
+    font-size: 1.15rem;
+    width: 24px;
+    text-align: center;
+    color: var(--color-ink-subtle);
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.saas-nav-link:hover {
+    color: var(--color-sky-deep);
+    background-color: var(--color-sky-soft);
+    transform: translateX(3px);
+}
+
+.saas-nav-link:hover i {
+    color: var(--color-sky);
+}
+
+.saas-nav-link.active {
+    color: var(--color-sky-deep);
+    background-color: var(--color-sky-soft);
+    font-weight: 700;
+    box-shadow: 0 2px 10px rgba(59, 130, 246, 0.15);
+}
+
+.saas-nav-link.active i {
+    color: var(--color-sky-deep);
+}
+
+.saas-topbar {
+    height: var(--topbar-height);
+    background-color: var(--topbar-bg);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.75rem;
+}
+
+/* ==========================================================================
+   ACCESSIBILITY & PREFERS-REDUCED-MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 120ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+.high-contrast-mode {
+    --color-bg: #FFFFFF;
+    --color-surface: #FFFFFF;
+    --color-ink: #000000;
+    --color-ink-muted: #1E293B;
+    --color-outline: #000000;
+    border-color: #000000 !important;
+}

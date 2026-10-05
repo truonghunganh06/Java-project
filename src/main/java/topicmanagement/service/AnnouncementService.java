@@ -1,5 +1,7 @@
 package topicmanagement.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import topicmanagement.entity.*;
@@ -21,6 +23,7 @@ public class AnnouncementService {
         this.periodRepository = periodRepository;
     }
 
+    @Cacheable("announcements")
     public List<Announcement> getAllAnnouncements() {
         return announcementRepository.findAllByOrderByIsPinnedDescCreatedAtDesc();
     }
@@ -46,6 +49,7 @@ public class AnnouncementService {
     }
 
     @Transactional
+    @CacheEvict(value = "announcements", allEntries = true)
     public Announcement createAnnouncement(AppUser author, Department department, Long periodId, String title, String content, String category, Boolean isPinned, String attachmentPath) {
         Announcement a = new Announcement();
         a.setAuthor(author);
@@ -66,6 +70,7 @@ public class AnnouncementService {
     }
 
     @Transactional
+    @CacheEvict(value = "announcements", allEntries = true)
     public boolean deleteAnnouncement(Long id) {
         if (id == null || !announcementRepository.existsById(id)) return false;
         announcementRepository.deleteById(id);

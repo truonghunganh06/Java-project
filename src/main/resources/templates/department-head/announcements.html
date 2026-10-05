@@ -59,14 +59,9 @@
                                 <span class="badge-pill-neutral font-medium flex-shrink-0" th:text="${a.getCategoryName()}">Kế hoạch đợt</span>
                                 <h2 class="text-base font-bold text-slate-900 mb-0 ms-1 hover:text-blue-600 transition text-truncate" style="min-width:0;" th:text="${a.title}">Thông báo nộp báo cáo tiến độ</h2>
                             </div>
-                            <!-- Right: timestamp + delete (never shrinks) -->
-                            <div class="d-flex align-items-center gap-2 flex-shrink-0" onclick="event.stopPropagation()">
+                            <!-- Right: timestamp -->
+                            <div class="d-flex align-items-center gap-2 flex-shrink-0">
                                 <span class="text-xs text-slate-400 d-none d-sm-inline" th:text="${#temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
-                                <form th:action="@{/department-head/announcements/{id}/delete(id=${a.id})}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa thông báo này?');">
-                                    <button type="submit" class="btn btn-sm btn-link text-rose-500 hover:text-rose-700 p-0" title="Xóa thông báo">
-                                        <i class="fa-regular fa-trash-can text-xs"></i>
-                                    </button>
-                                </form>
                             </div>
                         </div>
                         <div class="text-xs text-slate-600 leading-relaxed mt-2 line-clamp-3" th:text="${a.content}">Nội dung chi tiết thông báo...</div>

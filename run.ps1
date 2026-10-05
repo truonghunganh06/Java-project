@@ -1,3 +1,7 @@
+param(
+    [switch]$Fast
+)
+
 # Script khoi dong Spring Boot Server
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -49,8 +53,13 @@ if ($oldPort) {
     Stop-Process -Id $oldPort.OwningProcess -Force -ErrorAction SilentlyContinue
 }
 
-Write-Host "[*] Dang bien dich va dong goi du an..." -ForegroundColor Yellow
-cmd.exe /c "mvnw.cmd package -DskipTests"
+if ($Fast) {
+    Write-Host "[*] Che do Fast: Bien dich nhanh bang compile..." -ForegroundColor Cyan
+    cmd.exe /c "mvnw.cmd compile"
+} else {
+    Write-Host "[*] Dang bien dich va dong goi du an..." -ForegroundColor Yellow
+    cmd.exe /c "mvnw.cmd package -DskipTests"
+}
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[!] Bien dich that bai!" -ForegroundColor Red

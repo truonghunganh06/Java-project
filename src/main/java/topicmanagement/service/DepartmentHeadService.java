@@ -1,5 +1,6 @@
 package topicmanagement.service;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import topicmanagement.entity.*;
@@ -119,6 +120,7 @@ public class DepartmentHeadService {
     }
 
     @Transactional
+    @CacheEvict(value = "activePeriods", allEntries = true)
     public RegistrationPeriod createPeriod(Department dept, String name, String periodType, String academicYear, Integer semester,
                                            OffsetDateTime propStart, OffsetDateTime propEnd,
                                            OffsetDateTime regStart, OffsetDateTime regEnd,
@@ -147,6 +149,7 @@ public class DepartmentHeadService {
     }
 
     @Transactional
+    @CacheEvict(value = "activePeriods", allEntries = true)
     public boolean updatePeriodStatus(Long periodId, String status, Long departmentId) {
         RegistrationPeriod p = getPeriodById(periodId);
         if (p == null) return false;
@@ -162,6 +165,7 @@ public class DepartmentHeadService {
     }
 
     @Transactional
+    @CacheEvict(value = "activePeriods", allEntries = true)
     public RegistrationPeriod updatePeriod(Long id, Long departmentId, String name, String periodType, String academicYear, Integer semester,
                                            OffsetDateTime propStart, OffsetDateTime propEnd,
                                            OffsetDateTime regStart, OffsetDateTime regEnd,
@@ -171,6 +175,7 @@ public class DepartmentHeadService {
     }
 
     @Transactional
+    @CacheEvict(value = "activePeriods", allEntries = true)
     public RegistrationPeriod updatePeriod(Long id, Long departmentId, String name, String periodType, String academicYear, Integer semester,
                                            OffsetDateTime propStart, OffsetDateTime propEnd,
                                            OffsetDateTime regStart, OffsetDateTime regEnd,
@@ -235,6 +240,7 @@ public class DepartmentHeadService {
     }
 
     @Transactional
+    @CacheEvict(value = "activePeriods", allEntries = true)
     public boolean deletePeriod(Long periodId, Long departmentId) {
         RegistrationPeriod p = getPeriodById(periodId);
         if (p == null) return false;

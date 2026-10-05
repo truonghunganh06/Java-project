@@ -111,6 +111,8 @@ public class DatabaseMigrationService implements InitializingBean {
                     "resolved_at TIMESTAMP WITH TIME ZONE" +
                     ");");
 
+
+
             // 9. Đồng bộ hóa sequence ID trong PostgreSQL để tránh lỗi duplicate key pkey
             String[] tables = {"roles", "departments", "divisions", "majors", "users", "lecturers", "students", "registration_periods", "topics", "student_groups", "group_members", "councils", "council_members", "announcements", "evaluations", "submissions", "group_invitations", "group_leave_requests", "group_dissolve_requests"};
             for (String table : tables) {
@@ -119,7 +121,7 @@ public class DatabaseMigrationService implements InitializingBean {
                 } catch (Exception ignored) {}
             }
 
-            System.out.println("[DB-MIGRATION] Hoàn tất cập nhật cấu trúc bảng divisions, division_id, version và đồng bộ sequences.");
+            System.out.println("[DB-MIGRATION] Hoàn tất cập nhật cấu trúc bảng divisions, indexes, version và đồng bộ sequences.");
         } catch (Exception e) {
             System.err.println("[DB-MIGRATION-WARN] Lỗi khi chạy migration cấu trúc DB: " + e.getMessage());
         }

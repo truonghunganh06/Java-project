@@ -9,18 +9,17 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import topicmanagement.entity.*;
-import topicmanagement.repository.*;
+import topicmanagement.entity.Role;
+import topicmanagement.entity.User;
+import topicmanagement.repository.RoleRepository;
+import topicmanagement.repository.UserRepository;
 
-import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.Optional;
 
 /**
- * DataSeederService — Khởi tạo tự động bộ dữ liệu mẫu (Seed Data) chuẩn V2.0
- * bao gồm: Roles (có DIVISION_HEAD), Khoa (Departments), Bộ môn (Divisions),
- * Chuyên ngành (Majors), Đợt đăng ký, Tài khoản các vai trò
- * (Admin, Trưởng bộ môn, Giảng viên theo bộ môn, Sinh viên theo bộ môn),
- * và các đề tài mẫu liên kết trực tiếp với Giảng viên & Bộ môn.
+ * DataSeederService — Kiểm tra các vai trò hệ thống cơ bản (System Roles).
+ * Toàn bộ dữ liệu nghiệp vụ (Đề tài, Đợt đăng ký, Khoa, Giảng viên, Sinh viên)
+ * được lưu trữ và quản lý trực tiếp trên Neon PostgreSQL Database.
  */
 @Service
 @DependsOn("databaseMigrationService")
@@ -30,110 +29,57 @@ public class DataSeederService {
     private static final Logger log = LoggerFactory.getLogger(DataSeederService.class);
 
     private final RoleRepository roleRepository;
-    private final DepartmentRepository departmentRepository;
-    private final DivisionRepository divisionRepository;
-    private final MajorRepository majorRepository;
     private final UserRepository userRepository;
-    private final LecturerRepository lecturerRepository;
-    private final StudentRepository studentRepository;
-    private final RegistrationPeriodRepository periodRepository;
-    private final TopicRepository topicRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DataSeederService(
             RoleRepository roleRepository,
-            DepartmentRepository departmentRepository,
-            DivisionRepository divisionRepository,
-            MajorRepository majorRepository,
             UserRepository userRepository,
-            LecturerRepository lecturerRepository,
-            StudentRepository studentRepository,
-            RegistrationPeriodRepository periodRepository,
-            TopicRepository topicRepository,
             PasswordEncoder passwordEncoder) {
         this.roleRepository = roleRepository;
-        this.departmentRepository = departmentRepository;
-        this.divisionRepository = divisionRepository;
-        this.majorRepository = majorRepository;
         this.userRepository = userRepository;
-        this.lecturerRepository = lecturerRepository;
-        this.studentRepository = studentRepository;
-        this.periodRepository = periodRepository;
-        this.topicRepository = topicRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
-
     @EventListener(ApplicationReadyEvent.class)
-    public void seedAllTestData() {
+    @Transactional
+    public void ensureBasicSystemRoles() {
         try {
-            System.out.println("\n================================================================================");
-            System.out.println("  [DATA-SEEDER] KHỞI TẠO BỘ DỮ LIỆU VÀ TÀI KHOẢN TEST ĐẦY ĐỦ CÁC VAI TRÒ (V2.0)");
-            System.out.println("================================================================================");
+            // Đảm bảo các roles hệ thống cơ bản tồn tại trong database
+            createRoleIfMissing("ADMIN", "Quản trị viên hệ thống");
+            createRoleIfMissing("DEPARTMENT_HEAD", "Trưởng khoa / Trưởng bộ môn");
+            createRoleIfMissing("DIVISION_HEAD", "Trưởng bộ môn");
+            createRoleIfMissing("LECTURER", "Giảng viên");
+            createRoleIfMissing("STUDENT", "Sinh viên");
 
-            // 1. Khởi tạo / Kiểm tra Roles
-            Map<String, Role> roleMap = seedRoles();
-
-            // 2. Khởi tạo / Kiểm tra Khoa (Departments)
-            Map<String, Department> deptMap = seedDepartments();
-
-            // 3. Khởi tạo / Kiểm tra Bộ môn (Divisions)
-            Map<String, Division> divMap = seedDivisions(deptMap);
-
-            // 4. Khởi tạo / Kiểm tra Chuyên ngành (Majors)
-            Map<String, Major> majorMap = seedMajors(deptMap, divMap);
-
-            // 5. Khởi tạo / Kiểm tra Đợt đăng ký (Registration Periods) cho từng khoa
-            Map<String, RegistrationPeriod> periodMap = seedPeriods(deptMap);
-
-            // 6. Khởi tạo Tài khoản Quản trị viên (ADMIN)
-            seedAdminUser(roleMap.get("ADMIN"));
-
-            // 7. Khởi tạo Tài khoản Trưởng bộ môn / Trưởng khoa (DIVISION_HEAD & DEPARTMENT_HEAD)
-            Role headRole = roleMap.get("DIVISION_HEAD") != null ? roleMap.get("DIVISION_HEAD") : roleMap.get("DEPARTMENT_HEAD");
-            seedDepartmentHeads(headRole, deptMap, divMap);
-
-            // 8. Khởi tạo Tài khoản Giảng viên (LECTURER) theo từng Bộ môn
-            Map<String, Lecturer> lecturerMap = seedLecturers(roleMap.get("LECTURER"), deptMap, divMap);
-
-            // 9. Khởi tạo Tài khoản Sinh viên (STUDENT) theo từng Bộ môn & Chuyên ngành
-            seedStudents(roleMap.get("STUDENT"), majorMap, divMap);
-
-            // 10. Khởi tạo Đề tài mẫu gán cho Giảng viên, Bộ môn và Đợt
-            seedSampleTopics(deptMap, divMap, majorMap, periodMap, lecturerMap);
-
-            // 11. In bảng danh sách tài khoản test ra console
-            printTestAccountsSummary();
-
+            // Đảm bảo tài khoản admin khởi tạo nếu database hoàn toàn mới
+            if (userRepository.findByUsername("admin").isEmpty()) {
+                Role adminRole = roleRepository.findByCode("ADMIN").orElse(null);
+                if (adminRole != null) {
+                    User admin = new User();
+                    admin.setUsername("admin");
+                    admin.setPasswordHash(passwordEncoder.encode("123456"));
+                    admin.setFullName("Quản Trị Viên Hệ Thống");
+                    admin.setEmail("admin@topicmanagement.edu.vn");
+                    admin.setRole(adminRole);
+                    admin.setIsActive(true);
+                    userRepository.save(admin);
+                    log.info("[DATA-SEEDER] Đã khởi tạo tài khoản admin mặc định.");
+                }
+            }
+            log.info("[DATA-SEEDER] Hoàn tất kiểm tra hệ thống. Dữ liệu được quản lý 100% trên Neon PostgreSQL.");
         } catch (Exception e) {
-            System.err.println("[DATA-SEEDER-ERROR] Đã xảy ra lỗi khi khởi tạo dữ liệu mẫu: " + e.getMessage());
-            e.printStackTrace();
+            log.warn("[DATA-SEEDER-WARN] Lỗi kiểm tra role khởi tạo: {}", e.getMessage());
         }
     }
 
-    // =========================================================================
-    // 1. ROLES
-    // =========================================================================
-    private Map<String, Role> seedRoles() {
-        Map<String, Role> map = new HashMap<>();
-        String[][] rolesData = {
-                {"ADMIN", "Quản trị viên hệ thống"},
-                {"DEPARTMENT_HEAD", "Trưởng khoa / Trưởng bộ môn"},
-                {"DIVISION_HEAD", "Trưởng bộ môn"},
-                {"LECTURER", "Giảng viên"},
-                {"STUDENT", "Sinh viên"}
-        };
-
-        for (String[] r : rolesData) {
-            String code = r[0];
-            String name = r[1];
-            Role role = roleRepository.findByCode(code).orElseGet(() -> {
-                Role newRole = new Role();
-                newRole.setCode(code);
-                newRole.setName(name);
-                return roleRepository.save(newRole);
-            });
-            map.put(code, role);
+    private void createRoleIfMissing(String code, String name) {
+        if (roleRepository.findByCode(code).isEmpty()) {
+            Role role = new Role();
+            role.setCode(code);
+            role.setName(name);
+            roleRepository.save(role);
+            log.info("[DATA-SEEDER] Đã khởi tạo vai trò: {}", code);
         }
         return map;
     }
@@ -948,5 +894,8 @@ public class DataSeederService {
         System.out.println("| SINH VIÊN (KTPM)   | sv_cntt02     | 123456           | Trần Thị Bình (20110002)     | BM Kỹ thuật Phần mềm (Khoa CNTT)       |");
         System.out.println("| SINH VIÊN (QTKD)   | sv_qtkd01     | 123456           | Phạm Quốc Cường (20120001)   | BM QTKD Doanh nghiệp (Khoa QTKD)       |");
         System.out.println("+--------------------+---------------+------------------+------------------------------+----------------------------------------+\n");
+    }
+}
+
     }
 }
