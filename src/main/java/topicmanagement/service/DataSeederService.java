@@ -9,17 +9,34 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import topicmanagement.entity.AppUser;
+import topicmanagement.entity.Department;
+import topicmanagement.entity.Division;
+import topicmanagement.entity.Lecturer;
+import topicmanagement.entity.Major;
+import topicmanagement.entity.RegistrationPeriod;
 import topicmanagement.entity.Role;
-import topicmanagement.entity.User;
+import topicmanagement.entity.Student;
+import topicmanagement.entity.Topic;
+import topicmanagement.repository.DepartmentRepository;
+import topicmanagement.repository.DivisionRepository;
+import topicmanagement.repository.LecturerRepository;
+import topicmanagement.repository.MajorRepository;
+import topicmanagement.repository.RegistrationPeriodRepository;
 import topicmanagement.repository.RoleRepository;
+import topicmanagement.repository.StudentRepository;
+import topicmanagement.repository.TopicRepository;
 import topicmanagement.repository.UserRepository;
 
-import java.util.Optional;
+import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * DataSeederService — Kiểm tra các vai trò hệ thống cơ bản (System Roles).
- * Toàn bộ dữ liệu nghiệp vụ (Đề tài, Đợt đăng ký, Khoa, Giảng viên, Sinh viên)
- * được lưu trữ và quản lý trực tiếp trên Neon PostgreSQL Database.
+ * DataSeederService — Kiểm tra các vai trò hệ thống cơ bản (System Roles). Toàn
+ * bộ dữ liệu nghiệp vụ (Đề tài, Đợt đăng ký, Khoa, Giảng viên, Sinh viên) được
+ * lưu trữ và quản lý trực tiếp trên Neon PostgreSQL Database.
  */
 @Service
 @DependsOn("databaseMigrationService")
@@ -31,55 +48,107 @@ public class DataSeederService {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final DepartmentRepository departmentRepository;
+    private final DivisionRepository divisionRepository;
+    private final MajorRepository majorRepository;
+    private final RegistrationPeriodRepository periodRepository;
+    private final LecturerRepository lecturerRepository;
+    private final StudentRepository studentRepository;
+    private final TopicRepository topicRepository;
 
     public DataSeederService(
             RoleRepository roleRepository,
             UserRepository userRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            DepartmentRepository departmentRepository,
+            DivisionRepository divisionRepository,
+            MajorRepository majorRepository,
+            RegistrationPeriodRepository periodRepository,
+            LecturerRepository lecturerRepository,
+            StudentRepository studentRepository,
+            TopicRepository topicRepository) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.departmentRepository = departmentRepository;
+        this.divisionRepository = divisionRepository;
+        this.majorRepository = majorRepository;
+        this.periodRepository = periodRepository;
+        this.lecturerRepository = lecturerRepository;
+        this.studentRepository = studentRepository;
+        this.topicRepository = topicRepository;
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    @Transactional
-    public void ensureBasicSystemRoles() {
+    public void seedAllTestData() {
         try {
-            // Đảm bảo các roles hệ thống cơ bản tồn tại trong database
-            createRoleIfMissing("ADMIN", "Quản trị viên hệ thống");
-            createRoleIfMissing("DEPARTMENT_HEAD", "Trưởng khoa / Trưởng bộ môn");
-            createRoleIfMissing("DIVISION_HEAD", "Trưởng bộ môn");
-            createRoleIfMissing("LECTURER", "Giảng viên");
-            createRoleIfMissing("STUDENT", "Sinh viên");
+            System.out.println("\n================================================================================");
+            System.out.println("  [DATA-SEEDER] KHỞI TẠO BỘ DỮ LIỆU VÀ TÀI KHOẢN TEST ĐẦY ĐỦ CÁC VAI TRÒ (V2.0)");
+            System.out.println("================================================================================");
 
-            // Đảm bảo tài khoản admin khởi tạo nếu database hoàn toàn mới
-            if (userRepository.findByUsername("admin").isEmpty()) {
-                Role adminRole = roleRepository.findByCode("ADMIN").orElse(null);
-                if (adminRole != null) {
-                    User admin = new User();
-                    admin.setUsername("admin");
-                    admin.setPasswordHash(passwordEncoder.encode("123456"));
-                    admin.setFullName("Quản Trị Viên Hệ Thống");
-                    admin.setEmail("admin@topicmanagement.edu.vn");
-                    admin.setRole(adminRole);
-                    admin.setIsActive(true);
-                    userRepository.save(admin);
-                    log.info("[DATA-SEEDER] Đã khởi tạo tài khoản admin mặc định.");
-                }
-            }
-            log.info("[DATA-SEEDER] Hoàn tất kiểm tra hệ thống. Dữ liệu được quản lý 100% trên Neon PostgreSQL.");
+            // 1. Khởi tạo / Kiểm tra Roles
+            Map<String, Role> roleMap = seedRoles();
+
+            // 2. Khởi tạo / Kiểm tra Khoa (Departments)
+            Map<String, Department> deptMap = seedDepartments();
+
+            // 3. Khởi tạo / Kiểm tra Bộ môn (Divisions)
+            Map<String, Division> divMap = seedDivisions(deptMap);
+
+            // 4. Khởi tạo / Kiểm tra Chuyên ngành (Majors)
+            Map<String, Major> majorMap = seedMajors(deptMap, divMap);
+
+            // 5. Khởi tạo / Kiểm tra Đợt đăng ký (Registration Periods) cho từng khoa
+            Map<String, RegistrationPeriod> periodMap = seedPeriods(deptMap);
+
+            // 6. Khởi tạo Tài khoản Quản trị viên (ADMIN)
+            seedAdminUser(roleMap.get("ADMIN"));
+
+            // 7. Khởi tạo Tài khoản Trưởng bộ môn / Trưởng khoa (DIVISION_HEAD & DEPARTMENT_HEAD)
+            Role headRole = roleMap.get("DIVISION_HEAD") != null ? roleMap.get("DIVISION_HEAD") : roleMap.get("DEPARTMENT_HEAD");
+            seedDepartmentHeads(headRole, deptMap, divMap);
+
+            // 8. Khởi tạo Tài khoản Giảng viên (LECTURER) theo từng Bộ môn
+            Map<String, Lecturer> lecturerMap = seedLecturers(roleMap.get("LECTURER"), deptMap, divMap);
+
+            // 9. Khởi tạo Tài khoản Sinh viên (STUDENT) theo từng Bộ môn & Chuyên ngành
+            seedStudents(roleMap.get("STUDENT"), majorMap, divMap);
+
+            // 10. Khởi tạo Đề tài mẫu gán cho Giảng viên, Bộ môn và Đợt
+            seedSampleTopics(deptMap, divMap, majorMap, periodMap, lecturerMap);
+
+            // 11. In bảng danh sách tài khoản test ra console
+            printTestAccountsSummary();
+
         } catch (Exception e) {
-            log.warn("[DATA-SEEDER-WARN] Lỗi kiểm tra role khởi tạo: {}", e.getMessage());
+            System.err.println("[DATA-SEEDER-ERROR] Đã xảy ra lỗi khi khởi tạo dữ liệu mẫu: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    private void createRoleIfMissing(String code, String name) {
-        if (roleRepository.findByCode(code).isEmpty()) {
-            Role role = new Role();
-            role.setCode(code);
-            role.setName(name);
-            roleRepository.save(role);
-            log.info("[DATA-SEEDER] Đã khởi tạo vai trò: {}", code);
+    // =========================================================================
+    // 1. ROLES
+    // =========================================================================
+    private Map<String, Role> seedRoles() {
+        Map<String, Role> map = new HashMap<>();
+        String[][] rolesData = {
+            {"ADMIN", "Quản trị viên hệ thống"},
+            {"DEPARTMENT_HEAD", "Trưởng khoa / Trưởng bộ môn"},
+            {"DIVISION_HEAD", "Trưởng bộ môn"},
+            {"LECTURER", "Giảng viên"},
+            {"STUDENT", "Sinh viên"}
+        };
+
+        for (String[] r : rolesData) {
+            String code = r[0];
+            String name = r[1];
+            Role role = roleRepository.findByCode(code).orElseGet(() -> {
+                Role newRole = new Role();
+                newRole.setCode(code);
+                newRole.setName(name);
+                return roleRepository.save(newRole);
+            });
+            map.put(code, role);
         }
         return map;
     }
@@ -90,8 +159,8 @@ public class DataSeederService {
     private Map<String, Department> seedDepartments() {
         Map<String, Department> map = new HashMap<>();
         String[][] deptsData = {
-                {"CNTT", "Khoa Công nghệ Thông tin", "Khoa đào tạo các chuyên ngành Công nghệ Thông tin, Kỹ thuật Phần mềm, Khoa học Máy tính."},
-                {"QTKD", "Khoa Quản trị Kinh doanh", "Khoa đào tạo các chuyên ngành Quản trị Kinh doanh, Marketing, Kinh doanh Quốc tế."}
+            {"CNTT", "Khoa Công nghệ Thông tin", "Khoa đào tạo các chuyên ngành Công nghệ Thông tin, Kỹ thuật Phần mềm, Khoa học Máy tính."},
+            {"QTKD", "Khoa Quản trị Kinh doanh", "Khoa đào tạo các chuyên ngành Quản trị Kinh doanh, Marketing, Kinh doanh Quốc tế."}
         };
 
         for (String[] d : deptsData) {
@@ -218,78 +287,84 @@ public class DataSeederService {
 
         Department cnttDept = deptMap.get("CNTT");
         if (cnttDept != null) {
-            // 1. KLTN CNTT
+            // 1. KLTN CNTT — đang ở giai đoạn SV đăng ký
+            //    GV đề xuất:  16/09 → 01/10  |  SV đăng ký: 02/10 → 05/11
             RegistrationPeriod pKltn = findOrCreatePeriod(
                     "Đợt Khóa luận Tốt nghiệp CNTT 2026-2027",
                     "KLTN",
                     cnttDept,
-                    now.minusDays(20),
-                    now.minusDays(5),
-                    now.minusDays(4),
-                    now.plusDays(30)
+                    now.minusDays(20), // propStart: ~16/09
+                    now.minusDays(5), // propEnd:   ~01/10
+                    now.minusDays(4), // regStart:  ~02/10
+                    now.plusDays(30) // regEnd:    ~05/11
             );
             map.put("CNTT_KLTN", pKltn);
 
-            // 2. NCKH CNTT
+            // 2. NCKH CNTT — GV vừa mở đề xuất, SV chưa đăng ký
+            //    GV đề xuất:  01/10 → 20/10  |  SV đăng ký: 21/10 → 20/11
             RegistrationPeriod pNckh = findOrCreatePeriod(
                     "Đợt Nghiên cứu Khoa học Sinh viên CNTT 2026",
                     "NCKH",
                     cnttDept,
-                    now.minusDays(20),
-                    now.minusDays(5),
-                    now.minusDays(4),
-                    now.plusDays(30)
+                    now.minusDays(5), // propStart: ~01/10
+                    now.plusDays(14), // propEnd:   ~20/10
+                    now.plusDays(15), // regStart:  ~21/10
+                    now.plusDays(45) // regEnd:    ~20/11
             );
             map.put("CNTT_NCKH", pNckh);
 
-            // 3. TLCN CNTT
+            // 3. TLCN CNTT — sắp mở, GV chưa đề xuất
+            //    GV đề xuất:  15/10 → 31/10  |  SV đăng ký: 01/11 → 30/11
             RegistrationPeriod pTlcn = findOrCreatePeriod(
                     "Đợt Tiểu luận Chuyên ngành CNTT HK1 2026",
                     "TLCN",
                     cnttDept,
-                    now.minusDays(20),
-                    now.minusDays(5),
-                    now.minusDays(4),
-                    now.plusDays(30)
+                    now.plusDays(9), // propStart: ~15/10
+                    now.plusDays(25), // propEnd:   ~31/10
+                    now.plusDays(26), // regStart:  ~01/11
+                    now.plusDays(55) // regEnd:    ~30/11
             );
             map.put("CNTT_TLCN", pTlcn);
 
-            // 4. MON_HOC CNTT
+            // 4. MON_HOC CNTT — sắp mở, cách khá xa
+            //    GV đề xuất:  01/11 → 15/11  |  SV đăng ký: 16/11 → 15/12
             RegistrationPeriod pMonHoc = findOrCreatePeriod(
                     "Đợt Đồ án Chuyên ngành CNTT HK1 2026",
                     "MON_HOC",
                     cnttDept,
-                    now.minusDays(20),
-                    now.minusDays(5),
-                    now.minusDays(4),
-                    now.plusDays(30)
+                    now.plusDays(26), // propStart: ~01/11
+                    now.plusDays(40), // propEnd:   ~15/11
+                    now.plusDays(41), // regStart:  ~16/11
+                    now.plusDays(70) // regEnd:    ~15/12
             );
             map.put("CNTT_MON_HOC", pMonHoc);
         }
 
         Department qtkdDept = deptMap.get("QTKD");
         if (qtkdDept != null) {
-            // 1. KLTN QTKD
+            // 1. KLTN QTKD — đang ở giai đoạn GV đề xuất
+            //    GV đề xuất:  20/09 → 10/10  |  SV đăng ký: 11/10 → 10/11
             RegistrationPeriod pKltnQtkd = findOrCreatePeriod(
                     "Đợt Khóa luận Tốt nghiệp QTKD 2026-2027",
                     "KLTN",
                     qtkdDept,
-                    now.minusDays(20),
-                    now.minusDays(5),
-                    now.minusDays(4),
-                    now.plusDays(30)
+                    now.minusDays(16), // propStart: ~20/09
+                    now.plusDays(4), // propEnd:   ~10/10
+                    now.plusDays(5), // regStart:  ~11/10
+                    now.plusDays(35) // regEnd:    ~10/11
             );
             map.put("QTKD_KLTN", pKltnQtkd);
 
-            // 2. NCKH QTKD
+            // 2. NCKH QTKD — chưa bắt đầu
+            //    GV đề xuất:  10/10 → 25/10  |  SV đăng ký: 26/10 → 25/11
             RegistrationPeriod pNckhQtkd = findOrCreatePeriod(
                     "Đợt Nghiên cứu Khoa học Sinh viên QTKD 2026",
                     "NCKH",
                     qtkdDept,
-                    now.minusDays(20),
-                    now.minusDays(5),
-                    now.minusDays(4),
-                    now.plusDays(30)
+                    now.plusDays(4), // propStart: ~10/10
+                    now.plusDays(19), // propEnd:   ~25/10
+                    now.plusDays(20), // regStart:  ~26/10
+                    now.plusDays(50) // regEnd:    ~25/11
             );
             map.put("QTKD_NCKH", pNckhQtkd);
         }
@@ -339,7 +414,9 @@ public class DataSeederService {
     // 6. ADMIN USER
     // =========================================================================
     private void seedAdminUser(Role adminRole) {
-        if (adminRole == null) return;
+        if (adminRole == null) {
+            return;
+        }
         findOrCreateUser(
                 "admin",
                 "admin123",
@@ -354,7 +431,9 @@ public class DataSeederService {
     // 7. DIVISION / DEPARTMENT HEADS (CNTT & QTKD)
     // =========================================================================
     private void seedDepartmentHeads(Role headRole, Map<String, Department> deptMap, Map<String, Division> divMap) {
-        if (headRole == null) return;
+        if (headRole == null) {
+            return;
+        }
 
         Department cnttDept = deptMap.get("CNTT");
         Division divKtpm = divMap.get("KTPM");
@@ -398,7 +477,9 @@ public class DataSeederService {
     // =========================================================================
     private Map<String, Lecturer> seedLecturers(Role lecturerRole, Map<String, Department> deptMap, Map<String, Division> divMap) {
         Map<String, Lecturer> map = new HashMap<>();
-        if (lecturerRole == null) return map;
+        if (lecturerRole == null) {
+            return map;
+        }
 
         Department cnttDept = deptMap.get("CNTT");
         Division divKtpm = divMap.get("KTPM");
@@ -489,7 +570,9 @@ public class DataSeederService {
     // 9. STUDENTS (CNTT & QTKD)
     // =========================================================================
     private void seedStudents(Role studentRole, Map<String, Major> majorMap, Map<String, Division> divMap) {
-        if (studentRole == null) return;
+        if (studentRole == null) {
+            return;
+        }
 
         Major ktpmMajor = majorMap.get("KTPM") != null ? majorMap.get("KTPM") : majorMap.get("CNTT");
         Division divKtpm = divMap.get("KTPM");
@@ -742,160 +825,113 @@ public class DataSeederService {
         }
     }
 
-    private void createTopicIfNotExist(
-            String code, String title, String desc, String reqs,
-            Major major, Division division, RegistrationPeriod period, Lecturer supervisor, int maxStudents) {
-
-        if (topicRepository.existsByCode(code)) {
-            Topic existing = topicRepository.findAll().stream()
-                    .filter(t -> code.equalsIgnoreCase(t.getCode()))
-                    .findFirst()
-                    .orElse(null);
-            if (existing != null) {
-                boolean changed = false;
-                if (existing.getDivision() == null && division != null) {
-                    existing.setDivision(division);
-                    changed = true;
-                }
-                if (existing.getSupervisor() == null && supervisor != null) {
-                    existing.setSupervisor(supervisor);
-                    changed = true;
-                }
-                if (existing.getPeriod() == null && period != null) {
-                    existing.setPeriod(period);
-                    changed = true;
-                }
-                if (changed) {
-                    topicRepository.save(existing);
-                }
-            }
-            return;
-        }
-
-        Topic t = new Topic();
-        t.setCode(code);
-        t.setTitle(title);
-        t.setDescription(desc);
-        t.setRequirements(reqs);
-        t.setMajor(major);
-        t.setDivision(division);
-        t.setPeriod(period);
-        t.setSupervisor(supervisor);
-        t.setStatus("APPROVED");
-        t.setMaxStudents(maxStudents);
-        t.setAcademicYear("2026-2027");
-        t.setSemester(1);
-        t.setCreatedAt(OffsetDateTime.now());
-        topicRepository.save(t);
-    }
-
     // =========================================================================
-    // HELPER CREATORS
+    // HELPER: Find or Create User
     // =========================================================================
-    private AppUser findOrCreateUser(
-            String username, String password, String email,
+    @Transactional
+    private AppUser findOrCreateUser(String username, String rawPassword, String email,
             String fullName, String phone, Role role) {
-
-        Optional<AppUser> userOpt = userRepository.findByUsernameIgnoreCase(username);
-        AppUser user;
-        if (userOpt.isPresent()) {
-            user = userOpt.get();
-            user.setRole(role);
-            user.setIsActive(true);
-            user.setFullName(fullName);
-            user.setPasswordHash(passwordEncoder.encode(password));
-            user.setUpdatedAt(OffsetDateTime.now());
-            return userRepository.save(user);
-        }
-
-        user = new AppUser();
-        user.setUsername(username);
-        user.setPasswordHash(passwordEncoder.encode(password));
-        user.setEmail(email);
-        user.setFullName(fullName);
-        user.setPhone(phone);
-        user.setRole(role);
-        user.setIsActive(true);
-        user.setCreatedAt(OffsetDateTime.now());
-        user.setUpdatedAt(OffsetDateTime.now());
-        return userRepository.save(user);
+        return userRepository.findByUsernameIgnoreCase(username).orElseGet(() -> {
+            AppUser u = new AppUser();
+            u.setUsername(username);
+            u.setPasswordHash(passwordEncoder.encode(rawPassword));
+            u.setEmail(email);
+            u.setFullName(fullName);
+            u.setPhone(phone);
+            u.setRole(role);
+            u.setIsActive(true);
+            return userRepository.save(u);
+        });
     }
 
-    private Lecturer findOrCreateLecturer(
-            AppUser user, Department dept, Division div, String code, String title, String degree) {
-
-        Optional<Lecturer> opt = lecturerRepository.findByUserId(user.getId());
-        if (opt.isPresent()) {
-            Lecturer lec = opt.get();
+    // =========================================================================
+    // HELPER: Find or Create Lecturer
+    // =========================================================================
+    @Transactional
+    private Lecturer findOrCreateLecturer(AppUser user, Department dept, Division div,
+            String lecturerCode, String academicTitle, String degree) {
+        return lecturerRepository.findByUserId(user.getId()).orElseGet(() -> {
+            Lecturer lec = new Lecturer();
+            lec.setUser(user);
             lec.setDepartment(dept);
             lec.setDivision(div);
-            lec.setLecturerCode(code);
-            lec.setAcademicTitle(title);
+            lec.setLecturerCode(lecturerCode);
+            lec.setAcademicTitle(academicTitle);
             lec.setDegree(degree);
+            lec.setMaxTopicsQuota(5);
             return lecturerRepository.save(lec);
-        }
-
-        Lecturer lec = new Lecturer();
-        lec.setUser(user);
-        lec.setDepartment(dept);
-        lec.setDivision(div);
-        lec.setLecturerCode(code);
-        lec.setAcademicTitle(title);
-        lec.setDegree(degree);
-        lec.setMaxTopicsQuota(5);
-        return lecturerRepository.save(lec);
+        });
     }
 
-    private Student findOrCreateStudent(
-            AppUser user, Major major, Division div, String code, String className, String academicYear, Double gpa) {
-
-        Optional<Student> opt = studentRepository.findByUserId(user.getId());
-        if (opt.isPresent()) {
-            Student s = opt.get();
+    // =========================================================================
+    // HELPER: Find or Create Student
+    // =========================================================================
+    @Transactional
+    private Student findOrCreateStudent(AppUser user, Major major, Division div,
+            String studentCode, String className,
+            String academicYear, double gpa) {
+        return studentRepository.findByUserId(user.getId()).orElseGet(() -> {
+            Student s = new Student();
+            s.setUser(user);
             s.setMajor(major);
             s.setDivision(div);
-            s.setStudentCode(code);
+            s.setStudentCode(studentCode);
             s.setClassName(className);
             s.setAcademicYear(academicYear);
             s.setGpa(gpa);
             return studentRepository.save(s);
+        });
+    }
+
+    // =========================================================================
+    // HELPER: Create Topic if not exist
+    // =========================================================================
+    @Transactional
+    private void createTopicIfNotExist(String code, String title, String description,
+            String requirements, Major major, Division division,
+            RegistrationPeriod period, Lecturer supervisor, int maxStudents) {
+        boolean exists = topicRepository.findAll().stream()
+                .anyMatch(t -> code.equals(t.getCode()));
+        if (exists) {
+            return;
         }
 
-        Student s = new Student();
-        s.setUser(user);
-        s.setMajor(major);
-        s.setDivision(div);
-        s.setStudentCode(code);
-        s.setClassName(className);
-        s.setAcademicYear(academicYear);
-        s.setGpa(gpa);
-        return studentRepository.save(s);
+        Topic topic = new Topic();
+        topic.setCode(code);
+        topic.setTitle(title);
+        topic.setDescription(description);
+        topic.setRequirements(requirements);
+        topic.setMajor(major);
+        topic.setDivision(division);
+        topic.setPeriod(period);
+        topic.setSupervisor(supervisor);
+        topic.setMaxStudents(maxStudents);
+        topic.setStatus("APPROVED");
+        topic.setIsFinalized(false);
+        topicRepository.save(topic);
     }
 
     // =========================================================================
-    // 11. IN DANH SÁCH TÀI KHOẢN TEST RA CONSOLE
+    // 11. PRINT TEST ACCOUNTS SUMMARY
     // =========================================================================
     private void printTestAccountsSummary() {
-        System.out.println("\n+-------------------------------------------------------------------------------------------------------------------------------+");
-        System.out.println("|                                           BẢNG TÀI KHOẢN KIỂM THỬ HỆ THỐNG (V2.0 DIVISION SCOPING)                             |");
-        System.out.println("+--------------------+---------------+------------------+------------------------------+----------------------------------------+");
-        System.out.println("| VAI TRÒ (ROLE)     | TÀI KHOẢN     | MẬT KHẨU         | HỌ VÀ TÊN                    | BỘ MÔN / KHOA                          |");
-        System.out.println("+--------------------+---------------+------------------+------------------------------+----------------------------------------+");
-        System.out.println("| QUẢN TRỊ VIÊN      | admin         | admin123         | Quản Trị Viên Hệ Thống       | Quản trị toàn trường                   |");
-        System.out.println("+--------------------+---------------+------------------+------------------------------+----------------------------------------+");
-        System.out.println("| TRƯỞNG BỘ MÔN KTPM | head_cntt     | 123456           | TS. Nguyễn Văn Thắng         | Bộ môn Kỹ thuật Phần mềm (Khoa CNTT)   |");
-        System.out.println("| TRƯỞNG BỘ MÔN QTKD | head_qtkd     | 123456           | PGS.TS. Trần Thị Mai         | Bộ môn QTKD Doanh nghiệp (Khoa QTKD)   |");
-        System.out.println("+--------------------+---------------+------------------+------------------------------+----------------------------------------+");
-        System.out.println("| GIẢNG VIÊN (KTPM)  | gv_cntt01     | 123456           | ThS. Lê Hoàng Long           | BM Kỹ thuật Phần mềm (Khoa CNTT)       |");
-        System.out.println("| GIẢNG VIÊN (KHMT)  | gv_cntt02     | 123456           | TS. Phạm Minh Tuấn           | BM KHMT & HTTT (Khoa CNTT)             |");
-        System.out.println("| GIẢNG VIÊN (QTKD)  | gv_qtkd01     | 123456           | ThS. Hoàng Thu Thảo          | BM QTKD Doanh nghiệp (Khoa QTKD)       |");
-        System.out.println("+--------------------+---------------+------------------+------------------------------+----------------------------------------+");
-        System.out.println("| SINH VIÊN (KTPM)   | sv_cntt01     | 123456           | Nguyễn Văn An (20110001)     | BM Kỹ thuật Phần mềm (Khoa CNTT)       |");
-        System.out.println("| SINH VIÊN (KTPM)   | sv_cntt02     | 123456           | Trần Thị Bình (20110002)     | BM Kỹ thuật Phần mềm (Khoa CNTT)       |");
-        System.out.println("| SINH VIÊN (QTKD)   | sv_qtkd01     | 123456           | Phạm Quốc Cường (20120001)   | BM QTKD Doanh nghiệp (Khoa QTKD)       |");
-        System.out.println("+--------------------+---------------+------------------+------------------------------+----------------------------------------+\n");
-    }
-}
-
+        System.out.println("\n================================================================================");
+        System.out.println("  [DATA-SEEDER] DANH SÁCH TÀI KHOẢN TEST");
+        System.out.println("================================================================================");
+        System.out.printf("  %-20s %-15s %-25s%n", "USERNAME", "MẬT KHẨU", "VAI TRÒ");
+        System.out.println("  " + "-".repeat(62));
+        System.out.printf("  %-20s %-15s %-25s%n", "admin", "admin123", "ADMIN");
+        System.out.printf("  %-20s %-15s %-25s%n", "head_cntt", "123456", "DIVISION_HEAD (CNTT)");
+        System.out.printf("  %-20s %-15s %-25s%n", "head_qtkd", "123456", "DIVISION_HEAD (QTKD)");
+        System.out.printf("  %-20s %-15s %-25s%n", "gv_cntt01", "123456", "LECTURER");
+        System.out.printf("  %-20s %-15s %-25s%n", "gv_cntt02", "123456", "LECTURER");
+        System.out.printf("  %-20s %-15s %-25s%n", "gv_cntt03", "123456", "LECTURER");
+        System.out.printf("  %-20s %-15s %-25s%n", "gv_cntt04", "123456", "LECTURER");
+        System.out.printf("  %-20s %-15s %-25s%n", "gv_cntt05", "123456", "LECTURER");
+        System.out.printf("  %-20s %-15s %-25s%n", "gv_qtkd01", "123456", "LECTURER");
+        System.out.printf("  %-20s %-15s %-25s%n", "sv_cntt01", "123456", "STUDENT");
+        System.out.printf("  %-20s %-15s %-25s%n", "sv_cntt02", "123456", "STUDENT");
+        System.out.printf("  %-20s %-15s %-25s%n", "sv_qtkd01", "123456", "STUDENT");
+        System.out.println("================================================================================\n");
     }
 }

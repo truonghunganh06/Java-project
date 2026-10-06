@@ -297,11 +297,11 @@
                                                 <div class="step-name">1. GV Đề xuất</div>
                                                 <div class="step-date">
                                                     <span th:if="${p.lecturerProposalStart != null}"
-                                                        th:text="${#temporals.format(p.lecturerProposalStart, 'dd/MM')}">01/09</span>
+                                                        th:text="${#temporals.format(p.lecturerProposalStart, 'dd/MM')}">--</span>
                                                     <span th:if="${p.lecturerProposalStart != null}"> → </span>
                                                     <span th:if="${p.lecturerProposalEnd != null}"
                                                         class="font-semibold text-slate-700"
-                                                        th:text="${#temporals.format(p.lecturerProposalEnd, 'dd/MM/yy')}">15/09/26</span>
+                                                        th:text="${#temporals.format(p.lecturerProposalEnd, 'dd/MM/yy')}">--</span>
                                                     <span
                                                         th:if="${p.lecturerProposalStart == null && p.lecturerProposalEnd == null}"
                                                         class="text-slate-300">--</span>
@@ -322,11 +322,11 @@
                                                 <div class="step-name">2. SV Đăng ký</div>
                                                 <div class="step-date">
                                                     <span th:if="${p.studentRegistrationStart != null}"
-                                                        th:text="${#temporals.format(p.studentRegistrationStart, 'dd/MM')}">16/09</span>
+                                                        th:text="${#temporals.format(p.studentRegistrationStart, 'dd/MM')}">--</span>
                                                     <span th:if="${p.studentRegistrationStart != null}"> → </span>
                                                     <span th:if="${p.studentRegistrationEnd != null}"
                                                         class="font-semibold text-slate-700"
-                                                        th:text="${#temporals.format(p.studentRegistrationEnd, 'dd/MM/yy')}">30/09/26</span>
+                                                        th:text="${#temporals.format(p.studentRegistrationEnd, 'dd/MM/yy')}">--</span>
                                                     <span
                                                         th:if="${p.studentRegistrationStart == null && p.studentRegistrationEnd == null}"
                                                         class="text-slate-300">--</span>
@@ -351,7 +351,7 @@
                                                     <span
                                                         th:if="${(p.periodType == 'KLTN' || p.periodType == 'TLCN') && p.reviewerDeadline != null}"
                                                         class="font-semibold text-slate-700"
-                                                        th:text="${#temporals.format(p.reviewerDeadline, 'dd/MM/yy')}">15/10/26</span>
+                                                        th:text="${#temporals.format(p.reviewerDeadline, 'dd/MM/yy')}">--</span>
                                                     <span
                                                         th:if="${(p.periodType == 'KLTN' || p.periodType == 'TLCN') && p.reviewerDeadline == null}"
                                                         class="text-slate-300">--</span>
@@ -376,7 +376,7 @@
                                                     <span
                                                         th:if="${p.periodType == 'KLTN' && p.councilDefenseDate != null}"
                                                         class="font-semibold text-blue-700"
-                                                        th:text="${#temporals.format(p.councilDefenseDate, 'dd/MM/yy')}">30/10/26</span>
+                                                        th:text="${#temporals.format(p.councilDefenseDate, 'dd/MM/yy')}">--</span>
                                                     <span
                                                         th:if="${p.periodType == 'KLTN' && p.councilDefenseDate == null}"
                                                         class="text-slate-300">--</span>
@@ -495,10 +495,10 @@
                                 </div>
                                 <div class="text-[10.5px] text-slate-500">
                                     <span th:if="${p.lecturerProposalStart != null}"
-                                        th:text="${#temporals.format(p.lecturerProposalStart, 'dd/MM')}">01/09</span>
+                                        th:text="${#temporals.format(p.lecturerProposalStart, 'dd/MM')}">--</span>
                                     <span th:if="${p.lecturerProposalStart != null}"> - </span>
                                     <span th:if="${p.lecturerProposalEnd != null}" class="font-bold text-slate-800"
-                                        th:text="${#temporals.format(p.lecturerProposalEnd, 'dd/MM/yy')}">15/09/26</span>
+                                        th:text="${#temporals.format(p.lecturerProposalEnd, 'dd/MM/yy')}">--</span>
                                     <span th:if="${p.lecturerProposalStart == null && p.lecturerProposalEnd == null}"
                                         class="text-slate-300">--</span>
                                 </div>
@@ -515,10 +515,10 @@
                                 </div>
                                 <div class="text-[10.5px] text-slate-500">
                                     <span th:if="${p.studentRegistrationStart != null}"
-                                        th:text="${#temporals.format(p.studentRegistrationStart, 'dd/MM')}">16/09</span>
+                                        th:text="${#temporals.format(p.studentRegistrationStart, 'dd/MM')}">--</span>
                                     <span th:if="${p.studentRegistrationStart != null}"> - </span>
                                     <span th:if="${p.studentRegistrationEnd != null}" class="font-bold text-slate-800"
-                                        th:text="${#temporals.format(p.studentRegistrationEnd, 'dd/MM/yy')}">30/09/26</span>
+                                        th:text="${#temporals.format(p.studentRegistrationEnd, 'dd/MM/yy')}">--</span>
                                     <span
                                         th:if="${p.studentRegistrationStart == null && p.studentRegistrationEnd == null}"
                                         class="text-slate-300">--</span>
@@ -540,7 +540,7 @@
                                     <span
                                         th:if="${(p.periodType == 'KLTN' || p.periodType == 'TLCN') && p.reviewerDeadline != null}"
                                         class="font-bold text-purple-800"
-                                        th:text="${#temporals.format(p.reviewerDeadline, 'dd/MM/yy')}">15/10/26</span>
+                                        th:text="${#temporals.format(p.reviewerDeadline, 'dd/MM/yy')}">--</span>
                                     <span
                                         th:if="${(p.periodType == 'KLTN' || p.periodType == 'TLCN') && p.reviewerDeadline == null}"
                                         class="text-slate-300">--</span>
@@ -560,7 +560,7 @@
                                     <span th:if="${p.periodType != 'KLTN'}" class="text-slate-300">--</span>
                                     <span th:if="${p.periodType == 'KLTN' && p.councilDefenseDate != null}"
                                         class="font-bold text-indigo-800"
-                                        th:text="${#temporals.format(p.councilDefenseDate, 'dd/MM/yy')}">30/10/26</span>
+                                        th:text="${#temporals.format(p.councilDefenseDate, 'dd/MM/yy')}">--</span>
                                     <span th:if="${p.periodType == 'KLTN' && p.councilDefenseDate == null}"
                                         class="text-slate-300">--</span>
                                 </div>
