@@ -377,14 +377,9 @@ public class StudentService {
             group = getMyActiveGroup(student, topicPeriodId);
         }
 
-        // Nếu sinh viên vẫn chưa có nhóm trong đợt này, tự động tạo nhóm mới cho sinh viên làm Trưởng nhóm
+        // Sinh viên bắt buộc phải có nhóm trước khi đăng ký đề tài
         if (group == null) {
-            try {
-                String groupName = "Nhóm " + (student.getUser() != null && student.getUser().getFullName() != null ? student.getUser().getFullName() : student.getStudentCode());
-                group = createGroup(student, topicPeriodId, groupName);
-            } catch (Exception ex) {
-                return "Không thể khởi tạo nhóm: " + (ex.getMessage() != null ? ex.getMessage() : "Lỗi hệ thống");
-            }
+            return "Bạn chưa thuộc nhóm sinh viên nào! Vui lòng tạo nhóm hoặc gia nhập một nhóm trước khi đăng ký đề tài.";
         }
 
         // Kiểm tra quyền Trưởng nhóm: Chỉ Trưởng nhóm mới có quyền chọn và đăng ký đề tài

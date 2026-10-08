@@ -200,7 +200,7 @@ public class LecturerService {
                 topic.setCoSupervisor(null);
             }
             if (topicData.getMaxStudents() != null && topicData.getMaxStudents() > 0) {
-                topic.setMaxStudents(Math.min(3, topicData.getMaxStudents()));
+                topic.setMaxStudents(Math.min(5, Math.max(3, topicData.getMaxStudents())));
             }
             topic.setDescription(topicData.getDescription());
             topic.setRequirements(topicData.getRequirements());

@@ -53,6 +53,9 @@ public class StudentGroupAndSubmissionSecurityTest {
     @Autowired
     private StudentGroupRepository groupRepository;
 
+    @Autowired
+    private RegistrationPeriodRepository periodRepository;
+
     private Department department;
     private Major major;
     private RegistrationPeriod period;
@@ -100,6 +103,8 @@ public class StudentGroupAndSubmissionSecurityTest {
                 now.minusDays(3), now.plusDays(20),
                 now.plusDays(40), now.plusDays(60)
         );
+        period.setMaxStudents(3);
+        period = periodRepository.save(period);
 
         // Tạo 2 đề tài đã được duyệt
         Topic t1 = new Topic();

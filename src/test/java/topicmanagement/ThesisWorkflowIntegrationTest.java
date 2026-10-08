@@ -11,6 +11,7 @@ import topicmanagement.service.*;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -296,6 +297,8 @@ public class ThesisWorkflowIntegrationTest {
                 now.plusDays(45),                   // Hạn GVPB
                 now.plusDays(60)                    // Ngày bảo vệ
         );
+        testPeriod.setMaxStudents(3);
+        testPeriod = periodRepository.save(testPeriod);
 
         assertNotNull(testPeriod.getId(), "Đợt đăng ký phải được lưu vào Database");
         assertEquals("KLTN", testPeriod.getPeriodType());
@@ -312,7 +315,7 @@ public class ThesisWorkflowIntegrationTest {
         System.out.println("\n[TEST-3] BƯỚC 3: Giảng viên 1 đề xuất đề tài có 2 GVHD");
 
         Topic newTopic = new Topic();
-        newTopic.setCode("DT-TEST-AI-" + System.currentTimeMillis() % 10000);
+        newTopic.setCode("DT-TEST-AI-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         newTopic.setTitle("Nghiên cứu ứng dụng Deep Learning phát hiện gian lận thi cử");
         newTopic.setDescription("Phát triển mô hình thị giác máy tính và học sâu trên camera phòng thi.");
         newTopic.setRequirements("Thành thạo Python, PyTorch, Spring Boot, PostgreSQL");
@@ -371,9 +374,9 @@ public class ThesisWorkflowIntegrationTest {
         boolean approved = departmentHeadService.approveTopic(testTopic.getId(), testDept.getId());
         assertTrue(approved, "Phê duyệt đề tài phải thành công");
 
-        Topic updatedTopic = lecturerService.getTopicById(testTopic.getId());
-        assertEquals("APPROVED", updatedTopic.getStatus(), "Trạng thái đề tài phải là APPROVED");
-        System.out.println("-> Đề tài ID=" + updatedTopic.getId() + " đã được phê duyệt thành công (Status: APPROVED)");
+        testTopic = lecturerService.getTopicById(testTopic.getId());
+        assertEquals("APPROVED", testTopic.getStatus(), "Trạng thái đề tài phải là APPROVED");
+        System.out.println("-> Đề tài ID=" + testTopic.getId() + " đã được phê duyệt thành công (Status: APPROVED)");
     }
 
     @Test
@@ -382,12 +385,13 @@ public class ThesisWorkflowIntegrationTest {
     void step5_studentGroupManagementAndConstraints() {
         System.out.println("\n[TEST-5] BƯỚC 5: Quản lý nhóm sinh viên & Kiểm tra ràng buộc tối đa 3 thành viên");
 
-        // Clean any pre-existing test groups for testPeriod
-        List<StudentGroup> oldGroups = groupRepository.findByStudentIdAndPeriodId(sv1.getId(), testPeriod.getId());
-        for (StudentGroup g : oldGroups) {
-            groupMemberRepository.deleteByGroupIdAndStudentId(g.getId(), sv1.getId());
-            groupRepository.delete(g);
-        }
+        // Clean any pre-existing group memberships and test groups for all test students via SQL
+        jdbcTemplate.update("DELETE FROM evaluations WHERE group_id IN (SELECT id FROM student_groups WHERE period_id = ?)", testPeriod.getId());
+        jdbcTemplate.update("DELETE FROM submissions WHERE group_id IN (SELECT id FROM student_groups WHERE period_id = ?)", testPeriod.getId());
+        jdbcTemplate.update("DELETE FROM topic_registrations WHERE group_id IN (SELECT id FROM student_groups WHERE period_id = ?)", testPeriod.getId());
+        jdbcTemplate.update("DELETE FROM group_members WHERE student_id IN (?, ?, ?, ?)", sv1.getId(), sv2.getId(), sv3.getId(), sv4.getId());
+        jdbcTemplate.update("DELETE FROM group_members WHERE group_id IN (SELECT id FROM student_groups WHERE period_id = ?)", testPeriod.getId());
+        jdbcTemplate.update("DELETE FROM student_groups WHERE period_id = ? OR leader_id IN (?, ?, ?, ?)", testPeriod.getId(), sv1.getId(), sv2.getId(), sv3.getId(), sv4.getId());
 
         // 1. SV1 tạo nhóm mới
         testGroup = studentService.createGroup(sv1, testPeriod.getId(), "Nhóm Nghiên Cứu AI K16");
@@ -454,11 +458,11 @@ public class ThesisWorkflowIntegrationTest {
         assertTrue(prematureSubmitError.contains("Đề tài chưa được phê duyệt"), "Phải thông báo đề tài chưa được phê duyệt");
         System.out.println("-> [ĐẠT CHUẨN BẢO VỆ] Chặn thành công nộp báo cáo khi đề tài chưa được GVHD phê duyệt: \"" + prematureSubmitError + "\"");
 
-        StudentGroup reloaded = studentService.getMyActiveGroup(sv1, testPeriod.getId());
-        assertNotNull(reloaded.getTopic(), "Nhóm phải được gán đề tài");
-        assertEquals(testTopic.getId(), reloaded.getTopic().getId());
-        assertEquals("REGISTERED", reloaded.getStatus(), "Trạng thái nhóm phải là REGISTERED");
-        System.out.println("-> [ĐẠT CHUẨN] Leader SV1 đã đăng ký thành công đề tài: '" + reloaded.getTopic().getTitle() + "'");
+        testGroup = studentService.getMyActiveGroup(sv1, testPeriod.getId());
+        assertNotNull(testGroup.getTopic(), "Nhóm phải được gán đề tài");
+        assertEquals(testTopic.getId(), testGroup.getTopic().getId());
+        assertEquals("REGISTERED", testGroup.getStatus(), "Trạng thái nhóm phải là REGISTERED");
+        System.out.println("-> [ĐẠT CHUẨN] Leader SV1 đã đăng ký thành công đề tài: '" + testGroup.getTopic().getTitle() + "'");
     }
 
     @Test
@@ -707,8 +711,9 @@ public class ThesisWorkflowIntegrationTest {
         // 3. Tạo sinh viên thuộc Khoa A và sinh viên thuộc Khoa B
         Role studentRole = roleRepository.findByCode("STUDENT").orElse(null);
 
+        String uidA = UUID.randomUUID().toString().substring(0, 8);
         AppUser userA = new AppUser();
-        userA.setUsername("sv_dept_a_" + System.currentTimeMillis());
+        userA.setUsername("sv_dept_a_" + uidA);
         userA.setFullName("Sinh Viên Khoa A");
         userA.setEmail(userA.getUsername() + "@test.edu.vn");
         userA.setPasswordHash("123456");
@@ -717,12 +722,13 @@ public class ThesisWorkflowIntegrationTest {
 
         Student studentA = new Student();
         studentA.setUser(userA);
-        studentA.setStudentCode("SVA" + System.currentTimeMillis() % 10000);
+        studentA.setStudentCode("SVA" + uidA.toUpperCase());
         studentA.setMajor(majorA);
         final Student savedStudentA = studentRepository.save(studentA);
 
+        String uidB = UUID.randomUUID().toString().substring(0, 8);
         AppUser userB = new AppUser();
-        userB.setUsername("sv_dept_b_" + System.currentTimeMillis());
+        userB.setUsername("sv_dept_b_" + uidB);
         userB.setFullName("Sinh Viên Khoa B");
         userB.setEmail(userB.getUsername() + "@test.edu.vn");
         userB.setPasswordHash("123456");
@@ -731,7 +737,7 @@ public class ThesisWorkflowIntegrationTest {
 
         Student studentB = new Student();
         studentB.setUser(userB);
-        studentB.setStudentCode("SVB" + System.currentTimeMillis() % 10000);
+        studentB.setStudentCode("SVB" + uidB.toUpperCase());
         studentB.setMajor(majorB);
         final Student savedStudentB = studentRepository.save(studentB);
 
