@@ -2,84 +2,73 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <body>
     <div th:fragment="topbar(pageTitle, breadcrumbParent, breadcrumbParentUrl, user)" class="saas-header-group">
-        <!-- 1. Global Quick Role Switcher Banner for Dev/Testing -->
-        <div th:replace="~{fragments/role_switcher :: roleSwitcher(${user})}"></div>
-
-        <!-- 2. Main Topbar with Floating Island Capsules (Image 3 Style) -->
+        <!-- Main Topbar -->
         <header class="saas-topbar px-3 px-lg-4 d-flex align-items-center justify-content-between">
-            <!-- Left Island: Brand / Logo Badge & Mobile Toggle -->
-            <div class="topbar-island topbar-island-brand d-flex align-items-center gap-2">
-                <!-- Mobile Toggle Only (No 3-bars on Desktop) -->
-                <button class="btn btn-sm btn-light border-0 d-lg-none rounded-full" type="button" onclick="toggleSidebar()" aria-label="Toggle navigation" style="width: 34px; height: 34px; padding: 0;">
+            <!-- Left: Mobile Toggle & Clean Breadcrumb Pathway -->
+            <div class="d-flex align-items-center gap-2 min-w-0">
+                <!-- Mobile Toggle Only -->
+                <button class="btn btn-sm btn-light border-0 d-lg-none rounded-full" type="button" onclick="toggleSidebar()" aria-label="Toggle navigation" style="width: 36px; height: 36px; padding: 0;">
                     <i class="fa-solid fa-bars text-slate-600"></i>
                 </button>
 
-                <a class="d-flex align-items-center gap-2 text-decoration-none"
-                   th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
-                    <div class="topbar-brand-icon">
-                        <i class="fa-solid fa-shapes"></i>
-                    </div>
-                    <div class="d-flex flex-column">
-                        <span class="fw-bold text-slate-900 tracking-tight" style="font-size: 0.95rem; font-family: 'Plus Jakarta Sans', sans-serif;">TopicHub</span>
-                    </div>
-                </a>
-
-                <!-- Breadcrumb tag -->
-                <div class="topbar-breadcrumb-tag d-none d-sm-inline-flex align-items-center gap-1.5 ms-1.5">
-                    <span class="text-slate-300">/</span>
-                    <span class="text-slate-600 font-semibold text-xs truncate" style="max-width: 140px;" th:text="${pageTitle != null ? pageTitle : 'Bảng điều khiển'}">Bảng điều khiển</span>
-                </div>
+                <!-- Breadcrumb Pathway -->
+                <nav class="d-flex align-items-center gap-2 text-xs py-1 text-slate-500" aria-label="breadcrumb">
+                    <a th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}"
+                       class="d-flex align-items-center gap-1.5 text-slate-500 hover:text-blue-600 font-medium text-decoration-none transition">
+                        <i class="fa-solid fa-house-chimney text-slate-400 text-xs"></i>
+                        <span class="d-none d-sm-inline">TopicHub</span>
+                    </a>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+                    <th:block th:if="${breadcrumbParent != null && breadcrumbParent != pageTitle && breadcrumbParent != 'Trưởng Khoa' && breadcrumbParent != 'Trưởng Bộ Môn' && breadcrumbParent != 'Giảng Viên' && breadcrumbParent != 'Sinh Viên' && breadcrumbParent != 'Quản Trị Viên' && breadcrumbParent != 'Trưởng bộ môn'}">
+                        <a th:href="@{${breadcrumbParentUrl != null ? breadcrumbParentUrl : '#'}}" 
+                           class="text-slate-500 hover:text-blue-600 font-medium text-decoration-none transition text-truncate"
+                           style="max-width: 140px;"
+                           th:text="${breadcrumbParent}">Danh mục</a>
+                        <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+                    </th:block>
+                    <span class="text-slate-900 font-bold text-truncate" style="max-width: 240px;" th:text="${pageTitle != null ? pageTitle : 'Bảng điều khiển'}">Bảng điều khiển</span>
+                </nav>
             </div>
 
-            <!-- Center Island: Quick Navigation Pills (Image 3 Style) -->
-            <div class="topbar-island topbar-island-nav d-none d-md-flex align-items-center gap-1">
-                <!-- Admin Quick Pills -->
-                <th:block th:if="${user != null && user.role != null && user.role.code == 'ADMIN'}">
-                    <a th:href="@{/admin/dashboard}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Bảng điều khiển' ? 'active' : ''}">Bảng điều khiển</a>
-                    <a th:href="@{/admin/users}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Quản lý tài khoản' ? 'active' : ''}">Tài khoản</a>
-                    <a th:href="@{/admin/departments}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Khoa & Chuyên ngành' ? 'active' : ''}">Khoa &amp; Ngành</a>
-                </th:block>
-
-                <!-- Department Head Quick Pills -->
-                <th:block th:if="${user != null && user.role != null && (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD')}">
-                    <a th:href="@{/department-head/dashboard}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Bảng điều khiển' ? 'active' : ''}">Bảng điều khiển</a>
-                    <a th:href="@{/department-head/topics}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Quản lý Đề tài' ? 'active' : ''}">Đề tài</a>
-                    <a th:href="@{/department-head/periods}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Đợt đăng ký' ? 'active' : ''}">Đợt KLTN</a>
-                    <a th:href="@{/department-head/councils}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Hội đồng chấm' ? 'active' : ''}">Hội đồng</a>
-                    <a th:href="@{/department-head/personnel}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Quản lý Nhân sự' ? 'active' : ''}">Nhân sự</a>
-                </th:block>
-
-                <!-- Lecturer Quick Pills -->
-                <th:block th:if="${user != null && user.role != null && user.role.code == 'LECTURER'}">
-                    <a th:href="@{/lecturer/dashboard}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Bảng điều khiển' ? 'active' : ''}">Bảng điều khiển</a>
-                    <a th:href="@{/lecturer/topics}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Đề tài của tôi' || pageTitle == 'Đề xuất đề tài mới' ? 'active' : ''}">Đề tài</a>
-                    <a th:href="@{/lecturer/registrations}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Nhóm SV hướng dẫn' ? 'active' : ''}">Nhóm SV</a>
-                    <a th:href="@{/lecturer/submissions}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Bài nộp tiến độ' ? 'active' : ''}">Tiến độ</a>
-                    <a th:href="@{/lecturer/reviews}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Chấm phản biện' ? 'active' : ''}">Phản biện</a>
-                </th:block>
-
-                <!-- Student Quick Pills -->
-                <th:block th:if="${user != null && user.role != null && user.role.code == 'STUDENT'}">
-                    <a th:href="@{/student/dashboard}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Bảng điều khiển' ? 'active' : ''}">Bảng điều khiển</a>
-                    <a th:href="@{/student/group}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Nhóm sinh viên' ? 'active' : ''}">Nhóm</a>
-                    <a th:href="@{/student/topics}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Tra cứu đề tài' ? 'active' : ''}">Đề tài</a>
-                    <a th:href="@{/student/submissions}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Nộp báo cáo' ? 'active' : ''}">Báo cáo</a>
-                    <a th:href="@{/student/results}" class="topbar-nav-pill" th:classappend="${pageTitle == 'Kết quả đánh giá' ? 'active' : ''}">Kết quả</a>
-                </th:block>
-            </div>
-
-            <!-- Right Island: Action Pills (Image 3 Style: Notifications, Theme/Settings, User Avatar) -->
-            <div class="topbar-island topbar-island-actions d-flex align-items-center gap-1.5">
-                <!-- Notifications Dropdown -->
-                <div class="dropdown">
-                    <button class="topbar-action-btn position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Thông báo hệ thống">
-                        <i class="fa-regular fa-bell"></i>
-                        <!-- Red Notification Dot Indicator -->
-                        <span th:if="${announcements != null && !announcements.isEmpty()}" 
-                              class="position-absolute top-1.5 end-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" 
-                              id="topbarNotificationCount"></span>
+            <!-- Right Controls: Search Bar + Action Buttons -->
+            <div class="d-flex align-items-center gap-2.5">
+                <!-- Search Bar Capsule -->
+                <div class="topbar-search-wrapper position-relative d-none d-md-flex align-items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 transition" style="width: 280px; box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs flex-shrink-0"></i>
+                    <input type="text"
+                           id="topbarGlobalSearchInput"
+                           name="search_query_global_clean"
+                           class="form-control form-control-sm border-0 bg-transparent p-0 text-xs shadow-none text-slate-800 flex-grow-1"
+                           placeholder="Tìm kiếm nhanh..."
+                           autocomplete="chrome-off"
+                           autocorrect="off"
+                           autocapitalize="off"
+                           spellcheck="false"
+                           readonly
+                           onfocus="this.removeAttribute('readonly');"
+                           data-lpignore="true">
+                    <button type="button" id="topbarSearchClearBtn" class="border-0 bg-transparent p-0 text-slate-400 hover:text-slate-600 d-none text-xs flex-shrink-0" title="Xóa tìm kiếm" onclick="clearTopbarSearch()">
+                        <i class="fa-solid fa-xmark"></i>
                     </button>
-                    <div class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-100 rounded-3xl p-0 mt-2" style="width: 340px; z-index: 1050;">
+                    
+                    <!-- Floating Results Dropdown Popup -->
+                    <div id="topbarSearchResultsPopup" class="d-none position-absolute start-0 mt-2 w-100 bg-white rounded-2xl border border-slate-200 shadow-wellnest-lg p-2 text-xs text-start" style="top: 100%; z-index: 1060; min-width: 320px; max-height: 380px; overflow-y: auto;">
+                        <div id="topbarSearchResultsContent"></div>
+                    </div>
+                </div>
+
+                <!-- Right Island: Action Pills (Notifications, Theme, User Avatar) -->
+                <div class="topbar-island topbar-island-actions d-flex align-items-center gap-1.5">
+                    <!-- Notifications Dropdown -->
+                    <div class="dropdown">
+                        <button class="topbar-action-btn position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Thông báo hệ thống">
+                            <i class="fa-regular fa-bell"></i>
+                            <!-- Red Notification Count Badge -->
+                            <span th:if="${announcements != null && !announcements.isEmpty()}" 
+                                  class="position-absolute -top-1 -end-1 min-w-[16px] h-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold d-flex align-items-center justify-content-center ring-2 ring-white shadow-xs" 
+                                  id="topbarNotificationCount"></span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-100 rounded-3xl p-0 mt-2" style="width: 340px; z-index: 1050;">
                         <div class="p-3.5 border-b border-slate-100 bg-slate-50/70 rounded-t-3xl d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center gap-2">
                                 <span class="fw-bold text-slate-900 text-sm">Thông báo</span>
@@ -144,20 +133,147 @@
                             <span th:text="${user != null && user.fullName != null && user.fullName.length() > 0 ? user.fullName.substring(0, 1) : 'U'}">U</span>
                         </div>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-100 rounded-3xl p-1.5 mt-2" style="min-width: 220px;">
-                        <li class="px-3.5 py-2.5 border-b border-slate-100 mb-1">
-                            <p class="mb-0 fw-bold text-slate-900 text-sm" th:text="${user != null ? user.fullName : 'Họ Tên'}">Họ Tên</p>
-                            <p class="mb-0 text-slate-400 text-xs" th:text="${user != null && user.role != null ? user.role.name : 'Vai trò'}">Trưởng bộ môn</p>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-100 rounded-3xl p-2 mt-2" style="min-width: 280px; z-index: 1060;">
+                        <!-- User Info Header -->
+                        <li class="px-3 py-2.5 bg-slate-50/80 rounded-2xl mb-2 border border-slate-100/80">
+                            <div class="d-flex align-items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-full bg-emerald-500 text-white d-flex align-items-center justify-content-center fw-bold text-sm shadow-xs flex-shrink-0">
+                                    <span th:text="${user != null && user.fullName != null && user.fullName.length() > 0 ? user.fullName.substring(0, 1) : 'U'}">U</span>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <p class="mb-0 fw-bold text-slate-900 text-xs text-truncate" th:text="${user != null ? user.fullName : 'Họ Tên'}">Họ Tên</p>
+                                    <span class="badge bg-slate-200/80 text-slate-700 font-semibold rounded-full px-2 py-0.5 text-[10px]" th:text="${user != null && user.role != null ? user.role.name : 'Vai trò'}">Trưởng bộ môn</span>
+                                </div>
+                            </div>
                         </li>
+
+                        <!-- Dashboard Link -->
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2xl text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-900" th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
+                            <a class="dropdown-item d-flex align-items-center gap-2.5 py-2 px-3 rounded-2xl text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-900 transition" th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
                                 <i class="fa-solid fa-chart-pie text-slate-400"></i>
                                 <span>Bảng điều khiển</span>
                             </a>
                         </li>
-                        <li><hr class="dropdown-divider my-1 border-slate-100"></li>
+
+                        <!-- Quick Role Switch Section -->
+                        <li><hr class="dropdown-divider my-1.5 border-slate-100"></li>
+                        <li class="px-3 pt-1 pb-1.5 d-flex align-items-center justify-content-between">
+                            <span class="text-slate-400 font-bold uppercase tracking-wider" style="font-size: 10px;">Chuyển tài khoản</span>
+                            <span class="badge bg-blue-50 text-blue-600 rounded-full px-1.5 py-0.5 font-bold" style="font-size: 9px;">Demo / Test</span>
+                        </li>
+
+                        <!-- Switch 1: Admin -->
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2xl text-xs font-semibold text-rose-600 hover:bg-rose-50" th:href="@{/logout}">
+                            <a th:href="@{/auth/switch-role(username='admin')}"
+                               class="dropdown-item d-flex align-items-center justify-content-between py-1.5 px-2.5 rounded-2xl text-xs transition"
+                               th:classappend="${user != null && user.username == 'admin' ? 'bg-blue-50 text-blue-900 font-bold' : 'text-slate-700 hover:bg-slate-50'}">
+                                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                                    <div class="w-6 h-6 rounded-lg bg-rose-50 text-rose-500 d-flex align-items-center justify-content-center flex-shrink-0" style="font-size: 0.7rem;">
+                                        <i class="fa-solid fa-shield-halved"></i>
+                                    </div>
+                                    <div class="d-flex flex-column text-truncate">
+                                        <span class="leading-tight font-semibold">Admin</span>
+                                        <span class="text-slate-400 font-normal" style="font-size: 10px;">Quản trị hệ thống</span>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == 'admin'}" class="fa-solid fa-circle-check text-blue-600 text-xs flex-shrink-0 ms-1"></i>
+                            </a>
+                        </li>
+
+                        <!-- Switch 2: Dean (Trưởng khoa / Trưởng bộ môn) -->
+                        <li>
+                            <a th:href="@{/auth/switch-role(username='head_cntt')}"
+                               class="dropdown-item d-flex align-items-center justify-content-between py-1.5 px-2.5 rounded-2xl text-xs transition"
+                               th:classappend="${user != null && (user.username == 'head_cntt' || (user.role != null && user.role.code == 'DEPARTMENT_HEAD')) ? 'bg-blue-50 text-blue-900 font-bold' : 'text-slate-700 hover:bg-slate-50'}">
+                                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                                    <div class="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0" style="font-size: 0.7rem;">
+                                        <i class="fa-solid fa-bookmark"></i>
+                                    </div>
+                                    <div class="d-flex flex-column text-truncate">
+                                        <span class="leading-tight font-semibold">TS. Nguyễn Văn Thắng</span>
+                                        <span class="text-slate-400 font-normal" style="font-size: 10px;">Trưởng khoa (Dean)</span>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && (user.username == 'head_cntt' || (user.role != null && user.role.code == 'DEPARTMENT_HEAD'))}" class="fa-solid fa-circle-check text-blue-600 text-xs flex-shrink-0 ms-1"></i>
+                            </a>
+                        </li>
+
+                        <!-- Switch 3: GVHD (ThS. Lê Hoàng Long) -->
+                        <li>
+                            <a th:href="@{/auth/switch-role(username='gv_cntt01')}"
+                               class="dropdown-item d-flex align-items-center justify-content-between py-1.5 px-2.5 rounded-2xl text-xs transition"
+                               th:classappend="${user != null && user.username == 'gv_cntt01' ? 'bg-blue-50 text-blue-900 font-bold' : 'text-slate-700 hover:bg-slate-50'}">
+                                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                                    <div class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 d-flex align-items-center justify-content-center flex-shrink-0" style="font-size: 0.7rem;">
+                                        <i class="fa-solid fa-chalkboard-user"></i>
+                                    </div>
+                                    <div class="d-flex flex-column text-truncate">
+                                        <span class="leading-tight font-semibold">ThS. Lê Hoàng Long</span>
+                                        <span class="text-slate-400 font-normal" style="font-size: 10px;">GV Hướng dẫn (GVHD)</span>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == 'gv_cntt01'}" class="fa-solid fa-circle-check text-blue-600 text-xs flex-shrink-0 ms-1"></i>
+                            </a>
+                        </li>
+
+                        <!-- Switch 4: Chủ tịch HĐ / Phản biện (TS. Phạm Minh Tuấn) -->
+                        <li>
+                            <a th:href="@{/auth/switch-role(username='gv_cntt02')}"
+                               class="dropdown-item d-flex align-items-center justify-content-between py-1.5 px-2.5 rounded-2xl text-xs transition"
+                               th:classappend="${user != null && user.username == 'gv_cntt02' ? 'bg-blue-50 text-blue-900 font-bold' : 'text-slate-700 hover:bg-slate-50'}">
+                                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                                    <div class="w-6 h-6 rounded-lg bg-purple-50 text-purple-600 d-flex align-items-center justify-content-center flex-shrink-0" style="font-size: 0.7rem;">
+                                        <i class="fa-solid fa-scale-balanced"></i>
+                                    </div>
+                                    <div class="d-flex flex-column text-truncate">
+                                        <span class="leading-tight font-semibold">TS. Phạm Minh Tuấn</span>
+                                        <span class="text-slate-400 font-normal" style="font-size: 10px;">Chủ tịch HĐ / Phản biện</span>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == 'gv_cntt02'}" class="fa-solid fa-circle-check text-blue-600 text-xs flex-shrink-0 ms-1"></i>
+                            </a>
+                        </li>
+
+                        <!-- Switch 5: SV Nhóm trưởng (Nguyễn Văn An) -->
+                        <li>
+                            <a th:href="@{/auth/switch-role(username='sv_cntt01')}"
+                               class="dropdown-item d-flex align-items-center justify-content-between py-1.5 px-2.5 rounded-2xl text-xs transition"
+                               th:classappend="${user != null && user.username == 'sv_cntt01' ? 'bg-blue-50 text-blue-900 font-bold' : 'text-slate-700 hover:bg-slate-50'}">
+                                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                                    <div class="w-6 h-6 rounded-lg bg-amber-50 text-amber-600 d-flex align-items-center justify-content-center flex-shrink-0" style="font-size: 0.7rem;">
+                                        <i class="fa-solid fa-graduation-cap"></i>
+                                    </div>
+                                    <div class="d-flex flex-column text-truncate">
+                                        <span class="leading-tight font-semibold">SV Nguyễn Văn An</span>
+                                        <span class="text-slate-400 font-normal" style="font-size: 10px;">Sinh viên (Nhóm trưởng)</span>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == 'sv_cntt01'}" class="fa-solid fa-circle-check text-blue-600 text-xs flex-shrink-0 ms-1"></i>
+                            </a>
+                        </li>
+
+                        <!-- Switch 6: SV Thành viên (Trần Thị Bình) -->
+                        <li>
+                            <a th:href="@{/auth/switch-role(username='sv_cntt02')}"
+                               class="dropdown-item d-flex align-items-center justify-content-between py-1.5 px-2.5 rounded-2xl text-xs transition"
+                               th:classappend="${user != null && user.username == 'sv_cntt02' ? 'bg-blue-50 text-blue-900 font-bold' : 'text-slate-700 hover:bg-slate-50'}">
+                                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                                    <div class="w-6 h-6 rounded-lg bg-cyan-50 text-cyan-600 d-flex align-items-center justify-content-center flex-shrink-0" style="font-size: 0.7rem;">
+                                        <i class="fa-solid fa-user-graduate"></i>
+                                    </div>
+                                    <div class="d-flex flex-column text-truncate">
+                                        <span class="leading-tight font-semibold">SV Trần Thị Bình</span>
+                                        <span class="text-slate-400 font-normal" style="font-size: 10px;">Sinh viên (Thành viên)</span>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == 'sv_cntt02'}" class="fa-solid fa-circle-check text-blue-600 text-xs flex-shrink-0 ms-1"></i>
+                            </a>
+                        </li>
+
+                        <!-- Logout -->
+                        <li><hr class="dropdown-divider my-1.5 border-slate-100"></li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2.5 py-2 px-3 rounded-2xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition" th:href="@{/logout}">
                                 <i class="fa-solid fa-arrow-right-from-bracket"></i>
                                 <span>Đăng xuất</span>
                             </a>
@@ -166,6 +282,213 @@
                 </div>
             </div>
         </header>
+
+        <style>
+            .topbar-search-wrapper {
+                background: #FFFFFF;
+                border: 1px solid #E2E8F0;
+                border-radius: 9999px;
+                box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+                transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            .topbar-search-wrapper:focus-within {
+                border-color: #3B82F6;
+                background: #FFFFFF;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12), 0 2px 8px rgba(15, 23, 42, 0.06);
+            }
+            .topbar-search-wrapper input::placeholder {
+                color: #94A3B8;
+                font-size: 0.775rem;
+            }
+            [data-theme="dark"] .topbar-search-wrapper {
+                background-color: #0F172A !important;
+                border-color: #1E293B !important;
+            }
+            [data-theme="dark"] .topbar-search-wrapper input {
+                color: #F8FAFC !important;
+            }
+            [data-theme="dark"] .topbar-search-wrapper kbd {
+                background-color: #1E293B !important;
+                border-color: #334155 !important;
+                color: #94A3B8 !important;
+            }
+        </style>
+
+        <script>
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+                    e.preventDefault();
+                    const searchInput = document.getElementById('topbarGlobalSearchInput');
+                    if (searchInput) {
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                }
+            });
+
+            function clearTopbarSearch() {
+                const topSearch = document.getElementById('topbarGlobalSearchInput');
+                if (topSearch) {
+                    topSearch.value = '';
+                    topSearch.dispatchEvent(new Event('input'));
+                    topSearch.focus();
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const topSearch = document.getElementById('topbarGlobalSearchInput');
+                const clearBtn = document.getElementById('topbarSearchClearBtn');
+                const popup = document.getElementById('topbarSearchResultsPopup');
+                const content = document.getElementById('topbarSearchResultsContent');
+                if (!topSearch) return;
+
+                const quickLinks = [
+                    { title: 'Quản lý Đề tài', desc: 'Duyệt đề tài, phân công GVPB, phân Hội đồng', url: '/department-head/topics', icon: 'fa-book-open-reader', cat: 'Chức năng' },
+                    { title: 'Đợt đăng ký & Kế hoạch', desc: 'Thiết lập các mốc thời gian đề xuất, đăng ký', url: '/department-head/periods', icon: 'fa-calendar-plus', cat: 'Chức năng' },
+                    { title: 'Hội đồng chấm bảo vệ', desc: 'Thành lập & phân công Hội đồng KLTN / TLCN', url: '/department-head/councils', icon: 'fa-scale-balanced', cat: 'Chức năng' },
+                    { title: 'Tổng hợp Điểm & Kết quả', desc: 'Theo dõi tiến độ chấm & công bố điểm', url: '/department-head/results', icon: 'fa-square-poll-vertical', cat: 'Chức năng' },
+                    { title: 'Lịch kế hoạch & Sự kiện', desc: 'Xem lịch đợt, ngày bảo vệ trên lịch tháng/tuần', url: '/department-head/schedule', icon: 'fa-calendar-days', cat: 'Chức năng' },
+                    { title: 'Quản lý Nhân sự', desc: 'Danh sách Giảng viên, Sinh viên trong đơn vị', url: '/department-head/personnel', icon: 'fa-user-group', cat: 'Chức năng' },
+                    { title: 'Bảng tin Thông báo', desc: 'Đăng thông báo, ghim tin quan trọng toàn khoa', url: '/department-head/announcements', icon: 'fa-bullhorn', cat: 'Chức năng' }
+                ];
+
+                topSearch.addEventListener('input', function() {
+                    const query = this.value.trim().toLowerCase();
+
+                    // Toggle Clear Button
+                    if (clearBtn) {
+                        if (query.length > 0) {
+                            clearBtn.classList.remove('d-none');
+                        } else {
+                            clearBtn.classList.add('d-none');
+                        }
+                    }
+
+                    // 1. Sync with in-page input if exists
+                    const inPageSearch = document.querySelector('input[name="search"], input[name="keyword"], #tableSearchInput, #searchInput, #announcementSearchInput, .results-search-input');
+                    if (inPageSearch && inPageSearch !== topSearch) {
+                        inPageSearch.value = this.value;
+                        inPageSearch.dispatchEvent(new Event('input', { bubbles: true }));
+                        inPageSearch.dispatchEvent(new Event('keyup', { bubbles: true }));
+                    }
+
+                    // 2. Call global filter functions if defined on page
+                    if (typeof filterAnnouncements === 'function') {
+                        filterAnnouncements(query);
+                    }
+                    if (typeof filterTableByKeyword === 'function') {
+                        filterTableByKeyword(query);
+                    }
+
+                    // 3. Fallback table row & card filtering
+                    const rows = document.querySelectorAll('.saas-table tbody tr, .table-saas tbody tr, table.table tbody tr, .filterable-row');
+                    if (rows.length > 0) {
+                        rows.forEach(row => {
+                            const text = row.textContent.toLowerCase();
+                            row.style.display = text.includes(query) ? '' : 'none';
+                        });
+                    }
+
+                    const cards = document.querySelectorAll('.announcement-item-wrapper, .kanban-card');
+                    if (cards.length > 0) {
+                        cards.forEach(card => {
+                            const text = card.textContent.toLowerCase();
+                            card.style.display = text.includes(query) ? '' : 'none';
+                        });
+                    }
+
+                    // 4. Filter Full Calendar events
+                    const calEvents = document.querySelectorAll('.cal-event-pill');
+                    if (calEvents.length > 0) {
+                        calEvents.forEach(ev => {
+                            const text = ev.textContent.toLowerCase();
+                            ev.style.display = text.includes(query) ? '' : 'none';
+                        });
+                    }
+
+                    // 5. Build instant suggestions popup
+                    if (popup && content) {
+                        if (query.length >= 1) {
+                            const matchedLinks = quickLinks.filter(l => l.title.toLowerCase().includes(query) || l.desc.toLowerCase().includes(query));
+                            
+                            let html = '';
+                            if (matchedLinks.length > 0) {
+                                html += '<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 mb-1">Chức năng & Lối tắt</div>';
+                                matchedLinks.forEach(l => {
+                                    html += `<a href="${l.url}" class="d-flex align-items-center gap-2.5 p-2 rounded-xl text-decoration-none text-slate-800 hover:bg-slate-50 transition mb-1">
+                                        <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0">
+                                            <i class="fa-solid ${l.icon} text-xs"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="font-bold text-xs text-slate-900">${l.title}</div>
+                                            <div class="text-[11px] text-slate-400 text-truncate">${l.desc}</div>
+                                        </div>
+                                    </a>`;
+                                });
+                            }
+
+                            // Also scan visible text on page for matches
+                            const visibleTitles = [];
+                            document.querySelectorAll('.topic-title-link, h2, h5, h6, .announcement-item-wrapper h2').forEach(el => {
+                                const t = (el.textContent || '').trim();
+                                if (t.toLowerCase().includes(query) && !visibleTitles.includes(t) && visibleTitles.length < 5) {
+                                    visibleTitles.push(t);
+                                }
+                            });
+
+                            if (visibleTitles.length > 0) {
+                                html += '<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 mt-2 mb-1 border-t border-slate-100">Kết quả trên trang này</div>';
+                                visibleTitles.forEach(t => {
+                                    html += `<div class="p-2 rounded-xl bg-slate-50 border border-slate-100/80 mb-1 text-xs text-slate-800 font-semibold line-clamp-1">
+                                        <i class="fa-solid fa-magnifying-glass text-blue-500 text-[10px] me-1.5"></i> ${t}
+                                    </div>`;
+                                });
+                            }
+
+                            if (!html) {
+                                html = `<div class="p-3 text-center text-slate-400 text-xs">
+                                    <i class="fa-regular fa-folder-open text-base d-block mb-1"></i>
+                                    Không tìm thấy kết quả phù hợp với <strong>"${query}"</strong>
+                                </div>`;
+                            }
+
+                            content.innerHTML = html;
+                            popup.classList.remove('d-none');
+                        } else {
+                            popup.classList.add('d-none');
+                        }
+                    }
+                });
+
+                // Hide popup when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (popup && !popup.contains(e.target) && e.target !== topSearch) {
+                        popup.classList.add('d-none');
+                    }
+                });
+
+                topSearch.addEventListener('focus', function() {
+                    if (this.value.trim().length >= 1 && popup) {
+                        popup.classList.remove('d-none');
+                    }
+                });
+
+                topSearch.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        this.value = '';
+                        this.dispatchEvent(new Event('input'));
+                        if (popup) popup.classList.add('d-none');
+                        this.blur();
+                    } else if (e.key === 'Enter') {
+                        const inPageForm = document.querySelector('form:has(input[name="keyword"]), form:has(input[name="search"])');
+                        if (inPageForm) {
+                            e.preventDefault();
+                            inPageForm.submit();
+                        }
+                    }
+                });
+            });
+        </script>
     </div>
 </body>
 </html>

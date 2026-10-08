@@ -54,8 +54,8 @@ if ($oldPort) {
 }
 
 if ($Fast) {
-    Write-Host "[*] Che do Fast: Bien dich nhanh bang compile..." -ForegroundColor Cyan
-    cmd.exe /c "mvnw.cmd compile"
+    Write-Host "[*] Che do Fast: Bien dich va dong goi nhanh..." -ForegroundColor Cyan
+    cmd.exe /c "mvnw.cmd package -DskipTests -Dmaven.test.skip=true"
 } else {
     Write-Host "[*] Dang bien dich va dong goi du an..." -ForegroundColor Yellow
     cmd.exe /c "mvnw.cmd package -DskipTests"

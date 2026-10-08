@@ -55,7 +55,7 @@ public class Topic {
     private String requirements;
 
     @Column(name = "max_students")
-    private Integer maxStudents = 3;
+    private Integer maxStudents = 5;
 
     @Column(length = 50)
     private String status = "PENDING"; // PENDING, APPROVED, REJECTED

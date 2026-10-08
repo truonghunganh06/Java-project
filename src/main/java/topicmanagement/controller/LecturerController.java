@@ -162,7 +162,15 @@ public class LecturerController {
     }
 
     @GetMapping("/topics/create")
-    public String showCreateTopicForm(HttpSession session, Model model) {
+    public String showCreateTopicForm(
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            @RequestParam(value = "periodName", required = false) String periodName,
+            @RequestParam(value = "majorId", required = false) Long majorId,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "requirements", required = false) String requirements,
+            @RequestParam(value = "refNoticeTitle", required = false) String refNoticeTitle,
+            HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
         if (user == null) return "redirect:/login";
 
@@ -172,9 +180,54 @@ public class LecturerController {
         List<Lecturer> coSupervisors = lecturerService.getOtherLecturers(lecturer.getId());
         List<Major> majors = lecturerService.getMajorsForLecturer(lecturer);
 
+        // 1. Determine selected Period
+        Long selectedPeriodId = periodId;
+        if (selectedPeriodId == null && periodName != null && !periodName.trim().isEmpty()) {
+            openPeriods.stream()
+                    .filter(p -> p.getName() != null && p.getName().trim().equalsIgnoreCase(periodName.trim()))
+                    .findFirst()
+                    .ifPresent(p -> model.addAttribute("selectedPeriodId", p.getId()));
+        } else if (selectedPeriodId != null) {
+            model.addAttribute("selectedPeriodId", selectedPeriodId);
+        } else if (openPeriods != null && openPeriods.size() == 1) {
+            model.addAttribute("selectedPeriodId", openPeriods.get(0).getId());
+        }
+
+        // 2. Determine selected Major / Division (Bộ môn của Giảng viên / Trưởng khoa)
+        Long selectedMajorId = majorId;
+        if (selectedMajorId == null && lecturer.getDivision() != null && majors != null) {
+            majors.stream()
+                    .filter(m -> m.getDivision() != null && m.getDivision().getId().equals(lecturer.getDivision().getId()))
+                    .findFirst()
+                    .ifPresent(m -> model.addAttribute("selectedMajorId", m.getId()));
+        }
+        if (!model.containsAttribute("selectedMajorId")) {
+            if (selectedMajorId != null) {
+                model.addAttribute("selectedMajorId", selectedMajorId);
+            } else if (majors != null && !majors.isEmpty()) {
+                model.addAttribute("selectedMajorId", majors.get(0).getId());
+            }
+        }
+
+        // 3. Pre-fill Topic template / title / description / requirements if requested from quick proposal
+        Topic topic = new Topic();
+        if (title != null && !title.trim().isEmpty()) {
+            topic.setTitle(title.trim());
+        } else if (refNoticeTitle != null && !refNoticeTitle.trim().isEmpty()) {
+            String cleanTitle = refNoticeTitle.trim().replaceAll("(?i)^(Thông báo|Kế hoạch|Mở cổng|Đăng ký)\\s*:?\\s*", "");
+            topic.setTitle("Đề tài: " + cleanTitle);
+        }
+
+        if (description != null && !description.trim().isEmpty()) {
+            topic.setDescription(description.trim());
+        }
+        if (requirements != null && !requirements.trim().isEmpty()) {
+            topic.setRequirements(requirements.trim());
+        }
+
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
-        model.addAttribute("topic", new Topic());
+        model.addAttribute("topic", topic);
         model.addAttribute("openPeriods", openPeriods);
         model.addAttribute("proposalProgressList", proposalProgressList);
         model.addAttribute("coSupervisors", coSupervisors);

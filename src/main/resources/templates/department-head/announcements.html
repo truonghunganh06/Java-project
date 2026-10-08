@@ -20,26 +20,38 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
             </div>
 
-            <!-- Page Header -->
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <!-- Page Header & Action Bar -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
                 <div>
                     <h1 class="text-xl font-bold text-slate-900 mb-0">Bảng Tin & Thông Báo Toàn Khoa</h1>
+                    <p class="text-xs text-slate-500 mb-0">Xem và quản lý các thông báo quan trọng gửi đến Giảng viên và Sinh viên.</p>
                 </div>
-                <button class="btn btn-sm btn-dark rounded-xl px-3 py-2 text-xs font-semibold shadow-sm d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createAnnouncementModal">
+                <button class="btn btn-sm btn-dark rounded-xl px-3.5 py-2 text-xs font-semibold shadow-sm d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createAnnouncementModal">
                     <i class="fa-solid fa-bullhorn text-xs"></i> Đăng thông báo mới
                 </button>
             </div>
 
+            <!-- In-Page Search Toolbar -->
+            <div class="p-2.5 bg-white border border-slate-200/80 rounded-2xl shadow-xs mb-3">
+                <div class="relative max-w-md">
+                    <input type="text" class="form-control form-control-sm rounded-xl pl-8 text-xs" 
+                           id="announcementSearchInput"
+                           placeholder="Tìm kiếm thông báo theo tiêu đề, người đăng, nội dung..." 
+                           onkeyup="filterAnnouncements(this.value)">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none"></i>
+                </div>
+            </div>
+
             <!-- Announcement Cards Grid -->
-            <div class="row g-4 mb-4">
-                <div th:if="${announcements == null || #lists.isEmpty(announcements)}" class="col-12">
+            <div class="row g-3 mb-4" id="announcementsContainer">
+                <div th:if="${announcements == null || #lists.isEmpty(announcements)}" class="col-12" id="emptyAnnouncementMsg">
                     <div class="saas-card text-center py-5 text-muted text-xs">
                         <i class="fa-regular fa-newspaper text-3xl mb-2 d-block text-slate-300"></i>
                         Chưa có thông báo nào được đăng tải. Hãy nhấn <strong>Đăng thông báo mới</strong>.
                     </div>
                 </div>
 
-                <div th:each="a : ${announcements}" class="col-12">
+                <div th:each="a : ${announcements}" class="col-12 announcement-item-wrapper">
                     <div class="saas-card p-4 position-relative cursor-pointer hover:border-slate-300 transition" 
                          th:classappend="${a.isPinned ? 'border-amber-300 bg-amber-50/10' : ''}"
                          onclick="showAnnouncementDetail(this)"
@@ -59,9 +71,22 @@
                                 <span class="badge-pill-neutral font-medium flex-shrink-0" th:text="${a.getCategoryName()}">Kế hoạch đợt</span>
                                 <h2 class="text-base font-bold text-slate-900 mb-0 ms-1 hover:text-blue-600 transition text-truncate" style="min-width:0;" th:text="${a.title}">Thông báo nộp báo cáo tiến độ</h2>
                             </div>
-                            <!-- Right: timestamp -->
-                            <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                                <span class="text-xs text-slate-400 d-none d-sm-inline" th:text="${#temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                            <!-- Right: Actions (Toggle Pin & Delete) + Timestamp -->
+                            <div class="d-flex align-items-center gap-2 flex-shrink-0" onclick="event.stopPropagation();">
+                                <form th:action="@{/department-head/announcements/{id}/toggle-pin(id=${a.id})}" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-xs rounded-lg px-2 py-1 text-2xs font-semibold transition"
+                                            th:classappend="${a.isPinned ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+                                            th:title="${a.isPinned ? 'Bấm để BỎ GHIM thông báo' : 'Bấm để GHIM thông báo lên đầu'}">
+                                        <i class="fa-solid" th:classappend="${a.isPinned ? 'fa-thumbtack-slash text-amber-700' : 'fa-thumbtack text-slate-500'}"></i>
+                                        <span th:text="${a.isPinned ? 'Bỏ ghim' : 'Ghim'}">Ghim</span>
+                                    </button>
+                                </form>
+                                <form th:action="@{/department-head/announcements/{id}/delete(id=${a.id})}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa thông báo này?');">
+                                    <button type="submit" class="btn btn-xs btn-outline-danger rounded-lg px-2 py-1 text-2xs" title="Xóa thông báo">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                                <span class="text-xs text-slate-400 d-none d-sm-inline ms-1" th:text="${#temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
                             </div>
                         </div>
                         <div class="text-xs text-slate-600 leading-relaxed mt-2 line-clamp-3" th:text="${a.content}">Nội dung chi tiết thông báo...</div>
@@ -132,5 +157,23 @@
 
     <!-- Scripts Fragment -->
     <div th:replace="~{fragments/scripts :: scripts}"></div>
+
+    <script>
+        function filterAnnouncements(keyword) {
+            const q = (keyword || '').toLowerCase().trim();
+            const items = document.querySelectorAll('.announcement-item-wrapper');
+            let visibleCount = 0;
+            items.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                const match = text.includes(q);
+                card.style.display = match ? '' : 'none';
+                if (match) visibleCount++;
+            });
+            const emptyMsg = document.getElementById('emptyAnnouncementMsg');
+            if (emptyMsg) {
+                emptyMsg.style.display = (visibleCount === 0 && items.length > 0) ? 'block' : '';
+            }
+        }
+    </script>
 </body>
 </html>

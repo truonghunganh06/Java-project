@@ -62,8 +62,6 @@ public class AnnouncementService {
         a.setCategory(category != null ? category : "GENERAL");
         a.setIsPinned(Boolean.TRUE.equals(isPinned));
         a.setAttachmentPath(attachmentPath);
-        a.setCreatedAt(OffsetDateTime.now());
-
         Announcement saved = announcementRepository.save(a);
         System.out.println("[DB-ANNOUNCEMENT] Đã tạo thông báo mới: '" + title + "' (ID=" + saved.getId() + ")");
         return saved;
@@ -75,6 +73,17 @@ public class AnnouncementService {
         if (id == null || !announcementRepository.existsById(id)) return false;
         announcementRepository.deleteById(id);
         System.out.println("[DB-ANNOUNCEMENT] Đã xóa thông báo ID=" + id);
+        return true;
+    }
+
+    @Transactional
+    @CacheEvict(value = "announcements", allEntries = true)
+    public boolean togglePin(Long id) {
+        Announcement a = getAnnouncementById(id);
+        if (a == null) return false;
+        a.setIsPinned(!Boolean.TRUE.equals(a.getIsPinned()));
+        announcementRepository.save(a);
+        System.out.println("[DB-ANNOUNCEMENT] Đã đổi trạng thái ghim thông báo ID=" + id + " -> " + a.getIsPinned());
         return true;
     }
 }

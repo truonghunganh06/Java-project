@@ -193,16 +193,24 @@ public class StudentService {
         return saved;
     }
 
+    private int getMaxAllowedMembers(StudentGroup group) {
+        if (group == null) return 5;
+        if (group.getTopic() != null && group.getTopic().getMaxStudents() != null && group.getTopic().getMaxStudents() > 0) {
+            return Math.min(5, Math.max(3, group.getTopic().getMaxStudents()));
+        }
+        if (group.getPeriod() != null && group.getPeriod().getMaxStudents() != null && group.getPeriod().getMaxStudents() > 0) {
+            return Math.min(5, Math.max(3, group.getPeriod().getMaxStudents()));
+        }
+        return 5;
+    }
+
     @Transactional
     public String inviteMemberByCode(StudentGroup group, String studentCode) {
         if (group == null) return "Không tìm thấy nhóm.";
         List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
         
-        // BUG-03 FIX: Kiểm tra giới hạn thành viên theo topic.maxStudents nếu nhóm đã có đề tài
-        int maxAllowed = 3;
-        if (group.getTopic() != null && group.getTopic().getMaxStudents() != null && group.getTopic().getMaxStudents() > 0) {
-            maxAllowed = Math.min(3, group.getTopic().getMaxStudents());
-        }
+        // BUG-03 FIX: Kiểm tra giới hạn thành viên theo topic.maxStudents nếu nhóm đã có đề tài (3 - 5 SV theo Rubric)
+        int maxAllowed = getMaxAllowedMembers(group);
         if (currentMembers.size() >= maxAllowed) {
             return "Nhóm đã đạt số lượng tối đa " + maxAllowed + " thành viên" + (group.getTopic() != null ? " theo quy định đề tài!" : "!");
         }
@@ -263,11 +271,8 @@ public class StudentService {
 
         List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
 
-        // BUG-03 FIX: Kiểm tra giới hạn thành viên theo topic.maxStudents nếu nhóm đã có đề tài
-        int maxAllowed = 3;
-        if (group.getTopic() != null && group.getTopic().getMaxStudents() != null && group.getTopic().getMaxStudents() > 0) {
-            maxAllowed = Math.min(3, group.getTopic().getMaxStudents());
-        }
+        // BUG-03 FIX: Kiểm tra giới hạn thành viên theo topic.maxStudents nếu nhóm đã có đề tài (3 - 5 SV theo Rubric)
+        int maxAllowed = getMaxAllowedMembers(group);
         if (currentMembers.size() >= maxAllowed) {
             return "Nhóm " + group.getGroupName() + " đã đủ " + maxAllowed + " thành viên" + (group.getTopic() != null ? " theo quy định đề tài!" : "!");
         }
@@ -397,10 +402,12 @@ public class StudentService {
             return "Đợt đăng ký đề tài này hiện không trong thời gian mở đăng ký cho sinh viên!";
         }
 
-        // BUG-03 FIX: Kiểm tra số lượng thành viên nhóm không được vượt quá maxStudents của đề tài
+        // BUG-03 FIX: Kiểm tra số lượng thành viên nhóm không được vượt quá maxStudents của đề tài (3 - 5 SV theo Rubric)
         List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
         int memberCount = (currentMembers != null && !currentMembers.isEmpty()) ? currentMembers.size() : 1;
-        int maxStudentsAllowed = (topic.getMaxStudents() != null && topic.getMaxStudents() > 0) ? topic.getMaxStudents() : 3;
+        int maxStudentsAllowed = (topic.getMaxStudents() != null && topic.getMaxStudents() > 0)
+                ? Math.min(5, Math.max(3, topic.getMaxStudents()))
+                : 5;
         if (memberCount > maxStudentsAllowed) {
             return "Số lượng thành viên của nhóm (" + memberCount + " SV) vượt quá số lượng tối đa cho phép của đề tài này (" + maxStudentsAllowed + " SV)!";
         }

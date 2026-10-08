@@ -82,7 +82,7 @@
                                 <div th:each="m : ${c.members}" class="d-flex justify-content-between align-items-center py-2 px-3 bg-white">
                                     <div>
                                         <span class="font-semibold text-slate-900 text-xs" th:text="${m.lecturer != null && m.lecturer.user != null ? m.lecturer.user.fullName : 'GV'}">TS. Nguyễn Văn A</span>
-                                        <span class="text-slate-400 text-xs d-block" th:text="${m.lecturer != null ? m.lecturer.academicTitle + ' - ' + m.lecturer.lecturerCode : ''}"></span>
+                                        <span class="text-slate-400 text-xs d-block" th:text="${m.lecturer != null ? (m.lecturer.academicRank != null ? m.lecturer.academicRank : 'GV') + ' - ' + m.lecturer.lecturerCode : ''}"></span>
                                     </div>
                                     <div>
                                         <span th:if="${m.councilRole == 'PRESIDENT'}" class="badge-pill-pending font-semibold">
@@ -97,13 +97,116 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Assigned Topics Section -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1.5">
+                                    <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-0">
+                                        <i class="fa-solid fa-book-bookmark text-purple-600 me-1"></i> Đề tài bảo vệ (<span th:text="${councilTopicsMap != null && councilTopicsMap.get(c.id) != null ? councilTopicsMap.get(c.id).size() : 0}">0</span>):
+                                    </h6>
+                                </div>
+                                <div th:if="${councilTopicsMap != null && councilTopicsMap.get(c.id) != null && !#lists.isEmpty(councilTopicsMap.get(c.id))}" class="space-y-1.5">
+                                    <div th:each="tp : ${councilTopicsMap.get(c.id)}" class="p-2 rounded-xl bg-purple-50/50 border border-purple-100/80 d-flex justify-content-between align-items-center text-xs">
+                                        <div class="pe-2">
+                                            <div class="font-mono text-xs font-bold text-purple-700" th:text="${tp.code}">DT-01</div>
+                                            <div class="font-semibold text-slate-800 text-xs line-clamp-1" th:text="${tp.title}">Tên đề tài</div>
+                                            <div class="text-slate-500 text-2xs mt-0.5">
+                                                GVHD: <span th:text="${tp.supervisor != null && tp.supervisor.user != null ? tp.supervisor.user.fullName : 'N/A'}"></span>
+                                            </div>
+                                        </div>
+                                        <form th:action="@{/department-head/councils/{id}/unassign-topic(id=${c.id})}" method="post" class="d-inline">
+                                            <input type="hidden" name="topicId" th:value="${tp.id}">
+                                            <button type="submit" class="btn btn-xs btn-outline-danger rounded-lg px-2 py-1 text-2xs" title="Gỡ khỏi hội đồng" onclick="return confirm('Bạn có chắc muốn gỡ đề tài này khỏi hội đồng?')">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div th:if="${councilTopicsMap == null || councilTopicsMap.get(c.id) == null || #lists.isEmpty(councilTopicsMap.get(c.id))}" class="p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-center text-slate-400 text-xs">
+                                    Chưa có đề tài nào được phân công vào hội đồng này.
+                                </div>
+                            </div>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center pt-3 border-t border-slate-100">
                             <span class="text-xs text-slate-400" th:text="'Đợt: ' + (${c.period != null ? c.period.name : 'Tất cả'})"></span>
-                            <a th:href="@{/department-head/topics(periodId=${c.period != null ? c.period.id : null})}" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 text-xs font-medium text-slate-700 hover:bg-slate-100">
-                                <i class="fa-solid fa-list-check me-1 text-blue-600"></i> Phân công đề tài
-                            </a>
+                            <button type="button" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-3 text-xs font-semibold shadow-sm transition"
+                                    data-bs-toggle="modal" th:data-bs-target="'#assignTopicsModal-' + ${c.id}">
+                                <i class="fa-solid fa-list-check me-1"></i> Phân công đề tài
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Modal Assign Topics to Council -->
+                    <div class="modal fade text-start" th:id="'assignTopicsModal-' + ${c.id}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
+                                <div class="modal-header border-b border-slate-100 bg-gradient-to-r from-purple-50 to-indigo-50 p-4">
+                                    <h6 class="modal-title font-bold text-slate-900 text-sm d-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-users-rectangle text-purple-600"></i>
+                                        Phân công Đề tài vào Hội đồng: <span class="text-purple-700" th:text="${c.name}"></span>
+                                    </h6>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body p-4 space-y-4">
+                                    <!-- Council Info summary -->
+                                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-xs text-slate-700 flex flex-wrap gap-x-4 gap-y-1">
+                                        <div><i class="fa-solid fa-tag text-slate-400 me-1"></i> Mã: <strong th:text="${c.code != null ? c.code : 'HD-' + c.id}"></strong></div>
+                                        <div><i class="fa-regular fa-calendar text-slate-400 me-1"></i> Thời gian: <strong th:text="${c.defenseDate != null ? #temporals.format(c.defenseDate, 'dd/MM/yyyy HH:mm') : 'Chưa định'}"></strong></div>
+                                        <div><i class="fa-solid fa-location-dot text-slate-400 me-1"></i> Phòng: <strong th:text="${c.location != null ? c.location : 'Chưa có'}"></strong></div>
+                                    </div>
+
+                                    <!-- Add topic form -->
+                                    <div class="p-3.5 bg-purple-50/50 rounded-xl border border-purple-100">
+                                        <h6 class="text-xs font-bold text-purple-900 mb-2">Thêm Đề tài vào Hội đồng này:</h6>
+                                        <form th:action="@{/department-head/councils/{id}/assign-topic(id=${c.id})}" method="post" class="d-flex gap-2">
+                                            <select name="topicId" class="form-select text-xs rounded-xl flex-grow border-slate-300" required>
+                                                <option value="">-- Chọn đề tài đã duyệt để gán vào Hội đồng --</option>
+                                                <option th:each="at : ${allApprovedTopics}"
+                                                        th:if="${(at.council == null || at.council.id != c.id) && (councilLecturerIdsMap == null || councilLecturerIdsMap.get(c.id) == null || ((at.supervisor == null || !councilLecturerIdsMap.get(c.id).contains(at.supervisor.id)) && (at.coSupervisor == null || !councilLecturerIdsMap.get(c.id).contains(at.coSupervisor.id))))}"
+                                                        th:value="${at.id}"
+                                                        th:text="'[' + ${at.code} + '] ' + ${at.title} + ' - GVHD: ' + (${at.supervisor != null && at.supervisor.user != null ? at.supervisor.user.fullName : 'N/A'})">
+                                                </option>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-3.5 text-xs font-semibold shrink-0">
+                                                <i class="fa-solid fa-plus me-1"></i> Gán đề tài
+                                            </button>
+                                        </form>
+                                        <span class="text-2xs text-slate-500 mt-1.5 d-block italic">
+                                            * Hệ thống tự động ẩn các đề tài mà GVHD/GV đồng HD là thành viên của Hội đồng này để đảm bảo tính khách quan.
+                                        </span>
+                                    </div>
+
+                                    <!-- Current list in modal -->
+                                    <div>
+                                        <h6 class="text-xs font-bold text-slate-800 mb-2">Danh sách đề tài hiện tại trong Hội đồng (<span th:text="${councilTopicsMap != null && councilTopicsMap.get(c.id) != null ? councilTopicsMap.get(c.id).size() : 0}">0</span>):</h6>
+                                        <div th:if="${councilTopicsMap != null && councilTopicsMap.get(c.id) != null && !#lists.isEmpty(councilTopicsMap.get(c.id))}" class="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
+                                            <div th:each="tp : ${councilTopicsMap.get(c.id)}" class="p-3 d-flex justify-content-between align-items-center bg-white hover:bg-slate-50 transition">
+                                                <div>
+                                                    <span class="text-xs font-mono font-bold text-purple-700" th:text="${tp.code}">DT-01</span>
+                                                    <h6 class="text-xs font-bold text-slate-800 mb-0.5" th:text="${tp.title}">Tên đề tài</h6>
+                                                    <div class="text-2xs text-slate-500">
+                                                        GVHD: <strong class="text-slate-700" th:text="${tp.supervisor != null && tp.supervisor.user != null ? tp.supervisor.user.fullName : 'N/A'}"></strong> |
+                                                        SV: <span th:text="${tp.student != null && tp.student.user != null ? tp.student.user.fullName : (tp.group != null ? tp.group.name : 'Chưa có SV')}"></span>
+                                                    </div>
+                                                </div>
+                                                <form th:action="@{/department-head/councils/{id}/unassign-topic(id=${c.id})}" method="post">
+                                                    <input type="hidden" name="topicId" th:value="${tp.id}">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-2.5 py-1 text-xs font-medium" onclick="return confirm('Bạn có chắc muốn hủy phân công đề tài này khỏi hội đồng?')">
+                                                        <i class="fa-solid fa-xmark me-1"></i> Gỡ
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        <div th:if="${councilTopicsMap == null || councilTopicsMap.get(c.id) == null || #lists.isEmpty(councilTopicsMap.get(c.id))}" class="p-4 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-slate-200">
+                                            Hội đồng chưa có đề tài nào. Hãy chọn đề tài ở khung phía trên và nhấn <strong>Gán đề tài</strong>.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-t border-slate-100 bg-slate-50/50 p-3">
+                                    <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-4 text-xs font-medium" data-bs-dismiss="modal">Đóng</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

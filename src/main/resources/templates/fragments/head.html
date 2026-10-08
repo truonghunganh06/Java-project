@@ -6,6 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${title != null ? title + ' - TopicHub' : 'TopicHub - Quản lý Đề tài Sinh viên'}">TopicHub</title>
 
+    <!-- Immediate Theme & Sidebar Collapse State Initialization (Prevents Screen Flash / Layout Shift) -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('topichub_theme') || 'light';
+                if (savedTheme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+                if (localStorage.getItem('topichub_sidebar_collapsed') === 'true' && window.innerWidth >= 992) {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
     <!-- Preconnect & DNS-Prefetch for Fast CDN Resource Fetching -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -345,25 +360,30 @@
 
         /* Desktop / Laptop Collapsed Sidebar Styles (Exact Match to Image 4) */
         @media (min-width: 992px) {
+            html.sidebar-collapsed .saas-sidebar,
             body.sidebar-collapsed .saas-sidebar {
                 width: 76px !important;
                 transform: none !important;
             }
 
+            html.sidebar-collapsed .saas-main-wrapper,
             body.sidebar-collapsed .saas-main-wrapper {
                 margin-left: 76px !important;
             }
 
+            html.sidebar-collapsed .sidebar-capsule-header,
             body.sidebar-collapsed .sidebar-capsule-header {
                 padding: 0.65rem 0.25rem !important;
                 justify-content: center !important;
                 position: relative;
             }
 
+            html.sidebar-collapsed .sidebar-brand-text,
             body.sidebar-collapsed .sidebar-brand-text {
                 display: none !important;
             }
 
+            html.sidebar-collapsed .sidebar-chevron-btn,
             body.sidebar-collapsed .sidebar-chevron-btn {
                 position: absolute;
                 bottom: -10px;
@@ -372,19 +392,23 @@
                 transform: scale(0.85);
             }
 
+            html.sidebar-collapsed .sidebar-chevron-btn i,
             body.sidebar-collapsed .sidebar-chevron-btn i {
                 transform: rotate(180deg);
             }
 
+            html.sidebar-collapsed .sidebar-nav-container,
             body.sidebar-collapsed .sidebar-nav-container {
                 padding: 0.65rem 0.25rem !important;
                 overflow-x: hidden;
             }
 
+            html.sidebar-collapsed .sidebar-section-title,
             body.sidebar-collapsed .sidebar-section-title {
                 display: none !important;
             }
 
+            html.sidebar-collapsed .saas-nav-link,
             body.sidebar-collapsed .saas-nav-link {
                 justify-content: center !important;
                 padding: 0 !important;
@@ -395,16 +419,19 @@
                 margin: 0 auto 6px auto !important;
             }
 
+            html.sidebar-collapsed .saas-nav-link span,
             body.sidebar-collapsed .saas-nav-link span {
                 display: none !important;
             }
 
+            html.sidebar-collapsed .saas-nav-link i,
             body.sidebar-collapsed .saas-nav-link i {
                 margin: 0 !important;
                 font-size: 1.15rem !important;
                 width: auto !important;
             }
 
+            html.sidebar-collapsed .sidebar-bottom-link,
             body.sidebar-collapsed .sidebar-bottom-link {
                 justify-content: center !important;
                 padding: 0 !important;
@@ -415,10 +442,12 @@
                 margin: 0 auto 4px auto !important;
             }
 
+            html.sidebar-collapsed .sidebar-bottom-label,
             body.sidebar-collapsed .sidebar-bottom-label {
                 display: none !important;
             }
 
+            html.sidebar-collapsed .sidebar-bottom-link i,
             body.sidebar-collapsed .sidebar-bottom-link i {
                 margin: 0 !important;
                 font-size: 1.15rem !important;
@@ -2355,10 +2384,10 @@
         }
 
         .calendar-cell {
-            min-height: 125px;
+            min-height: 110px;
             padding: 8px 10px;
             background-color: #FFFFFF;
-            transition: background-color 0.15s ease;
+            transition: all 0.15s ease;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -2369,9 +2398,13 @@
         }
 
         .calendar-cell.other-month {
-            background-color: #FAFAFB;
-            background-image: repeating-linear-gradient(45deg, #F8FAFC, #F8FAFC 8px, #F1F5F9 8px, #F1F5F9 16px);
-            opacity: 0.75;
+            background-color: #F8FAFC;
+            opacity: 0.55;
+        }
+
+        .calendar-cell.other-month .day-number {
+            color: #94A3B8;
+            font-weight: 500;
         }
 
         .calendar-cell .day-header {
@@ -2381,11 +2414,11 @@
         }
 
         .calendar-cell .day-number {
-            font-size: 0.78rem;
+            font-size: 0.8125rem;
             font-weight: 700;
-            color: #64748B;
-            width: 24px;
-            height: 24px;
+            color: #475569;
+            width: 26px;
+            height: 26px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -2397,7 +2430,7 @@
             background-color: #132238;
             color: #FFFFFF;
             font-weight: 800;
-            box-shadow: 0 2px 6px rgba(19, 34, 56, 0.35);
+            box-shadow: 0 2px 8px rgba(19, 34, 56, 0.3);
         }
 
         .calendar-cell .events-container {
@@ -2409,59 +2442,68 @@
         }
 
         .cal-event-pill {
-            border-radius: 10px;
-            padding: 5px 8px;
-            font-size: 0.6875rem;
-            font-weight: 700;
-            line-height: 1.3;
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            line-height: 1.35;
             cursor: pointer;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-            display: block;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 4px;
             text-decoration: none;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            border: 1px solid transparent;
+            border-left-width: 3px;
         }
 
         .cal-event-pill:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 10px -2px rgba(15, 23, 42, 0.12);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
         }
 
         .cal-event-teal {
-            background-color: #CCFBF1;
+            background-color: #F0FDFA;
             color: #0F766E;
-            border: 1px solid #99F6E4;
+            border-color: #CCFBF1;
+            border-left-color: #0D9488;
         }
-        .cal-event-teal:hover { background-color: #99F6E4; color: #115E59; }
+        .cal-event-teal:hover { background-color: #CCFBF1; color: #115E59; }
 
         .cal-event-cyan {
-            background-color: #E0F2FE;
+            background-color: #F0F9FF;
             color: #0369A1;
-            border: 1px solid #BAE6FD;
+            border-color: #E0F2FE;
+            border-left-color: #0284C7;
         }
-        .cal-event-cyan:hover { background-color: #BAE6FD; color: #075985; }
+        .cal-event-cyan:hover { background-color: #E0F2FE; color: #075985; }
 
         .cal-event-indigo {
             background-color: #EEF2FF;
             color: #4338CA;
-            border: 1px solid #E0E7FF;
+            border-color: #E0E7FF;
+            border-left-color: #6366F1;
         }
         .cal-event-indigo:hover { background-color: #E0E7FF; color: #3730A3; }
 
         .cal-event-amber {
-            background-color: #FEF3C7;
+            background-color: #FFFBEB;
             color: #B45309;
-            border: 1px solid #FDE68A;
+            border-color: #FEF3C7;
+            border-left-color: #F59E0B;
         }
-        .cal-event-amber:hover { background-color: #FDE68A; color: #92400E; }
+        .cal-event-amber:hover { background-color: #FEF3C7; color: #92400E; }
 
         .cal-event-rose {
-            background-color: #FFE4E6;
+            background-color: #FFF1F2;
             color: #BE123C;
-            border: 1px solid #FECDD3;
+            border-color: #FFE4E6;
+            border-left-color: #F43F5E;
         }
-        .cal-event-rose:hover { background-color: #FECDD3; color: #9F1239; }
+        .cal-event-rose:hover { background-color: #FFE4E6; color: #9F1239; }
 
         /* ==================== POLISHED WEEK VIEW (WELLNEST BENTO CARDS) ==================== */
         .cal-week-col {

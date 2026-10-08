@@ -120,6 +120,22 @@ public class DataSeederService {
             // 11. In bảng danh sách tài khoản test ra console
             printTestAccountsSummary();
 
+            // Đảm bảo tài khoản admin khởi tạo nếu database hoàn toàn mới
+            if (userRepository.findByUsername("admin").isEmpty()) {
+                Role adminRole = roleRepository.findByCode("ADMIN").orElse(null);
+                if (adminRole != null) {
+                    AppUser admin = new AppUser();
+                    admin.setUsername("admin");
+                    admin.setPasswordHash(passwordEncoder.encode("123456"));
+                    admin.setFullName("Quản Trị Viên Hệ Thống");
+                    admin.setEmail("admin@topicmanagement.edu.vn");
+                    admin.setRole(adminRole);
+                    admin.setIsActive(true);
+                    userRepository.save(admin);
+                    log.info("[DATA-SEEDER] Đã khởi tạo tài khoản admin mặc định.");
+                }
+            }
+            log.info("[DATA-SEEDER] Hoàn tất kiểm tra hệ thống. Dữ liệu được quản lý 100% trên Neon PostgreSQL.");
         } catch (Exception e) {
             System.err.println("[DATA-SEEDER-ERROR] Đã xảy ra lỗi khi khởi tạo dữ liệu mẫu: " + e.getMessage());
             e.printStackTrace();

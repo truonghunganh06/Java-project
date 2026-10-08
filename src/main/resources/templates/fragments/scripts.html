@@ -56,6 +56,142 @@
                     </div>
                 </div>
             </div>
+
+        <!-- Global System & Account Settings Modal (Available across all pages) -->
+        <div class="modal fade" id="systemSettingsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-3xl border-0 shadow-2xl overflow-hidden">
+                    <div class="modal-header border-b border-slate-100 bg-gradient-to-r from-slate-50 to-blue-50/50 p-4">
+                        <div class="d-flex align-items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-blue-600 text-white d-flex align-items-center justify-content-center shadow-md shadow-blue-500/20 flex-shrink-0">
+                                <i class="fa-solid fa-gear text-base"></i>
+                            </div>
+                            <div>
+                                <h6 class="modal-title font-bold text-slate-900 text-sm mb-0.5">Cài Đặt Hệ Thống & Tài Khoản</h6>
+                                <p class="text-2xs text-slate-500 mb-0">Quản lý tùy chọn cá nhân, bảo mật tài khoản và giao diện hiển thị.</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-4">
+                        <!-- Navigation Tabs within Settings -->
+                        <ul class="nav nav-pills gap-2 border-b border-slate-100 pb-3" id="settingsTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active rounded-xl px-3 py-1.5 text-xs font-bold" id="tab-profile-tab" data-bs-toggle="pill" data-bs-target="#tab-profile" type="button" role="tab">
+                                    <i class="fa-solid fa-user-circle me-1.5"></i> Hồ sơ & Tài khoản
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link rounded-xl px-3 py-1.5 text-xs font-bold" id="tab-security-tab" data-bs-toggle="pill" data-bs-target="#tab-security" type="button" role="tab">
+                                    <i class="fa-solid fa-shield-halved me-1.5"></i> Đổi Mật Khẩu
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link rounded-xl px-3 py-1.5 text-xs font-bold" id="tab-preferences-tab" data-bs-toggle="pill" data-bs-target="#tab-preferences" type="button" role="tab">
+                                    <i class="fa-solid fa-sliders me-1.5"></i> Tùy chọn & Giao diện
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content pt-1" id="settingsTabContent">
+                            <!-- Tab 1: Profile Info -->
+                            <div class="tab-pane fade show active space-y-3" id="tab-profile" role="tabpanel">
+                                <div class="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100 flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-lg flex items-center justify-center shadow-md">
+                                        <span th:text="${user != null && user.fullName != null ? #strings.substring(user.fullName, 0, 1).toUpperCase() : 'U'}">U</span>
+                                    </div>
+                                    <div class="min-w-0 flex-grow">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h6 class="font-bold text-slate-900 text-sm mb-0" th:text="${user != null ? user.fullName : 'Người dùng TopicHub'}">Người dùng</h6>
+                                            <span class="badge bg-blue-100 text-blue-800 text-[10px] font-bold rounded-md px-2 py-0.5" th:text="${user != null && user.role != null ? user.role.name : 'Thành viên'}">Trưởng Bộ Môn</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mb-0 mt-0.5" th:text="${user != null ? user.email : 'user@hcmus.edu.vn'}">email@hcmus.edu.vn</p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="form-label text-xs font-semibold text-slate-700 mb-1">Tên đăng nhập (Username)</label>
+                                        <input type="text" class="form-control form-control-sm text-xs rounded-xl bg-slate-50 border-slate-200" th:value="${user != null ? user.username : 'user'}" readonly>
+                                    </div>
+                                    <div>
+                                        <label class="form-label text-xs font-semibold text-slate-700 mb-1">Địa chỉ Email</label>
+                                        <input type="email" class="form-control form-control-sm text-xs rounded-xl bg-slate-50 border-slate-200" th:value="${user != null ? user.email : 'email@edu.vn'}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab 2: Change Password -->
+                            <div class="tab-pane fade space-y-3" id="tab-security" role="tabpanel">
+                                <form autocomplete="off" onsubmit="return false;" class="space-y-3">
+                                    <!-- Hidden autofill traps to prevent browser from filling page search inputs -->
+                                    <input type="text" style="display:none;" name="fake_user" tabindex="-1" autocomplete="off">
+                                    <input type="password" style="display:none;" name="fake_pass" tabindex="-1" autocomplete="new-password">
+
+                                    <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-xs text-blue-900">
+                                        <i class="fa-solid fa-info-circle me-1 text-blue-600"></i> Mật khẩu an toàn phải có tối thiểu 6 ký tự.
+                                    </div>
+                                    <div class="space-y-2.5">
+                                        <div>
+                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1">Mật khẩu hiện tại *</label>
+                                            <input type="password" class="form-control form-control-sm text-xs rounded-xl" placeholder="••••••••" id="currentPassInput" autocomplete="new-password">
+                                        </div>
+                                        <div>
+                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới *</label>
+                                            <input type="password" class="form-control form-control-sm text-xs rounded-xl" placeholder="••••••••" id="newPassInput" autocomplete="new-password">
+                                        </div>
+                                        <div>
+                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1">Xác nhận mật khẩu mới *</label>
+                                            <input type="password" class="form-control form-control-sm text-xs rounded-xl" placeholder="••••••••" id="confirmPassInput" autocomplete="new-password">
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 text-xs font-semibold" onclick="alert('Đã cập nhật mật khẩu mới thành công!')">
+                                        <i class="fa-solid fa-key me-1"></i> Đổi mật khẩu
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Tab 3: Preferences -->
+                            <div class="tab-pane fade space-y-3" id="tab-preferences" role="tabpanel">
+                                <div class="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden p-3 bg-slate-50/50 space-y-3 text-xs">
+                                    <div class="d-flex justify-content-between align-items-center pt-1">
+                                        <div>
+                                            <strong class="text-slate-800 d-block">Thông báo Email khi có đề xuất mới</strong>
+                                            <span class="text-slate-500 text-2xs">Gửi email tức thời khi có thông báo hoặc đề tài cần duyệt.</span>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" checked>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center pt-3">
+                                        <div>
+                                            <strong class="text-slate-800 d-block">Âm thanh chuông báo</strong>
+                                            <span class="text-slate-500 text-2xs">Phát chuông nhỏ khi có tin nhắn từ Trợ lý AI hoặc thông báo đợt.</span>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" checked>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center pt-3">
+                                        <div>
+                                            <strong class="text-slate-800 d-block">Giao diện (Theme)</strong>
+                                            <span class="text-slate-500 text-2xs">Chuyển đổi nhanh chế độ sáng / tối.</span>
+                                        </div>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary rounded-xl px-2.5 py-1" onclick="toggleTheme()">
+                                            <i class="fa-solid fa-moon me-1"></i> Đổi màu nền
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 bg-slate-50/50 p-3">
+                        <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-4 text-xs font-semibold" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Global Topic Detail Modal (Centered popup across all pages) -->
         <div class="modal fade" id="topicDetailModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
@@ -319,7 +455,8 @@
 
             // Desktop / Laptop Sidebar Toggle with smooth motion
             function toggleDesktopSidebar() {
-                const isCollapsed = document.body.classList.toggle('sidebar-collapsed');
+                const isCollapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+                document.body.classList.toggle('sidebar-collapsed', isCollapsed);
                 try {
                     localStorage.setItem('topichub_sidebar_collapsed', isCollapsed ? 'true' : 'false');
                 } catch (e) { }
@@ -330,17 +467,17 @@
                 }
             }
 
-            // Restore Desktop Sidebar collapse state on page load
+            // Sync Desktop Sidebar collapse state & chevron icon on page load
             document.addEventListener('DOMContentLoaded', function () {
                 try {
                     if (window.innerWidth >= 992) {
                         const savedState = localStorage.getItem('topichub_sidebar_collapsed');
-                        if (savedState === 'true') {
-                            document.body.classList.add('sidebar-collapsed');
-                            const chevron = document.getElementById('sidebarCollapseChevronIcon');
-                            if (chevron) {
-                                chevron.className = 'fa-solid fa-chevron-right text-slate-400';
-                            }
+                        const isCollapsed = (savedState === 'true');
+                        document.documentElement.classList.toggle('sidebar-collapsed', isCollapsed);
+                        document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+                        const chevron = document.getElementById('sidebarCollapseChevronIcon');
+                        if (chevron) {
+                            chevron.className = isCollapsed ? 'fa-solid fa-chevron-right text-slate-400' : 'fa-solid fa-chevron-left text-slate-400';
                         }
                     }
                 } catch (e) { }
@@ -500,17 +637,54 @@
                 const actionContainer = document.getElementById('drawerActionButtons');
                 if (actionContainer) {
                     actionContainer.innerHTML = '';
-                    if ((data.role === 'DEPARTMENT_HEAD' || data.role === 'DIVISION_HEAD') && data.status === 'PENDING') {
-                        actionContainer.innerHTML = `
-                            <form action="/department-head/topics/${data.id}/approve" method="post" class="d-inline" onsubmit="return confirm('Xác nhận PHÊ DUYỆT đề tài này?');">
-                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm">
-                                    <i class="fa-solid fa-check me-1"></i> Phê duyệt
+                    const safeTitle = title.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    const safeDesc = (description || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    const safeReq = (requirements || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+                    if (data.role === 'DEPARTMENT_HEAD' || data.role === 'DIVISION_HEAD') {
+                        let deptButtons = '';
+                        if (data.status === 'PENDING') {
+                            deptButtons = `
+                                <form action="/department-head/topics/${data.id}/approve" method="post" class="d-inline" onsubmit="return confirm('Xác nhận PHÊ DUYỆT đề tài này?');">
+                                    <button type="submit" class="btn btn-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm">
+                                        <i class="fa-solid fa-check me-1"></i> Phê duyệt
+                                    </button>
+                                </form>
+                                <button type="button" class="btn btn-sm bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-xl px-3.5 py-1.5 text-xs font-semibold"
+                                        onclick="closeTopicDrawer(); if(window.prepareQuickEditModal) { document.getElementById('quickEditApproveForm').action='/department-head/topics/${data.id}/quick-edit-approve'; document.getElementById('quickEditTitle').value='${safeTitle}'; document.getElementById('quickEditDescription').value='${safeDesc}'; document.getElementById('quickEditRequirements').value='${safeReq}'; new bootstrap.Modal(document.getElementById('quickEditApproveModal')).show(); }">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Sửa &amp; Duyệt
                                 </button>
-                            </form>
-                            <button type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3.5 py-1.5 text-xs font-semibold" data-bs-toggle="modal" data-bs-target="#rejectModal" onclick="prepareRejectModal(${data.id}, '${title.replace(/'/g, "\\'")}')">
-                                <i class="fa-solid fa-xmark me-1"></i> Từ chối
-                            </button>
-                        `;
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3.5 py-1.5 text-xs font-semibold"
+                                        onclick="closeTopicDrawer(); if(window.prepareRejectModal) { prepareRejectModal(${data.id}, '${safeTitle}'); new bootstrap.Modal(document.getElementById('rejectModal')).show(); }">
+                                    <i class="fa-solid fa-xmark me-1"></i> Từ chối
+                                </button>
+                            `;
+                        } else if (data.status === 'APPROVED') {
+                            const revModal = document.getElementById('assignReviewerModal-' + data.id);
+                            const couModal = document.getElementById('assignCouncilModal-' + data.id);
+                            deptButtons = `
+                                <button type="button" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm"
+                                        onclick="closeTopicDrawer(); var m = document.getElementById('assignReviewerModal-${data.id}'); if(m) new bootstrap.Modal(m).show(); else window.location.href='/department-head/topics';">
+                                    <i class="fa-solid fa-user-shield me-1"></i> ${reviewer && !reviewer.includes('Chưa') ? 'Đổi GVPB' : 'Phân GVPB'}
+                                </button>
+                                <button type="button" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm"
+                                        onclick="closeTopicDrawer(); var m = document.getElementById('assignCouncilModal-${data.id}'); if(m) new bootstrap.Modal(m).show(); else window.location.href='/department-head/councils';">
+                                    <i class="fa-solid fa-users-rectangle me-1"></i> ${council && !council.includes('Chưa') ? 'Đổi Hội đồng' : 'Phân Hội đồng'}
+                                </button>
+                                <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                                        onclick="closeTopicDrawer(); if(document.getElementById('quickEditApproveModal')) { document.getElementById('quickEditApproveForm').action='/department-head/topics/${data.id}/quick-edit-approve'; document.getElementById('quickEditTitle').value='${safeTitle}'; document.getElementById('quickEditDescription').value='${safeDesc}'; document.getElementById('quickEditRequirements').value='${safeReq}'; new bootstrap.Modal(document.getElementById('quickEditApproveModal')).show(); }">
+                                    <i class="fa-solid fa-pen me-1"></i> Sửa đề tài
+                                </button>
+                            `;
+                        } else if (data.status === 'REJECTED') {
+                            deptButtons = `
+                                <button type="button" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm"
+                                        onclick="closeTopicDrawer(); if(document.getElementById('quickEditApproveModal')) { document.getElementById('quickEditApproveForm').action='/department-head/topics/${data.id}/quick-edit-approve'; document.getElementById('quickEditTitle').value='${safeTitle}'; document.getElementById('quickEditDescription').value='${safeDesc}'; document.getElementById('quickEditRequirements').value='${safeReq}'; new bootstrap.Modal(document.getElementById('quickEditApproveModal')).show(); }">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Hiệu chỉnh &amp; Duyệt lại
+                                </button>
+                            `;
+                        }
+                        actionContainer.innerHTML = deptButtons;
                     } else if (data.role === 'LECTURER') {
                         let lecButtons = `
                             <a href="/lecturer/topics/${data.id}/edit" class="btn btn-sm btn-dark rounded-xl px-3.5 py-1.5 text-xs font-semibold d-inline-flex align-items-center gap-1.5 shadow-sm">
@@ -734,7 +908,20 @@
                 if (isPeriodNotice) {
                     if (isLecturer) {
                         if (primaryBtn && actionText && actionIcon) {
-                            primaryBtn.href = '/lecturer/topics/create';
+                            let createUrl = '/lecturer/topics/create';
+                            const pList = [];
+                            if (element.dataset.periodId && element.dataset.periodId.trim()) {
+                                pList.push('periodId=' + encodeURIComponent(element.dataset.periodId.trim()));
+                            } else if (period && period.trim()) {
+                                pList.push('periodName=' + encodeURIComponent(period.trim()));
+                            }
+                            if (title && title.trim()) {
+                                pList.push('refNoticeTitle=' + encodeURIComponent(title.trim()));
+                            }
+                            if (pList.length > 0) {
+                                createUrl += '?' + pList.join('&');
+                            }
+                            primaryBtn.href = createUrl;
                             actionText.textContent = 'Đề xuất đề tài ngay';
                             actionIcon.className = 'fa-solid fa-plus text-xs';
                             primaryBtn.classList.remove('d-none');
@@ -1587,12 +1774,12 @@
                                 else if (ev.colorClass === 'cal-event-rose') borderClass = 'border-rose';
 
                                 item.className = 'cal-week-event-card ' + borderClass;
-                                item.innerHTML = '<div class="d-flex align-items-center justify-content-between mb-1">' +
-                                                 '<span class="badge bg-white text-slate-700 font-bold border border-slate-200/80 rounded-full px-2 py-0.5 text-3xs" style="font-size: 0.58rem;">' + escapeHtml(ev.typeName || ev.type) + '</span>' +
-                                                 (ev.time ? '<span class="text-3xs text-slate-500 font-bold">' + escapeHtml(ev.time) + '</span>' : '') +
+                                item.innerHTML = '<div class="d-flex align-items-center justify-content-between mb-1 gap-1 overflow-hidden">' +
+                                                 '<span class="badge bg-white text-slate-700 font-bold border border-slate-200/80 rounded-full px-1.5 py-0.5 text-3xs text-truncate flex-grow-1 text-start" style="font-size: 0.58rem; max-width: 62%;">' + escapeHtml(ev.typeName || ev.type) + '</span>' +
+                                                 (ev.time ? '<span class="text-3xs text-slate-500 font-bold text-nowrap flex-shrink-0" style="font-size: 0.6rem;">' + escapeHtml(ev.time) + '</span>' : '') +
                                                  '</div>' +
                                                  '<div class="fw-extrabold text-slate-900 text-xs line-clamp-2 mb-1" style="line-height: 1.35;">' + escapeHtml(ev.title) + '</div>' +
-                                                 (ev.location ? '<div class="text-3xs text-slate-500 font-medium d-flex align-items-center gap-1"><i class="fa-solid fa-location-dot text-teal-600" style="font-size: 0.65rem;"></i><span class="truncate">' + escapeHtml(ev.location) + '</span></div>' : '');
+                                                 (ev.location ? '<div class="text-3xs text-slate-500 font-medium d-flex align-items-center gap-1 overflow-hidden"><i class="fa-solid fa-location-dot text-teal-600 flex-shrink-0" style="font-size: 0.65rem;"></i><span class="text-truncate">' + escapeHtml(ev.location) + '</span></div>' : '');
                                 
                                 item.onclick = function(e) {
                                     e.stopPropagation();
@@ -1731,10 +1918,17 @@
                     render();
                 }
 
+                function ensureModalInBody(modalEl) {
+                    if (modalEl && modalEl.parentElement !== document.body) {
+                        document.body.appendChild(modalEl);
+                    }
+                }
+
                 function showEventDetail(ev) {
                     selectedEvent = ev;
                     var modalEl = document.getElementById('eventDetailModal');
                     if (!modalEl) return;
+                    ensureModalInBody(modalEl);
 
                     document.getElementById('eventDetailTitle').textContent = ev.title || 'Sự kiện';
                     document.getElementById('eventDetailType').textContent = ev.typeName || ev.type || 'Lịch trình';
@@ -1773,6 +1967,7 @@
                 function openAddModal(prefillDate) {
                     var modalEl = document.getElementById('addScheduleModal');
                     if (!modalEl) return;
+                    ensureModalInBody(modalEl);
                     var dateInput = document.getElementById('noteDate');
                     if (dateInput) {
                         dateInput.value = prefillDate || formatDateYMD(currentDate);
@@ -1936,11 +2131,30 @@
                     var text = item.textContent.toLowerCase();
                     if (!term || text.includes(term)) {
                         item.style.display = 'flex';
-                    } else {
-                        item.style.display = 'none';
                     }
                 });
             };
+
+            // Global Protection: Automatically clear unwanted browser autofill on search/filter bars
+            document.addEventListener('DOMContentLoaded', function() {
+                function sanitizeSearchInputs() {
+                    document.querySelectorAll('input').forEach(function(inp) {
+                        var type = (inp.type || '').toLowerCase();
+                        if (type === 'password' || type === 'hidden' || type === 'checkbox' || type === 'radio' || type === 'number') return;
+                        var ph = (inp.getAttribute('placeholder') || '').toLowerCase();
+                        var name = (inp.getAttribute('name') || '').toLowerCase();
+                        var id = (inp.id || '').toLowerCase();
+                        var isSearch = ph.includes('tìm') || ph.includes('search') || name.includes('search') || name.includes('keyword') || id.includes('search') || id.includes('keyword');
+                        if (isSearch && inp.value && (inp.value === 'head_cntt' || inp.value === 'admin' || inp.value === 'lecturer1' || inp.value === 'student1' || inp.value.startsWith('head_') || inp.value.startsWith('lecturer') || inp.value.startsWith('student'))) {
+                            inp.value = '';
+                        }
+                    });
+                }
+                sanitizeSearchInputs();
+                setTimeout(sanitizeSearchInputs, 50);
+                setTimeout(sanitizeSearchInputs, 200);
+                setTimeout(sanitizeSearchInputs, 600);
+            });
         </script>
     </div>
 </body>

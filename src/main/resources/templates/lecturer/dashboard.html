@@ -436,6 +436,7 @@
                                  th:data-category="${a.category != null ? a.category : 'THÔNG BÁO'}"
                                  th:data-author="${a.author != null ? a.author.fullName : 'Ban chủ nhiệm Khoa'}"
                                  th:data-created-at="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm') : ''}"
+                                 th:data-period-id="${a.period != null ? a.period.id : ''}"
                                  th:data-period="${a.period != null ? a.period.name : ''}"
                                  th:data-content="${a.content}">
                                 <div class="d-flex align-items-center justify-content-between mb-1">

@@ -80,6 +80,17 @@ public class GroupRegistrationService {
         return status == null || "DRAFT".equalsIgnoreCase(status) || "REJECTED".equalsIgnoreCase(status);
     }
 
+    private int getMaxAllowedMembers(StudentGroup group) {
+        if (group == null) return 5;
+        if (group.getTopic() != null && group.getTopic().getMaxStudents() != null && group.getTopic().getMaxStudents() > 0) {
+            return Math.min(5, Math.max(3, group.getTopic().getMaxStudents()));
+        }
+        if (group.getPeriod() != null && group.getPeriod().getMaxStudents() != null && group.getPeriod().getMaxStudents() > 0) {
+            return Math.min(5, Math.max(3, group.getPeriod().getMaxStudents()));
+        }
+        return 5;
+    }
+
     // ==================== 1. LUỒNG BẮT TAY 2 CHIỀU (INVITATIONS) ====================
 
     @Transactional(rollbackFor = Exception.class)
@@ -92,12 +103,9 @@ public class GroupRegistrationService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Chỉ Nhóm trưởng mới có quyền mời thành viên vào nhóm!");
         }
 
-        // Kiểm tra số lượng thành viên tối đa
+        // Kiểm tra số lượng thành viên tối đa (3 - 5 sinh viên theo Rubric)
         List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
-        int maxAllowed = 3;
-        if (group.getTopic() != null && group.getTopic().getMaxStudents() != null && group.getTopic().getMaxStudents() > 0) {
-            maxAllowed = Math.min(3, group.getTopic().getMaxStudents());
-        }
+        int maxAllowed = getMaxAllowedMembers(group);
         if (currentMembers.size() >= maxAllowed) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nhóm đã đạt số lượng tối đa " + maxAllowed + " thành viên!");
         }
@@ -174,12 +182,9 @@ public class GroupRegistrationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bạn đã là thành viên của một nhóm khác trong đợt này rồi!");
         }
 
-        // Kiểm tra sĩ số nhóm hiện tại
+        // Kiểm tra sĩ số nhóm hiện tại (3 - 5 SV theo Rubric)
         List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
-        int maxAllowed = 3;
-        if (group.getTopic() != null && group.getTopic().getMaxStudents() != null && group.getTopic().getMaxStudents() > 0) {
-            maxAllowed = Math.min(3, group.getTopic().getMaxStudents());
-        }
+        int maxAllowed = getMaxAllowedMembers(group);
         if (currentMembers.size() >= maxAllowed) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nhóm đã đủ số lượng thành viên tối đa (" + maxAllowed + " SV)!");
         }
@@ -723,15 +728,12 @@ public class GroupRegistrationService {
             }
         }
 
-        // 1. Kiểm tra sĩ số hợp nhất
+        // 1. Kiểm tra sĩ số hợp nhất (3 - 5 SV theo Rubric)
         List<GroupMember> sourceMembers = groupMemberRepository.findByGroupId(sourceGroup.getId());
         List<GroupMember> targetMembers = groupMemberRepository.findByGroupId(targetGroup.getId());
 
         int totalMembers = sourceMembers.size() + targetMembers.size();
-        int maxAllowed = 3;
-        if (targetGroup.getTopic() != null && targetGroup.getTopic().getMaxStudents() != null && targetGroup.getTopic().getMaxStudents() > 0) {
-            maxAllowed = Math.min(3, targetGroup.getTopic().getMaxStudents());
-        }
+        int maxAllowed = getMaxAllowedMembers(targetGroup);
 
         if (totalMembers > maxAllowed) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,

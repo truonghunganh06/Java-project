@@ -28,6 +28,7 @@ public class DepartmentHeadController {
     private final StudentGroupRepository studentGroupRepository;
     private final SubmissionRepository submissionRepository;
     private final GroupRegistrationService groupRegistrationService;
+    private final ExportService exportService;
 
     public DepartmentHeadController(
             DepartmentHeadService departmentHeadService,
@@ -36,7 +37,8 @@ public class DepartmentHeadController {
             LecturerService lecturerService,
             StudentGroupRepository studentGroupRepository,
             SubmissionRepository submissionRepository,
-            GroupRegistrationService groupRegistrationService) {
+            GroupRegistrationService groupRegistrationService,
+            ExportService exportService) {
         this.departmentHeadService = departmentHeadService;
         this.councilService = councilService;
         this.announcementService = announcementService;
@@ -44,6 +46,7 @@ public class DepartmentHeadController {
         this.studentGroupRepository = studentGroupRepository;
         this.submissionRepository = submissionRepository;
         this.groupRegistrationService = groupRegistrationService;
+        this.exportService = exportService;
     }
 
     private AppUser getAuthenticatedDeptHead(HttpSession session) {
@@ -638,13 +641,29 @@ public class DepartmentHeadController {
 
         List<Council> councils = (division != null)
                 ? councilService.getCouncilsByDivision(division.getId())
-                : councilService.getCouncilsByDepartment(dept.getId());
+                : (dept != null ? councilService.getCouncilsByDepartment(dept.getId()) : Collections.emptyList());
 
         List<Lecturer> lecturers = (division != null)
                 ? departmentHeadService.getLecturersInDivision(division.getId())
-                : departmentHeadService.getLecturersInDepartment(dept.getId());
+                : (dept != null ? departmentHeadService.getLecturersInDepartment(dept.getId()) : Collections.emptyList());
 
-        List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
+        List<RegistrationPeriod> periods = (dept != null)
+                ? departmentHeadService.getAllPeriods(dept.getId())
+                : Collections.emptyList();
+
+        // Lấy tất cả đề tài đã duyệt thuộc Khoa/Bộ môn để phục vụ phân công
+        List<Topic> allApprovedTopics = (division != null)
+                ? departmentHeadService.getDivisionTopics(division.getId(), "APPROVED", null, null, null)
+                : (dept != null ? departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, null, null) : Collections.emptyList());
+
+        // Lập bản đồ đề tài đã gán cho từng hội đồng
+        Map<Long, List<Topic>> councilTopicsMap = new HashMap<>();
+        List<Long> councilIds = councils.stream().map(Council::getId).toList();
+        Map<Long, Set<Long>> councilLecturerIdsMap = councilService.getCouncilLecturerIdsMap(councilIds);
+
+        for (Council c : councils) {
+            councilTopicsMap.put(c.getId(), councilService.getTopicsByCouncil(c.getId()));
+        }
 
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
@@ -652,6 +671,9 @@ public class DepartmentHeadController {
         model.addAttribute("councils", councils);
         model.addAttribute("lecturers", lecturers);
         model.addAttribute("periods", periods);
+        model.addAttribute("councilTopicsMap", councilTopicsMap);
+        model.addAttribute("councilLecturerIdsMap", councilLecturerIdsMap);
+        model.addAttribute("allApprovedTopics", allApprovedTopics);
 
         return "department-head/councils";
     }
@@ -668,6 +690,7 @@ public class DepartmentHeadController {
             @RequestParam(value = "member1Id", required = false) Long member1Id,
             @RequestParam(value = "member2Id", required = false) Long member2Id,
             @RequestParam(value = "member3Id", required = false) Long member3Id,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
@@ -676,12 +699,14 @@ public class DepartmentHeadController {
             return "redirect:/login";
         }
 
+        String targetRedirect = (redirectUrl != null && !redirectUrl.trim().isEmpty()) ? redirectUrl : "/department-head/councils";
+
         Department dept = departmentHeadService.getDepartmentForUser(user);
         Division division = departmentHeadService.getDivisionForUser(user);
 
         if (name == null || name.trim().isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Tên hội đồng không được để trống!");
-            return "redirect:/department-head/councils";
+            return "redirect:" + targetRedirect;
         }
 
         List<Long> lecturerIds = new ArrayList<>();
@@ -710,14 +735,14 @@ public class DepartmentHeadController {
 
         if (lecturerIds.size() < 3) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hội đồng phải có ít nhất 3 thành viên (Chủ tịch, Thư ký và ít nhất 1 Ủy viên)!");
-            return "redirect:/department-head/councils";
+            return "redirect:" + targetRedirect;
         }
 
         Set<Long> uniqueLids = new HashSet<>();
         for (Long lid : lecturerIds) {
             if (!uniqueLids.add(lid)) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Một giảng viên không thể đảm nhiệm nhiều vị trí trong cùng một Hội đồng!");
-                return "redirect:/department-head/councils";
+                return "redirect:" + targetRedirect;
             }
         }
 
@@ -731,6 +756,44 @@ public class DepartmentHeadController {
             redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi tạo hội đồng: " + ex.getMessage());
         }
 
+        return "redirect:" + targetRedirect;
+    }
+
+    @PostMapping("/councils/{id}/assign-topic")
+    public String assignTopicToCouncil(
+            @PathVariable("id") Long councilId,
+            @RequestParam("topicId") Long topicId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        boolean ok = councilService.assignTopicToCouncil(topicId, councilId);
+        if (ok) {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã phân công đề tài vào Hội đồng bảo vệ thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Xung đột lợi ích: Không thể gán đề tài vào Hội đồng có chứa Giảng viên hướng dẫn!");
+        }
+        return "redirect:/department-head/councils";
+    }
+
+    @PostMapping("/councils/{id}/unassign-topic")
+    public String unassignTopicFromCouncil(
+            @PathVariable("id") Long councilId,
+            @RequestParam("topicId") Long topicId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        councilService.assignTopicToCouncil(topicId, null);
+        redirectAttributes.addFlashAttribute("successMessage", "Đã hủy phân công đề tài khỏi Hội đồng thành công!");
         return "redirect:/department-head/councils";
     }
 
@@ -748,7 +811,14 @@ public class DepartmentHeadController {
         }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
-        List<Topic> allTopics = departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, periodId, null);
+        List<Topic> approvedTopics = departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, periodId, null);
+        Map<Long, StudentGroup> allGroupsMap = councilService.getGroupsMapForTopics(approvedTopics);
+
+        // Chỉ hiển thị các đề tài đã có Sinh viên / Nhóm sinh viên đăng ký thực hiện để theo dõi chấm điểm & công bố
+        List<Topic> allTopics = approvedTopics.stream()
+                .filter(t -> allGroupsMap.containsKey(t.getId()))
+                .toList();
+
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
 
         // Pagination: Limit to 10 topics per page
@@ -800,7 +870,7 @@ public class DepartmentHeadController {
 
     @PostMapping("/results/publish-all")
     public String publishAllResults(
-            @RequestParam(value = "periodId", required = false) Long periodId,
+            @RequestParam(value = "periodId", required = false) String periodIdStr,
             @RequestParam(value = "isFinalized", defaultValue = "true") Boolean isFinalized,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
@@ -808,6 +878,13 @@ public class DepartmentHeadController {
         AppUser user = getAuthenticatedDeptHead(session);
         if (user == null) {
             return "redirect:/login";
+        }
+
+        Long periodId = null;
+        if (periodIdStr != null && !periodIdStr.trim().isEmpty() && !"null".equalsIgnoreCase(periodIdStr.trim())) {
+            try {
+                periodId = Long.parseLong(periodIdStr.trim());
+            } catch (NumberFormatException ignored) {}
         }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
@@ -830,8 +907,11 @@ public class DepartmentHeadController {
         }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
-        List<Topic> topics = departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, periodId, null);
-        Map<Long, StudentGroup> topicGroupsMap = councilService.getGroupsMapForTopics(topics);
+        List<Topic> approvedTopics = departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, periodId, null);
+        Map<Long, StudentGroup> topicGroupsMap = councilService.getGroupsMapForTopics(approvedTopics);
+        List<Topic> topics = approvedTopics.stream()
+                .filter(t -> topicGroupsMap.containsKey(t.getId()))
+                .toList();
 
         StringBuilder sb = new StringBuilder();
         // UTF-8 BOM for seamless Excel compatibility
@@ -874,6 +954,70 @@ public class DepartmentHeadController {
                 .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .contentType(org.springframework.http.MediaType.parseMediaType("text/csv; charset=UTF-8"))
                 .body(bytes);
+    }
+
+    @GetMapping("/results/export-excel")
+    public org.springframework.http.ResponseEntity<byte[]> exportResultsExcel(
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            HttpSession session) {
+
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) {
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Department dept = departmentHeadService.getDepartmentForUser(user);
+        RegistrationPeriod period = (periodId != null) ? departmentHeadService.getPeriodById(periodId) : null;
+        List<Topic> approvedTopics = departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, periodId, null);
+        Map<Long, StudentGroup> topicGroupsMap = councilService.getGroupsMapForTopics(approvedTopics);
+        List<Topic> topics = approvedTopics.stream()
+                .filter(t -> topicGroupsMap.containsKey(t.getId()))
+                .toList();
+
+        try {
+            byte[] excelBytes = exportService.exportResultsToExcel(topics, topicGroupsMap, dept, period);
+            String filename = "bang_diem_tong_ket_" + System.currentTimeMillis() + ".xlsx";
+
+            return org.springframework.http.ResponseEntity.ok()
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .contentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(excelBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return org.springframework.http.ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/results/export-pdf")
+    public org.springframework.http.ResponseEntity<byte[]> exportResultsPdf(
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            HttpSession session) {
+
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) {
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Department dept = departmentHeadService.getDepartmentForUser(user);
+        RegistrationPeriod period = (periodId != null) ? departmentHeadService.getPeriodById(periodId) : null;
+        List<Topic> approvedTopics = departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, periodId, null);
+        Map<Long, StudentGroup> topicGroupsMap = councilService.getGroupsMapForTopics(approvedTopics);
+        List<Topic> topics = approvedTopics.stream()
+                .filter(t -> topicGroupsMap.containsKey(t.getId()))
+                .toList();
+
+        try {
+            byte[] pdfBytes = exportService.exportResultsToPdf(topics, topicGroupsMap, dept, period);
+            String filename = "bang_diem_tong_ket_" + System.currentTimeMillis() + ".pdf";
+
+            return org.springframework.http.ResponseEntity.ok()
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                    .body(pdfBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return org.springframework.http.ResponseEntity.internalServerError().build();
+        }
     }
 
     private String escapeCsv(String str) {
@@ -934,6 +1078,22 @@ public class DepartmentHeadController {
 
         announcementService.deleteAnnouncement(id);
         redirectAttributes.addFlashAttribute("successMessage", "Đã xóa thông báo!");
+        return "redirect:/department-head/announcements";
+    }
+
+    @PostMapping("/announcements/{id}/toggle-pin")
+    public String togglePinAnnouncement(@PathVariable("id") Long id, HttpSession session, RedirectAttributes redirectAttributes) {
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        boolean ok = announcementService.togglePin(id);
+        if (ok) {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã thay đổi trạng thái ghim thông báo!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy thông báo!");
+        }
         return "redirect:/department-head/announcements";
     }
 

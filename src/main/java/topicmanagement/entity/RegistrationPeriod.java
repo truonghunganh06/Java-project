@@ -46,10 +46,10 @@ public class RegistrationPeriod {
     private OffsetDateTime councilDefenseDate;
 
     @Column(name = "min_students")
-    private Integer minStudents = 2;
+    private Integer minStudents = 3;
 
     @Column(name = "max_students")
-    private Integer maxStudents = 3;
+    private Integer maxStudents = 5;
 
     @Column(name = "min_topics_per_lecturer")
     private Integer minTopicsPerLecturer = 3;

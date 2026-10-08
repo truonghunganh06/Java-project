@@ -62,17 +62,27 @@
                             <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}" th:selected="${selectedPeriodId == p.id}"></option>
                         </select>
 
-                        <select class="form-select form-select-sm rounded-xl text-xs" style="width: 155px;" onchange="filterTableByAttribute('score-status', this.value)">
-                            <option value="all">-- Tất cả điểm --</option>
+                        <select class="form-select form-select-sm rounded-xl text-xs" style="width: 170px;" onchange="filterTableByAttribute('score-status', this.value)">
+                            <option value="all">-- Tất cả tiến độ điểm --</option>
                             <option value="scored">Đã có điểm tổng kết</option>
-                            <option value="pending">Chờ chấm điểm</option>
-                            <option value="unassigned">Chưa có nhóm</option>
+                            <option value="pending">Đang chờ chấm điểm</option>
                         </select>
 
-                        <a th:href="@{/department-head/results/export-csv(periodId=${selectedPeriodId})}" class="btn-motion-secondary btn-sm rounded-xl px-2.5 py-1 text-xs font-semibold inline-flex items-center gap-1 text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200/80" title="Tải file Excel/CSV bảng điểm">
-                            <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
-                            <span>Xuất Excel</span>
-                        </a>
+                        <!-- Export Dropdown / Buttons -->
+                        <div class="btn-group">
+                            <a th:href="@{/department-head/results/export-excel(periodId=${selectedPeriodId})}" class="btn-motion-secondary btn-sm rounded-l-xl px-2.5 py-1 text-xs font-semibold inline-flex items-center gap-1 text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200/80" title="Xuất file Excel (.xlsx) chuẩn định dạng">
+                                <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
+                                <span>Excel</span>
+                            </a>
+                            <a th:href="@{/department-head/results/export-pdf(periodId=${selectedPeriodId})}" class="btn-motion-secondary btn-sm px-2.5 py-1 text-xs font-semibold inline-flex items-center gap-1 text-slate-700 bg-slate-50 hover:bg-slate-100 border-y border-r border-slate-200/80" title="Xuất file PDF bảng điểm chính thức">
+                                <i class="fa-solid fa-file-pdf text-red-500 text-xs"></i>
+                                <span>PDF</span>
+                            </a>
+                            <a th:href="@{/department-head/results/export-csv(periodId=${selectedPeriodId})}" class="btn-motion-secondary btn-sm rounded-r-xl px-2 py-1 text-xs font-semibold inline-flex items-center gap-1 text-slate-700 bg-slate-50 hover:bg-slate-100 border-y border-r border-slate-200/80" title="Xuất file CSV">
+                                <i class="fa-solid fa-file-csv text-blue-500 text-xs"></i>
+                                <span>CSV</span>
+                            </a>
+                        </div>
 
                         <a th:href="@{/department-head/results}" class="btn-motion-icon rounded-xl p-1 text-slate-500 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 border border-slate-200/80" title="Đặt lại bộ lọc">
                             <i class="fa-solid fa-rotate-left text-xs"></i>

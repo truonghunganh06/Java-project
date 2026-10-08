@@ -199,11 +199,10 @@
         <!-- ================= CAPSULE 2: BOTTOM UTILITY CAPSULE (IMAGE 4 STYLE) ================= -->
         <div class="sidebar-capsule sidebar-capsule-bottom">
             <!-- Settings / Account Button -->
-            <a th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}"
-               class="sidebar-bottom-link" title="Cài đặt hệ thống">
+            <button type="button" class="sidebar-bottom-link border-0 bg-transparent text-start" data-bs-toggle="modal" data-bs-target="#systemSettingsModal" title="Cài đặt hệ thống & Tài khoản">
                 <i class="fa-solid fa-gear"></i>
                 <span class="sidebar-bottom-label">Cài đặt</span>
-            </a>
+            </button>
 
             <!-- Help / Guide Button -->
             <button type="button" class="sidebar-bottom-link border-0 bg-transparent" onclick="toggleAiChat()" title="Trợ lý AI & Hướng dẫn">
