@@ -250,8 +250,14 @@ public class GroupRegistrationService {
     }
 
     public List<InvitationResponseDto> getMyPendingInvitations(AppUser user) {
-        Student student = getStudentFromUser(user);
-        return groupInvitationRepository.findByStudentIdAndStatus(student.getId(), "INVITED").stream()
+        if (user == null || user.getId() == null) {
+            return Collections.emptyList();
+        }
+        Optional<Student> studentOpt = studentRepository.findByUserId(user.getId());
+        if (studentOpt.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return groupInvitationRepository.findByStudentIdAndStatus(studentOpt.get().getId(), "INVITED").stream()
                 .map(this::mapToInvitationDto)
                 .collect(Collectors.toList());
     }

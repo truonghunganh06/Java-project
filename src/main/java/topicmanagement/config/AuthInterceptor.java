@@ -3,9 +3,13 @@ package topicmanagement.config;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import topicmanagement.entity.AppUser;
+import topicmanagement.repository.UserRepository;
 
 import java.io.IOException;
 
@@ -16,6 +20,12 @@ import java.io.IOException;
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
+    private final UserRepository userRepository;
+
+    public AuthInterceptor(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String uri = request.getRequestURI();
@@ -24,6 +34,19 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         HttpSession session = request.getSession(false);
         AppUser currentUser = (session != null) ? (AppUser) session.getAttribute("currentUser") : null;
+
+        if (currentUser == null) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
+                currentUser = userRepository.findByUsernameIgnoreCase(auth.getName())
+                        .or(() -> userRepository.findByUsername(auth.getName()))
+                        .orElse(null);
+                if (currentUser != null) {
+                    if (session == null) session = request.getSession(true);
+                    session.setAttribute("currentUser", currentUser);
+                }
+            }
+        }
 
         // 1. If unauthenticated
         if (currentUser == null) {

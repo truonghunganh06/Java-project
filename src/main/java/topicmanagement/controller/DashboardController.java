@@ -9,12 +9,26 @@ import topicmanagement.entity.AppUser;
 @Controller
 public class DashboardController {
 
+    private final topicmanagement.repository.UserRepository userRepository;
+
+    public DashboardController(topicmanagement.repository.UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
     @GetMapping({"/", "/dashboard"})
     public String showDashboard(HttpSession session, Model model) {
-        AppUser currentUser = (AppUser) session.getAttribute("currentUser");
-        if (currentUser == null) {
+        AppUser currentUser = (session != null) ? (AppUser) session.getAttribute("currentUser") : null;
+        if (currentUser == null || currentUser.getId() == null) {
             return "redirect:/login";
         }
+
+        var dbUserOpt = userRepository.findById(currentUser.getId());
+        if (dbUserOpt.isEmpty() || !Boolean.TRUE.equals(dbUserOpt.get().getIsActive())) {
+            if (session != null) session.invalidate();
+            return "redirect:/login";
+        }
+        currentUser = dbUserOpt.get();
+        if (session != null) session.setAttribute("currentUser", currentUser);
 
         if (currentUser.getRole() != null) {
             String roleCode = currentUser.getRole().getCode();

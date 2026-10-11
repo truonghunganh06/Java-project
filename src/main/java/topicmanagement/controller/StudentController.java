@@ -20,26 +20,43 @@ public class StudentController {
     private final FileStorageService fileStorageService;
     private final topicmanagement.repository.SubmissionRepository submissionRepository;
     private final GroupRegistrationService groupRegistrationService;
+    private final topicmanagement.repository.UserRepository userRepository;
 
     public StudentController(
             StudentService studentService,
             AnnouncementService announcementService,
             FileStorageService fileStorageService,
             topicmanagement.repository.SubmissionRepository submissionRepository,
-            GroupRegistrationService groupRegistrationService) {
+            GroupRegistrationService groupRegistrationService,
+            topicmanagement.repository.UserRepository userRepository) {
         this.studentService = studentService;
         this.announcementService = announcementService;
         this.fileStorageService = fileStorageService;
         this.submissionRepository = submissionRepository;
         this.groupRegistrationService = groupRegistrationService;
+        this.userRepository = userRepository;
     }
 
     /**
-     * BUG-05 FIX: Kiểm tra role STUDENT trước khi cho phép truy cập
+     * Kiểm tra phiên đăng nhập và xác thực tài khoản còn tồn tại trong DB
      */
     private AppUser getAuthenticatedUser(HttpSession session) {
-        AppUser user = (AppUser) session.getAttribute("currentUser");
-        if (user == null) return null;
+        AppUser user = (session != null) ? (AppUser) session.getAttribute("currentUser") : null;
+        if (user == null || user.getId() == null) return null;
+
+        var dbUserOpt = userRepository.findById(user.getId());
+        if (dbUserOpt.isEmpty() || !Boolean.TRUE.equals(dbUserOpt.get().getIsActive())) {
+            if (session != null) {
+                session.invalidate();
+            }
+            return null;
+        }
+
+        user = dbUserOpt.get();
+        if (session != null) {
+            session.setAttribute("currentUser", user);
+        }
+
         if (user.getRole() == null || !"STUDENT".equalsIgnoreCase(user.getRole().getCode())) {
             return null;
         }
@@ -56,6 +73,7 @@ public class StudentController {
         List<Announcement> announcements = announcementService.getAllAnnouncements();
         List<Submission> submissions = studentService.getGroupSubmissions(group);
         List<topicmanagement.dto.RegistrationDtos.InvitationResponseDto> myInvitations = groupRegistrationService.getMyPendingInvitations(user);
+        List<RegistrationPeriod> activePeriods = studentService.getAllActivePeriods();
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
@@ -63,6 +81,7 @@ public class StudentController {
         model.addAttribute("submissions", submissions);
         model.addAttribute("announcements", announcements.stream().limit(5).toList());
         model.addAttribute("myInvitations", myInvitations);
+        model.addAttribute("activePeriods", activePeriods);
 
         return "student/dashboard";
     }

@@ -12,7 +12,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@DependsOn("databaseMigrationService")
 public class CouncilService {
 
     private final CouncilRepository councilRepository;

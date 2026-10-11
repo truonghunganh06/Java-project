@@ -165,6 +165,7 @@ public class LecturerController {
     public String showCreateTopicForm(
             @RequestParam(value = "periodId", required = false) Long periodId,
             @RequestParam(value = "periodName", required = false) String periodName,
+            @RequestParam(value = "noticeId", required = false) Long noticeId,
             @RequestParam(value = "majorId", required = false) Long majorId,
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "description", required = false) String description,
@@ -175,22 +176,75 @@ public class LecturerController {
         if (user == null) return "redirect:/login";
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
-        List<RegistrationPeriod> openPeriods = lecturerService.getOpenProposalPeriods(lecturer);
+        List<RegistrationPeriod> openPeriods = new java.util.ArrayList<>(lecturerService.getOpenProposalPeriods(lecturer));
         List<LecturerService.ProposalProgressDto> proposalProgressList = lecturerService.getProposalProgressList(lecturer);
         List<Lecturer> coSupervisors = lecturerService.getOtherLecturers(lecturer.getId());
         List<Major> majors = lecturerService.getMajorsForLecturer(lecturer);
 
         // 1. Determine selected Period
         Long selectedPeriodId = periodId;
+
+        // 1a. If noticeId is provided, check if the announcement was linked to a period
+        if (selectedPeriodId == null && noticeId != null) {
+            Announcement notice = announcementService.getAnnouncementById(noticeId);
+            if (notice != null && notice.getPeriod() != null) {
+                selectedPeriodId = notice.getPeriod().getId();
+            }
+        }
+
+        // 1b. If periodName is provided, match against openPeriods (exact or partial)
         if (selectedPeriodId == null && periodName != null && !periodName.trim().isEmpty()) {
-            openPeriods.stream()
-                    .filter(p -> p.getName() != null && p.getName().trim().equalsIgnoreCase(periodName.trim()))
+            String pNameLower = periodName.trim().toLowerCase();
+            selectedPeriodId = openPeriods.stream()
+                    .filter(p -> p.getName() != null && (
+                            p.getName().trim().equalsIgnoreCase(periodName.trim()) ||
+                            pNameLower.contains(p.getName().trim().toLowerCase()) ||
+                            p.getName().trim().toLowerCase().contains(pNameLower)
+                    ))
+                    .map(RegistrationPeriod::getId)
                     .findFirst()
-                    .ifPresent(p -> model.addAttribute("selectedPeriodId", p.getId()));
-        } else if (selectedPeriodId != null) {
+                    .orElse(null);
+        }
+
+        // 1c. If still not matched, check if refNoticeTitle matches any period's name, semester, or academic year
+        if (selectedPeriodId == null && refNoticeTitle != null && !refNoticeTitle.trim().isEmpty()) {
+            String noticeTitleLower = refNoticeTitle.trim().toLowerCase();
+            selectedPeriodId = openPeriods.stream()
+                    .filter(p -> {
+                        if (p.getName() != null && noticeTitleLower.contains(p.getName().trim().toLowerCase())) {
+                            return true;
+                        }
+                        if (p.getAcademicYear() != null && noticeTitleLower.contains(p.getAcademicYear().toLowerCase())) {
+                            if (p.getSemester() != null && noticeTitleLower.contains("hk" + p.getSemester())) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    })
+                    .map(RegistrationPeriod::getId)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        // 1d. If selectedPeriodId is determined but not currently in openPeriods, fetch from all periods and add to openPeriods
+        if (selectedPeriodId != null) {
+            final Long targetPeriodId = selectedPeriodId;
+            boolean alreadyInList = openPeriods.stream().anyMatch(p -> p.getId() != null && p.getId().equals(targetPeriodId));
+            if (!alreadyInList) {
+                lecturerService.getAllPeriods().stream()
+                        .filter(p -> p.getId() != null && p.getId().equals(targetPeriodId))
+                        .findFirst()
+                        .ifPresent(p -> openPeriods.add(0, p));
+            }
+        }
+
+        // 1e. Fallback: if still null, default to the single open period or the active open period
+        if (selectedPeriodId == null && !openPeriods.isEmpty()) {
+            selectedPeriodId = openPeriods.get(0).getId();
+        }
+
+        if (selectedPeriodId != null) {
             model.addAttribute("selectedPeriodId", selectedPeriodId);
-        } else if (openPeriods != null && openPeriods.size() == 1) {
-            model.addAttribute("selectedPeriodId", openPeriods.get(0).getId());
         }
 
         // 2. Determine selected Major / Division (Bộ môn của Giảng viên / Trưởng khoa)
@@ -214,8 +268,18 @@ public class LecturerController {
         if (title != null && !title.trim().isEmpty()) {
             topic.setTitle(title.trim());
         } else if (refNoticeTitle != null && !refNoticeTitle.trim().isEmpty()) {
-            String cleanTitle = refNoticeTitle.trim().replaceAll("(?i)^(Thông báo|Kế hoạch|Mở cổng|Đăng ký)\\s*:?\\s*", "");
-            topic.setTitle("Đề tài: " + cleanTitle);
+            String cleanTitle = refNoticeTitle.trim()
+                    .replaceAll("(?i)^\\[.*?\\]\\s*", "")
+                    .replaceAll("(?i)^(Thông báo|Kế hoạch|Mở cổng|Đăng ký)\\s*:?\\s*", "")
+                    .trim();
+            // Chỉ điền tên đề tài nếu thông báo không phải là thông báo ban hành kế hoạch đợt chung
+            boolean isGenericPeriodNotice = cleanTitle.toLowerCase().contains("kế hoạch")
+                    || cleanTitle.matches(".*\\d{2}/\\d{2}/\\d{4}.*")
+                    || cleanTitle.matches(".*\\bhk[1-3]\\b.*")
+                    || cleanTitle.isEmpty();
+            if (!isGenericPeriodNotice) {
+                topic.setTitle("Đề tài: " + cleanTitle);
+            }
         }
 
         if (description != null && !description.trim().isEmpty()) {

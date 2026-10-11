@@ -138,7 +138,15 @@ application-*.properties
 application-*.yml
 !application-dev.properties
 !application-dev.yml
+!application-prod.properties
+!application-prod.yml
 
 # Graft local context cache
 graft/
 .graft/
+
+# AI Tooling & Metadata
+.cursorrules
+.agents/
+.antigravity/
+.gemini/

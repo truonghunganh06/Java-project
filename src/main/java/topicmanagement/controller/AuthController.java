@@ -11,6 +11,22 @@ import topicmanagement.entity.AppUser;
 import topicmanagement.service.AuthService;
 import topicmanagement.service.GoogleAuthService;
 
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import topicmanagement.entity.AppUser;
+import topicmanagement.service.AuthService;
+import topicmanagement.service.CustomUserDetailsService;
+import topicmanagement.service.GoogleAuthService;
+
 import java.util.UUID;
 
 @Controller
@@ -18,10 +34,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final GoogleAuthService googleAuthService;
+    private final CustomUserDetailsService customUserDetailsService;
 
-    public AuthController(AuthService authService, GoogleAuthService googleAuthService) {
+    public AuthController(AuthService authService, GoogleAuthService googleAuthService, CustomUserDetailsService customUserDetailsService) {
         this.authService = authService;
         this.googleAuthService = googleAuthService;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
     @GetMapping("/login")
@@ -45,6 +63,7 @@ public class AuthController {
         AppUser user = authService.authenticate(trimmedUser, trimmedPass);
         if (user != null) {
             session.setAttribute("currentUser", user);
+            setSecurityContext(user, session);
             return "redirect:/dashboard";
         }
 
@@ -88,6 +107,7 @@ public class AuthController {
         try {
             AppUser user = googleAuthService.processGoogleCallback(code);
             session.setAttribute("currentUser", user);
+            setSecurityContext(user, session);
             return "redirect:/dashboard";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -97,7 +117,10 @@ public class AuthController {
 
     @GetMapping("/logout")
     public String handleLogout(HttpSession session) {
-        session.invalidate();
+        SecurityContextHolder.clearContext();
+        if (session != null) {
+            session.invalidate();
+        }
         return "redirect:/login?logout=true";
     }
 
@@ -111,6 +134,7 @@ public class AuthController {
         AppUser user = authService.findUserByUsername(username);
         if (user != null) {
             session.setAttribute("currentUser", user);
+            setSecurityContext(user, session);
             System.out.println("[ROLE-SWITCHER] Đã chuyển đổi nhanh sang tài khoản: " + user.getUsername() + " (" + (user.getRole() != null ? user.getRole().getCode() : "NO_ROLE") + ")");
             if (redirectUrl != null && !redirectUrl.trim().isEmpty() && redirectUrl.startsWith("/")) {
                 return "redirect:" + redirectUrl;
@@ -120,5 +144,15 @@ public class AuthController {
 
         redirectAttributes.addFlashAttribute("error", "Không tìm thấy tài khoản kiểm thử: " + username);
         return "redirect:/login";
+    }
+
+    private void setSecurityContext(AppUser user, HttpSession session) {
+        if (user == null || session == null) return;
+        try {
+            UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
+            Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
+        } catch (Exception ignored) {}
     }
 }

@@ -23,7 +23,16 @@ public class AdminController {
     }
 
     private AppUser getAuthenticatedAdmin(HttpSession session) {
-        AppUser user = (AppUser) session.getAttribute("currentUser");
+        AppUser user = (session != null) ? (AppUser) session.getAttribute("currentUser") : null;
+        if (user == null) {
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                user = adminService.getUserByUsername(auth.getName());
+                if (user != null && session != null) {
+                    session.setAttribute("currentUser", user);
+                }
+            }
+        }
         if (user == null) {
             return null;
         }

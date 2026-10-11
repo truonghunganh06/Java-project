@@ -864,6 +864,7 @@
                 const author = decodeUnicode(element.dataset.author) || 'Ban chủ nhiệm Khoa';
                 const time = element.dataset.createdAt || '';
                 const period = decodeUnicode(element.dataset.period) || '';
+                const periodId = element.dataset.periodId || '';
                 const content = decodeUnicode(element.dataset.content) || 'Không có nội dung chi tiết.';
 
                 const modalTitle = document.getElementById('modalAnnouncementTitle');
@@ -910,10 +911,14 @@
                         if (primaryBtn && actionText && actionIcon) {
                             let createUrl = '/lecturer/topics/create';
                             const pList = [];
-                            if (element.dataset.periodId && element.dataset.periodId.trim()) {
-                                pList.push('periodId=' + encodeURIComponent(element.dataset.periodId.trim()));
-                            } else if (period && period.trim()) {
+                            if (periodId && periodId.trim()) {
+                                pList.push('periodId=' + encodeURIComponent(periodId.trim()));
+                            }
+                            if (period && period.trim()) {
                                 pList.push('periodName=' + encodeURIComponent(period.trim()));
+                            }
+                            if (annId && annId.trim()) {
+                                pList.push('noticeId=' + encodeURIComponent(annId.trim()));
                             }
                             if (title && title.trim()) {
                                 pList.push('refNoticeTitle=' + encodeURIComponent(title.trim()));

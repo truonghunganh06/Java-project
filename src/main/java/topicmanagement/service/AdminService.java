@@ -58,6 +58,13 @@ public class AdminService {
         return userRepository.findById(id).orElse(null);
     }
 
+    public AppUser getUserByUsername(String username) {
+        if (username == null || username.trim().isEmpty()) return null;
+        return userRepository.findByUsernameIgnoreCase(username.trim())
+                .or(() -> userRepository.findByUsername(username.trim()))
+                .orElse(null);
+    }
+
     @Transactional
     public String createUser(AppUser user, Long roleId) {
         if (user == null || user.getUsername() == null || user.getUsername().trim().isEmpty()) {
