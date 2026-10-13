@@ -43,9 +43,260 @@
                             Nội dung chi tiết thông báo...
                         </div>
                     </div>
+<<<<<<< Updated upstream
                     <div class="modal-footer border-t border-slate-100 p-3">
                         <button type="button" class="btn btn-sm btn-light border rounded-xl px-4 text-xs font-semibold"
                             data-bs-dismiss="modal">Đóng</button>
+=======
+                    <div class="modal-footer border-t border-slate-100 p-3 d-flex justify-content-between align-items-center">
+                        <div id="modalAnnouncementSecondaryActionWrap"></div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-sm btn-light border rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                                data-bs-dismiss="modal">Đóng</button>
+                            <a id="modalAnnouncementPrimaryActionBtn" href="#" class="btn btn-sm bg-slate-900 hover:bg-slate-800 text-teal-300 rounded-xl px-4 py-2 text-xs font-bold shadow-sm d-inline-flex align-items-center gap-1.5 transition border-0 d-none">
+                                <i id="modalAnnouncementActionIcon" class="fa-solid fa-plus text-xs"></i>
+                                <span id="modalAnnouncementActionText">Đề xuất đề tài ngay</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global System & Account Settings Modal (Available across all pages) -->
+        <div class="modal fade" id="systemSettingsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-3xl border-0 shadow-2xl overflow-hidden">
+                    <div class="modal-header border-b border-slate-100 bg-gradient-to-r from-slate-50 to-blue-50/50 p-4">
+                        <div class="d-flex align-items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-blue-600 text-white d-flex align-items-center justify-content-center shadow-md shadow-blue-500/20 flex-shrink-0">
+                                <i class="fa-solid fa-gear text-base"></i>
+                            </div>
+                            <div>
+                                <h6 class="modal-title font-bold text-slate-900 text-sm mb-0.5">Cài Đặt Hệ Thống & Tài Khoản</h6>
+                                <p class="text-2xs text-slate-500 mb-0">Quản lý tùy chọn cá nhân, bảo mật tài khoản và giao diện hiển thị.</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-4">
+                        <!-- Navigation Tabs within Settings -->
+                        <ul class="nav nav-pills gap-2 border-b border-slate-100 pb-3" id="settingsTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active rounded-xl px-3 py-1.5 text-xs font-bold" id="tab-profile-tab" data-bs-toggle="pill" data-bs-target="#tab-profile" type="button" role="tab">
+                                    <i class="fa-solid fa-user-circle me-1.5"></i> Hồ sơ & Tài khoản
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link rounded-xl px-3 py-1.5 text-xs font-bold" id="tab-security-tab" data-bs-toggle="pill" data-bs-target="#tab-security" type="button" role="tab">
+                                    <i class="fa-solid fa-shield-halved me-1.5"></i> Đổi Mật Khẩu
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link rounded-xl px-3 py-1.5 text-xs font-bold" id="tab-preferences-tab" data-bs-toggle="pill" data-bs-target="#tab-preferences" type="button" role="tab">
+                                    <i class="fa-solid fa-sliders me-1.5"></i> Tùy chọn & Giao diện
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content pt-1" id="settingsTabContent">
+                            <!-- Tab 1: Profile Info -->
+                            <div class="tab-pane fade show active space-y-3" id="tab-profile" role="tabpanel">
+                                <div class="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100 flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-lg flex items-center justify-center shadow-md">
+                                        <span th:text="${user != null && user.fullName != null ? #strings.substring(user.fullName, 0, 1).toUpperCase() : 'U'}">U</span>
+                                    </div>
+                                    <div class="min-w-0 flex-grow">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h6 class="font-bold text-slate-900 text-sm mb-0" th:text="${user != null ? user.fullName : 'Người dùng TopicHub'}">Người dùng</h6>
+                                            <span class="badge bg-blue-100 text-blue-800 text-[10px] font-bold rounded-md px-2 py-0.5" th:text="${user != null && user.role != null ? user.role.name : 'Thành viên'}">Trưởng Bộ Môn</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mb-0 mt-0.5" th:text="${user != null ? user.email : 'user@hcmus.edu.vn'}">email@hcmus.edu.vn</p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="form-label text-xs font-semibold text-slate-700 mb-1">Tên đăng nhập (Username)</label>
+                                        <input type="text" class="form-control form-control-sm text-xs rounded-xl bg-slate-50 border-slate-200" th:value="${user != null ? user.username : 'user'}" readonly>
+                                    </div>
+                                    <div>
+                                        <label class="form-label text-xs font-semibold text-slate-700 mb-1">Địa chỉ Email</label>
+                                        <input type="email" class="form-control form-control-sm text-xs rounded-xl bg-slate-50 border-slate-200" th:value="${user != null ? user.email : 'email@edu.vn'}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab 2: Change Password -->
+                            <div class="tab-pane fade space-y-3" id="tab-security" role="tabpanel">
+                                <form autocomplete="off" onsubmit="return false;" class="space-y-3">
+                                    <!-- Hidden autofill traps to prevent browser from filling page search inputs -->
+                                    <input type="text" style="display:none;" name="fake_user" tabindex="-1" autocomplete="off">
+                                    <input type="password" style="display:none;" name="fake_pass" tabindex="-1" autocomplete="new-password">
+
+                                    <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-xs text-blue-900">
+                                        <i class="fa-solid fa-info-circle me-1 text-blue-600"></i> Mật khẩu an toàn phải có tối thiểu 6 ký tự.
+                                    </div>
+                                    <div class="space-y-2.5">
+                                        <div>
+                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1">Mật khẩu hiện tại *</label>
+                                            <input type="password" class="form-control form-control-sm text-xs rounded-xl" placeholder="••••••••" id="currentPassInput" autocomplete="new-password">
+                                        </div>
+                                        <div>
+                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới *</label>
+                                            <input type="password" class="form-control form-control-sm text-xs rounded-xl" placeholder="••••••••" id="newPassInput" autocomplete="new-password">
+                                        </div>
+                                        <div>
+                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1">Xác nhận mật khẩu mới *</label>
+                                            <input type="password" class="form-control form-control-sm text-xs rounded-xl" placeholder="••••••••" id="confirmPassInput" autocomplete="new-password">
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 text-xs font-semibold" onclick="alert('Đã cập nhật mật khẩu mới thành công!')">
+                                        <i class="fa-solid fa-key me-1"></i> Đổi mật khẩu
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Tab 3: Preferences -->
+                            <div class="tab-pane fade space-y-3" id="tab-preferences" role="tabpanel">
+                                <div class="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden p-3 bg-slate-50/50 space-y-3 text-xs">
+                                    <div class="d-flex justify-content-between align-items-center pt-1">
+                                        <div>
+                                            <strong class="text-slate-800 d-block">Thông báo Email khi có đề xuất mới</strong>
+                                            <span class="text-slate-500 text-2xs">Gửi email tức thời khi có thông báo hoặc đề tài cần duyệt.</span>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" checked>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center pt-3">
+                                        <div>
+                                            <strong class="text-slate-800 d-block">Âm thanh chuông báo</strong>
+                                            <span class="text-slate-500 text-2xs">Phát chuông nhỏ khi có tin nhắn từ Trợ lý AI hoặc thông báo đợt.</span>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" checked>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center pt-3">
+                                        <div>
+                                            <strong class="text-slate-800 d-block">Giao diện (Theme)</strong>
+                                            <span class="text-slate-500 text-2xs">Chuyển đổi nhanh chế độ sáng / tối.</span>
+                                        </div>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary rounded-xl px-2.5 py-1" onclick="toggleTheme()">
+                                            <i class="fa-solid fa-moon me-1"></i> Đổi màu nền
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 bg-slate-50/50 p-3">
+                        <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-4 text-xs font-semibold" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Topic Detail Modal (Centered popup across all pages) -->
+        <div class="modal fade" id="topicDetailModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                <div class="modal-content rounded-2xl border-0 shadow-2xl">
+                    <div class="modal-header border-b border-slate-100 p-4">
+                        <div class="d-flex align-items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0">
+                                <i class="fa-solid fa-book-bookmark text-base"></i>
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-0.5">
+                                    <span id="drawerTopicCode" class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-bold">DT-01</span>
+                                    <span id="drawerTopicStatusBadge" class="badge-pill-pending">Chờ duyệt</span>
+                                </div>
+                                <h5 id="drawerTopicTitle" class="modal-title font-bold text-slate-900 text-sm md:text-base mb-0 line-clamp-1">Tiêu đề đề tài</h5>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-3">
+                        <!-- Rejection Reason Alert if any -->
+                        <div id="drawerTopicRejectionAlert" class="alert alert-danger p-3 rounded-2xl mb-3 border border-rose-200 shadow-sm" style="display: none;">
+                            <div class="fw-bold text-rose-900 text-xs mb-1"><i class="fa-solid fa-triangle-exclamation text-rose-600 me-1"></i> Lý do Trưởng khoa từ chối:</div>
+                            <div id="drawerTopicRejectionText" class="text-rose-700 text-xs"></div>
+                        </div>
+
+                        <!-- Period & Major & Quota Badges Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                            <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/70">
+                                <span class="text-xs text-slate-400 d-block mb-0.5"><i class="fa-solid fa-building-columns me-1"></i> Chuyên ngành / Khoa</span>
+                                <strong class="text-xs text-slate-800" id="drawerTopicMajor">CNTT</strong>
+                            </div>
+                            <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/70">
+                                <span class="text-xs text-slate-400 d-block mb-0.5"><i class="fa-regular fa-calendar-check me-1"></i> Đợt đăng ký</span>
+                                <strong class="text-xs text-slate-800" id="drawerTopicPeriod">KLTN 2026-2027</strong>
+                            </div>
+                            <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/70">
+                                <span class="text-xs text-slate-400 d-block mb-0.5"><i class="fa-solid fa-users me-1"></i> Chỉ tiêu</span>
+                                <strong class="text-xs text-slate-800" id="drawerTopicQuota">Tối đa 3 SV</strong>
+                            </div>
+                        </div>
+
+                        <!-- Supervisors & Reviewers Grid -->
+                        <div class="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-2 text-xs">
+                            <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
+                                <i class="fa-solid fa-user-tie text-blue-600 me-1.5"></i> Cán bộ Hướng dẫn &amp; Phản biện
+                            </h6>
+                            <div class="d-flex justify-content-between py-1 border-b border-slate-100">
+                                <span class="text-slate-500"><i class="fa-solid fa-chalkboard-user text-blue-600 me-1"></i> GV Hướng dẫn chính:</span>
+                                <strong id="drawerTopicSupervisor" class="text-slate-900">TS. Nguyễn Văn A</strong>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-b border-slate-100">
+                                <span class="text-slate-500"><i class="fa-solid fa-user-plus text-slate-400 me-1"></i> GV Hướng dẫn phụ:</span>
+                                <strong id="drawerTopicCoSupervisor" class="text-slate-900">Không có</strong>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-b border-slate-100">
+                                <span class="text-slate-500"><i class="fa-solid fa-user-check text-indigo-600 me-1"></i> GV Phản biện:</span>
+                                <strong id="drawerTopicReviewer" class="text-slate-900">Chưa phân công</strong>
+                            </div>
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-slate-500"><i class="fa-solid fa-users-rectangle text-purple-600 me-1"></i> Hội đồng:</span>
+                                <strong id="drawerTopicCouncil" class="text-slate-900">Chưa phân hội đồng</strong>
+                            </div>
+                        </div>
+
+                        <!-- Group Registered Info -->
+                        <div>
+                            <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5">
+                                <i class="fa-solid fa-users text-blue-600 me-1.5"></i> Nhóm sinh viên thực hiện:
+                            </h6>
+                            <div id="drawerTopicGroupInfo" class="text-xs text-slate-600">
+                                Chưa có nhóm nào đăng ký.
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div>
+                            <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5">
+                                <i class="fa-regular fa-file-lines text-blue-600 me-1.5"></i> Mục tiêu &amp; Mô tả nội dung:
+                            </h6>
+                            <div id="drawerTopicDescription" class="text-xs text-slate-700 leading-relaxed p-3 bg-slate-50/70 border border-slate-100 rounded-xl" style="white-space: pre-line;">
+                                Chưa có mô tả chi tiết.
+                            </div>
+                        </div>
+
+                        <!-- Requirements -->
+                        <div>
+                            <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5">
+                                <i class="fa-solid fa-list-check text-blue-600 me-1.5"></i> Yêu cầu &amp; Công nghệ:
+                            </h6>
+                            <div id="drawerTopicRequirements" class="text-xs text-slate-700 leading-relaxed p-3 bg-slate-50/70 border border-slate-100 rounded-xl" style="white-space: pre-line;">
+                                Theo hướng dẫn của Giảng viên.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 p-3 d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100" data-bs-dismiss="modal">Đóng</button>
+                        <div id="drawerActionButtons" class="d-inline-flex align-items-center gap-2"></div>
+>>>>>>> Stashed changes
                     </div>
                 </div>
             </div>
@@ -58,7 +309,7 @@
         <div th:replace="~{fragments/ai_chat :: aiChatWidget}"></div>
 
         <!-- Global Confirmation Modal (Replaces browser default confirm dialogs) -->
-        <div class="modal fade saas-confirm-modal" id="globalConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal fade saas-confirm-modal" id="globalConfirmModal" tabindex="-1" aria-hidden="true" style="z-index: 1080 !important;">
             <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
                 <div class="modal-content text-center p-4">
                     <div class="d-flex justify-content-center">
@@ -88,6 +339,13 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 
         <script>
+            // Ensure any Bootstrap modal is attached directly to document.body to prevent stacking context clipping
+            document.addEventListener('show.bs.modal', function (e) {
+                if (e.target && e.target.parentElement !== document.body) {
+                    document.body.appendChild(e.target);
+                }
+            });
+
             // Robust Unicode String Decoder (fixes any \uXXXX or \xXX escape artifacts)
             function decodeUnicode(str) {
                 if (!str || typeof str !== 'string') return str || '';
@@ -718,10 +976,19 @@
 
             // ==================== GLOBAL CONFIRMATION MODAL ====================
             window.showConfirmDialog = function (options) {
+                options = options || {};
                 const modalEl = document.getElementById('globalConfirmModal');
-                if (!modalEl) {
-                    if (options.onConfirm) options.onConfirm();
+                if (!modalEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+                    const fallbackConfirmed = window.confirm(options.message || 'Bạn có chắc chắn muốn tiếp tục?');
+                    if (fallbackConfirmed && typeof options.onConfirm === 'function') {
+                        options.onConfirm();
+                    }
                     return;
+                }
+
+                // Ensure modal is attached directly to document.body to avoid clipping or stacking issues
+                if (modalEl.parentElement !== document.body) {
+                    document.body.appendChild(modalEl);
                 }
 
                 const titleEl = document.getElementById('confirmModalTitle');
@@ -732,31 +999,35 @@
                 const cancelBtn = document.getElementById('confirmModalCancelBtn');
 
                 const isDanger = options.type === 'danger';
-                titleEl.textContent = options.title || 'Xác nhận thao tác';
-                msgEl.textContent = decodeUnicode(options.message) || 'Bạn có chắc chắn muốn tiếp tục?';
+                if (titleEl) titleEl.textContent = options.title || 'Xác nhận thao tác';
+                if (msgEl) msgEl.textContent = decodeUnicode(options.message) || 'Bạn có chắc chắn muốn tiếp tục?';
 
                 // Icon and Color Styling
-                iconWrap.className = 'saas-confirm-icon-wrap ' + (isDanger ? 'danger' : 'primary');
-                iconEl.className = isDanger ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-question';
+                if (iconWrap) iconWrap.className = 'saas-confirm-icon-wrap ' + (isDanger ? 'danger' : 'primary');
+                if (iconEl) iconEl.className = isDanger ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-question';
 
-                acceptBtn.className = isDanger
-                    ? 'btn btn-sm btn-danger rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm'
-                    : 'btn btn-sm btn-primary rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm';
-                acceptBtn.textContent = options.confirmText || (isDanger ? 'Đồng ý' : 'Xác nhận');
+                if (acceptBtn) {
+                    acceptBtn.className = isDanger
+                        ? 'btn btn-sm btn-danger rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm'
+                        : 'btn btn-sm btn-primary rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm';
+                    acceptBtn.textContent = options.confirmText || (isDanger ? 'Đồng ý' : 'Xác nhận');
+                }
                 if (cancelBtn) cancelBtn.textContent = options.cancelText || 'Hủy';
 
                 const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
 
                 // Clone accept button to clean previous event listeners
-                const newAcceptBtn = acceptBtn.cloneNode(true);
-                acceptBtn.parentNode.replaceChild(newAcceptBtn, acceptBtn);
+                if (acceptBtn) {
+                    const newAcceptBtn = acceptBtn.cloneNode(true);
+                    acceptBtn.parentNode.replaceChild(newAcceptBtn, acceptBtn);
 
-                newAcceptBtn.onclick = function () {
-                    bsModal.hide();
-                    if (typeof options.onConfirm === 'function') {
-                        options.onConfirm();
-                    }
-                };
+                    newAcceptBtn.onclick = function () {
+                        bsModal.hide();
+                        if (typeof options.onConfirm === 'function') {
+                            options.onConfirm();
+                        }
+                    };
+                }
 
                 bsModal.show();
             };
@@ -791,7 +1062,11 @@
                         confirmText: isDanger ? 'Đồng ý thực hiện' : 'Xác nhận',
                         onConfirm: function () {
                             form._isConfirmed = true;
-                            form.submit();
+                            if (typeof HTMLFormElement.prototype.submit === 'function') {
+                                HTMLFormElement.prototype.submit.call(form);
+                            } else {
+                                form.submit();
+                            }
                         }
                     });
                 }
