@@ -153,9 +153,9 @@
                                             </span>
                                         </td>
                                         <td class="text-end">
-                                            <a th:href="@{/admin/users(keyword=${u.username})}" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2.5 py-1 text-xs text-slate-600 hover:bg-slate-100" title="Chi tiết">
+                                            <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2.5 py-1 text-xs text-slate-600 hover:bg-slate-100" data-bs-toggle="modal" th:data-bs-target="'#editUserModal-' + ${u.id}" title="Chỉnh sửa trực tiếp">
                                                 <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                            </a>
+                                            </button>
                                         </td>
                                     </tr>
                                     <tr th:if="${recentUsers == null || recentUsers.isEmpty()}">
@@ -249,6 +249,7 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content rounded-2xl border-0 shadow-xl">
                 <form th:action="@{/admin/users/create}" method="post">
+                    <input type="hidden" name="redirectUrl" value="/admin/dashboard">
                     <div class="modal-header border-b border-slate-100 p-4">
                         <h6 class="modal-title font-bold text-slate-900 text-sm">
                             <i class="fa-solid fa-user-plus text-blue-600 me-1.5"></i> Thêm tài khoản người dùng mới
@@ -263,7 +264,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Mật khẩu ban đầu <span class="text-rose-600">*</span></label>
-                                <input type="password" name="password" class="form-control text-xs rounded-xl" placeholder="••••••••" required>
+                                <input type="password" name="passwordHash" value="123456" class="form-control text-xs rounded-xl" placeholder="••••••••" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Họ và Tên đầy đủ <span class="text-rose-600">*</span></label>
@@ -279,12 +280,9 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Vai trò hệ thống <span class="text-rose-600">*</span></label>
-                                <select name="roleCode" class="form-select text-xs rounded-xl" required>
-                                    <option value="STUDENT">Sinh viên (STUDENT)</option>
-                                    <option value="LECTURER">Giảng viên (LECTURER)</option>
-                                    <option value="DIVISION_HEAD">Trưởng Bộ Môn (DIVISION_HEAD)</option>
-                                    <option value="DEPARTMENT_HEAD">Trưởng Khoa (DEPARTMENT_HEAD)</option>
-                                    <option value="ADMIN">Quản trị viên (ADMIN)</option>
+                                <select name="roleId" class="form-select text-xs rounded-xl" required>
+                                    <option value="">-- Chọn vai trò --</option>
+                                    <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}"></option>
                                 </select>
                             </div>
                         </div>
@@ -299,6 +297,51 @@
             </div>
         </div>
     </div>
+
+    <!-- Modals for Editing Recent Users Directly from Dashboard -->
+    <th:block th:each="u : ${recentUsers}">
+        <div class="modal fade text-start" th:id="'editUserModal-' + ${u.id}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-2xl border-0 shadow-xl">
+                    <form th:action="@{/admin/users/{id}/edit(id=${u.id})}" method="post">
+                        <input type="hidden" name="redirectUrl" value="/admin/dashboard">
+                        <div class="modal-header border-b border-slate-100 p-4">
+                            <h6 class="modal-title font-bold text-slate-900 text-sm">Chỉnh sửa Tài khoản: <span th:text="${u.username}"></span></h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4 space-y-3">
+                            <div>
+                                <label class="form-label text-xs font-semibold text-slate-700">Họ và tên <span class="text-rose-600">*</span></label>
+                                <input type="text" name="fullName" th:value="${u.fullName}" class="form-control text-xs rounded-xl" required>
+                            </div>
+                            <div>
+                                <label class="form-label text-xs font-semibold text-slate-700">Email <span class="text-rose-600">*</span></label>
+                                <input type="email" name="email" th:value="${u.email}" class="form-control text-xs rounded-xl" required>
+                            </div>
+                            <div>
+                                <label class="form-label text-xs font-semibold text-slate-700">Số điện thoại</label>
+                                <input type="text" name="phone" th:value="${u.phone}" class="form-control text-xs rounded-xl" placeholder="VD: 0912345678">
+                            </div>
+                            <div>
+                                <label class="form-label text-xs font-semibold text-slate-700">Vai trò hệ thống <span class="text-rose-600">*</span></label>
+                                <select name="roleId" class="form-select text-xs rounded-xl" required>
+                                    <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}" th:selected="${u.role != null and u.role.id == r.id}"></option>
+                                </select>
+                            </div>
+                            <div class="form-check form-switch pt-1">
+                                <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${u.isActive}" th:id="'activeCheck-dash-' + ${u.id}">
+                                <label class="form-check-label text-xs font-semibold text-slate-700" th:for="'activeCheck-dash-' + ${u.id}">Kích hoạt tài khoản</label>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-t border-slate-100 p-3">
+                            <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu thay đổi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </th:block>
 
     <!-- Scripts Fragment -->
     <div th:replace="~{fragments/scripts :: scripts}"></div>

@@ -584,6 +584,81 @@
                         <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-semibold">Tạo đợt</button>
                     </div>
                 </form>
+<<<<<<< Updated upstream
+=======
+                <script>
+                    function validatePeriodDates(ids, alertId, textId) {
+                        try {
+                            var errorAlert = document.getElementById(alertId);
+                            var errorText = document.getElementById(textId);
+                            if (!errorAlert || !errorText) return true;
+                            errorAlert.classList.add('d-none');
+                            errorText.textContent = '';
+
+                            function v(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+
+                            var propStart = v(ids.propStart);
+                            var propEnd = v(ids.propEnd);
+                            var regStart = v(ids.regStart);
+                            var regEnd = v(ids.regEnd);
+                            var revDead = v(ids.revDead);
+                            var defenseDate = v(ids.defenseDate);
+
+                            if (propStart && propEnd && propStart >= propEnd) {
+                                errorAlert.classList.remove('d-none');
+                                errorText.textContent = 'Ngày bắt đầu GV đề xuất phải trước ngày hạn chót.';
+                                return false;
+                            }
+                            if (regStart && regEnd && regStart >= regEnd) {
+                                errorAlert.classList.remove('d-none');
+                                errorText.textContent = 'Ngày bắt đầu SV đăng ký phải trước ngày hạn chót.';
+                                return false;
+                            }
+                            if (propEnd && regStart && propEnd >= regStart) {
+                                errorAlert.classList.remove('d-none');
+                                errorText.textContent = 'Ngày kết thúc đề xuất phải trước ngày bắt đầu đăng ký.';
+                                return false;
+                            }
+                            if (regEnd && revDead && regEnd >= revDead) {
+                                errorAlert.classList.remove('d-none');
+                                errorText.textContent = 'Hạn nộp điểm GVPB phải sau ngày kết thúc đăng ký.';
+                                return false;
+                            }
+                            if (revDead && defenseDate && revDead >= defenseDate) {
+                                errorAlert.classList.remove('d-none');
+                                errorText.textContent = 'Ngày báo cáo Hội đồng phải sau hạn nộp điểm GVPB.';
+                                return false;
+                            }
+                            return true;
+                        } catch (err) {
+                            console.error('Date validation error:', err);
+                            return true;
+                        }
+                    }
+
+                    function submitCreatePeriod() {
+                        var ids = {
+                            propStart: 'inputPropStart', propEnd: 'inputPropEnd',
+                            regStart: 'inputRegStart', regEnd: 'inputRegEnd',
+                            revDead: 'inputRevDead', defenseDate: 'inputDefenseDate'
+                        };
+                        if (validatePeriodDates(ids, 'createPeriodErrorAlert', 'createPeriodErrorText')) {
+                            document.getElementById('formCreatePeriod').submit();
+                        }
+                    }
+
+                    function submitEditPeriod() {
+                        var ids = {
+                            propStart: 'editPropStart', propEnd: 'editPropEnd',
+                            regStart: 'editRegStart', regEnd: 'editRegEnd',
+                            revDead: 'editRevDead', defenseDate: 'editDefenseDate'
+                        };
+                        if (validatePeriodDates(ids, 'editPeriodErrorAlert', 'editPeriodErrorText')) {
+                            document.getElementById('formEditPeriod').submit();
+                        }
+                    }
+                </script>
+>>>>>>> Stashed changes
             </div>
         </div>
     </div>
@@ -1181,7 +1256,11 @@
                 const revDead = form.querySelector('[name="revDead"]')?.value;
                 const defenseDate = form.querySelector('[name="defenseDate"]')?.value;
 
+<<<<<<< Updated upstream
                 if (pStart && pEnd && pEnd < pStart) {
+=======
+                if (pStart && pEnd && pEnd <= pStart) {
+>>>>>>> Stashed changes
                     showModalError('Hạn chót GV đề xuất phải sau ngày bắt đầu đề xuất!', 'propEnd', modalId);
                     return false;
                 }
