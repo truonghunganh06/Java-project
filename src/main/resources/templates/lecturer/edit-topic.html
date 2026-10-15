@@ -79,9 +79,9 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Số lượng sinh viên tối đa trong nhóm</label>
-                                <input type="number" name="maxStudents" class="form-control text-xs rounded-xl" th:value="${topic.maxStudents != null ? topic.maxStudents : 3}" min="1" max="3" required>
-                                <span class="text-slate-400 text-xs mt-1 d-block">Mỗi nhóm tối đa 3 sinh viên.</span>
+                                <label class="form-label text-xs font-semibold text-slate-700">Số lượng sinh viên trong nhóm (3 - 5 SV) *</label>
+                                <input type="number" name="maxStudents" class="form-control text-xs rounded-xl" th:value="${topic.maxStudents != null ? topic.maxStudents : 3}" min="3" max="5" required>
+                                <span class="text-slate-400 text-xs mt-1 d-block">Quy định mỗi nhóm từ 3 đến 5 sinh viên.</span>
                             </div>
 
                             <div class="col-md-6">

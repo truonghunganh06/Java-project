@@ -62,17 +62,27 @@
                             <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}" th:selected="${selectedPeriodId == p.id}"></option>
                         </select>
 
-                        <select class="form-select form-select-sm rounded-xl text-xs" style="width: 155px;" onchange="filterTableByAttribute('score-status', this.value)">
-                            <option value="all">-- Tất cả điểm --</option>
+                        <select class="form-select form-select-sm rounded-xl text-xs" style="width: 170px;" onchange="filterTableByAttribute('score-status', this.value)">
+                            <option value="all">-- Tất cả tiến độ điểm --</option>
                             <option value="scored">Đã có điểm tổng kết</option>
-                            <option value="pending">Chờ chấm điểm</option>
-                            <option value="unassigned">Chưa có nhóm</option>
+                            <option value="pending">Đang chờ chấm điểm</option>
                         </select>
 
-                        <a th:href="@{/department-head/results/export-csv(periodId=${selectedPeriodId})}" class="btn-motion-secondary btn-sm rounded-xl px-2.5 py-1 text-xs font-semibold inline-flex items-center gap-1 text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200/80" title="Tải file Excel/CSV bảng điểm">
-                            <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
-                            <span>Xuất Excel</span>
-                        </a>
+                        <!-- Export Dropdown / Buttons -->
+                        <div class="btn-group">
+                            <a th:href="@{/department-head/results/export-excel(periodId=${selectedPeriodId})}" class="btn-motion-secondary btn-sm rounded-l-xl px-2.5 py-1 text-xs font-semibold inline-flex items-center gap-1 text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200/80" title="Xuất file Excel (.xlsx) chuẩn định dạng">
+                                <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
+                                <span>Excel</span>
+                            </a>
+                            <a th:href="@{/department-head/results/export-pdf(periodId=${selectedPeriodId})}" class="btn-motion-secondary btn-sm px-2.5 py-1 text-xs font-semibold inline-flex items-center gap-1 text-slate-700 bg-slate-50 hover:bg-slate-100 border-y border-r border-slate-200/80" title="Xuất file PDF bảng điểm chính thức">
+                                <i class="fa-solid fa-file-pdf text-red-500 text-xs"></i>
+                                <span>PDF</span>
+                            </a>
+                            <a th:href="@{/department-head/results/export-csv(periodId=${selectedPeriodId})}" class="btn-motion-secondary btn-sm rounded-r-xl px-2 py-1 text-xs font-semibold inline-flex items-center gap-1 text-slate-700 bg-slate-50 hover:bg-slate-100 border-y border-r border-slate-200/80" title="Xuất file CSV">
+                                <i class="fa-solid fa-file-csv text-blue-500 text-xs"></i>
+                                <span>CSV</span>
+                            </a>
+                        </div>
 
                         <a th:href="@{/department-head/results}" class="btn-motion-icon rounded-xl p-1 text-slate-500 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 border border-slate-200/80" title="Đặt lại bộ lọc">
                             <i class="fa-solid fa-rotate-left text-xs"></i>
@@ -274,72 +284,7 @@
         </main>
     </div>
 
-    <!-- Slide-over Topic Drawer Structure -->
-    <div id="topicDrawerBackdrop" class="saas-drawer-backdrop" onclick="closeTopicDrawer()"></div>
-    <div id="topicDrawerPanel" class="saas-drawer-panel">
-        <div class="drawer-header">
-            <div class="d-flex align-items-center gap-2">
-                <span id="drawerTopicCode" class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-bold">DT-01</span>
-                <span id="drawerTopicStatusBadge" class="badge-pill-approved">Đã duyệt</span>
-            </div>
-            <button type="button" class="btn-close text-xs" onclick="closeTopicDrawer()" aria-label="Close"></button>
-        </div>
 
-        <div class="drawer-body">
-            <div>
-                <h5 id="drawerTopicTitle" class="text-base font-bold text-slate-900 mb-2 leading-snug">Tiêu đề đề tài</h5>
-                <div class="d-flex flex-wrap gap-2 text-xs text-slate-500">
-                    <div><i class="fa-solid fa-building-columns text-slate-400 me-1"></i> Bộ môn: <strong id="drawerTopicMajor" class="text-slate-700">CNTT</strong></div>
-                    <div class="ms-2"><i class="fa-solid fa-calendar-check text-slate-400 me-1"></i> Đợt: <strong id="drawerTopicPeriod" class="text-slate-700">KLTN</strong></div>
-                    <div class="ms-2"><i class="fa-solid fa-users text-slate-400 me-1"></i> <strong id="drawerTopicQuota" class="text-slate-700">Tối đa 3 SV</strong></div>
-                </div>
-            </div>
-
-            <!-- Group Registered Info -->
-            <div id="drawerTopicGroupInfo" class="text-xs"></div>
-
-            <!-- Lecturers in Charge -->
-            <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-100 space-y-2 text-xs">
-                <div class="d-flex justify-content-between">
-                    <span class="text-slate-500"><i class="fa-solid fa-chalkboard-user text-blue-600 me-1"></i> GV Hướng dẫn chính:</span>
-                    <strong id="drawerTopicSupervisor" class="text-slate-900">TS. Nguyễn Văn A</strong>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <span class="text-slate-500"><i class="fa-solid fa-user-plus text-slate-400 me-1"></i> GV Hướng dẫn phụ:</span>
-                    <strong id="drawerTopicCoSupervisor" class="text-slate-900">Không có</strong>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <span class="text-slate-500"><i class="fa-solid fa-user-check text-indigo-600 me-1"></i> GV Phản biện:</span>
-                    <strong id="drawerTopicReviewer" class="text-slate-900">Chưa phân công</strong>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <span class="text-slate-500"><i class="fa-solid fa-users-rectangle text-purple-600 me-1"></i> Hội đồng:</span>
-                    <strong id="drawerTopicCouncil" class="text-slate-900">Chưa phân hội đồng</strong>
-                </div>
-            </div>
-
-            <!-- Description -->
-            <div>
-                <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Mô tả mục tiêu & Nội dung:</h6>
-                <div id="drawerTopicDescription" class="text-xs text-slate-700 leading-relaxed p-3 bg-white border border-slate-100 rounded-xl" style="white-space: pre-line;">
-                    Chưa có mô tả chi tiết.
-                </div>
-            </div>
-
-            <!-- Requirements -->
-            <div>
-                <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Yêu cầu & Công nghệ:</h6>
-                <div id="drawerTopicRequirements" class="text-xs text-slate-700 leading-relaxed p-3 bg-white border border-slate-100 rounded-xl" style="white-space: pre-line;">
-                    Theo hướng dẫn của Giảng viên.
-                </div>
-            </div>
-        </div>
-
-        <div class="drawer-footer">
-            <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs font-medium" onclick="closeTopicDrawer()">Đóng</button>
-            <div id="drawerActionButtons" class="d-flex align-items-center gap-2"></div>
-        </div>
-    </div>
 
     <!-- Modal Detailed Evaluations for each Topic (Placed directly in <body> outside saas-main-wrapper to prevent stacking context & backdrop bugs) -->
     <th:block th:each="t : ${topics}">
@@ -377,7 +322,7 @@
                         </div>
 
                         <!-- Discrepancy Alert Banner if max - min > 2.0 -->
-                        <div th:with="discrepancy=${topicEvaluationsMap != null && topicEvaluationsMap.get(t.id) != null ? T(topic_management.entity.Evaluation).calculateCouncilDiscrepancy(topicEvaluationsMap.get(t.id)) : 0.0}"
+                        <div th:with="discrepancy=${topicEvaluationsMap != null && topicEvaluationsMap.get(t.id) != null ? T(topicmanagement.entity.Evaluation).calculateCouncilDiscrepancy(topicEvaluationsMap.get(t.id)) : 0.0}"
                              th:if="${discrepancy > 2.0}"
                              class="p-3 bg-amber-50/90 border border-amber-200 rounded-xl text-xs text-amber-900 d-flex align-items-center gap-2.5">
                             <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 d-flex align-items-center justify-content-center flex-shrink-0">

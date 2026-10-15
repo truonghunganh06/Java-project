@@ -43,11 +43,6 @@
                             Nội dung chi tiết thông báo...
                         </div>
                     </div>
-<<<<<<< Updated upstream
-                    <div class="modal-footer border-t border-slate-100 p-3">
-                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-4 text-xs font-semibold"
-                            data-bs-dismiss="modal">Đóng</button>
-=======
                     <div class="modal-footer border-t border-slate-100 p-3 d-flex justify-content-between align-items-center">
                         <div id="modalAnnouncementSecondaryActionWrap"></div>
                         <div class="d-flex align-items-center gap-2">
@@ -61,7 +56,6 @@
                     </div>
                 </div>
             </div>
-        </div>
 
         <!-- Global System & Account Settings Modal (Available across all pages) -->
         <div class="modal fade" id="systemSettingsModal" tabindex="-1" aria-hidden="true">
@@ -296,7 +290,6 @@
                     <div class="modal-footer border-t border-slate-100 p-3 d-flex justify-content-between align-items-center">
                         <button type="button" class="btn btn-sm btn-light border rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100" data-bs-dismiss="modal">Đóng</button>
                         <div id="drawerActionButtons" class="d-inline-flex align-items-center gap-2"></div>
->>>>>>> Stashed changes
                     </div>
                 </div>
             </div>
@@ -309,7 +302,7 @@
         <div th:replace="~{fragments/ai_chat :: aiChatWidget}"></div>
 
         <!-- Global Confirmation Modal (Replaces browser default confirm dialogs) -->
-        <div class="modal fade saas-confirm-modal" id="globalConfirmModal" tabindex="-1" aria-hidden="true" style="z-index: 1080 !important;">
+        <div class="modal fade saas-confirm-modal" id="globalConfirmModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
                 <div class="modal-content text-center p-4">
                     <div class="d-flex justify-content-center">
@@ -339,13 +332,6 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 
         <script>
-            // Ensure any Bootstrap modal is attached directly to document.body to prevent stacking context clipping
-            document.addEventListener('show.bs.modal', function (e) {
-                if (e.target && e.target.parentElement !== document.body) {
-                    document.body.appendChild(e.target);
-                }
-            });
-
             // Robust Unicode String Decoder (fixes any \uXXXX or \xXX escape artifacts)
             function decodeUnicode(str) {
                 if (!str || typeof str !== 'string') return str || '';
@@ -381,7 +367,7 @@
 
                 const wrap = document.createElement('div');
                 wrap.className = 'custom-select-wrap';
-                wrap.style.width = '220px';
+                wrap.style.width = select.style.width || '100%';
                 select.parentNode.insertBefore(wrap, select);
                 wrap.appendChild(select);
                 select.classList.add('custom-select-source');
@@ -456,34 +442,42 @@
                 if (overlay) overlay.classList.toggle('show');
             }
 
+            // Handle click on Sidebar Brand / Logo
+            function handleSidebarBrandClick(event) {
+                if (document.body.classList.contains('sidebar-collapsed')) {
+                    if (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    toggleDesktopSidebar();
+                }
+            }
+
             // Desktop / Laptop Sidebar Toggle with smooth motion
             function toggleDesktopSidebar() {
-                const isCollapsed = document.body.classList.toggle('sidebar-collapsed');
+                const isCollapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+                document.body.classList.toggle('sidebar-collapsed', isCollapsed);
                 try {
                     localStorage.setItem('topichub_sidebar_collapsed', isCollapsed ? 'true' : 'false');
                 } catch (e) { }
 
-                const icon = document.getElementById('desktopSidebarToggleIcon');
-                if (icon) {
-                    if (isCollapsed) {
-                        icon.className = 'fa-solid fa-bars text-secondary';
-                    } else {
-                        icon.className = 'fa-solid fa-indent text-secondary';
-                    }
+                const chevron = document.getElementById('sidebarCollapseChevronIcon');
+                if (chevron) {
+                    chevron.className = isCollapsed ? 'fa-solid fa-chevron-right text-slate-400' : 'fa-solid fa-chevron-left text-slate-400';
                 }
             }
 
-            // Restore Desktop Sidebar collapse state on page load
+            // Sync Desktop Sidebar collapse state & chevron icon on page load
             document.addEventListener('DOMContentLoaded', function () {
                 try {
                     if (window.innerWidth >= 992) {
                         const savedState = localStorage.getItem('topichub_sidebar_collapsed');
-                        if (savedState === 'true') {
-                            document.body.classList.add('sidebar-collapsed');
-                            const icon = document.getElementById('desktopSidebarToggleIcon');
-                            if (icon) {
-                                icon.className = 'fa-solid fa-bars text-secondary';
-                            }
+                        const isCollapsed = (savedState === 'true');
+                        document.documentElement.classList.toggle('sidebar-collapsed', isCollapsed);
+                        document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+                        const chevron = document.getElementById('sidebarCollapseChevronIcon');
+                        if (chevron) {
+                            chevron.className = isCollapsed ? 'fa-solid fa-chevron-right text-slate-400' : 'fa-solid fa-chevron-left text-slate-400';
                         }
                     }
                 } catch (e) { }
@@ -613,23 +607,12 @@
 
                 // Rejection Alert Box
                 let rejAlert = document.getElementById('drawerTopicRejectionAlert');
+                let rejText = document.getElementById('drawerTopicRejectionText');
                 const rejReason = data.rejectionReason || '';
                 if (data.status === 'REJECTED' && rejReason) {
-                    if (!rejAlert) {
-                        const drawerBody = document.querySelector('.drawer-body');
-                        if (drawerBody) {
-                            rejAlert = document.createElement('div');
-                            rejAlert.id = 'drawerTopicRejectionAlert';
-                            rejAlert.className = 'alert alert-danger p-3 rounded-2xl mb-3 border border-rose-200 shadow-sm';
-                            drawerBody.insertBefore(rejAlert, drawerBody.firstChild);
-                        }
-                    }
                     if (rejAlert) {
                         rejAlert.style.display = 'block';
-                        rejAlert.innerHTML = `
-                            <div class="fw-bold text-rose-900 text-xs mb-1"><i class="fa-solid fa-triangle-exclamation text-rose-600 me-1"></i> Lý do Trưởng khoa từ chối:</div>
-                            <div class="text-rose-700 text-xs">${rejReason}</div>
-                        `;
+                        if (rejText) rejText.textContent = rejReason;
                     }
                 } else if (rejAlert) {
                     rejAlert.style.display = 'none';
@@ -654,27 +637,74 @@
                 const actionContainer = document.getElementById('drawerActionButtons');
                 if (actionContainer) {
                     actionContainer.innerHTML = '';
-                    if ((data.role === 'DEPARTMENT_HEAD' || data.role === 'DIVISION_HEAD') && data.status === 'PENDING') {
-                        actionContainer.innerHTML = `
-                            <form action="/department-head/topics/${data.id}/approve" method="post" class="d-inline" onsubmit="return confirm('Xác nhận PHÊ DUYỆT đề tài này?');">
-                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">
-                                    <i class="fa-solid fa-check me-1"></i> Phê duyệt
+                    const safeTitle = title.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    const safeDesc = (description || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    const safeReq = (requirements || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+                    if (data.role === 'DEPARTMENT_HEAD' || data.role === 'DIVISION_HEAD') {
+                        let deptButtons = '';
+                        if (data.status === 'PENDING') {
+                            deptButtons = `
+                                <form action="/department-head/topics/${data.id}/approve" method="post" class="d-inline" onsubmit="return confirm('Xác nhận PHÊ DUYỆT đề tài này?');">
+                                    <button type="submit" class="btn btn-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm">
+                                        <i class="fa-solid fa-check me-1"></i> Phê duyệt
+                                    </button>
+                                </form>
+                                <button type="button" class="btn btn-sm bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-xl px-3.5 py-1.5 text-xs font-semibold"
+                                        onclick="closeTopicDrawer(); if(window.prepareQuickEditModal) { document.getElementById('quickEditApproveForm').action='/department-head/topics/${data.id}/quick-edit-approve'; document.getElementById('quickEditTitle').value='${safeTitle}'; document.getElementById('quickEditDescription').value='${safeDesc}'; document.getElementById('quickEditRequirements').value='${safeReq}'; new bootstrap.Modal(document.getElementById('quickEditApproveModal')).show(); }">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Sửa &amp; Duyệt
                                 </button>
-                            </form>
-                            <button type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3 text-xs font-semibold" data-bs-toggle="modal" data-bs-target="#rejectModal" onclick="prepareRejectModal(${data.id}, '${title.replace(/'/g, "\\'")}')">
-                                <i class="fa-solid fa-xmark me-1"></i> Từ chối
-                            </button>
-                        `;
-                    } else if (data.role === 'LECTURER' && (data.status === 'PENDING' || data.status === 'REJECTED')) {
-                        actionContainer.innerHTML = `
-                            <a href="/lecturer/topics/${data.id}/edit" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">
-                                <i class="fa-solid fa-pen-to-square me-1"></i> Chỉnh sửa đề tài
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3.5 py-1.5 text-xs font-semibold"
+                                        onclick="closeTopicDrawer(); if(window.prepareRejectModal) { prepareRejectModal(${data.id}, '${safeTitle}'); new bootstrap.Modal(document.getElementById('rejectModal')).show(); }">
+                                    <i class="fa-solid fa-xmark me-1"></i> Từ chối
+                                </button>
+                            `;
+                        } else if (data.status === 'APPROVED') {
+                            const revModal = document.getElementById('assignReviewerModal-' + data.id);
+                            const couModal = document.getElementById('assignCouncilModal-' + data.id);
+                            deptButtons = `
+                                <button type="button" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm"
+                                        onclick="closeTopicDrawer(); var m = document.getElementById('assignReviewerModal-${data.id}'); if(m) new bootstrap.Modal(m).show(); else window.location.href='/department-head/topics';">
+                                    <i class="fa-solid fa-user-shield me-1"></i> ${reviewer && !reviewer.includes('Chưa') ? 'Đổi GVPB' : 'Phân GVPB'}
+                                </button>
+                                <button type="button" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm"
+                                        onclick="closeTopicDrawer(); var m = document.getElementById('assignCouncilModal-${data.id}'); if(m) new bootstrap.Modal(m).show(); else window.location.href='/department-head/councils';">
+                                    <i class="fa-solid fa-users-rectangle me-1"></i> ${council && !council.includes('Chưa') ? 'Đổi Hội đồng' : 'Phân Hội đồng'}
+                                </button>
+                                <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                                        onclick="closeTopicDrawer(); if(document.getElementById('quickEditApproveModal')) { document.getElementById('quickEditApproveForm').action='/department-head/topics/${data.id}/quick-edit-approve'; document.getElementById('quickEditTitle').value='${safeTitle}'; document.getElementById('quickEditDescription').value='${safeDesc}'; document.getElementById('quickEditRequirements').value='${safeReq}'; new bootstrap.Modal(document.getElementById('quickEditApproveModal')).show(); }">
+                                    <i class="fa-solid fa-pen me-1"></i> Sửa đề tài
+                                </button>
+                            `;
+                        } else if (data.status === 'REJECTED') {
+                            deptButtons = `
+                                <button type="button" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm"
+                                        onclick="closeTopicDrawer(); if(document.getElementById('quickEditApproveModal')) { document.getElementById('quickEditApproveForm').action='/department-head/topics/${data.id}/quick-edit-approve'; document.getElementById('quickEditTitle').value='${safeTitle}'; document.getElementById('quickEditDescription').value='${safeDesc}'; document.getElementById('quickEditRequirements').value='${safeReq}'; new bootstrap.Modal(document.getElementById('quickEditApproveModal')).show(); }">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Hiệu chỉnh &amp; Duyệt lại
+                                </button>
+                            `;
+                        }
+                        actionContainer.innerHTML = deptButtons;
+                    } else if (data.role === 'LECTURER') {
+                        let lecButtons = `
+                            <a href="/lecturer/topics/${data.id}/edit" class="btn btn-sm btn-dark rounded-xl px-3.5 py-1.5 text-xs font-semibold d-inline-flex align-items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa đề tài
                             </a>
                         `;
+                        if (data.status === 'PENDING' || data.status === 'REJECTED') {
+                            lecButtons += `
+                                <form action="/lecturer/topics/${data.id}/delete" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đề xuất đề tài này?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-3.5 py-1.5 text-xs font-semibold d-inline-flex align-items-center gap-1.5">
+                                        <i class="fa-solid fa-trash-can"></i> Xóa đề tài
+                                    </button>
+                                </form>
+                            `;
+                        }
+                        actionContainer.innerHTML = lecButtons;
                     } else if (data.role === 'STUDENT' && data.status === 'APPROVED' && !data.hasGroupTopic) {
                         actionContainer.innerHTML = `
                             <form action="/student/topics/${data.id}/register" method="post" class="d-inline" onsubmit="return confirm('Xác nhận đăng ký đề tài này cho nhóm của bạn?');">
-                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">
+                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm">
                                     <i class="fa-solid fa-bookmark me-1"></i> Đăng ký ngay
                                 </button>
                             </form>
@@ -682,13 +712,26 @@
                     }
                 }
 
-                // Show drawer
-                if (backdrop) backdrop.classList.add('show');
-                if (panel) panel.classList.add('show');
-                document.body.style.overflow = 'hidden';
+                // Show centered modal (or fallback to side-drawer)
+                const modalEl = document.getElementById('topicDetailModal');
+                if (modalEl) {
+                    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    bsModal.show();
+                } else {
+                    const backdrop = document.getElementById('topicDrawerBackdrop');
+                    const panel = document.getElementById('topicDrawerPanel');
+                    if (backdrop) backdrop.classList.add('show');
+                    if (panel) panel.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                }
             }
 
             function closeTopicDrawer() {
+                const modalEl = document.getElementById('topicDetailModal');
+                if (modalEl) {
+                    const bsModal = bootstrap.Modal.getInstance(modalEl);
+                    if (bsModal) bsModal.hide();
+                }
                 const backdrop = document.getElementById('topicDrawerBackdrop');
                 const panel = document.getElementById('topicDrawerPanel');
                 if (backdrop) backdrop.classList.remove('show');
@@ -791,6 +834,23 @@
                 }
             }
 
+            // Safe Markdown Formatter for modal text
+            function renderSafeAnnouncementMarkdown(raw) {
+                if (!raw) return '';
+                let safe = raw
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;");
+                
+                // Format ### Headers
+                safe = safe.replace(/###\s*(.*?)(\n|$)/g, '<div class="fw-bold text-slate-900 mt-2.5 mb-1.5 fs-7">$1</div>');
+                // Format **bold**
+                safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900 font-semibold">$1</strong>');
+                // Format line breaks
+                safe = safe.replace(/\n/g, '<br>');
+                return safe;
+            }
+
             // Global Announcement Detail Modal Opener
             function showAnnouncementDetail(element) {
                 if (!element) return;
@@ -804,6 +864,7 @@
                 const author = decodeUnicode(element.dataset.author) || 'Ban chủ nhiệm Khoa';
                 const time = element.dataset.createdAt || '';
                 const period = decodeUnicode(element.dataset.period) || '';
+                const periodId = element.dataset.periodId || '';
                 const content = decodeUnicode(element.dataset.content) || 'Không có nội dung chi tiết.';
 
                 const modalTitle = document.getElementById('modalAnnouncementTitle');
@@ -818,7 +879,7 @@
                 if (modalCategory) modalCategory.textContent = category;
                 if (modalAuthor) modalAuthor.textContent = author;
                 if (modalTime) modalTime.textContent = time;
-                if (modalContent) modalContent.textContent = content;
+                if (modalContent) modalContent.innerHTML = renderSafeAnnouncementMarkdown(content);
 
                 if (periodWrap && modalPeriod) {
                     if (period && period.trim() !== '') {
@@ -827,6 +888,88 @@
                     } else {
                         periodWrap.classList.add('d-none');
                     }
+                }
+
+                // Dynamic Action Buttons based on User Role & Notice Context
+                const path = window.location.pathname;
+                const isLecturer = path.startsWith('/lecturer');
+                const isStudent = path.startsWith('/student');
+                const isDeptHead = path.startsWith('/department-head');
+
+                const primaryBtn = document.getElementById('modalAnnouncementPrimaryActionBtn');
+                const actionText = document.getElementById('modalAnnouncementActionText');
+                const actionIcon = document.getElementById('modalAnnouncementActionIcon');
+                const secondaryWrap = document.getElementById('modalAnnouncementSecondaryActionWrap');
+
+                if (primaryBtn) primaryBtn.classList.add('d-none');
+                if (secondaryWrap) secondaryWrap.innerHTML = '';
+
+                const isPeriodNotice = category.toUpperCase() === 'PERIOD' || (title && (title.toLowerCase().includes('kế hoạch') || title.toLowerCase().includes('đợt')));
+
+                if (isPeriodNotice) {
+                    if (isLecturer) {
+                        if (primaryBtn && actionText && actionIcon) {
+                            let createUrl = '/lecturer/topics/create';
+                            const pList = [];
+                            if (periodId && periodId.trim()) {
+                                pList.push('periodId=' + encodeURIComponent(periodId.trim()));
+                            }
+                            if (period && period.trim()) {
+                                pList.push('periodName=' + encodeURIComponent(period.trim()));
+                            }
+                            if (annId && annId.trim()) {
+                                pList.push('noticeId=' + encodeURIComponent(annId.trim()));
+                            }
+                            if (title && title.trim()) {
+                                pList.push('refNoticeTitle=' + encodeURIComponent(title.trim()));
+                            }
+                            if (pList.length > 0) {
+                                createUrl += '?' + pList.join('&');
+                            }
+                            primaryBtn.href = createUrl;
+                            actionText.textContent = 'Đề xuất đề tài ngay';
+                            actionIcon.className = 'fa-solid fa-plus text-xs';
+                            primaryBtn.classList.remove('d-none');
+                        }
+                        if (secondaryWrap) {
+                            secondaryWrap.innerHTML = `
+                                <a href="/lecturer/schedule" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 d-inline-flex align-items-center gap-1.5 transition text-decoration-none">
+                                    <i class="fa-regular fa-calendar-days text-xs text-blue-600"></i> Xem lịch trình đợt
+                                </a>
+                            `;
+                        }
+                    } else if (isStudent) {
+                        if (primaryBtn && actionText && actionIcon) {
+                            primaryBtn.href = '/student/topics';
+                            actionText.textContent = 'Xem danh sách đề tài';
+                            actionIcon.className = 'fa-solid fa-list-check text-xs';
+                            primaryBtn.classList.remove('d-none');
+                        }
+                        if (secondaryWrap) {
+                            secondaryWrap.innerHTML = `
+                                <a href="/student/schedule" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 d-inline-flex align-items-center gap-1.5 transition text-decoration-none">
+                                    <i class="fa-regular fa-calendar-days text-xs text-blue-600"></i> Xem lịch trình
+                                </a>
+                            `;
+                        }
+                    } else if (isDeptHead) {
+                        if (primaryBtn && actionText && actionIcon) {
+                            primaryBtn.href = '/department-head/periods';
+                            actionText.textContent = 'Quản lý các đợt';
+                            actionIcon.className = 'fa-solid fa-calendar-check text-xs';
+                            primaryBtn.classList.remove('d-none');
+                        }
+                    }
+                }
+
+                if (isDeptHead && annId && secondaryWrap && secondaryWrap.innerHTML.trim() === '') {
+                    secondaryWrap.innerHTML = `
+                        <form action="/department-head/announcements/${annId}/delete" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa thông báo này?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-3 py-2 text-xs font-semibold d-inline-flex align-items-center gap-1.5 transition">
+                                <i class="fa-regular fa-trash-can text-xs"></i> Xóa thông báo này
+                            </button>
+                        </form>
+                    `;
                 }
 
                 const modalEl = document.getElementById('announcementDetailModal');
@@ -976,19 +1119,10 @@
 
             // ==================== GLOBAL CONFIRMATION MODAL ====================
             window.showConfirmDialog = function (options) {
-                options = options || {};
                 const modalEl = document.getElementById('globalConfirmModal');
-                if (!modalEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) {
-                    const fallbackConfirmed = window.confirm(options.message || 'Bạn có chắc chắn muốn tiếp tục?');
-                    if (fallbackConfirmed && typeof options.onConfirm === 'function') {
-                        options.onConfirm();
-                    }
+                if (!modalEl) {
+                    if (options.onConfirm) options.onConfirm();
                     return;
-                }
-
-                // Ensure modal is attached directly to document.body to avoid clipping or stacking issues
-                if (modalEl.parentElement !== document.body) {
-                    document.body.appendChild(modalEl);
                 }
 
                 const titleEl = document.getElementById('confirmModalTitle');
@@ -999,35 +1133,31 @@
                 const cancelBtn = document.getElementById('confirmModalCancelBtn');
 
                 const isDanger = options.type === 'danger';
-                if (titleEl) titleEl.textContent = options.title || 'Xác nhận thao tác';
-                if (msgEl) msgEl.textContent = decodeUnicode(options.message) || 'Bạn có chắc chắn muốn tiếp tục?';
+                titleEl.textContent = options.title || 'Xác nhận thao tác';
+                msgEl.textContent = decodeUnicode(options.message) || 'Bạn có chắc chắn muốn tiếp tục?';
 
                 // Icon and Color Styling
-                if (iconWrap) iconWrap.className = 'saas-confirm-icon-wrap ' + (isDanger ? 'danger' : 'primary');
-                if (iconEl) iconEl.className = isDanger ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-question';
+                iconWrap.className = 'saas-confirm-icon-wrap ' + (isDanger ? 'danger' : 'primary');
+                iconEl.className = isDanger ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-question';
 
-                if (acceptBtn) {
-                    acceptBtn.className = isDanger
-                        ? 'btn btn-sm btn-danger rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm'
-                        : 'btn btn-sm btn-primary rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm';
-                    acceptBtn.textContent = options.confirmText || (isDanger ? 'Đồng ý' : 'Xác nhận');
-                }
+                acceptBtn.className = isDanger
+                    ? 'btn btn-sm btn-danger rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm'
+                    : 'btn btn-sm btn-primary rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm';
+                acceptBtn.textContent = options.confirmText || (isDanger ? 'Đồng ý' : 'Xác nhận');
                 if (cancelBtn) cancelBtn.textContent = options.cancelText || 'Hủy';
 
                 const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
 
                 // Clone accept button to clean previous event listeners
-                if (acceptBtn) {
-                    const newAcceptBtn = acceptBtn.cloneNode(true);
-                    acceptBtn.parentNode.replaceChild(newAcceptBtn, acceptBtn);
+                const newAcceptBtn = acceptBtn.cloneNode(true);
+                acceptBtn.parentNode.replaceChild(newAcceptBtn, acceptBtn);
 
-                    newAcceptBtn.onclick = function () {
-                        bsModal.hide();
-                        if (typeof options.onConfirm === 'function') {
-                            options.onConfirm();
-                        }
-                    };
-                }
+                newAcceptBtn.onclick = function () {
+                    bsModal.hide();
+                    if (typeof options.onConfirm === 'function') {
+                        options.onConfirm();
+                    }
+                };
 
                 bsModal.show();
             };
@@ -1062,11 +1192,7 @@
                         confirmText: isDanger ? 'Đồng ý thực hiện' : 'Xác nhận',
                         onConfirm: function () {
                             form._isConfirmed = true;
-                            if (typeof HTMLFormElement.prototype.submit === 'function') {
-                                HTMLFormElement.prototype.submit.call(form);
-                            } else {
-                                form.submit();
-                            }
+                            form.submit();
                         }
                     });
                 }
@@ -1189,50 +1315,55 @@
                 });
             });
 
-            // === PAGE TRANSITION LOADER & OVERLAY ===
+            // === SLIM TOP PROGRESS BAR (NON-BLOCKING) ===
             (function () {
-                var overlay = document.createElement('div');
-                overlay.id = 'page-loader';
-                overlay.innerHTML = '<div class="spinner"></div><span class="page-loader-text">Đang tải dữ liệu...</span>';
-                if (document.body) {
-                    document.body.appendChild(overlay);
-                } else {
-                    document.addEventListener('DOMContentLoaded', function () { document.body.appendChild(overlay); });
-                }
-
                 var bar = document.createElement('div');
                 bar.className = 'page-loader-bar';
                 document.documentElement.appendChild(bar);
-                var w = 0, iv = null;
+                var w = 0, iv = null, safetyTimeout = null;
 
                 function startPL() {
-                    w = 0; bar.style.opacity = '1'; bar.style.width = '0%';
-                    if (overlay) overlay.classList.add('is-loading');
+                    w = 0;
+                    bar.style.opacity = '1';
+                    bar.style.width = '0%';
                     clearInterval(iv);
+                    clearTimeout(safetyTimeout);
                     iv = setInterval(function () {
-                        if (w < 85) { w += (85 - w) * 0.08 + 0.5; bar.style.width = Math.min(w, 85) + '%'; }
+                        if (w < 85) { w += (85 - w) * 0.12 + 1; bar.style.width = Math.min(w, 85) + '%'; }
                     }, 40);
+
+                    // Safety auto-dismiss: if no navigation occurs within 1s, dismiss smoothly
+                    safetyTimeout = setTimeout(finishPL, 1000);
                 }
 
                 function finishPL() {
-                    clearInterval(iv); bar.style.width = '100%';
-                    if (overlay) overlay.classList.remove('is-loading');
-                    setTimeout(function () { bar.style.opacity = '0'; setTimeout(function () { bar.style.width = '0%'; }, 350); }, 250);
+                    clearInterval(iv);
+                    clearTimeout(safetyTimeout);
+                    bar.style.width = '100%';
+                    setTimeout(function () {
+                        bar.style.opacity = '0';
+                        setTimeout(function () { bar.style.width = '0%'; }, 200);
+                    }, 150);
                 }
 
                 document.addEventListener('click', function (e) {
+                    if (e.defaultPrevented) return;
                     var a = e.target.closest('a[href]');
                     if (!a) return;
                     var h = a.getAttribute('href');
                     if (!h || h.charAt(0) === '#' || h.indexOf('javascript') === 0 || h.indexOf('mailto') === 0 || h.indexOf('tel') === 0 ||
                         a.target === '_blank' || a.hasAttribute('data-bs-toggle') || a.hasAttribute('data-bs-dismiss') ||
                         e.ctrlKey || e.metaKey || e.shiftKey) return;
+                    // Skip if navigating to the exact same URL hash/page
+                    if (a.href === window.location.href) return;
                     startPL();
-                }, true);
+                });
 
                 document.addEventListener('submit', function (e) {
-                    if (e.target && e.target.method && e.target.method.toLowerCase() !== 'get') startPL();
-                }, true);
+                    if (!e.defaultPrevented && e.target && e.target.method && e.target.method.toLowerCase() !== 'get') {
+                        startPL();
+                    }
+                });
 
                 window.addEventListener('pageshow', finishPL);
                 window.addEventListener('load', finishPL);
@@ -1648,12 +1779,12 @@
                                 else if (ev.colorClass === 'cal-event-rose') borderClass = 'border-rose';
 
                                 item.className = 'cal-week-event-card ' + borderClass;
-                                item.innerHTML = '<div class="d-flex align-items-center justify-content-between mb-1">' +
-                                                 '<span class="badge bg-white text-slate-700 font-bold border border-slate-200/80 rounded-full px-2 py-0.5 text-3xs" style="font-size: 0.58rem;">' + escapeHtml(ev.typeName || ev.type) + '</span>' +
-                                                 (ev.time ? '<span class="text-3xs text-slate-500 font-bold">' + escapeHtml(ev.time) + '</span>' : '') +
+                                item.innerHTML = '<div class="d-flex align-items-center justify-content-between mb-1 gap-1 overflow-hidden">' +
+                                                 '<span class="badge bg-white text-slate-700 font-bold border border-slate-200/80 rounded-full px-1.5 py-0.5 text-3xs text-truncate flex-grow-1 text-start" style="font-size: 0.58rem; max-width: 62%;">' + escapeHtml(ev.typeName || ev.type) + '</span>' +
+                                                 (ev.time ? '<span class="text-3xs text-slate-500 font-bold text-nowrap flex-shrink-0" style="font-size: 0.6rem;">' + escapeHtml(ev.time) + '</span>' : '') +
                                                  '</div>' +
                                                  '<div class="fw-extrabold text-slate-900 text-xs line-clamp-2 mb-1" style="line-height: 1.35;">' + escapeHtml(ev.title) + '</div>' +
-                                                 (ev.location ? '<div class="text-3xs text-slate-500 font-medium d-flex align-items-center gap-1"><i class="fa-solid fa-location-dot text-teal-600" style="font-size: 0.65rem;"></i><span class="truncate">' + escapeHtml(ev.location) + '</span></div>' : '');
+                                                 (ev.location ? '<div class="text-3xs text-slate-500 font-medium d-flex align-items-center gap-1 overflow-hidden"><i class="fa-solid fa-location-dot text-teal-600 flex-shrink-0" style="font-size: 0.65rem;"></i><span class="text-truncate">' + escapeHtml(ev.location) + '</span></div>' : '');
                                 
                                 item.onclick = function(e) {
                                     e.stopPropagation();
@@ -1792,10 +1923,17 @@
                     render();
                 }
 
+                function ensureModalInBody(modalEl) {
+                    if (modalEl && modalEl.parentElement !== document.body) {
+                        document.body.appendChild(modalEl);
+                    }
+                }
+
                 function showEventDetail(ev) {
                     selectedEvent = ev;
                     var modalEl = document.getElementById('eventDetailModal');
                     if (!modalEl) return;
+                    ensureModalInBody(modalEl);
 
                     document.getElementById('eventDetailTitle').textContent = ev.title || 'Sự kiện';
                     document.getElementById('eventDetailType').textContent = ev.typeName || ev.type || 'Lịch trình';
@@ -1834,6 +1972,7 @@
                 function openAddModal(prefillDate) {
                     var modalEl = document.getElementById('addScheduleModal');
                     if (!modalEl) return;
+                    ensureModalInBody(modalEl);
                     var dateInput = document.getElementById('noteDate');
                     if (dateInput) {
                         dateInput.value = prefillDate || formatDateYMD(currentDate);
@@ -1997,13 +2136,50 @@
                     var text = item.textContent.toLowerCase();
                     if (!term || text.includes(term)) {
                         item.style.display = 'flex';
-                    } else {
-                        item.style.display = 'none';
                     }
                 });
             };
+
+            // Global Protection: Automatically clear unwanted browser autofill on search/filter bars
+            document.addEventListener('DOMContentLoaded', function() {
+                function sanitizeSearchInputs() {
+                    document.querySelectorAll('input').forEach(function(inp) {
+                        var type = (inp.type || '').toLowerCase();
+                        if (type === 'password' || type === 'hidden' || type === 'checkbox' || type === 'radio' || type === 'number') return;
+                        var ph = (inp.getAttribute('placeholder') || '').toLowerCase();
+                        var name = (inp.getAttribute('name') || '').toLowerCase();
+                        var id = (inp.id || '').toLowerCase();
+                        var isSearch = ph.includes('tìm') || ph.includes('search') || name.includes('search') || name.includes('keyword') || id.includes('search') || id.includes('keyword');
+                        if (isSearch && inp.value && (inp.value === 'head_cntt' || inp.value === 'admin' || inp.value === 'lecturer1' || inp.value === 'student1' || inp.value.startsWith('head_') || inp.value.startsWith('lecturer') || inp.value.startsWith('student'))) {
+                            inp.value = '';
+                        }
+                    });
+                }
+                sanitizeSearchInputs();
+                setTimeout(sanitizeSearchInputs, 50);
+                setTimeout(sanitizeSearchInputs, 200);
+                setTimeout(sanitizeSearchInputs, 600);
+            });
         </script>
     </div>
+
+<script>
+// Header ẩn khi cuộn xuống, hiện khi cuộn lên (áp dụng mọi trang)
+(function() {
+    var header = document.querySelector('.saas-header-group');
+    if (!header) return;
+    var lastScrollTop = 0;
+    window.addEventListener('scroll', function() {
+        var st = window.pageYOffset || document.documentElement.scrollTop;
+        if (st > lastScrollTop && st > 120) {
+            header.classList.add('header-hidden');
+        } else {
+            header.classList.remove('header-hidden');
+        }
+        lastScrollTop = st <= 0 ? 0 : st;
+    }, { passive: true });
+})();
+</script>
 </body>
 
 </html>

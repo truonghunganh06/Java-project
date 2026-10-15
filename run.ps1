@@ -1,3 +1,7 @@
+param(
+    [switch]$Fast
+)
+
 # Script khoi dong Spring Boot Server
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -49,8 +53,13 @@ if ($oldPort) {
     Stop-Process -Id $oldPort.OwningProcess -Force -ErrorAction SilentlyContinue
 }
 
-Write-Host "[*] Dang bien dich va dong goi du an..." -ForegroundColor Yellow
-cmd.exe /c "mvnw.cmd package -DskipTests"
+if ($Fast) {
+    Write-Host "[*] Che do Fast: Bien dich va dong goi nhanh..." -ForegroundColor Cyan
+    cmd.exe /c "mvnw.cmd package -DskipTests -Dmaven.test.skip=true"
+} else {
+    Write-Host "[*] Dang bien dich va dong goi du an..." -ForegroundColor Yellow
+    cmd.exe /c "mvnw.cmd package -DskipTests"
+}
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[!] Bien dich that bai!" -ForegroundColor Red
@@ -64,4 +73,4 @@ Write-Host "[*] Truy cap sau khi khoi dong xong: http://localhost:8080" -Foregro
 Write-Host "===================================================" -ForegroundColor Green
 Write-Host ""
 
-& "$javaHome\bin\java.exe" "-Dfile.encoding=UTF-8" -jar "target\topic_management-0.0.1-SNAPSHOT.jar"
+& "$javaHome\bin\java.exe" "-Dfile.encoding=UTF-8" -jar "target\topicmanagement-0.0.1-SNAPSHOT.jar"

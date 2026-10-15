@@ -66,19 +66,29 @@
                     <table class="table table-saas mb-0">
                         <thead>
                             <tr>
-                                <th>Họ và tên</th>
-                                <th>Tên đăng nhập</th>
-                                <th>Email / Số điện thoại</th>
-                                <th>Vai trò</th>
-                                <th>Trạng thái</th>
-                                <th class="text-end">Hành động</th>
+                                <th style="width: 28%;">Họ và tên</th>
+                                <th style="width: 20%;">Tên đăng nhập</th>
+                                <th style="width: 26%;">Email / Số điện thoại</th>
+                                <th style="width: 14%;">Vai trò</th>
+                                <th style="width: 12%;" class="text-center">Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:if="${users == null or users.isEmpty()}">
-                                <td colspan="6" class="text-center py-5 text-muted text-xs">Không tìm thấy tài khoản người dùng phù hợp.</td>
+                                <td colspan="5" class="text-center py-5 text-muted text-xs">Không tìm thấy tài khoản người dùng phù hợp.</td>
                             </tr>
-                            <tr th:each="u : ${users}" class="filterable-row" th:data-role="${u.role != null ? u.role.code : ''}" th:data-status="${u.isActive ? 'ACTIVE' : 'LOCKED'}">
+                            <tr th:each="u : ${users}" class="filterable-row cursor-pointer hover:bg-slate-50/80 transition"
+                                th:data-role="${u.role != null ? u.role.code : ''}"
+                                th:data-status="${u.isActive ? 'ACTIVE' : 'LOCKED'}"
+                                th:data-user-id="${u.id}"
+                                th:data-user-fullname="${u.fullName}"
+                                th:data-user-username="${u.username}"
+                                th:data-user-email="${u.email}"
+                                th:data-user-phone="${u.phone != null ? u.phone : ''}"
+                                th:data-user-role="${u.role != null ? u.role.name : ''}"
+                                th:data-user-active="${u.isActive}"
+                                onclick="openUserActionModal(this)"
+                                title="Nhấp để xem chi tiết và thao tác">
                                 <td>
                                     <div class="d-flex align-items-center gap-2.5">
                                         <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-xs flex-shrink-0" th:text="${u.fullName != null and !u.fullName.isEmpty() ? u.fullName.substring(0, 1) : 'U'}">U</div>
@@ -100,7 +110,7 @@
                                           class="badge-pill-neutral font-medium text-xs"
                                           th:text="${u.role.name}">Vai trò</span>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <span th:if="${u.isActive}" class="badge-pill-approved">
                                         <i class="fa-solid fa-circle-check text-xs"></i> Hoạt động
                                     </span>
@@ -108,30 +118,11 @@
                                         <i class="fa-solid fa-lock text-xs"></i> Đã khóa
                                     </span>
                                 </td>
-                                <td class="text-end">
-                                    <div class="d-inline-flex gap-1">
-                                        <!-- Edit button modal trigger -->
-                                        <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2 py-1 text-xs text-slate-600 hover:bg-slate-100" data-bs-toggle="modal" th:data-bs-target="'#editUserModal-' + ${u.id}" title="Chỉnh sửa">
-                                            <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                        </button>
-
-                                        <!-- Toggle lock/unlock -->
-                                        <form th:action="@{/admin/users/{id}/toggle-status(id=${u.id})}" method="post" class="d-inline">
-                                            <button th:if="${u.isActive}" type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-2 py-1 text-xs font-medium" title="Khóa tài khoản">
-                                                <i class="fa-solid fa-lock text-xs"></i>
-                                            </button>
-                                            <button th:unless="${u.isActive}" type="submit" class="btn btn-sm btn-outline-success rounded-xl px-2 py-1 text-xs font-medium" title="Mở khóa tài khoản">
-                                                <i class="fa-solid fa-lock-open text-xs"></i>
-                                            </button>
-                                        </form>
-
-                                        <!-- Reset password trigger -->
-                                        <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2 py-1 text-xs text-slate-700 hover:bg-slate-100" data-bs-toggle="modal" th:data-bs-target="'#resetPwdModal-' + ${u.id}" title="Đặt lại mật khẩu">
-                                            <i class="fa-solid fa-key text-xs text-amber-500"></i>
-                                        </button>
-                                    </div>
-
-                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>                     </td>
                             </tr>
                         </tbody>
                     </table>
@@ -259,7 +250,134 @@
         </div>
     </div>
 
+    <!-- User Detail & Actions Modal (Popup thao tác & xem chi tiết khi click vào mục) -->
+    <div class="modal fade" id="userActionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 460px;">
+            <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
+                <div class="modal-header bg-slate-900 text-white p-4 border-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div id="uActionAvatar" class="w-12 h-12 rounded-2xl bg-white/10 text-white font-bold flex items-center justify-center text-lg border border-white/10 flex-shrink-0">
+                            U
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <h6 class="modal-title font-bold text-white text-base mb-0" id="uActionFullName">Họ và tên</h6>
+                                <span id="uActionStatusBadge" class="badge-pill-approved text-2xs py-0.5 px-2">Hoạt động</span>
+                            </div>
+                            <div class="text-slate-300 text-xs mt-0.5 font-mono" id="uActionUsername">@username</div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 space-y-3 bg-white">
+                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-2 text-xs">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-slate-500"><i class="fa-solid fa-envelope text-slate-400 me-1.5"></i>Email:</span>
+                            <span class="font-medium text-slate-800" id="uActionEmail">email@edu.vn</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-slate-500"><i class="fa-solid fa-phone text-slate-400 me-1.5"></i>Điện thoại:</span>
+                            <span class="font-medium text-slate-800" id="uActionPhone">0912345678</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-slate-500"><i class="fa-solid fa-shield-halved text-slate-400 me-1.5"></i>Vai trò:</span>
+                            <span class="badge-pill-neutral font-semibold text-xs" id="uActionRole">Giảng viên</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Thao tác tài khoản</div>
+                        <div class="d-grid gap-2">
+                            <!-- Button Edit -->
+                            <button type="button" class="btn btn-outline-primary rounded-xl py-2 text-xs font-semibold d-flex align-items-center justify-content-center gap-2" id="uBtnEdit">
+                                <i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa thông tin tài khoản
+                            </button>
+
+                            <!-- Form Lock/Unlock -->
+                            <form id="uActionToggleForm" method="post" class="d-grid">
+                                <button type="submit" class="btn rounded-xl py-2 text-xs font-semibold d-flex align-items-center justify-content-center gap-2" id="uBtnToggleStatus">
+                                    <i class="fa-solid fa-lock"></i> <span id="uBtnToggleText">Khóa tài khoản</span>
+                                </button>
+                            </form>
+
+                            <!-- Button Reset Password -->
+                            <button type="button" class="btn btn-outline-warning rounded-xl py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50 border-amber-300 d-flex align-items-center justify-content-center gap-2" id="uBtnResetPwd">
+                                <i class="fa-solid fa-key"></i> Đặt lại mật khẩu (123456)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts Fragment -->
     <div th:replace="~{fragments/scripts :: scripts}"></div>
+
+    <script>
+        function openUserActionModal(row) {
+            const userId = row.getAttribute('data-user-id');
+            const fullName = row.getAttribute('data-user-fullname') || 'Người dùng';
+            const username = row.getAttribute('data-user-username') || '';
+            const email = row.getAttribute('data-user-email') || 'Chưa cập nhật';
+            const phone = row.getAttribute('data-user-phone') || 'Chưa cập nhật';
+            const role = row.getAttribute('data-user-role') || 'N/A';
+            const isActive = row.getAttribute('data-user-active') === 'true';
+
+            document.getElementById('uActionAvatar').textContent = fullName.trim().charAt(0).toUpperCase() || 'U';
+            document.getElementById('uActionFullName').textContent = fullName;
+            document.getElementById('uActionUsername').textContent = '@' + username;
+            document.getElementById('uActionEmail').textContent = email;
+            document.getElementById('uActionPhone').textContent = phone;
+            document.getElementById('uActionRole').textContent = role;
+
+            const badge = document.getElementById('uActionStatusBadge');
+            const toggleBtn = document.getElementById('uBtnToggleStatus');
+            const toggleForm = document.getElementById('uActionToggleForm');
+
+            toggleForm.action = '/admin/users/' + userId + '/toggle-status';
+
+            if (isActive) {
+                badge.className = 'badge-pill-approved text-2xs py-0.5 px-2';
+                badge.innerHTML = '<i class="fa-solid fa-circle-check text-xs me-1"></i> Hoạt động';
+                toggleBtn.className = 'btn btn-outline-danger rounded-xl py-2 text-xs font-semibold d-flex align-items-center justify-content-center gap-2';
+                toggleBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Khóa tài khoản';
+                toggleForm.onsubmit = function() { return confirm('Bạn có chắc chắn muốn KHÓA tài khoản "' + username + '"?'); };
+            } else {
+                badge.className = 'badge-pill-rejected text-2xs py-0.5 px-2';
+                badge.innerHTML = '<i class="fa-solid fa-lock text-xs me-1"></i> Đã khóa';
+                toggleBtn.className = 'btn btn-outline-success rounded-xl py-2 text-xs font-semibold d-flex align-items-center justify-content-center gap-2';
+                toggleBtn.innerHTML = '<i class="fa-solid fa-lock-open"></i> Mở khóa tài khoản';
+                toggleForm.onsubmit = function() { return confirm('Bạn có chắc chắn muốn MỞ KHÓA tài khoản "' + username + '"?'); };
+            }
+
+            const actionModalEl = document.getElementById('userActionModal');
+            const actionModal = bootstrap.Modal.getOrCreateInstance(actionModalEl);
+
+            document.getElementById('uBtnEdit').onclick = function() {
+                actionModal.hide();
+                setTimeout(() => {
+                    const editModalEl = document.getElementById('editUserModal-' + userId);
+                    if (editModalEl) {
+                        const editModal = new bootstrap.Modal(editModalEl);
+                        editModal.show();
+                    }
+                }, 350);
+            };
+
+            document.getElementById('uBtnResetPwd').onclick = function() {
+                actionModal.hide();
+                setTimeout(() => {
+                    const resetModalEl = document.getElementById('resetPwdModal-' + userId);
+                    if (resetModalEl) {
+                        const resetModal = new bootstrap.Modal(resetModalEl);
+                        resetModal.show();
+                    }
+                }, 350);
+            };
+
+            actionModal.show();
+        }
+    </script>
 </body>
 </html>

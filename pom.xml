@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>group12</groupId>
-	<artifactId>topic_management</artifactId>
+	<artifactId>topicmanagement</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>topic_management</name>
+	<name>topicmanagement</name>
 	<description/>
 	<url/>
 	<licenses>
@@ -30,6 +30,12 @@
 		<java.version>21</java.version>
 	</properties>
 	<dependencies>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
 		<!-- Web MVC & REST -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -68,10 +74,16 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!-- Spring Security Crypto (hỗ trợ giải mã BCrypt / Plain text) -->
+		<!-- Spring Security Starter  -->
 		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-crypto</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<!-- Thymeleaf Security 6 dialect for UI authorization tags -->
+		<dependency>
+			<groupId>org.thymeleaf.extras</groupId>
+			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
 		</dependency>
 
 		<!-- Swagger UI & OpenAPI 3 Documentation -->
@@ -81,10 +93,30 @@
 			<version>2.8.5</version>
 		</dependency>
 
+		<!-- Apache POI for Excel (.xlsx) Export -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.3.0</version>
+		</dependency>
+
+		<!-- OpenPDF for PDF Export -->
+		<dependency>
+			<groupId>com.github.librepdf</groupId>
+			<artifactId>openpdf</artifactId>
+			<version>2.0.3</version>
+		</dependency>
+
 		<!-- Test Starter -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -95,7 +127,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<mainClass>topic_management.TopicManagementApplication</mainClass>
+					<mainClass>topicmanagement.TopicManagementApplication</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>

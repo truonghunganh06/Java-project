@@ -40,7 +40,7 @@
                     <div class="d-flex align-items-center gap-2.5">
                         <h1 class="text-2xl font-black text-slate-900 tracking-tight mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif;">Bảng điều khiển</h1>
                         <span
-                            class="badge bg-teal-100 text-teal-800 font-bold text-xs px-3 py-1 rounded-full border border-teal-200"
+                            class="badge bg-blue-50 text-blue-700 font-bold text-xs px-3 py-1 rounded-full border border-blue-200"
                             th:text="${division != null ? division.name + ' - ' + department.name : (department != null ? department.name : 'Khoa CNTT')}">Bộ
                             môn Kỹ thuật Phần mềm</span>
                     </div>
@@ -55,7 +55,7 @@
                             th:text="${stats['pendingTopics']}">0</span>
                     </a>
                     <button
-                        class="btn bg-slate-900 hover:bg-slate-800 text-teal-300 rounded-full px-4 py-2 text-xs font-bold shadow-wellnest d-inline-flex align-items-center gap-2 transition border-0"
+                        class="btn bg-slate-900 hover:bg-slate-800 text-white rounded-full px-4 py-2 text-xs font-bold shadow-xs d-inline-flex align-items-center gap-2 transition border-0"
                         data-bs-toggle="modal" data-bs-target="#modalCreateAnnouncement">
                         <i class="fa-solid fa-bullhorn text-xs"></i>
                         <span>+ Đăng thông báo</span>
@@ -426,6 +426,7 @@
                                 th:data-category="${a.category != null ? a.category : 'THÔNG BÁO'}"
                                 th:data-author="${a.author != null ? a.author.fullName : 'Ban chủ nhiệm Khoa'}"
                                 th:data-created-at="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm') : ''}"
+                                th:data-period-id="${a.period != null ? a.period.id : ''}"
                                 th:data-period="${a.period != null ? a.period.name : ''}"
                                 th:data-content="${a.content}">
                                 <div class="d-flex align-items-center justify-content-between mb-0.5">
@@ -584,7 +585,7 @@
                         labels: ['Xuất sắc (>=9)', 'Giỏi (8-8.9)', 'Khá (6.5-7.9)', 'Trung bình (5-6.4)', 'Không đạt (<5)', 'Chưa chấm'],
                         datasets: [{
                             data: [excellent, good, fair, average, failed, ungraded],
-                            backgroundColor: ['#10b981', '#14b8a6', '#06b6d4', '#f59e0b', '#ef4444', '#cbd5e1'],
+                            backgroundColor: ['#10b981', '#2563eb', '#38bdf8', '#f59e0b', '#ef4444', '#cbd5e1'],
                             borderWidth: 2,
                             borderColor: '#ffffff'
                         }]
@@ -609,7 +610,7 @@
                         datasets: [{
                             label: 'Số lượng đề tài',
                             data: [pendingTopics, approvedTopics, withReviewer, withCouncil, finalized],
-                            backgroundColor: ['#f59e0b', '#2dd4bf', '#0d9488', '#132238', '#6366f1'],
+                            backgroundColor: ['#f59e0b', '#2563eb', '#3b82f6', '#0f172a', '#10b981'],
                             borderRadius: 8
                         }]
                     },
