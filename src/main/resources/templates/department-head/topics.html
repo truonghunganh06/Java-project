@@ -602,7 +602,7 @@
                                     <option th:each="c : ${councils}"
                                         th:if="${councilLecturerIdsMap == null || councilLecturerIdsMap.get(c.id) == null || ((t.supervisor == null || !councilLecturerIdsMap.get(c.id).contains(t.supervisor.id)) && (t.coSupervisor == null || !councilLecturerIdsMap.get(c.id).contains(t.coSupervisor.id)))}"
                                         th:value="${c.id}"
-                                        th:text="${c.name + ' (' + (c.major != null ? c.major.name : (c.division != null ? c.division.name : (c.department != null ? c.department.name : 'Chung'))) + ')'}"
+                                        th:text="${c.name + ' (' + (c.division != null ? c.division.name : (c.department != null ? c.department.name : 'Chung')) + ')'}"
                                         th:selected="${t.council != null && t.council.id.equals(c.id)}">
                                     </option>
                                 </select>
@@ -674,28 +674,28 @@
                                     <label class="form-label text-xs font-medium text-slate-600 mb-1"><i class="fa-solid fa-crown text-amber-500 me-1"></i> Chủ tịch hội đồng *</label>
                                     <select name="presidentId" class="form-select text-xs rounded-xl" required>
                                         <option value="">-- Chọn Chủ tịch --</option>
-                                        <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user != null ? l.user.fullName + ' (' + (l.academicRank != null ? l.academicRank : 'GV') + ')' : ''}"></option>
+                                        <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user != null ? l.user.fullName + ' (' + (l.academicTitle != null ? l.academicTitle : 'GV') + ')' : ''}"></option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="form-label text-xs font-medium text-slate-600 mb-1"><i class="fa-solid fa-pen-nib text-slate-500 me-1"></i> Thư ký hội đồng *</label>
                                     <select name="secretaryId" class="form-select text-xs rounded-xl" required>
                                         <option value="">-- Chọn Thư ký --</option>
-                                        <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user != null ? l.user.fullName + ' (' + (l.academicRank != null ? l.academicRank : 'GV') + ')' : ''}"></option>
+                                        <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user != null ? l.user.fullName + ' (' + (l.academicTitle != null ? l.academicTitle : 'GV') + ')' : ''}"></option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="form-label text-xs font-medium text-slate-600 mb-1"><i class="fa-solid fa-user-check text-indigo-500 me-1"></i> Ủy viên 1</label>
                                     <select name="member1Id" class="form-select text-xs rounded-xl">
                                         <option value="">-- Chọn Ủy viên --</option>
-                                        <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user != null ? l.user.fullName + ' (' + (l.academicRank != null ? l.academicRank : 'GV') + ')' : ''}"></option>
+                                        <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user != null ? l.user.fullName + ' (' + (l.academicTitle != null ? l.academicTitle : 'GV') + ')' : ''}"></option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="form-label text-xs font-medium text-slate-600 mb-1"><i class="fa-solid fa-user-check text-indigo-500 me-1"></i> Ủy viên 2</label>
                                     <select name="member2Id" class="form-select text-xs rounded-xl">
                                         <option value="">-- Chọn Ủy viên --</option>
-                                        <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user != null ? l.user.fullName + ' (' + (l.academicRank != null ? l.academicRank : 'GV') + ')' : ''}"></option>
+                                        <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user != null ? l.user.fullName + ' (' + (l.academicTitle != null ? l.academicTitle : 'GV') + ')' : ''}"></option>
                                     </select>
                                 </div>
                             </div>

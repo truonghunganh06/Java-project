@@ -82,7 +82,7 @@
                                 <div th:each="m : ${c.members}" class="d-flex justify-content-between align-items-center py-2 px-3 bg-white">
                                     <div>
                                         <span class="font-semibold text-slate-900 text-xs" th:text="${m.lecturer != null && m.lecturer.user != null ? m.lecturer.user.fullName : 'GV'}">TS. Nguyễn Văn A</span>
-                                        <span class="text-slate-400 text-xs d-block" th:text="${m.lecturer != null ? (m.lecturer.academicRank != null ? m.lecturer.academicRank : 'GV') + ' - ' + m.lecturer.lecturerCode : ''}"></span>
+                                        <span class="text-slate-400 text-xs d-block" th:text="${m.lecturer != null ? (m.lecturer.academicTitle != null ? m.lecturer.academicTitle : 'GV') + ' - ' + m.lecturer.lecturerCode : ''}"></span>
                                     </div>
                                     <div>
                                         <span th:if="${m.councilRole == 'PRESIDENT'}" class="badge-pill-pending font-semibold">
@@ -187,7 +187,9 @@
                                                     <h6 class="text-xs font-bold text-slate-800 mb-0.5" th:text="${tp.title}">Tên đề tài</h6>
                                                     <div class="text-2xs text-slate-500">
                                                         GVHD: <strong class="text-slate-700" th:text="${tp.supervisor != null && tp.supervisor.user != null ? tp.supervisor.user.fullName : 'N/A'}"></strong> |
-                                                        SV: <span th:text="${tp.student != null && tp.student.user != null ? tp.student.user.fullName : (tp.group != null ? tp.group.name : 'Chưa có SV')}"></span>
+                                                        <!-- SV: <span th:text="${tp.student != null && tp.student.user != null ? tp.student.user.fullName : (tp.group != null ? tp.group.name : 'Chưa có SV')}"></span> -->
+                                                         SV: <span>Chưa có SV</span>
+
                                                     </div>
                                                 </div>
                                                 <form th:action="@{/department-head/councils/{id}/unassign-topic(id=${c.id})}" method="post">
