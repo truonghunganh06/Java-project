@@ -16,15 +16,15 @@ public class GroupDissolveRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
     private StudentGroup group;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requested_by_student_id", nullable = false)
     private Student requestedBy; // Nhóm trưởng yêu cầu hủy
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "topic_id", nullable = false)
     private Topic topic; // Đề tài cần giải phóng
 
@@ -34,7 +34,7 @@ public class GroupDissolveRequest {
     @Column(nullable = false, length = 50)
     private String status = "PENDING"; // PENDING, APPROVED, REJECTED
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resolved_by_lecturer_id")
     private Lecturer resolvedBy; // GVHD duyệt/từ chối
 

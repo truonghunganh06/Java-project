@@ -15,11 +15,11 @@ public class GroupLeaveRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
     private StudentGroup group;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false)
     private Student student; // Sinh viên xin rút nhóm
 
@@ -29,7 +29,7 @@ public class GroupLeaveRequest {
     @Column(nullable = false, length = 50)
     private String status = "PENDING"; // PENDING, APPROVED, REJECTED
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resolved_by_lecturer_id")
     private Lecturer resolvedBy; // GVHD duyệt/từ chối
 
