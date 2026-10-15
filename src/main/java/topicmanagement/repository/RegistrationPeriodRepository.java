@@ -12,6 +12,14 @@ import java.util.List;
 @Repository
 public interface RegistrationPeriodRepository extends JpaRepository<RegistrationPeriod, Long> {
     @EntityGraph(attributePaths = {"department"})
+    @Override
+    java.util.Optional<RegistrationPeriod> findById(Long id);
+
+    @EntityGraph(attributePaths = {"department"})
+    @Override
+    List<RegistrationPeriod> findAll();
+
+    @EntityGraph(attributePaths = {"department"})
     @Query("SELECT p FROM RegistrationPeriod p WHERE p.department.id = :departmentId AND p.isActive = true ORDER BY p.id DESC")
     List<RegistrationPeriod> findByDepartmentId(@Param("departmentId") Long departmentId);
     

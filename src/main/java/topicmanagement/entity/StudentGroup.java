@@ -16,7 +16,7 @@ public class StudentGroup {
     @Version
     private Long version;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "period_id")
     private RegistrationPeriod period;
 
@@ -26,11 +26,11 @@ public class StudentGroup {
     @Column(name = "group_name", nullable = false, length = 255)
     private String groupName;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "leader_id")
     private Student leader;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
@@ -40,7 +40,7 @@ public class StudentGroup {
     @Column(name = "created_at")
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<GroupMember> members = new ArrayList<>();
 
     public StudentGroup() {}

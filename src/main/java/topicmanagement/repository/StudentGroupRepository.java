@@ -15,61 +15,61 @@ import java.util.Optional;
 @Repository
 public interface StudentGroupRepository extends JpaRepository<StudentGroup, Long> {
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     @Override
     Optional<StudentGroup> findById(Long id);
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     @Override
     List<StudentGroup> findAll();
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     @Override
     Page<StudentGroup> findAll(Pageable pageable);
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     Optional<StudentGroup> findByGroupCode(String groupCode);
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     List<StudentGroup> findByPeriodId(Long periodId);
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     List<StudentGroup> findByLeaderId(Long leaderId);
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     List<StudentGroup> findByTopicId(Long topicId);
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     List<StudentGroup> findByTopicIdIn(List<Long> topicIds);
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     @Query("SELECT g FROM StudentGroup g JOIN g.members m WHERE m.student.id = :studentId AND (:periodId IS NULL OR g.period.id = :periodId)")
     List<StudentGroup> findByStudentIdAndPeriodId(@Param("studentId") Long studentId, @Param("periodId") Long periodId);
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     @Query("SELECT g FROM StudentGroup g JOIN g.members m WHERE m.student.id = :studentId")
     List<StudentGroup> findByStudentId(@Param("studentId") Long studentId);
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     @Query("SELECT g FROM StudentGroup g WHERE g.period.department.id = :departmentId")
     List<StudentGroup> findByPeriodDepartmentId(@Param("departmentId") Long departmentId);
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     @Query("SELECT g FROM StudentGroup g WHERE g.period.department.id = :departmentId")
     Page<StudentGroup> findByPeriodDepartmentId(@Param("departmentId") Long departmentId, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     @Query("SELECT g FROM StudentGroup g WHERE g.period.department.id = :departmentId AND g.period.id = :periodId")
     List<StudentGroup> findByPeriodDepartmentIdAndPeriodId(@Param("departmentId") Long departmentId, @Param("periodId") Long periodId);
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     @Query("SELECT g FROM StudentGroup g WHERE g.period.department.id = :departmentId AND g.period.id = :periodId")
     Page<StudentGroup> findByPeriodDepartmentIdAndPeriodId(@Param("departmentId") Long departmentId, @Param("periodId") Long periodId, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     Page<StudentGroup> findByPeriodId(Long periodId, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"period", "leader", "topic"})
+    @EntityGraph(attributePaths = {"period", "period.department", "leader", "leader.user", "leader.major", "leader.division", "topic", "topic.supervisor", "topic.supervisor.user", "topic.major"})
     @Query("SELECT g FROM StudentGroup g WHERE (:departmentId IS NULL OR g.period.department.id = :departmentId) " +
            "AND (:periodId IS NULL OR g.period.id = :periodId)")
     Page<StudentGroup> findDepartmentGroupsPaged(
