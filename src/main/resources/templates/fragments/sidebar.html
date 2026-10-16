@@ -13,20 +13,24 @@
                         <i class="fa-solid fa-shapes"></i>
                     </div>
                     <div class="sidebar-brand-text d-flex flex-column">
-                        <span class="fw-extrabold text-slate-900 tracking-tight" style="font-size: 1.05rem; font-family: 'Plus Jakarta Sans', sans-serif;">TopicHub</span>
+                        <span class="fw-extrabold text-slate-900 tracking-tight"
+                            style="font-size: 1.05rem; font-family: 'Plus Jakarta Sans', sans-serif;">TopicHub</span>
                         <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]"
-                            th:text="${user != null && user.role != null ? user.role.name : 'Hệ Thống'}">Quản Lý Đề Tài</span>
+                            th:text="${user != null && user.role != null ? user.role.name : 'Hệ Thống'}">Quản Lý Đề
+                            Tài</span>
                     </div>
                 </a>
 
                 <!-- Sleek Small Arrow / Chevron Collapse Button (Replaces 3-bar hamburger) -->
                 <button id="sidebarDesktopCollapseBtn" class="sidebar-chevron-btn d-none d-lg-flex" type="button"
-                    onclick="toggleDesktopSidebar()" aria-label="Thu gọn hoặc mở rộng Sidebar" title="Thu gọn / Mở rộng Menu">
+                    onclick="toggleDesktopSidebar()" aria-label="Thu gọn hoặc mở rộng Sidebar"
+                    title="Thu gọn / Mở rộng Menu">
                     <i class="fa-solid fa-chevron-left text-slate-400" id="sidebarCollapseChevronIcon"></i>
                 </button>
 
                 <!-- Mobile Close Button -->
-                <button id="sidebarCloseBtn" class="btn btn-sm btn-light border border-slate-200/80 d-lg-none rounded-full ms-1" type="button"
+                <button id="sidebarCloseBtn"
+                    class="btn btn-sm btn-light border border-slate-200/80 d-lg-none rounded-full ms-1" type="button"
                     onclick="toggleSidebar()" aria-label="Đóng menu" title="Đóng menu"
                     style="width:28px; height:28px; padding:0; display:flex; align-items:center; justify-content:center;">
                     <i class="fa-solid fa-xmark text-slate-500" style="font-size:0.75rem;"></i>
@@ -58,7 +62,8 @@
                 </div>
 
                 <!-- ================= DEPARTMENT HEAD / DIVISION HEAD MENU ================= -->
-                <div th:if="${user != null && user.role != null && (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD')}">
+                <div
+                    th:if="${user != null && user.role != null && (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD')}">
                     <div class="sidebar-section-title">Tổng quan</div>
                     <a th:href="@{/department-head/dashboard}" class="saas-nav-link"
                         th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Bảng điều khiển">
@@ -95,7 +100,8 @@
 
                     <div class="sidebar-section-title mt-2">Nhân sự &amp; Bảng tin</div>
                     <a th:href="@{/department-head/personnel}" class="saas-nav-link"
-                        th:classappend="${activePage == 'personnel' || activePage == 'lecturers' || activePage == 'students' ? 'active' : ''}" title="Quản lý Nhân sự">
+                        th:classappend="${activePage == 'personnel' || activePage == 'lecturers' || activePage == 'students' ? 'active' : ''}"
+                        title="Quản lý Nhân sự">
                         <i class="fa-solid fa-user-group"></i>
                         <span>Quản lý Nhân sự</span>
                     </a>
@@ -122,7 +128,8 @@
 
                     <div class="sidebar-section-title mt-2">Hướng dẫn Đề tài</div>
                     <a th:href="@{/lecturer/topics}" class="saas-nav-link"
-                        th:classappend="${activePage == 'topics' || activePage == 'create-topic' ? 'active' : ''}" title="Đề tài của tôi">
+                        th:classappend="${activePage == 'topics' || activePage == 'create-topic' ? 'active' : ''}"
+                        title="Đề tài của tôi">
                         <i class="fa-solid fa-book-bookmark"></i>
                         <span>Đề tài của tôi</span>
                     </a>
@@ -196,22 +203,25 @@
             </div>
         </div>
 
-        <!-- ================= CAPSULE 2: BOTTOM UTILITY CAPSULE (IMAGE 4 STYLE) ================= -->
+        <!-- ================= CAPSULE 2: BOTTOM UTILITY CAPSULE ================= -->
         <div class="sidebar-capsule sidebar-capsule-bottom">
             <!-- Settings / Account Button -->
-            <button type="button" class="sidebar-bottom-link border-0 bg-transparent text-start" data-bs-toggle="modal" data-bs-target="#systemSettingsModal" title="Cài đặt hệ thống & Tài khoản">
+            <button type="button" class="sidebar-bottom-link d-flex align-items-center border-0 bg-transparent"
+                data-bs-toggle="modal" data-bs-target="#systemSettingsModal" title="Cài đặt hệ thống &amp; Tài khoản">
                 <i class="fa-solid fa-gear"></i>
                 <span class="sidebar-bottom-label">Cài đặt</span>
             </button>
 
             <!-- Help / Guide Button -->
-            <button type="button" class="sidebar-bottom-link border-0 bg-transparent" onclick="toggleAiChat()" title="Trợ lý AI & Hướng dẫn">
+            <button type="button" class="sidebar-bottom-link d-flex align-items-center border-0 bg-transparent"
+                onclick="toggleAiChat()" title="Trợ lý AI &amp; Hướng dẫn">
                 <i class="fa-regular fa-circle-question"></i>
                 <span class="sidebar-bottom-label">Trợ giúp</span>
             </button>
 
             <!-- Logout Button -->
-            <a th:href="@{/logout}" class="sidebar-bottom-link logout-btn" title="Đăng xuất khỏi hệ thống">
+            <a th:href="@{/logout}" class="sidebar-bottom-link d-flex align-items-center logout-btn"
+                title="Đăng xuất khỏi hệ thống">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i>
                 <span class="sidebar-bottom-label">Đăng xuất</span>
             </a>

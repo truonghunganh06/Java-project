@@ -8,7 +8,7 @@
 
     <!-- Immediate Theme & Sidebar Collapse State Initialization (Prevents Screen Flash / Layout Shift) -->
     <script>
-        (function() {
+        (function () {
             try {
                 const savedTheme = localStorage.getItem('topichub_theme') || 'light';
                 if (savedTheme === 'dark') {
@@ -17,7 +17,7 @@
                 if (localStorage.getItem('topichub_sidebar_collapsed') === 'true' && window.innerWidth >= 992) {
                     document.documentElement.classList.add('sidebar-collapsed');
                 }
-            } catch (e) {}
+            } catch (e) { }
         })();
     </script>
 
@@ -131,7 +131,7 @@
             overflow-x: hidden;
         }
 
-        /* ===== SIDEBAR STYLING (2-CAPSULE FLOATING MODERN SAAS - IMAGE 4 STYLE) ===== */
+        /* ===== SIDEBAR ===== */
         .saas-sidebar {
             width: var(--sidebar-width);
             background-color: transparent;
@@ -146,9 +146,9 @@
             justify-content: space-between;
             padding: 0.85rem 0.75rem;
             gap: 0.75rem;
-            transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: none;
-            will-change: width, transform;
+            will-change: width;
         }
 
         .saas-sidebar .sidebar-capsule {
@@ -157,10 +157,10 @@
             border: 1px solid var(--sidebar-border);
             border-radius: 32px;
             box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(15, 23, 42, 0.02);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+            /* Key: clip nội dung tự nhiên khi sidebar thu hẹp */
         }
 
-        /* Upper Capsule (Brand & Main Navigation) */
         .sidebar-capsule-main {
             flex: 1;
             display: flex;
@@ -170,31 +170,53 @@
         }
 
         .sidebar-capsule-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             padding: 0.75rem 0.85rem 0.5rem 0.85rem;
             border-bottom: 1px solid var(--border-light);
+            transition: padding 0.3s ease;
+            white-space: nowrap;
         }
 
         .sidebar-capsule-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            text-decoration: none;
             overflow: hidden;
+            flex: 1;
+            min-width: 0;
         }
 
         .sidebar-capsule-logo {
             width: 38px;
             height: 38px;
+            flex-shrink: 0;
             background: #0F172A;
-            color: #34D399; /* Fresh Green / Mint Accent */
+            color: #34D399;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-size: 1.05rem;
             box-shadow: 0 2px 8px rgba(15, 23, 42, 0.25);
-            transition: transform 0.2s ease;
         }
 
+        /* Brand text + collapse label - fade khi collapse */
+        .sidebar-brand-text {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: opacity 0.2s ease, max-width 0.3s ease;
+            max-width: 200px;
+        }
+
+        /* Collapse toggle button */
         .sidebar-chevron-btn {
             width: 26px;
             height: 26px;
+            flex-shrink: 0;
             border-radius: 50%;
             background: #F8FAFC;
             border: 1px solid #E2E8F0;
@@ -203,22 +225,27 @@
             justify-content: center;
             font-size: 0.7rem;
             cursor: pointer;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
             padding: 0;
         }
 
         .sidebar-chevron-btn:hover {
-            background: #E2E8F0;
-            color: #0F172A;
+            background: #0F172A;
+            border-color: #0F172A;
+        }
+
+        .sidebar-chevron-btn:hover i {
+            color: #FFFFFF !important;
         }
 
         .sidebar-nav-container {
             flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
             padding: 0.85rem 0.65rem;
             scrollbar-width: thin;
             scrollbar-color: #E2E8F0 transparent;
+            transition: padding 0.3s ease;
         }
 
         .sidebar-section-title {
@@ -227,36 +254,53 @@
             text-transform: uppercase;
             letter-spacing: 0.08em;
             color: #94A3B8;
-            padding: 0.6rem 0.85rem 0.35rem 0.85rem;
+            padding: 0.6rem 0.85rem 0.35rem;
+            white-space: nowrap;
+            overflow: hidden;
+            transition: opacity 0.15s ease;
         }
 
-        /* Signature Pill Navigation Item */
+        /* Nav item - Icon luôn cố định trong ô 42px x 42px, không bao giờ bị lệch vị trí */
         .saas-nav-link {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.6rem 0.95rem;
+            height: 42px;
+            padding: 0;
             font-size: 0.8125rem;
             font-weight: 500;
             color: var(--sidebar-text);
-            border-radius: 9999px; /* Pill Shape */
+            border-radius: 9999px;
             text-decoration: none;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: background-color 0.15s ease, color 0.15s ease;
             margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
         }
 
         .saas-nav-link i {
             font-size: 0.95rem;
-            width: 20px;
-            text-align: center;
+            width: 42px;
+            min-width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
             color: #94A3B8;
-            transition: color 0.2s ease, transform 0.2s ease;
+            transition: color 0.15s ease;
+        }
+
+        .saas-nav-link span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-right: 0.75rem;
+            transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .saas-nav-link:hover {
-            color: var(--text-main);
             background-color: var(--sidebar-hover);
-            transform: translateX(2px);
+            color: var(--text-main);
         }
 
         .saas-nav-link:hover i {
@@ -267,43 +311,58 @@
             color: #1D4ED8;
             background-color: #EFF6FF;
             font-weight: 700;
-            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
         }
 
         .saas-nav-link.active i {
             color: #2563EB;
         }
 
-        /* Lower Capsule (Settings, Help, Logout) */
+        /* Bottom capsule */
         .sidebar-capsule-bottom {
             flex-shrink: 0;
             padding: 0.5rem;
             display: flex;
             flex-direction: column;
             gap: 2px;
+            overflow: hidden;
+            transition: padding 0.3s ease;
         }
 
         .sidebar-bottom-link {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.55rem 0.85rem;
+            height: 40px;
+            padding: 0;
             border-radius: 9999px;
             font-size: 0.8125rem;
             font-weight: 500;
             color: #64748B;
             text-decoration: none;
-            transition: all 0.2s ease;
+            transition: background-color 0.15s ease, color 0.15s ease;
             cursor: pointer;
-            width: 100%;
-            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            margin-bottom: 2px;
         }
 
         .sidebar-bottom-link i {
             font-size: 0.95rem;
-            width: 20px;
-            text-align: center;
+            width: 40px;
+            min-width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
             color: #94A3B8;
+        }
+
+        .sidebar-bottom-label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-right: 0.75rem;
+            transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .sidebar-bottom-link:hover {
@@ -324,17 +383,18 @@
             color: #DC2626;
         }
 
-        /* ===== MAIN APP WRAPPER ===== */
+        /* ===== MAIN WRAPPER ===== */
         .saas-main-wrapper {
             margin-left: var(--sidebar-width);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             background-color: var(--bg-body);
-            transition: margin-left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: margin-left;
         }
 
-        /* ===== GLOBAL BOOTSTRAP MODAL & BACKDROP STACKING CONFIX ===== */
+        /* ===== MODAL STACKING ===== */
         .modal-backdrop {
             --bs-backdrop-zindex: 1050;
             z-index: 1050 !important;
@@ -358,12 +418,13 @@
             color: #f8fafc !important;
         }
 
-        /* Desktop / Laptop Collapsed Sidebar Styles (Exact Match to Image 4) */
+        /* ===== COLLAPSED STATE (desktop) ===== */
         @media (min-width: 992px) {
+
             html.sidebar-collapsed .saas-sidebar,
             body.sidebar-collapsed .saas-sidebar {
                 width: 76px !important;
-                transform: none !important;
+                padding: 0.85rem 0.5rem;
             }
 
             html.sidebar-collapsed .saas-main-wrapper,
@@ -371,52 +432,98 @@
                 margin-left: 76px !important;
             }
 
+            /* Header: logo và nút mũi tên căn giữa theo cột */
             html.sidebar-collapsed .sidebar-capsule-header,
             body.sidebar-collapsed .sidebar-capsule-header {
-                padding: 0.65rem 0.25rem !important;
+                flex-direction: column !important;
+                align-items: center !important;
                 justify-content: center !important;
-                position: relative;
+                gap: 0.5rem !important;
+                padding: 0.75rem 0.25rem 0.5rem 0.25rem !important;
             }
 
+            /* Brand logo căn giữa chính xác */
+            html.sidebar-collapsed .sidebar-capsule-brand,
+            body.sidebar-collapsed .sidebar-capsule-brand {
+                justify-content: center !important;
+                align-items: center !important;
+                gap: 0 !important;
+                width: 100% !important;
+                margin: 0 auto !important;
+            }
+
+            html.sidebar-collapsed .sidebar-capsule-logo,
+            body.sidebar-collapsed .sidebar-capsule-logo {
+                margin: 0 auto !important;
+            }
+
+            /* Brand text ẩn hoàn toàn khi collapse */
             html.sidebar-collapsed .sidebar-brand-text,
             body.sidebar-collapsed .sidebar-brand-text {
                 display: none !important;
             }
 
+            /* Nút mũi tên chevron hiển thị ở giữa dưới logo, hướng sang phải */
             html.sidebar-collapsed .sidebar-chevron-btn,
             body.sidebar-collapsed .sidebar-chevron-btn {
-                position: absolute;
-                bottom: -10px;
-                right: 4px;
-                z-index: 2;
-                transform: scale(0.85);
+                display: inline-flex !important;
+                width: 32px;
+                height: 20px;
+                border-radius: 10px;
+                background: #F1F5F9;
+                border: 1px solid #CBD5E1;
+                margin: 0 auto;
             }
 
-            html.sidebar-collapsed .sidebar-chevron-btn i,
-            body.sidebar-collapsed .sidebar-chevron-btn i {
-                transform: rotate(180deg);
-            }
-
+            /* Nav container & wrapper của từng vai trò (Trưởng bộ môn, Giảng viên, Sinh viên, Admin) */
             html.sidebar-collapsed .sidebar-nav-container,
             body.sidebar-collapsed .sidebar-nav-container {
                 padding: 0.65rem 0.25rem !important;
-                overflow-x: hidden;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                width: 100% !important;
             }
 
+            html.sidebar-collapsed .sidebar-nav-container>div,
+            body.sidebar-collapsed .sidebar-nav-container>div {
+                width: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+            }
+
+            /* Tiêu đề mục ẩn hoàn toàn để không làm dạt layout sang bên */
             html.sidebar-collapsed .sidebar-section-title,
             body.sidebar-collapsed .sidebar-section-title {
                 display: none !important;
             }
 
+            /* Nav link: 42px x 42px tròn, icon nằm chuẩn tâm 100% */
             html.sidebar-collapsed .saas-nav-link,
             body.sidebar-collapsed .saas-nav-link {
-                justify-content: center !important;
+                width: 42px !important;
+                min-width: 42px !important;
+                height: 42px !important;
+                margin: 0 auto 3px auto !important;
+                border-radius: 9999px !important;
                 padding: 0 !important;
-                gap: 0 !important;
-                border-radius: 50% !important;
-                width: 44px;
-                height: 44px;
-                margin: 0 auto 6px auto !important;
+                justify-content: center !important;
+                display: flex !important;
+                align-items: center !important;
+            }
+
+            html.sidebar-collapsed .saas-nav-link i,
+            body.sidebar-collapsed .saas-nav-link i {
+                width: 42px !important;
+                min-width: 42px !important;
+                height: 42px !important;
+                margin: 0 auto !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-align: center !important;
+                font-size: 1rem !important;
             }
 
             html.sidebar-collapsed .saas-nav-link span,
@@ -424,33 +531,80 @@
                 display: none !important;
             }
 
-            html.sidebar-collapsed .saas-nav-link i,
-            body.sidebar-collapsed .saas-nav-link i {
-                margin: 0 !important;
-                font-size: 1.15rem !important;
-                width: auto !important;
+            /* Bottom capsule: căn giữa */
+            html.sidebar-collapsed .sidebar-capsule-bottom,
+            body.sidebar-collapsed .sidebar-capsule-bottom {
+                align-items: center !important;
+                padding: 0.5rem 0.25rem !important;
+                width: 100% !important;
             }
 
+            /* Bottom link: 40px x 40px tròn */
             html.sidebar-collapsed .sidebar-bottom-link,
             body.sidebar-collapsed .sidebar-bottom-link {
-                justify-content: center !important;
+                width: 40px !important;
+                min-width: 40px !important;
+                height: 40px !important;
+                margin: 0 auto 2px auto !important;
+                border-radius: 9999px !important;
                 padding: 0 !important;
-                gap: 0 !important;
-                border-radius: 50% !important;
-                width: 44px;
-                height: 44px;
-                margin: 0 auto 4px auto !important;
+                justify-content: center !important;
+                display: flex !important;
+                align-items: center !important;
+            }
+
+            html.sidebar-collapsed .sidebar-bottom-link i,
+            body.sidebar-collapsed .sidebar-bottom-link i {
+                width: 40px !important;
+                min-width: 40px !important;
+                height: 40px !important;
+                margin: 0 auto !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-align: center !important;
             }
 
             html.sidebar-collapsed .sidebar-bottom-label,
             body.sidebar-collapsed .sidebar-bottom-label {
                 display: none !important;
             }
+        }
 
-            html.sidebar-collapsed .sidebar-bottom-link i,
-            body.sidebar-collapsed .sidebar-bottom-link i {
-                margin: 0 !important;
-                font-size: 1.15rem !important;
+        /* ===== MOBILE SIDEBAR (<992px) ===== */
+        @media (max-width: 991.98px) {
+            .saas-sidebar {
+                transform: translateX(-100%);
+                width: 270px;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .saas-sidebar.show {
+                transform: translateX(0);
+                pointer-events: auto;
+            }
+
+            .saas-main-wrapper {
+                margin-left: 0 !important;
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(15, 23, 42, 0.4);
+                backdrop-filter: blur(4px);
+                z-index: 1035;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s ease, visibility 0.3s ease;
+            }
+
+            .sidebar-overlay.show {
+                opacity: 1;
+                visibility: visible;
             }
         }
 
@@ -476,7 +630,8 @@
         .topbar-island {
             background: #FFFFFF;
             border: 1px solid var(--border-color);
-            border-radius: 9999px; /* Pill Island */
+            border-radius: 9999px;
+            /* Pill Island */
             box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(15, 23, 42, 0.02);
             padding: 0.3rem 0.55rem;
             transition: all 0.2s ease;
@@ -489,7 +644,8 @@
         .topbar-brand-icon {
             width: 32px;
             height: 32px;
-            background: linear-gradient(135deg, #10B981, #059669); /* Fresh Emerald Logo Icon */
+            background: linear-gradient(135deg, #10B981, #059669);
+            /* Fresh Emerald Logo Icon */
             color: #FFFFFF;
             border-radius: 10px;
             display: inline-flex;
@@ -1276,7 +1432,8 @@
         @media (max-width: 991.98px) {
             .saas-sidebar {
                 transform: translateX(-110%);
-                background-color: var(--bg-body); /* Show bg behind capsules */
+                background-color: var(--bg-body);
+                /* Show bg behind capsules */
             }
 
             .saas-sidebar.show {
@@ -2471,7 +2628,11 @@
             border-color: #CCFBF1;
             border-left-color: #0D9488;
         }
-        .cal-event-teal:hover { background-color: #CCFBF1; color: #115E59; }
+
+        .cal-event-teal:hover {
+            background-color: #CCFBF1;
+            color: #115E59;
+        }
 
         .cal-event-cyan {
             background-color: #F0F9FF;
@@ -2479,7 +2640,11 @@
             border-color: #E0F2FE;
             border-left-color: #0284C7;
         }
-        .cal-event-cyan:hover { background-color: #E0F2FE; color: #075985; }
+
+        .cal-event-cyan:hover {
+            background-color: #E0F2FE;
+            color: #075985;
+        }
 
         .cal-event-indigo {
             background-color: #EEF2FF;
@@ -2487,7 +2652,11 @@
             border-color: #E0E7FF;
             border-left-color: #6366F1;
         }
-        .cal-event-indigo:hover { background-color: #E0E7FF; color: #3730A3; }
+
+        .cal-event-indigo:hover {
+            background-color: #E0E7FF;
+            color: #3730A3;
+        }
 
         .cal-event-amber {
             background-color: #FFFBEB;
@@ -2495,7 +2664,11 @@
             border-color: #FEF3C7;
             border-left-color: #F59E0B;
         }
-        .cal-event-amber:hover { background-color: #FEF3C7; color: #92400E; }
+
+        .cal-event-amber:hover {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
 
         .cal-event-rose {
             background-color: #FFF1F2;
@@ -2503,7 +2676,11 @@
             border-color: #FFE4E6;
             border-left-color: #F43F5E;
         }
-        .cal-event-rose:hover { background-color: #FFE4E6; color: #9F1239; }
+
+        .cal-event-rose:hover {
+            background-color: #FFE4E6;
+            color: #9F1239;
+        }
 
         /* ==================== POLISHED WEEK VIEW (WELLNEST BENTO CARDS) ==================== */
         .cal-week-col {
@@ -2594,11 +2771,30 @@
             box-shadow: 0 8px 18px -2px rgba(15, 23, 42, 0.1);
         }
 
-        .cal-week-event-card.border-teal { border-left-color: #14B8A6 !important; background: #F0FDF4; }
-        .cal-week-event-card.border-cyan { border-left-color: #0284C7 !important; background: #F0F9FF; }
-        .cal-week-event-card.border-indigo { border-left-color: #6366F1 !important; background: #EEF2FF; }
-        .cal-week-event-card.border-amber { border-left-color: #F59E0B !important; background: #FEFCE8; }
-        .cal-week-event-card.border-rose { border-left-color: #F43F5E !important; background: #FFF1F2; }
+        .cal-week-event-card.border-teal {
+            border-left-color: #14B8A6 !important;
+            background: #F0FDF4;
+        }
+
+        .cal-week-event-card.border-cyan {
+            border-left-color: #0284C7 !important;
+            background: #F0F9FF;
+        }
+
+        .cal-week-event-card.border-indigo {
+            border-left-color: #6366F1 !important;
+            background: #EEF2FF;
+        }
+
+        .cal-week-event-card.border-amber {
+            border-left-color: #F59E0B !important;
+            background: #FEFCE8;
+        }
+
+        .cal-week-event-card.border-rose {
+            border-left-color: #F43F5E !important;
+            background: #FFF1F2;
+        }
 
         .cal-empty-week-slot {
             display: flex;
