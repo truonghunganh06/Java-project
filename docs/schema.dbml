@@ -1,0 +1,436 @@
+// =============================================================================
+// TOPICHUB DATABASE SCHEMA - DBDATABASE MARKUP LANGUAGE (DBML)
+// Công cụ trực quan hóa: https://dbdiagram.io/
+// 20 Bảng chuẩn hóa Neon PostgreSQL (Đồng bộ 1:1 Spring Boot JPA)
+// =============================================================================
+
+Project TopicHub {
+  database_type: 'PostgreSQL'
+  Note: '''
+    # Hệ Thống Quản Lý Đề Tài Tốt Nghiệp (TopicHub)
+    Cơ sở dữ liệu vật lý chuẩn hóa trên Neon PostgreSQL gồm 20 bảng cốt lõi.
+    Tuân thủ đầy đủ 5 tiêu chuẩn nghiệp vụ Rubric đồ án.
+  '''
+}
+
+// =============================================================================
+// 1. HỆ THỐNG TỔ CHỨC & PHÂN QUYỀN (ORGANIZATION & SECURITY)
+// =============================================================================
+
+Table roles [headercolor: #3b82f6] {
+  id bigint [pk, increment]
+  code varchar(50) [unique, not null, note: 'ROLE_ADMIN, ROLE_STUDENT, ROLE_LECTURER, ROLE_DEPARTMENT_HEAD']
+  name varchar(100) [not null, note: 'Tên hiển thị vai trò']
+
+  Note: 'Bảng danh mục vai trò người dùng hệ thống (RBAC)'
+}
+
+Table users [headercolor: #3b82f6] {
+  id bigint [pk, increment]
+  username varchar(50) [unique, not null]
+  password_hash varchar(255) [not null, note: 'Mã hóa BCrypt']
+  full_name varchar(100) [not null]
+  email varchar(100) [unique, not null]
+  phone varchar(20)
+  role_id bigint [note: 'Khóa ngoại đến roles']
+  is_active boolean [default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+
+  Note: 'Tài khoản đăng nhập hệ thống'
+}
+
+Table departments [headercolor: #3b82f6] {
+  id bigint [pk, increment]
+  code varchar(50) [unique, not null, note: 'Mã khoa (CNTT, KT, ...)']
+  name varchar(100) [not null, note: 'Tên khoa']
+  description text
+  is_active boolean [default: true]
+
+  Note: 'Danh mục Khoa đào tạo'
+}
+
+Table divisions [headercolor: #3b82f6] {
+  id bigint [pk, increment]
+  department_id bigint [note: 'Thuộc khoa nào']
+  code varchar(50) [not null, note: 'Mã bộ môn (KTPM, HTTT, KHMT, ...)']
+  name varchar(150) [not null]
+  description text
+  head_lecturer_id bigint [note: 'Trưởng bộ môn']
+  is_active boolean [default: true]
+
+  Note: 'Danh mục Bộ môn trực thuộc khoa'
+}
+
+Table majors [headercolor: #3b82f6] {
+  id bigint [pk, increment]
+  department_id bigint [note: 'Thuộc khoa']
+  division_id bigint [note: 'Thuộc bộ môn']
+  code varchar(50) [not null, note: 'Mã ngành (SE, IS, CS, ...)']
+  name varchar(100) [not null]
+  is_active boolean [default: true]
+
+  Note: 'Danh mục Chuyên ngành đào tạo'
+}
+
+// =============================================================================
+// 2. HỒ SƠ HỌC THUẬT & THÔNG BÁO (ACADEMIC PROFILES & ANNOUNCEMENTS)
+// =============================================================================
+
+Table lecturers [headercolor: #6366f1] {
+  id bigint [pk, increment]
+  user_id bigint [unique, not null, note: 'Tài khoản user tương ứng']
+  department_id bigint [note: 'Khoa trực thuộc']
+  division_id bigint [note: 'Bộ môn sinh hoạt']
+  lecturer_code varchar(50) [unique, note: 'Mã giảng viên (GV001...)']
+  academic_title varchar(50) [note: 'Học hàm (PGS, GS, ...)']
+  degree varchar(50) [note: 'Học vị (ThS, TS, ...)']
+  max_topics_quota int [default: 5, note: 'Hạn mức đề tài tối đa']
+
+  Note: 'Hồ sơ chuyên môn Giảng viên'
+}
+
+Table students [headercolor: #6366f1] {
+  id bigint [pk, increment]
+  user_id bigint [unique, not null, note: 'Tài khoản user tương ứng']
+  department_id bigint
+  division_id bigint
+  major_id bigint [note: 'Chuyên ngành học']
+  student_code varchar(50) [unique, note: 'Mã số sinh viên (SV001...)']
+  class_name varchar(50) [note: 'Lớp sinh hoạt']
+  academic_year varchar(50) [note: 'Niên khóa']
+  gpa numeric(3,2) [note: 'Điểm tích lũy hệ 4.0']
+
+  Note: 'Hồ sơ học thuật Sinh viên'
+}
+
+Table registration_periods [headercolor: #8b5cf6] {
+  id bigint [pk, increment]
+  name varchar(200) [not null, note: 'Tên đợt đăng ký']
+  department_id bigint [note: 'Đợt của khoa']
+  period_type varchar(50) [default: 'KLTN', note: 'KLTN, TTTN, NCKH']
+  academic_year varchar(50) [default: '2026-2027']
+  semester int [default: 1]
+  lecturer_proposal_start timestamptz [note: 'Giai đoạn 1: GV đề xuất đề tài']
+  lecturer_proposal_end timestamptz
+  student_registration_start timestamptz [note: 'Giai đoạn 2: SV đăng ký đề tài']
+  student_registration_end timestamptz
+  reviewer_deadline timestamptz [note: 'Hạn chấm điểm phản biện']
+  council_defense_date timestamptz [note: 'Ngày hội đồng bảo vệ']
+  min_students int [default: 2, note: 'Tối thiểu SV / nhóm']
+  max_students int [default: 3, note: 'Tối đa SV / nhóm']
+  min_topics_per_lecturer int [default: 3]
+  status varchar(20) [default: 'ACTIVE']
+  is_active boolean [default: true]
+  created_at timestamptz [default: `now()`]
+
+  Note: 'Đợt đăng ký đề tài 2 giai đoạn theo Rubric'
+}
+
+Table announcements [headercolor: #8b5cf6] {
+  id bigint [pk, increment]
+  department_id bigint
+  period_id bigint
+  author_id bigint [note: 'Người đăng thông báo']
+  title varchar(255) [not null]
+  content text [not null]
+  category varchar(50) [default: 'GENERAL', note: 'GENERAL, PERIOD, URGENT']
+  attachment_path varchar(500)
+  is_pinned boolean [default: false]
+  created_at timestamptz [default: `now()`]
+
+  Note: 'Bảng thông báo tin tức và quy định'
+}
+
+// =============================================================================
+// 3. ĐỀ TÀI & QUẢN LÝ NHÓM (TOPICS & STUDENT GROUPS - CORE DOMAIN)
+// =============================================================================
+
+Table topics [headercolor: #ea580c] {
+  id bigint [pk, increment]
+  code varchar(50) [note: 'Mã đề tài (DT001...)']
+  title varchar(255) [not null, note: 'Tên đề tài']
+  description text
+  requirements text
+  department_id bigint
+  division_id bigint
+  major_id bigint
+  period_id bigint [note: 'Đợt đăng ký']
+  supervisor_id bigint [note: 'Giảng viên hướng dẫn chính']
+  co_supervisor_id bigint [note: 'Giảng viên đồng hướng dẫn (nếu có)']
+  reviewer_id bigint [note: 'Giảng viên phản biện']
+  council_id bigint [note: 'Hội đồng chấm bảo vệ']
+  min_students int [default: 1]
+  max_students int [default: 3]
+  status varchar(20) [default: 'PENDING', note: 'PENDING, APPROVED, ASSIGNED, COMPLETED, REJECTED']
+  rejection_reason text
+  academic_year varchar(50)
+  semester varchar(20)
+  is_finalized boolean [default: false, note: 'Đã hoàn tất đánh giá']
+  advisor_score float [note: 'Điểm GVHD']
+  reviewer_score float [note: 'Điểm GVPB']
+  council_score float [note: 'Điểm TB Hội đồng']
+  final_score float [note: 'Điểm tổng kết cuối cùng']
+  version bigint [default: 0, note: 'Optimistic locking']
+  created_at timestamp [default: `now()`]
+
+  Note: 'BẢNG TRỌNG TÂM CỦA HỆ THỐNG - Đề tài tốt nghiệp'
+}
+
+Table student_groups [headercolor: #059669] {
+  id bigint [pk, increment]
+  group_code varchar(50) [note: 'Mã nhóm (NHOM_01...)']
+  group_name varchar(255) [note: 'Tên gọi của nhóm']
+  period_id bigint [note: 'Thuộc đợt đăng ký']
+  leader_id bigint [note: 'Nhóm trưởng đại diện']
+  topic_id bigint [note: 'Đề tài nhóm thực hiện']
+  status varchar(20) [default: 'ACTIVE', note: 'ACTIVE, REGISTERED, DISSOLVED']
+  version bigint [default: 0]
+  created_at timestamptz [default: `now()`]
+
+  Note: 'Nhóm sinh viên thực hiện đề tài (Ràng buộc 3-5 SV, 1 nhóm trưởng)'
+}
+
+Table group_members [headercolor: #059669] {
+  id bigint [pk, increment]
+  group_id bigint [not null]
+  student_id bigint [not null, note: 'Sinh viên thành viên']
+  role_in_group varchar(50) [default: 'MEMBER', note: 'LEADER hoặc MEMBER']
+  joined_at timestamptz [default: `now()`]
+
+  Note: 'Danh sách thành viên nhóm (1 SV chỉ thuộc đúng 1 nhóm)'
+}
+
+Table topic_registrations [headercolor: #059669] {
+  id bigint [pk, increment]
+  topic_id bigint [not null]
+  group_id bigint [note: 'Nhóm đăng ký']
+  student_id bigint [note: 'Sinh viên nộp đơn']
+  registered_by_student_id bigint
+  status varchar(20) [default: 'PENDING', note: 'PENDING, APPROVED, REJECTED']
+  registered_at timestamp [default: `now()`]
+  approved_at timestamp
+
+  Note: 'Đơn đăng ký đề tài của nhóm sinh viên'
+}
+
+Table group_invitations [headercolor: #10b981] {
+  id bigint [pk, increment]
+  group_id bigint [not null]
+  student_id bigint [not null, note: 'Sinh viên được mời']
+  invited_by_student_id bigint [note: 'Nhóm trưởng gửi lời mời']
+  status varchar(50) [default: 'INVITED', note: 'INVITED, ACCEPTED, REJECTED']
+  rejection_reason text
+  created_at timestamptz [default: `now()`]
+  responded_at timestamptz
+
+  Note: 'Lời mời sinh viên khác vào nhóm'
+}
+
+Table group_leave_requests [headercolor: #10b981] {
+  id bigint [pk, increment]
+  group_id bigint [not null]
+  student_id bigint [not null, note: 'Sinh viên xin rút khỏi nhóm']
+  reason text [note: 'Lý do xin rời nhóm']
+  status varchar(50) [default: 'PENDING', note: 'PENDING, APPROVED, REJECTED']
+  resolved_by_lecturer_id bigint [note: 'GVHD phê duyệt']
+  rejection_reason text
+  created_at timestamptz [default: `now()`]
+  resolved_at timestamptz
+
+  Note: 'Đơn xin rút khỏi nhóm của sinh viên'
+}
+
+Table group_dissolve_requests [headercolor: #10b981] {
+  id bigint [pk, increment]
+  group_id bigint [not null]
+  requested_by_student_id bigint [not null, note: 'Nhóm trưởng yêu cầu giải tán']
+  topic_id bigint
+  reason text [note: 'Lý do giải tán nhóm']
+  status varchar(50) [default: 'PENDING', note: 'PENDING, APPROVED, REJECTED']
+  resolved_by_lecturer_id bigint [note: 'GVHD phê duyệt']
+  rejection_reason text
+  created_at timestamptz [default: `now()`]
+  resolved_at timestamptz
+
+  Note: 'Đơn yêu cầu giải tán nhóm của nhóm trưởng'
+}
+
+// =============================================================================
+// 4. TIẾN ĐỘ, BÁO CÁO & ĐÁNH GIÁ (SUBMISSIONS, COUNCILS, EVALUATIONS)
+// =============================================================================
+
+Table submissions [headercolor: #d97706] {
+  id bigint [pk, increment]
+  topic_id bigint [not null]
+  group_id bigint [not null]
+  submitted_by_student_id bigint [not null, note: 'Nhóm trưởng đại diện nộp file']
+  title varchar(255)
+  submission_round varchar(50) [note: 'Báo cáo giữa kỳ, cuối kỳ, báo cáo tuần']
+  file_path text [note: 'Đường dẫn file vật lý trên server']
+  original_file_name varchar(255)
+  file_size bigint
+  content_type varchar(100)
+  grade numeric(4,2)
+  feedback text
+  submitted_at timestamp [default: `now()`]
+
+  Note: 'Báo cáo tiến độ và sản phẩm của nhóm'
+}
+
+Table councils [headercolor: #dc2626] {
+  id bigint [pk, increment]
+  code varchar(50)
+  name varchar(200) [not null, note: 'Hội đồng bảo vệ KLTN số 1, 2...']
+  department_id bigint
+  division_id bigint
+  period_id bigint
+  chairman_id bigint [note: 'Chủ tịch hội đồng']
+  secretary_id bigint [note: 'Thư ký hội đồng']
+  location varchar(255) [note: 'Phòng bảo vệ (A1-201...)']
+  defense_date timestamptz [note: 'Thời gian bảo vệ']
+  status varchar(20) [default: 'ACTIVE']
+  created_at timestamptz [default: `now()`]
+
+  Note: 'Hội đồng chấm bảo vệ đề tài'
+}
+
+Table council_members [headercolor: #dc2626] {
+  id bigint [pk, increment]
+  council_id bigint [not null]
+  lecturer_id bigint [not null, note: 'Giảng viên ủy viên (BẮT BUỘC LOẠI BỎ GVHD)']
+  role varchar(20) [default: 'MEMBER']
+  council_role varchar(50) [default: 'MEMBER', note: 'CHAIRMAN, SECRETARY, MEMBER']
+  joined_at timestamptz [default: `now()`]
+
+  Note: 'Danh sách 3-5 thành viên hội đồng'
+}
+
+Table evaluations [headercolor: #dc2626] {
+  id bigint [pk, increment]
+  topic_id bigint [not null]
+  group_id bigint
+  lecturer_id bigint [not null, note: 'Giảng viên chấm điểm']
+  evaluation_type varchar(50) [note: 'SUPERVISOR, REVIEWER, COUNCIL']
+  score float [note: 'Thang điểm [0.0 - 10.0]']
+  comments text [note: 'Nhận xét chi tiết']
+  is_submitted boolean [default: false]
+  evaluated_at timestamptz [default: `now()`]
+
+  Note: 'Phiếu điểm đánh giá đề tài của từng giảng viên'
+}
+
+// =============================================================================
+// QUAN HỆ KHÓA NGOẠI (RELATIONSHIPS / FOREIGN KEYS)
+// =============================================================================
+
+// Hệ thống & phân quyền
+Ref: users.role_id > roles.id
+Ref: divisions.department_id > departments.id
+Ref: majors.department_id > departments.id
+Ref: majors.division_id > divisions.id
+
+// Hồ sơ giảng viên & sinh viên
+Ref: lecturers.user_id - users.id
+Ref: lecturers.department_id > departments.id
+Ref: lecturers.division_id > divisions.id
+
+Ref: students.user_id - users.id
+Ref: students.department_id > departments.id
+Ref: students.division_id > divisions.id
+Ref: students.major_id > majors.id
+
+// Đợt & thông báo
+Ref: registration_periods.department_id > departments.id
+Ref: announcements.department_id > departments.id
+Ref: announcements.period_id > registration_periods.id
+Ref: announcements.author_id > users.id
+
+// Đề tài (Core relationships)
+Ref: topics.department_id > departments.id
+Ref: topics.division_id > divisions.id
+Ref: topics.major_id > majors.id
+Ref: topics.period_id > registration_periods.id
+Ref: topics.supervisor_id > lecturers.id
+Ref: topics.co_supervisor_id > lecturers.id
+Ref: topics.reviewer_id > lecturers.id
+Ref: topics.council_id > councils.id
+
+// Nhóm sinh viên & thành viên
+Ref: student_groups.period_id > registration_periods.id
+Ref: student_groups.leader_id > students.id
+Ref: student_groups.topic_id > topics.id
+
+Ref: group_members.group_id > student_groups.id [delete: cascade]
+Ref: group_members.student_id > students.id
+
+Ref: topic_registrations.topic_id > topics.id
+Ref: topic_registrations.group_id > student_groups.id
+Ref: topic_registrations.student_id > students.id
+
+// Yêu cầu nhóm (invitations, leave, dissolve)
+Ref: group_invitations.group_id > student_groups.id [delete: cascade]
+Ref: group_invitations.student_id > students.id
+
+Ref: group_leave_requests.group_id > student_groups.id [delete: cascade]
+Ref: group_leave_requests.student_id > students.id
+Ref: group_leave_requests.resolved_by_lecturer_id > lecturers.id
+
+Ref: group_dissolve_requests.group_id > student_groups.id [delete: cascade]
+Ref: group_dissolve_requests.requested_by_student_id > students.id
+Ref: group_dissolve_requests.topic_id > topics.id
+Ref: group_dissolve_requests.resolved_by_lecturer_id > lecturers.id
+
+// Báo cáo & Hội đồng
+Ref: submissions.topic_id > topics.id
+Ref: submissions.group_id > student_groups.id
+Ref: submissions.submitted_by_student_id > students.id
+
+Ref: councils.department_id > departments.id
+Ref: councils.division_id > divisions.id
+Ref: councils.period_id > registration_periods.id
+Ref: councils.chairman_id > lecturers.id
+Ref: councils.secretary_id > lecturers.id
+
+Ref: council_members.council_id > councils.id [delete: cascade]
+Ref: council_members.lecturer_id > lecturers.id
+
+Ref: evaluations.topic_id > topics.id
+Ref: evaluations.group_id > student_groups.id
+Ref: evaluations.lecturer_id > lecturers.id
+
+// =============================================================================
+// GOM NHÓM LOGICAL ZONE (TABLE GROUPS TRONG DBDATABASE.IO)
+// =============================================================================
+
+TableGroup Organization_And_Security {
+  roles
+  users
+  departments
+  divisions
+  majors
+}
+
+TableGroup Profiles_And_Periods {
+  lecturers
+  students
+  registration_periods
+  announcements
+}
+
+TableGroup Topics_And_Groups {
+  topics
+  student_groups
+  group_members
+  topic_registrations
+  group_invitations
+  group_leave_requests
+  group_dissolve_requests
+}
+
+TableGroup Submissions_And_Evaluation {
+  submissions
+  councils
+  council_members
+  evaluations
+}
