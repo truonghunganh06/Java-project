@@ -96,12 +96,7 @@ public class AuthService {
         }
 
         // 2. So sánh plaintext (cho dữ liệu cũ chưa hash)
-        if (rawPassword.equals(storedHash)) {
-            return true;
-        }
-
-        // 3. Hỗ trợ mật khẩu mặc định mẫu ("123456", "admin123") cho tài khoản seed
-        return "123456".equals(rawPassword) || "admin123".equals(rawPassword);
+        return rawPassword.equals(storedHash);
     }
 
     /**

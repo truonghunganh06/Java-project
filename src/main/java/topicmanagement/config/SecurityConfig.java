@@ -49,8 +49,7 @@ public class SecurityConfig {
                         if (bcrypt.matches(raw, encodedPassword)) return true;
                     } catch (Exception ignored) {}
                 }
-                if (raw.equals(encodedPassword)) return true;
-                return "123456".equals(raw) || "admin123".equals(raw);
+                return raw.equals(encodedPassword);
             }
         };
     }

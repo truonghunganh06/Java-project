@@ -135,6 +135,13 @@ public class StudentGroup {
         return leader.getId().equals(student.getId());
     }
 
+    public boolean hasMember(Student student) {
+        if (student == null || student.getId() == null) return false;
+        if (isLeader(student)) return true;
+        if (members == null) return false;
+        return members.stream().anyMatch(m -> m.getStudent() != null && student.getId().equals(m.getStudent().getId()));
+    }
+
     public int getMemberCount() {
         return members != null ? members.size() : 0;
     }

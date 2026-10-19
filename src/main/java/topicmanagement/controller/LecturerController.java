@@ -418,11 +418,15 @@ public class LecturerController {
 
         // BUG-07 FIX: Truyền lecturer để kiểm tra ownership
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
-        boolean success = lecturerService.approveGroupTopic(id, "APPROVED", lecturer);
-        if (success) {
-            redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt nhóm sinh viên hướng dẫn thành công!");
-        } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể phê duyệt nhóm này (không tìm thấy hoặc không phải đề tài bạn hướng dẫn)!");
+        try {
+            boolean success = lecturerService.approveGroupTopic(id, "APPROVED", lecturer);
+            if (success) {
+                redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt nhóm sinh viên hướng dẫn thành công!");
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể phê duyệt nhóm này (không tìm thấy hoặc không phải đề tài bạn hướng dẫn)!");
+            }
+        } catch (IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/lecturer/registrations";
     }
@@ -622,6 +626,28 @@ public class LecturerController {
         Submission submission = submissionRepository.findById(submissionId).orElse(null);
         if (submission == null || submission.getFilePath() == null) {
             return org.springframework.http.ResponseEntity.notFound().build();
+        }
+
+        // BẢO MẬT PHÂN QUYỀN (IDOR): Chỉ GVHD, GVPB, Thành viên Hội đồng, Trưởng khoa hoặc Admin mới được tải
+        boolean isAdminOrHead = user.getRole() != null && ("ADMIN".equalsIgnoreCase(user.getRole().getCode())
+                || "DEPARTMENT_HEAD".equalsIgnoreCase(user.getRole().getCode()));
+        if (!isAdminOrHead) {
+            Lecturer lecturer = lecturerService.getLecturerByUser(user);
+            if (lecturer == null) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+            Topic topic = submission.getTopic();
+            if (topic == null) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+            boolean isSupervisor = topic.isSupervisorOrCoSupervisor(lecturer);
+            boolean isReviewer = topic.getReviewer() != null && topic.getReviewer().getId().equals(lecturer.getId());
+            boolean isCouncilMember = topic.getCouncil() != null && councilService.getCouncilMembers(topic.getCouncil().getId())
+                    .stream().anyMatch(m -> m.getLecturer() != null && m.getLecturer().getId().equals(lecturer.getId()));
+
+            if (!isSupervisor && !isReviewer && !isCouncilMember) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
         }
 
         try {

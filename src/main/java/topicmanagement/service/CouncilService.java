@@ -22,6 +22,7 @@ public class CouncilService {
     private final DepartmentRepository departmentRepository;
     private final DivisionRepository divisionRepository;
     private final StudentGroupRepository groupRepository;
+    private final EmailService emailService;
 
     public CouncilService(
             CouncilRepository councilRepository,
@@ -32,7 +33,8 @@ public class CouncilService {
             RegistrationPeriodRepository periodRepository,
             DepartmentRepository departmentRepository,
             DivisionRepository divisionRepository,
-            StudentGroupRepository groupRepository) {
+            StudentGroupRepository groupRepository,
+            EmailService emailService) {
         this.councilRepository = councilRepository;
         this.councilMemberRepository = councilMemberRepository;
         this.evaluationRepository = evaluationRepository;
@@ -42,54 +44,10 @@ public class CouncilService {
         this.departmentRepository = departmentRepository;
         this.divisionRepository = divisionRepository;
         this.groupRepository = groupRepository;
+        this.emailService = emailService;
     }
 
-    /**
-     * Data Cleanup Runner: Removes orphan evaluations and resets scores on topics that have no student group.
-     */
-    @PostConstruct
-    @Transactional
-    public void cleanupOrphanEvaluationsAndScores() {
-        List<Topic> allTopics = topicRepository.findAll();
-        if (allTopics.isEmpty()) return;
 
-        List<Long> topicIds = allTopics.stream().map(Topic::getId).filter(Objects::nonNull).toList();
-        List<StudentGroup> allGroups = groupRepository.findByTopicIdIn(topicIds);
-        Set<Long> topicsWithGroups = allGroups.stream()
-                .filter(g -> g.getTopic() != null)
-                .map(g -> g.getTopic().getId())
-                .collect(Collectors.toSet());
-
-        int cleanedScores = 0;
-        int deletedEvals = 0;
-
-        List<Evaluation> allEvals = evaluationRepository.findByTopicIdIn(topicIds);
-        Map<Long, List<Evaluation>> evalsByTopic = allEvals.stream()
-                .filter(e -> e.getTopic() != null)
-                .collect(Collectors.groupingBy(e -> e.getTopic().getId()));
-
-        for (Topic t : allTopics) {
-            if (!topicsWithGroups.contains(t.getId())) {
-                if (t.getFinalScore() != null || t.getAdvisorScore() != null || t.getReviewerScore() != null || t.getCouncilScore() != null || Boolean.TRUE.equals(t.getIsFinalized())) {
-                    t.setAdvisorScore(null);
-                    t.setReviewerScore(null);
-                    t.setCouncilScore(null);
-                    t.setFinalScore(null);
-                    t.setIsFinalized(false);
-                    topicRepository.save(t);
-                    cleanedScores++;
-                }
-                List<Evaluation> evals = evalsByTopic.getOrDefault(t.getId(), Collections.emptyList());
-                if (!evals.isEmpty()) {
-                    evaluationRepository.deleteAll(evals);
-                    deletedEvals += evals.size();
-                }
-            }
-        }
-        if (cleanedScores > 0 || deletedEvals > 0) {
-            System.out.println("[DATA-CLEANUP] Đã xóa " + deletedEvals + " phiếu chấm rác và reset điểm cho " + cleanedScores + " đề tài chưa có nhóm sinh viên!");
-        }
-    }
 
     public List<Council> getAllCouncils() {
         return councilRepository.findAll();
@@ -442,6 +400,11 @@ public class CouncilService {
 
         if (topic == null || lecturer == null || evaluationType == null) return false;
 
+        if (score == null || !Double.isFinite(score) || score < 0.0 || score > 10.0) {
+            System.err.println("[DB-EVAL] Điểm không hợp lệ: " + score + " (Điểm phải nằm trong thang điểm từ 0.0 đến 10.0)!");
+            return false;
+        }
+
         List<StudentGroup> groups = groupRepository.findByTopicId(topicId);
         if (groups.isEmpty()) {
             System.err.println("[DB-EVAL] Lỗi! Đề tài ID=" + topicId + " chưa có nhóm sinh viên đăng ký thực hiện, tuyệt đối không được chấm điểm!");
@@ -475,6 +438,11 @@ public class CouncilService {
             // Giảng viên phản biện tuyệt đối không được trùng với GVHD
             if (isSupervisor) {
                 System.err.println("[DB-EVAL] Xung đột lợi ích! GVHD không được tự chấm phản biện cho đề tài của mình!");
+                return false;
+            }
+            // Giảng viên phản biện phải là người được phân công chính thức cho đề tài
+            if (topic.getReviewer() == null || !topic.getReviewer().getId().equals(lecturer.getId())) {
+                System.err.println("[DB-EVAL] Lỗi quyền hạn! Giảng viên không phải người phản biện được phân công cho đề tài này!");
                 return false;
             }
         } else if ("SUPERVISOR".equals(evalTypeUpper)) {
@@ -565,11 +533,18 @@ public class CouncilService {
         }
 
         // 3. Điểm Hội đồng bảo vệ (COUNCIL) = TBC điểm của các thành viên HĐ (3-5 thành viên)
+        // Chỉ tính điểm Hội đồng khi TẤT CẢ các thành viên được phân công trong Hội đồng đã chấm xong
         List<Evaluation> councilEvals = evals.stream()
                 .filter(e -> "COUNCIL".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null)
                 .toList();
         Double councilScore = null;
-        if (!councilEvals.isEmpty()) {
+        if (topic.getCouncil() != null) {
+            List<CouncilMember> assignedMembers = councilMemberRepository.findByCouncilId(topic.getCouncil().getId());
+            if (!assignedMembers.isEmpty() && councilEvals.size() >= assignedMembers.size()) {
+                double avg = councilEvals.stream().mapToDouble(Evaluation::getScore).average().orElse(0.0);
+                councilScore = roundScore(avg);
+            }
+        } else if (!councilEvals.isEmpty()) {
             double avg = councilEvals.stream().mapToDouble(Evaluation::getScore).average().orElse(0.0);
             councilScore = roundScore(avg);
         }
@@ -603,7 +578,7 @@ public class CouncilService {
                     // Đầy đủ 3 trạm: GVHD + GVPB + Hội đồng
                     finalScore = roundScore((advisorScore + reviewerScore + councilScore) / 3.0);
                 } else if (councilScore != null && advisorScore != null) {
-                    // Fallback nếu có GVHD và Hội đồng bảo vệ
+                    // Fallback nếu có GVHD và Hội đồng bảo vệ đã chấm đủ
                     int count = 1;
                     double sum = councilScore;
                     if (advisorScore != null) { sum += advisorScore; count++; }
@@ -624,8 +599,59 @@ public class CouncilService {
     }
 
     /**
-     * BUG-I FIX: Kiểm tra đủ ít nhất 1 loại điểm (SUPERVISOR) trước khi công bố.
-     * Với loại KLTN/TLCN bắt buộc phải có cả REVIEWER hoặc COUNCIL đã chấm.
+     * Kiểm tra đề tài đã hoàn tất đầy đủ tất cả các phiếu chấm bắt buộc theo quy chế đợt chưa.
+     */
+    public boolean isTopicFullyGraded(Topic topic) {
+        if (topic == null || topic.getId() == null) return false;
+        List<Evaluation> evals = evaluationRepository.findByTopicId(topic.getId());
+
+        // 1. Phải có điểm của GVHD (SUPERVISOR)
+        boolean hasSupervisorScore = evals.stream()
+                .anyMatch(e -> "SUPERVISOR".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null);
+        if (!hasSupervisorScore) return false;
+
+        RegistrationPeriod period = topic.getPeriod();
+        String periodType = (period != null && period.getPeriodType() != null)
+                ? period.getPeriodType().trim().toUpperCase()
+                : "KLTN";
+
+        // 2. Với TLCN: nếu có phân công GVPB thì GVPB phải chấm xong
+        if ("TLCN".equals(periodType)) {
+            if (topic.getReviewer() != null) {
+                boolean hasReviewerScore = evals.stream()
+                        .anyMatch(e -> "REVIEWER".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null);
+                if (!hasReviewerScore) return false;
+            }
+        }
+
+        // 3. Với KLTN:
+        if ("KLTN".equals(periodType)) {
+            if (topic.getReviewer() != null) {
+                boolean hasReviewerScore = evals.stream()
+                        .anyMatch(e -> "REVIEWER".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null);
+                if (!hasReviewerScore) return false;
+            }
+            if (topic.getCouncil() != null) {
+                List<CouncilMember> assignedMembers = councilMemberRepository.findByCouncilId(topic.getCouncil().getId());
+                if (!assignedMembers.isEmpty()) {
+                    Set<Long> gradedLecturerIds = evals.stream()
+                            .filter(e -> "COUNCIL".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null && e.getLecturer() != null)
+                            .map(e -> e.getLecturer().getId())
+                            .collect(Collectors.toSet());
+                    for (CouncilMember m : assignedMembers) {
+                        if (m.getLecturer() != null && !gradedLecturerIds.contains(m.getLecturer().getId())) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+
+        return topic.getFinalScore() != null;
+    }
+
+    /**
+     * Công bố kết quả điểm số cho sinh viên và tự động gửi email thông báo theo Rubric.
      */
     @Transactional
     public boolean publishTopicResults(Long topicId, Boolean isFinalized) {
@@ -638,35 +664,24 @@ public class CouncilService {
             return false;
         }
 
-        if (topic.getFinalScore() == null) {
-            System.err.println("[DB-EVAL] Không thể công bố: Đề tài chưa có điểm tổng kết hợp lệ!");
-            return false;
-        }
-
-        // BUG-I FIX: Kiểm tra tối thiểu phải có điểm của GVHD (SUPERVISOR) trước khi công bố
         if (Boolean.TRUE.equals(isFinalized)) {
-            List<Evaluation> evals = evaluationRepository.findByTopicId(topicId);
-            boolean hasSupervisorScore = evals.stream()
-                    .anyMatch(e -> "SUPERVISOR".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null);
-            if (!hasSupervisorScore) {
-                System.err.println("[DB-EVAL] Không thể công bố chính thức: Chưa có điểm của GVHD!");
+            if (!isTopicFullyGraded(topic)) {
+                System.err.println("[DB-EVAL] Không thể công bố: Đề tài ID=" + topicId + " chưa hoàn tất đầy đủ các phiếu chấm theo quy chế đợt!");
                 return false;
-            }
-
-            // Kiểm tra REVIEWER hoặc COUNCIL đã chấm chưa
-            boolean hasExternalScore = evals.stream()
-                    .anyMatch(e -> ("REVIEWER".equalsIgnoreCase(e.getEvaluationType())
-                            || "COUNCIL".equalsIgnoreCase(e.getEvaluationType()))
-                            && e.getScore() != null);
-            if (!hasExternalScore) {
-                System.err.println("[DB-EVAL] Cảnh báo: Chưa có điểm Phản biện/Hội đồng. Điểm công bố chỉ dựa trên GVHD.");
-                // Chỉ warn, không block — cho phép trường hợp dạng MON_HOC (không có hội đồng)
             }
         }
 
         topic.setIsFinalized(Boolean.TRUE.equals(isFinalized));
         topicRepository.save(topic);
         System.out.println("[DB-EVAL] Cập nhật công bố kết quả đề tài ID=" + topicId + " -> isFinalized=" + topic.getIsFinalized());
+
+        // Gửi email thông báo kết quả cho từng sinh viên trong nhóm theo Rubric
+        if (Boolean.TRUE.equals(isFinalized)) {
+            for (StudentGroup g : groups) {
+                emailService.sendTopicResultEmailsToGroup(topic, g);
+            }
+        }
+
         return true;
     }
 
@@ -687,10 +702,20 @@ public class CouncilService {
         int count = 0;
         for (Topic t : topics) {
             if (periodId == null || (t.getPeriod() != null && t.getPeriod().getId().equals(periodId))) {
-                if ("APPROVED".equalsIgnoreCase(t.getStatus()) && topicsWithGroups.contains(t.getId()) && t.getFinalScore() != null) {
+                if ("APPROVED".equalsIgnoreCase(t.getStatus()) && topicsWithGroups.contains(t.getId())) {
+                    if (Boolean.TRUE.equals(isFinalized) && !isTopicFullyGraded(t)) {
+                        continue; // Bỏ qua đề tài chưa chấm đủ phiếu
+                    }
                     t.setIsFinalized(Boolean.TRUE.equals(isFinalized));
                     topicRepository.save(t);
                     count++;
+
+                    if (Boolean.TRUE.equals(isFinalized)) {
+                        List<StudentGroup> grps = groupRepository.findByTopicId(t.getId());
+                        for (StudentGroup g : grps) {
+                            emailService.sendTopicResultEmailsToGroup(t, g);
+                        }
+                    }
                 }
             }
         }

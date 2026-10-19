@@ -112,6 +112,11 @@ public class AdminController {
         model.addAttribute("keyword", keyword);
         model.addAttribute("totalCount", allUsers.size());
         model.addAttribute("newUser", new AppUser());
+        model.addAttribute("studentMap", adminService.getStudentMap());
+        model.addAttribute("lecturerMap", adminService.getLecturerMap());
+        model.addAttribute("departments", adminService.getAllDepartments());
+        model.addAttribute("divisions", adminService.getAllDivisions());
+        model.addAttribute("majors", adminService.getAllMajors());
 
         return "admin/users";
     }
@@ -165,6 +170,17 @@ public class AdminController {
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam("roleId") Long roleId,
             @RequestParam(value = "isActive", required = false) Boolean isActive,
+            @RequestParam(value = "studentCode", required = false) String studentCode,
+            @RequestParam(value = "className", required = false) String className,
+            @RequestParam(value = "academicYear", required = false) String academicYear,
+            @RequestParam(value = "gpa", required = false) Double gpa,
+            @RequestParam(value = "majorId", required = false) Long majorId,
+            @RequestParam(value = "lecturerCode", required = false) String lecturerCode,
+            @RequestParam(value = "academicTitle", required = false) String academicTitle,
+            @RequestParam(value = "degree", required = false) String degree,
+            @RequestParam(value = "maxTopicsQuota", required = false) Integer maxTopicsQuota,
+            @RequestParam(value = "departmentId", required = false) Long departmentId,
+            @RequestParam(value = "divisionId", required = false) Long divisionId,
             @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
@@ -175,7 +191,13 @@ public class AdminController {
         boolean activeStatus = Boolean.TRUE.equals(isActive);
         String err = adminService.updateUser(id, fullName, email, phone, roleId, activeStatus);
         if (err == null) {
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin tài khoản thành công!");
+            Role r = adminService.getRoleById(roleId);
+            if (r != null && "STUDENT".equalsIgnoreCase(r.getCode())) {
+                adminService.updateStudentProfile(id, studentCode, className, academicYear, gpa, majorId);
+            } else if (r != null && ("LECTURER".equalsIgnoreCase(r.getCode()) || "DEPARTMENT_HEAD".equalsIgnoreCase(r.getCode()) || "DIVISION_HEAD".equalsIgnoreCase(r.getCode()))) {
+                adminService.updateLecturerProfile(id, lecturerCode, academicTitle, degree, maxTopicsQuota, departmentId, divisionId);
+            }
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin tài khoản và hồ sơ thành công!");
         } else {
             redirectAttributes.addFlashAttribute("errorMessage", err);
         }
@@ -184,6 +206,63 @@ public class AdminController {
             return "redirect:" + redirectUrl;
         }
 
+        return "redirect:/admin/users";
+    }
+
+    @PostMapping("/users/{id}/student-profile")
+    public String updateStudentProfile(
+            @PathVariable("id") Long id,
+            @RequestParam("studentCode") String studentCode,
+            @RequestParam(value = "className", required = false) String className,
+            @RequestParam(value = "academicYear", required = false) String academicYear,
+            @RequestParam(value = "gpa", required = false) Double gpa,
+            @RequestParam(value = "majorId", required = false) Long majorId,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser admin = getAuthenticatedAdmin(session);
+        if (admin == null) return "redirect:/login";
+
+        String err = adminService.updateStudentProfile(id, studentCode, className, academicYear, gpa, majorId);
+        if (err == null) {
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật hồ sơ học vụ sinh viên thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", err);
+        }
+
+        if (redirectUrl != null && !redirectUrl.trim().isEmpty() && redirectUrl.startsWith("/admin")) {
+            return "redirect:" + redirectUrl;
+        }
+        return "redirect:/admin/users";
+    }
+
+    @PostMapping("/users/{id}/lecturer-profile")
+    public String updateLecturerProfile(
+            @PathVariable("id") Long id,
+            @RequestParam("lecturerCode") String lecturerCode,
+            @RequestParam(value = "academicTitle", required = false) String academicTitle,
+            @RequestParam(value = "degree", required = false) String degree,
+            @RequestParam(value = "maxTopicsQuota", required = false) Integer maxTopicsQuota,
+            @RequestParam(value = "departmentId", required = false) Long departmentId,
+            @RequestParam(value = "divisionId", required = false) Long divisionId,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser admin = getAuthenticatedAdmin(session);
+        if (admin == null) return "redirect:/login";
+
+        String err = adminService.updateLecturerProfile(id, lecturerCode, academicTitle, degree, maxTopicsQuota, departmentId, divisionId);
+        if (err == null) {
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật hồ sơ chuyên môn giảng viên thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", err);
+        }
+
+        if (redirectUrl != null && !redirectUrl.trim().isEmpty() && redirectUrl.startsWith("/admin")) {
+            return "redirect:" + redirectUrl;
+        }
         return "redirect:/admin/users";
     }
 

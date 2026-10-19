@@ -8,6 +8,7 @@ import topicmanagement.repository.*;
 
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class AdminService {
@@ -101,22 +102,12 @@ public class AdminService {
 
         AppUser saved = userRepository.save(user);
 
-        // Khởi tạo hồ sơ thực thể con (Student / Lecturer) để người dùng đăng nhập sử dụng ngay
+        // Khởi tạo thực thể liên kết (Student / Lecturer) nếu cần, không tự điền dữ liệu học tập/chuyên môn giả
         if ("STUDENT".equalsIgnoreCase(role.getCode())) {
             if (studentRepository.findByUserId(saved.getId()).isEmpty()) {
                 Student student = new Student();
                 student.setUser(saved);
                 student.setStudentCode(saved.getUsername());
-                student.setClassName("CNTT-K16");
-                student.setAcademicYear("2026-2027");
-                student.setGpa(3.50);
-                List<Major> majors = majorRepository.findAll();
-                if (!majors.isEmpty()) {
-                    student.setMajor(majors.get(0));
-                    if (majors.get(0).getDivision() != null) {
-                        student.setDivision(majors.get(0).getDivision());
-                    }
-                }
                 studentRepository.save(student);
             }
         } else if ("LECTURER".equalsIgnoreCase(role.getCode()) || "DEPARTMENT_HEAD".equalsIgnoreCase(role.getCode()) || "DIVISION_HEAD".equalsIgnoreCase(role.getCode())) {
@@ -124,19 +115,7 @@ public class AdminService {
                 Lecturer lecturer = new Lecturer();
                 lecturer.setUser(saved);
                 lecturer.setLecturerCode(saved.getUsername());
-                lecturer.setAcademicTitle("TS");
-                lecturer.setDegree("Tiến sĩ");
                 lecturer.setMaxTopicsQuota(5);
-                List<Division> divs = divisionRepository.findAll();
-                if (!divs.isEmpty()) {
-                    lecturer.setDivision(divs.get(0));
-                    lecturer.setDepartment(divs.get(0).getDepartment());
-                } else {
-                    List<Department> depts = departmentRepository.findAll();
-                    if (!depts.isEmpty()) {
-                        lecturer.setDepartment(depts.get(0));
-                    }
-                }
                 lecturerRepository.save(lecturer);
             }
         }
@@ -185,43 +164,21 @@ public class AdminService {
         user.setUpdatedAt(OffsetDateTime.now());
         AppUser saved = userRepository.save(user);
 
-        // Khởi tạo/đồng bộ hồ sơ thực thể con (Student / Lecturer) nếu người dùng được đổi sang vai trò mới
+        // Khởi tạo thực thể con nếu đổi vai trò, không tự điền dữ liệu giả
         if (newRole != null) {
             if ("STUDENT".equalsIgnoreCase(newRole.getCode())) {
                 if (studentRepository.findByUserId(saved.getId()).isEmpty()) {
                     Student student = new Student();
                     student.setUser(saved);
                     student.setStudentCode(saved.getUsername());
-                    student.setClassName("CNTT-K16");
-                    student.setAcademicYear("2026-2027");
-                    student.setGpa(3.50);
-                    List<Major> majors = majorRepository.findAll();
-                    if (!majors.isEmpty()) {
-                        student.setMajor(majors.get(0));
-                        if (majors.get(0).getDivision() != null) {
-                            student.setDivision(majors.get(0).getDivision());
-                        }
-                    }
                     studentRepository.save(student);
                 }
-            } else if ("LECTURER".equalsIgnoreCase(newRole.getCode()) || "DEPARTMENT_HEAD".equalsIgnoreCase(newRole.getCode()) || "DIVISION_HEAD".equalsIgnoreCase(newRole.getCode()) || "DEAN".equalsIgnoreCase(newRole.getCode())) {
+            } else if ("LECTURER".equalsIgnoreCase(newRole.getCode()) || "DEPARTMENT_HEAD".equalsIgnoreCase(newRole.getCode()) || "DIVISION_HEAD".equalsIgnoreCase(newRole.getCode())) {
                 if (lecturerRepository.findByUserId(saved.getId()).isEmpty()) {
                     Lecturer lecturer = new Lecturer();
                     lecturer.setUser(saved);
                     lecturer.setLecturerCode(saved.getUsername());
-                    lecturer.setAcademicTitle("TS");
-                    lecturer.setDegree("Tiến sĩ");
                     lecturer.setMaxTopicsQuota(5);
-                    List<Division> divs = divisionRepository.findAll();
-                    if (!divs.isEmpty()) {
-                        lecturer.setDivision(divs.get(0));
-                        lecturer.setDepartment(divs.get(0).getDepartment());
-                    } else {
-                        List<Department> depts = departmentRepository.findAll();
-                        if (!depts.isEmpty()) {
-                            lecturer.setDepartment(depts.get(0));
-                        }
-                    }
                     lecturerRepository.save(lecturer);
                 }
             }
@@ -229,6 +186,91 @@ public class AdminService {
 
         System.out.println("[DB-ADMIN] updateUser(" + id + "): Đã cập nhật thông tin user '" + user.getUsername() + "' vào DB thành công!");
         return null; // Thành công
+    }
+
+    @Transactional
+    public String updateStudentProfile(Long userId, String studentCode, String className, String academicYear, Double gpa, Long majorId) {
+        if (userId == null) return "User ID không hợp lệ!";
+        Optional<Student> opt = studentRepository.findByUserId(userId);
+        Student student = opt.orElseGet(() -> {
+            AppUser u = userRepository.findById(userId).orElse(null);
+            if (u == null) return null;
+            Student s = new Student();
+            s.setUser(u);
+            return s;
+        });
+        if (student == null) return "Không tìm thấy người dùng!";
+
+        if (studentCode != null && !studentCode.trim().isEmpty()) {
+            student.setStudentCode(studentCode.trim());
+        }
+        student.setClassName(className != null && !className.trim().isEmpty() ? className.trim() : null);
+        student.setAcademicYear(academicYear != null && !academicYear.trim().isEmpty() ? academicYear.trim() : null);
+        if (gpa != null) {
+            if (gpa < 0.0 || gpa > 4.0) return "GPA phải nằm trong thang điểm từ 0.0 đến 4.0!";
+            student.setGpa(gpa);
+        } else {
+            student.setGpa(null);
+        }
+        if (majorId != null) {
+            Major m = majorRepository.findById(majorId).orElse(null);
+            student.setMajor(m);
+            if (m != null && m.getDivision() != null) {
+                student.setDivision(m.getDivision());
+            }
+        } else {
+            student.setMajor(null);
+        }
+        studentRepository.save(student);
+        return null;
+    }
+
+    @Transactional
+    public String updateLecturerProfile(Long userId, String lecturerCode, String academicTitle, String degree, Integer maxTopicsQuota, Long departmentId, Long divisionId) {
+        if (userId == null) return "User ID không hợp lệ!";
+        Optional<Lecturer> opt = lecturerRepository.findByUserId(userId);
+        Lecturer lecturer = opt.orElseGet(() -> {
+            AppUser u = userRepository.findById(userId).orElse(null);
+            if (u == null) return null;
+            Lecturer l = new Lecturer();
+            l.setUser(u);
+            return l;
+        });
+        if (lecturer == null) return "Không tìm thấy người dùng!";
+
+        if (lecturerCode != null && !lecturerCode.trim().isEmpty()) {
+            lecturer.setLecturerCode(lecturerCode.trim());
+        }
+        lecturer.setAcademicTitle(academicTitle != null && !academicTitle.trim().isEmpty() ? academicTitle.trim() : null);
+        lecturer.setDegree(degree != null && !degree.trim().isEmpty() ? degree.trim() : null);
+        if (maxTopicsQuota != null && maxTopicsQuota > 0) {
+            lecturer.setMaxTopicsQuota(maxTopicsQuota);
+        }
+        if (departmentId != null) {
+            Department d = departmentRepository.findById(departmentId).orElse(null);
+            lecturer.setDepartment(d);
+        }
+        if (divisionId != null) {
+            Division div = divisionRepository.findById(divisionId).orElse(null);
+            lecturer.setDivision(div);
+            if (div != null && div.getDepartment() != null) {
+                lecturer.setDepartment(div.getDepartment());
+            }
+        }
+        lecturerRepository.save(lecturer);
+        return null;
+    }
+
+    public java.util.Map<Long, Student> getStudentMap() {
+        return studentRepository.findAll().stream()
+                .filter(s -> s.getUser() != null && s.getUser().getId() != null)
+                .collect(Collectors.toMap(s -> s.getUser().getId(), s -> s, (a, b) -> a));
+    }
+
+    public java.util.Map<Long, Lecturer> getLecturerMap() {
+        return lecturerRepository.findAll().stream()
+                .filter(l -> l.getUser() != null && l.getUser().getId() != null)
+                .collect(Collectors.toMap(l -> l.getUser().getId(), l -> l, (a, b) -> a));
     }
 
     @Transactional
