@@ -10,6 +10,7 @@ import topicmanagement.entity.*;
 import topicmanagement.service.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @Controller
 @RequestMapping("/student")
@@ -383,8 +384,17 @@ public class StudentController {
             return "redirect:/student/group";
         }
 
-        studentService.removeMember(group, studentId);
-        redirectAttributes.addFlashAttribute("successMessage", "Đã xóa thành viên khỏi nhóm.");
+        if ("APPROVED".equalsIgnoreCase(group.getStatus()) || "REGISTERED".equalsIgnoreCase(group.getStatus())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Nhóm đã ở trạng thái '" + group.getStatus() + "'. Thành viên muốn rút khỏi nhóm phải gửi 'Yêu cầu rút khỏi nhóm' để GVHD xét duyệt!");
+            return "redirect:/student/group";
+        }
+
+        boolean ok = studentService.removeMember(group, studentId);
+        if (ok) {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa thành viên khỏi nhóm.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa thành viên khỏi nhóm!");
+        }
         return "redirect:/student/group";
     }
 
@@ -443,7 +453,9 @@ public class StudentController {
         if (user == null) return "redirect:/login";
 
         Student student = studentService.getStudentByUser(user);
-        StudentGroup group = studentService.getMyActiveGroup(student, null);
+        Topic topic = studentService.getTopicById(topicId);
+        Long topicPeriodId = (topic != null && topic.getPeriod() != null) ? topic.getPeriod().getId() : null;
+        StudentGroup group = studentService.getMyActiveGroup(student, topicPeriodId);
 
         String err = studentService.registerTopicForGroup(student, group, topicId);
         if (err != null) {
@@ -516,12 +528,12 @@ public class StudentController {
             return "redirect:/student/submissions";
         }
 
-        String err;
-        if (file != null && !file.isEmpty()) {
-            err = studentService.submitGroupReport(student, group, title, round, file);
-        } else {
-            err = studentService.submitGroupReport(student, group, title, round, "BaoCao_TienDo_Dot" + round + ".pdf", 2048576L);
+        if (file == null || file.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng đính kèm file báo cáo thực tế trước khi bấm nộp bài!");
+            return "redirect:/student/submissions";
         }
+
+        String err = studentService.submitGroupReport(student, group, title, round, file);
 
         if (err != null) {
             redirectAttributes.addFlashAttribute("errorMessage", err);
@@ -547,6 +559,19 @@ public class StudentController {
             return org.springframework.http.ResponseEntity.notFound().build();
         }
 
+        // BẢO MẬT PHÂN QUYỀN (IDOR): Sinh viên chỉ được tải báo cáo thuộc nhóm của mình
+        boolean isAdmin = user.getRole() != null && "ADMIN".equalsIgnoreCase(user.getRole().getCode());
+        if (!isAdmin) {
+            Student student = studentService.getStudentByUser(user);
+            if (student == null) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+            StudentGroup subGroup = submission.getGroup();
+            if (subGroup == null || !subGroup.hasMember(student)) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+        }
+
         try {
             org.springframework.core.io.Resource resource = fileStorageService.loadFileAsResource(submission.getFilePath());
             String contentType = submission.getContentType() != null ? submission.getContentType() : "application/octet-stream";
@@ -564,18 +589,47 @@ public class StudentController {
     // ==================== RESULTS ====================
 
     @GetMapping("/results")
-    public String showResults(HttpSession session, Model model) {
+    public String showResults(
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
         if (user == null) return "redirect:/login";
 
         Student student = studentService.getStudentByUser(user);
-        StudentGroup group = studentService.getMyActiveGroup(student, null);
+        if (student == null) {
+            return "redirect:/login";
+        }
+
+        List<RegistrationPeriod> participatedPeriods = studentService.getParticipatedPeriods(student);
+        Long selectedPeriodId = periodId;
+        StudentGroup group = null;
+        boolean accessDeniedPeriod = false;
+
+        if (periodId != null) {
+            final Long targetPeriodId = periodId;
+            boolean isAllowed = participatedPeriods.stream()
+                    .anyMatch(p -> Objects.equals(p.getId(), targetPeriodId));
+            if (!isAllowed) {
+                accessDeniedPeriod = true;
+            } else {
+                group = studentService.getMyActiveGroup(student, targetPeriodId);
+            }
+        } else {
+            if (!participatedPeriods.isEmpty()) {
+                selectedPeriodId = participatedPeriods.get(0).getId();
+                group = studentService.getMyActiveGroup(student, selectedPeriodId);
+            }
+        }
+
         List<Evaluation> evaluations = studentService.getGroupEvaluations(group);
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
         model.addAttribute("group", group);
         model.addAttribute("evaluations", evaluations);
+        model.addAttribute("participatedPeriods", participatedPeriods);
+        model.addAttribute("selectedPeriodId", selectedPeriodId);
+        model.addAttribute("accessDeniedPeriod", accessDeniedPeriod);
 
         return "student/results";
     }

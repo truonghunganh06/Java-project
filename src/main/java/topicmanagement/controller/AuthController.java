@@ -90,6 +90,13 @@ public class AuthController {
             return "redirect:/login";
         }
 
+        String expectedState = (String) session.getAttribute("oauth_state");
+        session.removeAttribute("oauth_state");
+        if (expectedState == null || state == null || !expectedState.equals(state)) {
+            redirectAttributes.addFlashAttribute("error", "Trạng thái xác thực (state) không hợp lệ hoặc phiên đã hết hạn. Vui lòng thử lại!");
+            return "redirect:/login";
+        }
+
         if (code == null || code.trim().isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Không nhận được mã xác thực từ Google.");
             return "redirect:/login";
@@ -113,28 +120,6 @@ public class AuthController {
             session.invalidate();
         }
         return "redirect:/login?logout=true";
-    }
-
-    @GetMapping("/auth/switch-role")
-    public String switchRole(
-            @RequestParam("username") String username,
-            @RequestParam(value = "redirect", required = false) String redirectUrl,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
-
-        AppUser user = authService.findUserByUsername(username);
-        if (user != null) {
-            session.setAttribute("currentUser", user);
-            setSecurityContext(user, session);
-            System.out.println("[ROLE-SWITCHER] Đã chuyển đổi nhanh sang tài khoản: " + user.getUsername() + " (" + (user.getRole() != null ? user.getRole().getCode() : "NO_ROLE") + ")");
-            if (redirectUrl != null && !redirectUrl.trim().isEmpty() && redirectUrl.startsWith("/")) {
-                return "redirect:" + redirectUrl;
-            }
-            return "redirect:/dashboard";
-        }
-
-        redirectAttributes.addFlashAttribute("error", "Không tìm thấy tài khoản kiểm thử: " + username);
-        return "redirect:/login";
     }
 
     private void setSecurityContext(AppUser user, HttpSession session) {

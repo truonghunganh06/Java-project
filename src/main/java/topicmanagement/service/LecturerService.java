@@ -40,28 +40,11 @@ public class LecturerService {
         this.councilRepository = councilRepository;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Lecturer getLecturerByUser(AppUser user) {
         if (user == null || user.getId() == null)
             return null;
-        Optional<Lecturer> opt = lecturerRepository.findByUserId(user.getId());
-        if (opt.isPresent()) {
-            return opt.get();
-        }
-
-        Lecturer newLecturer = new Lecturer();
-        newLecturer.setUser(user);
-        newLecturer.setLecturerCode("GV" + String.format("%03d", user.getId()));
-        newLecturer.setAcademicTitle("TS");
-        newLecturer.setDegree("Tiến sĩ");
-        newLecturer.setMaxTopicsQuota(5);
-
-        List<Department> depts = departmentRepository.findAll();
-        if (!depts.isEmpty()) {
-            newLecturer.setDepartment(depts.get(0));
-        }
-
-        return lecturerRepository.save(newLecturer);
+        return lecturerRepository.findByUserId(user.getId()).orElse(null);
     }
 
     public List<Lecturer> getAllLecturers() {
@@ -262,6 +245,15 @@ public class LecturerService {
                     + " cố duyệt nhóm của đề tài không phải mình hướng dẫn!");
             return false;
         }
+
+        if ("APPROVED".equalsIgnoreCase(status)) {
+            int memberCount = (group.getMembers() != null) ? group.getMembers().size() : 0;
+            if (memberCount < 3 || memberCount > 5) {
+                System.err.println("[VALIDATION] Không thể duyệt nhóm ID=" + groupId + " vì số thành viên (" + memberCount + ") không thuộc [3, 5]!");
+                throw new IllegalStateException("Không thể duyệt nhóm: Nhóm hiện có " + memberCount + " sinh viên. Quy định bắt buộc nhóm phải có từ 3 đến 5 sinh viên!");
+            }
+        }
+
         group.setStatus(status);
         studentGroupRepository.save(group);
         System.out.println("[DB-LECTURER] Cập nhật trạng thái nhóm ID=" + groupId + " -> " + status);
@@ -281,6 +273,10 @@ public class LecturerService {
     public boolean gradeSubmission(Long submissionId, Double grade, String feedback, Lecturer currentLecturer) {
         if (submissionId == null)
             return false;
+        if (grade == null || !Double.isFinite(grade) || grade < 0.0 || grade > 10.0) {
+            System.err.println("[DB-LECTURER] Điểm bài nộp không hợp lệ: " + grade + " (Điểm phải từ 0.0 đến 10.0)!");
+            return false;
+        }
         Optional<Submission> opt = submissionRepository.findById(submissionId);
         if (opt.isPresent()) {
             Submission sub = opt.get();

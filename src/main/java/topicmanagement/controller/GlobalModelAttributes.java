@@ -14,42 +14,10 @@ import java.util.List;
 @ControllerAdvice
 public class GlobalModelAttributes {
 
-    private final UserRepository userRepository;
     private final topicmanagement.repository.RegistrationPeriodRepository registrationPeriodRepository;
 
-    private static final List<String> TEST_USERNAMES = List.of(
-            "admin",
-            "head_cntt",
-            "head_qtkd",
-            "gv_cntt01",
-            "gv_cntt02",
-            "gv_qtkd01",
-            "sv_cntt01",
-            "sv_cntt02",
-            "sv_qtkd01",
-            "truongkhoa",
-            "giangvien01",
-            "giangvien02",
-            "sinhvien01",
-            "sinhvien02",
-            "sinhvien03"
-    );
-
-    public GlobalModelAttributes(UserRepository userRepository, topicmanagement.repository.RegistrationPeriodRepository registrationPeriodRepository) {
-        this.userRepository = userRepository;
+    public GlobalModelAttributes(topicmanagement.repository.RegistrationPeriodRepository registrationPeriodRepository) {
         this.registrationPeriodRepository = registrationPeriodRepository;
-    }
-
-    /**
-     * Danh sách tài khoản kiểm thử được query trực tiếp từ Neon PostgreSQL.
-     */
-    @ModelAttribute("testAccounts")
-    public List<AppUser> getTestAccountsFromNeon() {
-        List<AppUser> accounts = new ArrayList<>();
-        for (String uname : TEST_USERNAMES) {
-            userRepository.findByUsernameIgnoreCase(uname).ifPresent(accounts::add);
-        }
-        return accounts;
     }
 
     /**

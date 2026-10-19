@@ -673,6 +673,14 @@ public class DepartmentHeadController {
             return "redirect:/login";
         }
 
+        Department dept = departmentHeadService.getDepartmentForUser(user);
+        Division division = departmentHeadService.getDivisionForUser(user);
+        Topic topic = departmentHeadService.getTopicById(topicId);
+        if (topic == null || !departmentHeadService.isTopicInScope(topic, division != null ? division.getId() : null, dept != null ? dept.getId() : null)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Quyền hạn bị từ chối: Đề tài không thuộc phạm vi quản lý của khoa/bộ môn bạn!");
+            return "redirect:/department-head/topics";
+        }
+
         boolean ok = councilService.assignReviewer(topicId, reviewerId);
         if (ok) {
             redirectAttributes.addFlashAttribute("successMessage", "Phân công Giảng viên phản biện thành công!");
@@ -692,6 +700,22 @@ public class DepartmentHeadController {
         AppUser user = getAuthenticatedDeptHead(session);
         if (user == null) {
             return "redirect:/login";
+        }
+
+        Department dept = departmentHeadService.getDepartmentForUser(user);
+        Division division = departmentHeadService.getDivisionForUser(user);
+        Topic topic = departmentHeadService.getTopicById(topicId);
+        if (topic == null || !departmentHeadService.isTopicInScope(topic, division != null ? division.getId() : null, dept != null ? dept.getId() : null)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Quyền hạn bị từ chối: Đề tài không thuộc phạm vi quản lý của khoa/bộ môn bạn!");
+            return "redirect:/department-head/topics";
+        }
+
+        if (councilId != null) {
+            Council council = councilService.getCouncilById(councilId);
+            if (council != null && council.getDepartment() != null && dept != null && !council.getDepartment().getId().equals(dept.getId())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Quyền hạn bị từ chối: Hội đồng không thuộc khoa của bạn!");
+                return "redirect:/department-head/topics";
+            }
         }
 
         boolean ok = councilService.assignTopicToCouncil(topicId, councilId);
@@ -930,8 +954,20 @@ public class DepartmentHeadController {
             return "redirect:/login";
         }
 
-        councilService.publishTopicResults(topicId, isFinalized);
-        redirectAttributes.addFlashAttribute("successMessage", Boolean.TRUE.equals(isFinalized) ? "Đã công bố kết quả điểm số cho sinh viên!" : "Đã chuyển về trạng thái dự thảo điểm.");
+        Department dept = departmentHeadService.getDepartmentForUser(user);
+        Division division = departmentHeadService.getDivisionForUser(user);
+        Topic topic = departmentHeadService.getTopicById(topicId);
+        if (topic == null || !departmentHeadService.isTopicInScope(topic, division != null ? division.getId() : null, dept != null ? dept.getId() : null)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Quyền hạn bị từ chối: Đề tài không thuộc phạm vi quản lý của khoa/bộ môn bạn!");
+            return "redirect:/department-head/results";
+        }
+
+        boolean ok = councilService.publishTopicResults(topicId, isFinalized);
+        if (ok) {
+            redirectAttributes.addFlashAttribute("successMessage", Boolean.TRUE.equals(isFinalized) ? "Đã công bố kết quả điểm số cho sinh viên và gửi email thông báo!" : "Đã chuyển về trạng thái dự thảo điểm.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể công bố kết quả: Đề tài chưa hoàn tất đầy đủ các phiếu chấm bắt buộc theo quy chế đợt!");
+        }
         return "redirect:/department-head/results";
     }
 
@@ -955,7 +991,7 @@ public class DepartmentHeadController {
         }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
-        int count = councilService.publishAllResults(dept.getId(), periodId, isFinalized);
+        int count = councilService.publishAllResults(dept != null ? dept.getId() : null, periodId, isFinalized);
         redirectAttributes.addFlashAttribute("successMessage",
                 Boolean.TRUE.equals(isFinalized)
                 ? "Đã công bố kết quả điểm chính thức cho toàn bộ " + count + " đề tài trong đợt!"

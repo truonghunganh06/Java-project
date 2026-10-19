@@ -72,16 +72,7 @@ public class DepartmentHeadService {
             }
         }
 
-        List<Department> departments = departmentRepository.findAll();
-        if (!departments.isEmpty()) {
-            return departments.get(0);
-        }
-
-        Department defaultDept = new Department();
-        defaultDept.setId(1L);
-        defaultDept.setCode("CNTT");
-        defaultDept.setName("Khoa Công nghệ Thông tin");
-        return defaultDept;
+        return null;
     }
 
     public List<Division> getDivisionsByDepartment(Long departmentId) {

@@ -232,37 +232,6 @@
                             </a>
                         </li>
 
-                        <!-- Quick Role Switch Section (Lấy trực tiếp từ Neon DB) -->
-                        <li th:if="${testAccounts != null && !testAccounts.isEmpty()}"><hr class="dropdown-divider my-1.5 border-slate-100"></li>
-                        <li th:if="${testAccounts != null && !testAccounts.isEmpty()}" class="px-3 py-1">
-                            <div class="d-flex align-items-center justify-content-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                                <span>Chuyển tài khoản (Neon DB)</span>
-                                <span class="badge bg-emerald-100 text-emerald-700 rounded-full text-[9px] px-1.5 py-0.5">Test sẵn</span>
-                            </div>
-                        </li>
-                        <li th:if="${testAccounts != null && !testAccounts.isEmpty()}" th:each="acc : ${testAccounts}">
-                            <a class="dropdown-item d-flex align-items-center justify-content-between py-1.5 px-3 rounded-2xl text-xs transition"
-                               th:classappend="${user != null && user.username == acc.username ? 'bg-blue-50/80 font-bold text-blue-700' : 'text-slate-700 hover:bg-slate-100/80'}"
-                               th:href="@{/auth/switch-role(username=${acc.username})}">
-                                <div class="d-flex align-items-center gap-2 min-w-0">
-                                    <div class="w-6 h-6 rounded-full text-white d-flex align-items-center justify-content-center text-[10px] font-bold flex-shrink-0"
-                                         th:classappend="${acc.role != null && acc.role.code == 'ADMIN' ? 'bg-slate-800' : (acc.role != null && (acc.role.code == 'DEPARTMENT_HEAD' || acc.role.code == 'DIVISION_HEAD') ? 'bg-amber-600' : (acc.role != null && acc.role.code == 'LECTURER' ? 'bg-indigo-600' : 'bg-teal-600'))}">
-                                        <span th:text="${acc.fullName != null && acc.fullName.length() > 0 ? acc.fullName.substring(0, 1) : 'U'}">U</span>
-                                    </div>
-                                    <div class="text-truncate">
-                                        <div class="text-truncate text-[11px]" th:text="${acc.fullName}">Họ Tên</div>
-                                        <div class="text-[10px] text-slate-400 font-normal" th:text="${acc.username}">username</div>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center gap-1 flex-shrink-0 ms-2">
-                                    <span class="badge rounded-full px-2 py-0.5 text-[9.5px] font-medium"
-                                          th:classappend="${acc.role != null && acc.role.code == 'ADMIN' ? 'bg-slate-100 text-slate-800 border border-slate-300' : (acc.role != null && (acc.role.code == 'DEPARTMENT_HEAD' || acc.role.code == 'DIVISION_HEAD') ? 'bg-amber-100 text-amber-800 border border-amber-200' : (acc.role != null && acc.role.code == 'LECTURER' ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' : 'bg-teal-100 text-teal-800 border border-teal-200'))}"
-                                          th:text="${acc.role != null && acc.role.code == 'ADMIN' ? 'Admin' : (acc.role != null && (acc.role.code == 'DEPARTMENT_HEAD' || acc.role.code == 'DIVISION_HEAD') ? 'Trưởng khoa' : (acc.role != null && acc.role.code == 'LECTURER' ? 'Giảng viên' : 'Sinh viên'))}">Vai trò</span>
-                                    <i th:if="${user != null && user.username == acc.username}" class="fa-solid fa-check text-blue-600 text-[10px] ms-1"></i>
-                                </div>
-                            </a>
-                        </li>
-
                         <!-- Logout (Spring Security compliant with CSRF) -->
                         <li><hr class="dropdown-divider my-1.5 border-slate-100"></li>
                         <li>

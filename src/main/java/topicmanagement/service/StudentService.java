@@ -89,27 +89,10 @@ public class StudentService {
         }
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Student getStudentByUser(AppUser user) {
         if (user == null || user.getId() == null) return null;
-        Optional<Student> opt = studentRepository.findByUserId(user.getId());
-        if (opt.isPresent()) {
-            return opt.get();
-        }
-
-        Student newStudent = new Student();
-        newStudent.setUser(user);
-        newStudent.setStudentCode(user.getUsername() != null ? user.getUsername() : "SV" + user.getId());
-        newStudent.setClassName("CNTT-K16");
-        newStudent.setAcademicYear("2021-2025");
-        newStudent.setGpa(3.50);
-
-        List<Major> majors = majorRepository.findAll();
-        if (!majors.isEmpty()) {
-            newStudent.setMajor(majors.get(0));
-        }
-
-        return studentRepository.save(newStudent);
+        return studentRepository.findByUserId(user.getId()).orElse(null);
     }
 
     public Student getStudentByCode(String studentCode) {
@@ -129,7 +112,7 @@ public class StudentService {
         // Case 1: period cu the duoc chi dinh
         if (periodId != null) {
             List<StudentGroup> list = groupRepository.findByStudentIdAndPeriodId(student.getId(), periodId);
-            if (!list.isEmpty()) return list.get(0);
+            return list.isEmpty() ? null : list.get(0);
         }
 
         // Case 2: Khong co periodId — tim nhom trong dot dang hoat dong nhat
@@ -301,6 +284,10 @@ public class StudentService {
         if (group.getLeader() != null && group.getLeader().getId().equals(memberStudentId)) {
             return false;
         }
+        if ("APPROVED".equalsIgnoreCase(group.getStatus()) || "REGISTERED".equalsIgnoreCase(group.getStatus())) {
+            System.err.println("[SECURITY] Không thể tự ý xóa thành viên khi nhóm đã ở trạng thái " + group.getStatus());
+            return false;
+        }
         groupMemberRepository.deleteByGroupIdAndStudentId(group.getId(), memberStudentId);
         return true;
     }
@@ -379,16 +366,23 @@ public class StudentService {
             group = getMyActiveGroup(student, topicPeriodId);
         }
 
+        // Sinh viên bắt buộc phải có nhóm trước khi đăng ký đề tài
+        if (group == null) {
+            return "Bạn chưa có nhóm sinh viên trong đợt này! Vui lòng tạo nhóm hoặc gia nhập một nhóm trong đợt trước khi đăng ký đề tài.";
+        }
+
+        // Ràng buộc khớp đợt đăng ký giữa nhóm và đề tài
+        if (group.getPeriod() != null && topic.getPeriod() != null
+                && !Objects.equals(group.getPeriod().getId(), topic.getPeriod().getId())) {
+            return "Nhóm sinh viên thuộc đợt '" + group.getPeriod().getName()
+                    + "', không thể đăng ký đề tài của đợt '" + topic.getPeriod().getName() + "'!";
+        }
+
         // GLOBAL VALIDATION: Chặn tuyệt đối đề tài khác Khoa
         Department studentDept = student.getDepartment();
         Department topicDept = topic.getDepartment();
         if (studentDept != null && topicDept != null && !Objects.equals(studentDept.getId(), topicDept.getId())) {
             return "Sinh viên " + studentDept.getName() + " không được đăng ký đề tài thuộc " + topicDept.getName() + "!";
-        }
-
-        // Sinh viên bắt buộc phải có nhóm trước khi đăng ký đề tài
-        if (group == null) {
-            return "Bạn chưa thuộc nhóm sinh viên nào! Vui lòng tạo nhóm hoặc gia nhập một nhóm trước khi đăng ký đề tài.";
         }
 
         // Kiểm tra quyền Trưởng nhóm: Chỉ Trưởng nhóm mới có quyền chọn và đăng ký đề tài
@@ -406,9 +400,12 @@ public class StudentService {
             return "Đợt đăng ký đề tài này hiện không trong thời gian mở đăng ký cho sinh viên!";
         }
 
-        // BUG-03 FIX: Kiểm tra số lượng thành viên nhóm không được vượt quá maxStudents của đề tài (3 - 5 SV theo Rubric)
+        // Ràng buộc số lượng thành viên nhóm: Rubric bắt buộc 3 đến 5 SV
         List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
         int memberCount = (currentMembers != null && !currentMembers.isEmpty()) ? currentMembers.size() : 1;
+        if (memberCount < 3) {
+            return "Nhóm của bạn hiện chỉ có " + memberCount + " thành viên. Quy chế đồ án bắt buộc nhóm phải có tối thiểu 3 sinh viên (tối đa 5 SV) mới được đăng ký đề tài!";
+        }
         int maxStudentsAllowed = (topic.getMaxStudents() != null && topic.getMaxStudents() > 0)
                 ? Math.min(5, Math.max(3, topic.getMaxStudents()))
                 : 5;
@@ -533,46 +530,7 @@ public class StudentService {
         }
     }
 
-    @Transactional
-    public String submitGroupReport(Student student, StudentGroup group, String title, Integer round, String fileName, Long fileSize) {
-        if (group == null) {
-            return "Bạn chưa thuộc nhóm nào!";
-        }
 
-        if (group.getId() != null) {
-            group = groupRepository.findById(group.getId()).orElse(group);
-        }
-
-        // BẮT BUỘC: CHỈ NHÓM TRƯỞNG MỚI ĐƯỢC NỘP BÁO CÁO ĐỀ TÀI
-        if (!group.isLeader(student)) {
-            return "QUYỀN HẠN BỊ TỪ CHỐI: Chỉ Nhóm trưởng mới có quyền nộp bài báo cáo đề tài!";
-        }
-
-        if (group.getTopic() == null) {
-            return "Nhóm của bạn chưa đăng ký đề tài nào!";
-        }
-
-        if (!"APPROVED".equalsIgnoreCase(group.getStatus()) || !"APPROVED".equalsIgnoreCase(group.getTopic().getStatus())) {
-            return "Đề tài chưa được phê duyệt, không thể nộp báo cáo!";
-        }
-
-        Submission sub = new Submission();
-        sub.setTopic(group.getTopic());
-        sub.setGroup(group);
-        sub.setSubmittedByStudent(student);
-        sub.setStudent(student);
-        sub.setTitle(title != null && !title.isBlank() ? title.trim() : ("Báo cáo đợt " + (round != null ? round : 1)));
-        sub.setSubmissionRound(round != null ? round : 1);
-        sub.setFilePath("/uploads/submissions/" + (fileName != null ? fileName : "report.pdf"));
-        sub.setOriginalFileName(fileName != null ? fileName : "report.pdf");
-        sub.setContentType("application/pdf");
-        sub.setFileSize(fileSize != null ? fileSize : 1048576L);
-        sub.setSubmittedAt(OffsetDateTime.now());
-
-        submissionRepository.save(sub);
-        System.out.println("[DB-STUDENT] Leader " + student.getStudentCode() + " đã nộp báo cáo cho nhóm " + group.getGroupName());
-        return null; // success
-    }
 
     // ==================== RESULTS & EVALUATIONS ====================
 
@@ -589,6 +547,17 @@ public class StudentService {
             return Collections.emptyList();
         }
         return evaluationRepository.findByTopicId(freshTopic.getId());
+    }
+
+    public List<RegistrationPeriod> getParticipatedPeriods(Student student) {
+        if (student == null || student.getId() == null) return Collections.emptyList();
+        List<StudentGroup> groups = groupRepository.findByStudentId(student.getId());
+        return groups.stream()
+                .map(StudentGroup::getPeriod)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted(Comparator.comparing(RegistrationPeriod::getId).reversed())
+                .collect(Collectors.toList());
     }
 
     @Cacheable("activePeriods")

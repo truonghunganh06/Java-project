@@ -151,51 +151,13 @@ public class GoogleAuthService {
 
         // 2. Tìm AppUser theo email trong DB
         Optional<AppUser> userOpt = userRepository.findByEmailIgnoreCase(email);
-        AppUser user;
-
-        if (userOpt.isPresent()) {
-            user = userOpt.get();
-            if (user.getIsActive() != null && !user.getIsActive()) {
-                throw new IllegalStateException("Tài khoản liên kết với email " + email + " đã bị vô hiệu hóa.");
-            }
-            // Nếu người dùng chưa có Role, gán ROLE_STUDENT
-            if (user.getRole() == null) {
-                Role studentRole = roleRepository.findByCode("STUDENT").orElse(null);
-                user.setRole(studentRole);
-                user = userRepository.save(user);
-            }
-        } else {
-            // 3. Tự động đăng ký sinh viên mới
-            Role studentRole = roleRepository.findByCode("STUDENT").orElse(null);
-            if (studentRole == null) {
-                throw new IllegalStateException("Không tìm thấy cấu hình vai trò STUDENT trong hệ thống.");
-            }
-
-            // Trích xuất mã SV hoặc username từ email (ví dụ 2101001@student.edu.vn -> 2101001)
-            String emailPrefix = email.split("@")[0];
-            String usernameCandidate = emailPrefix;
-            int counter = 1;
-            while (userRepository.findByUsernameIgnoreCase(usernameCandidate).isPresent()) {
-                usernameCandidate = emailPrefix + "_" + counter++;
-            }
-
-            user = new AppUser();
-            user.setUsername(usernameCandidate);
-            user.setEmail(email);
-            user.setFullName((fullName != null && !fullName.isBlank()) ? fullName : emailPrefix);
-            // Mật khẩu ngẫu nhiên bảo mật (đăng nhập qua Google SSO)
-            user.setPasswordHash(passwordEncoder.encode(UUID.randomUUID().toString()));
-            user.setRole(studentRole);
-            user.setIsActive(true);
-            user.setCreatedAt(OffsetDateTime.now());
-            user.setUpdatedAt(OffsetDateTime.now());
-
-            user = userRepository.save(user);
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("Email Google '" + email + "' chưa được liên kết với bất kỳ tài khoản sinh viên nào trong hệ thống! Vui lòng liên hệ Quản trị viên để cập nhật email hồ sơ trước khi đăng nhập bằng Google.");
         }
 
-        // 4. Khởi tạo hồ sơ Student nếu chưa có
-        if (user.getRole() != null && "STUDENT".equalsIgnoreCase(user.getRole().getCode())) {
-            studentService.getStudentByUser(user);
+        AppUser user = userOpt.get();
+        if (user.getIsActive() != null && !user.getIsActive()) {
+            throw new IllegalStateException("Tài khoản liên kết với email " + email + " đã bị vô hiệu hóa.");
         }
 
         return user;
