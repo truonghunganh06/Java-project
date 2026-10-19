@@ -72,7 +72,8 @@ public class LecturerController {
 
         long approvedCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus())).count();
         long pendingCount = topics.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
-        List<Announcement> announcements = announcementService.getAllAnnouncements();
+        Long deptId = (lecturer != null && lecturer.getDepartment() != null) ? lecturer.getDepartment().getId() : null;
+        List<Announcement> announcements = announcementService.getAnnouncementsForDepartment(deptId);
 
         List<StudentGroup> pendingGroups = groups.stream()
                 .filter(g -> "DRAFT".equalsIgnoreCase(g.getStatus()) || "REGISTERED".equalsIgnoreCase(g.getStatus()) || "PENDING".equalsIgnoreCase(g.getStatus()))
@@ -124,9 +125,10 @@ public class LecturerController {
         List<Topic> topics = lecturerService.getTopicsByLecturer(lecturer);
         List<Topic> reviewerTopics = lecturerService.getReviewerTopics(lecturer);
         List<Council> councils = lecturerService.getCouncilsForLecturer(lecturer);
-        List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
+        Long deptId = (lecturer != null && lecturer.getDepartment() != null) ? lecturer.getDepartment().getId() : null;
+        List<RegistrationPeriod> periods = lecturerService.getPeriodsForLecturer(lecturer);
         List<Submission> submissions = lecturerService.getSubmissionsByLecturer(lecturer);
-        List<Announcement> announcements = announcementService.getAllAnnouncements();
+        List<Announcement> announcements = announcementService.getAnnouncementsForDepartment(deptId);
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
@@ -150,7 +152,7 @@ public class LecturerController {
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         List<Topic> topics = lecturerService.getTopicsByLecturer(lecturer);
         List<Major> majors = lecturerService.getMajorsForLecturer(lecturer);
-        List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
+        List<RegistrationPeriod> periods = lecturerService.getPeriodsForLecturer(lecturer);
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);

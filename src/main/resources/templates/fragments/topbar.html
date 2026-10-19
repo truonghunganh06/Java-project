@@ -1,5 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub Topbar</title>
+</head>
 <body>
     <div th:fragment="topbar(pageTitle, breadcrumbParent, breadcrumbParentUrl, user)" class="saas-header-group">
         <!-- Main Topbar -->
@@ -28,6 +33,51 @@
                     </th:block>
                     <span class="text-slate-900 font-bold text-truncate" style="max-width: 240px;" th:text="${pageTitle != null ? pageTitle : 'Bảng điều khiển'}">Bảng điều khiển</span>
                 </nav>
+
+                <!-- Current Semester & Academic Year Capsule Dropdown Switcher -->
+                <div class="dropdown d-none d-md-inline-block ms-1.5">
+                    <button class="btn btn-xs rounded-full bg-slate-100 hover:bg-slate-200/80 border border-slate-200/90 text-xs font-semibold text-slate-700 shadow-2xs d-inline-flex align-items-center gap-1.5 px-3 py-1.5 transition" 
+                            type="button" 
+                            id="semesterSwitcherDropdown" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false" 
+                            title="Bấm để chọn/thay đổi học kỳ">
+                        <i class="fa-regular fa-calendar-check text-blue-600 text-xs"></i>
+                        <span>HK<strong class="text-slate-900" th:text="${currentSemester != null ? currentSemester : 1}">1</strong> · <span class="text-slate-600" th:text="${currentAcademicYear != null ? currentAcademicYear : '2026-2027'}">2026-2027</span></span>
+                        <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 ms-0.5"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-start shadow-wellnest-lg border border-slate-200 rounded-2xl p-1.5 text-xs mt-1" aria-labelledby="semesterSwitcherDropdown" style="min-width: 210px; z-index: 1060;">
+                        <li class="px-2.5 py-1 text-2xs font-bold text-slate-400 uppercase tracking-wider">Học kỳ hiển thị</li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between" 
+                               th:classappend="${(currentSemester == 1) ? 'active font-bold' : ''}"
+                               th:href="@{/switch-semester(semester=1, academicYear=${currentAcademicYear != null ? currentAcademicYear : '2026-2027'})}">
+                                <span><i class="fa-solid fa-graduation-cap me-1.5 text-slate-400"></i>Học kỳ 1</span>
+                                <i th:if="${currentSemester == 1}" class="fa-solid fa-check text-xs text-blue-600"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between" 
+                               th:classappend="${(currentSemester == 2) ? 'active font-bold' : ''}"
+                               th:href="@{/switch-semester(semester=2, academicYear=${currentAcademicYear != null ? currentAcademicYear : '2026-2027'})}">
+                                <span><i class="fa-solid fa-graduation-cap me-1.5 text-slate-400"></i>Học kỳ 2</span>
+                                <i th:if="${currentSemester == 2}" class="fa-solid fa-check text-xs text-blue-600"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between" 
+                               th:classappend="${(currentSemester == 3) ? 'active font-bold' : ''}"
+                               th:href="@{/switch-semester(semester=3, academicYear=${currentAcademicYear != null ? currentAcademicYear : '2026-2027'})}">
+                                <span><i class="fa-solid fa-sun me-1.5 text-amber-500"></i>Học kỳ hè</span>
+                                <i th:if="${currentSemester == 3}" class="fa-solid fa-check text-xs text-blue-600"></i>
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1 border-slate-100"></li>
+                        <li class="px-2.5 py-1 text-2xs text-slate-500">
+                            Năm học: <strong class="text-slate-700" th:text="${currentAcademicYear != null ? currentAcademicYear : '2026-2027'}">2026-2027</strong>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <!-- Right Controls: Search Bar + Action Buttons -->
@@ -46,7 +96,7 @@
                            spellcheck="false"
                            readonly
                            onfocus="this.removeAttribute('readonly');"
-                           data-lpignore="true">
+                           data-lpignore="true" title="search_query_global_clean" aria-label="search_query_global_clean">
                     <button type="button" id="topbarSearchClearBtn" class="border-0 bg-transparent p-0 text-slate-400 hover:text-slate-600 d-none text-xs flex-shrink-0" title="Xóa tìm kiếm" onclick="clearTopbarSearch()">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
@@ -64,49 +114,75 @@
                         <button class="topbar-action-btn position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Thông báo hệ thống">
                             <i class="fa-regular fa-bell"></i>
                             <!-- Red Notification Count Badge -->
-                            <span th:if="${announcements != null && !announcements.isEmpty()}" 
-                                  class="position-absolute -top-1 -end-1 min-w-[16px] h-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold d-flex align-items-center justify-content-center ring-2 ring-white shadow-xs" 
-                                  id="topbarNotificationCount"></span>
+                            <span class="position-absolute rounded-full bg-rose-500 text-white text-[9px] font-bold d-flex align-items-center justify-content-center shadow-xs d-none" 
+                                  id="topbarNotificationCount"
+                                  style="top: -4px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px; box-shadow: 0 0 0 2px #ffffff, 0 1px 3px rgba(15,23,42,0.06);"></span>
                         </button>
                         <div class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-100 rounded-3xl p-0 mt-2" style="width: 340px; z-index: 1050;">
                         <div class="p-3.5 border-b border-slate-100 bg-slate-50/70 rounded-t-3xl d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center gap-2">
                                 <span class="fw-bold text-slate-900 text-sm">Thông báo</span>
-                                <span class="badge bg-blue-100 text-blue-800 font-bold rounded-full px-2 py-0.5 text-xs" 
-                                      id="topbarNotificationHeaderCount"
-                                      th:if="${announcements != null && !announcements.isEmpty()}"
-                                      th:text="${#lists.size(announcements)} + ' mới'">1 mới</span>
+                                <span class="badge bg-blue-100 text-blue-800 font-bold rounded-full px-2 py-0.5 text-xs d-none" 
+                                      id="topbarNotificationHeaderCount"></span>
                             </div>
                             <button type="button" class="btn btn-link p-0 text-xs text-blue-600 text-decoration-none hover:underline font-semibold" 
-                                     onclick="markAllAnnouncementsAsRead()" 
-                                     th:if="${announcements != null && !announcements.isEmpty()}">
+                                     onclick="markAllAnnouncementsAsRead()">
                                 Đã đọc tất cả
                             </button>
                         </div>
                         <div class="p-2 divide-y divide-slate-100" style="max-height: 320px; overflow-y: auto;">
-                            <th:block th:if="${announcements != null && !announcements.isEmpty()}">
+                            <!-- Option A: topbarNotifications provided (e.g. for Department Head with pending approvals & incoming notices) -->
+                            <th:block th:if="${topbarNotifications != null && !topbarNotifications.isEmpty()}">
                                 <div class="p-2.5 rounded-2xl hover:bg-slate-50 transition cursor-pointer d-flex gap-2.5 align-items-start position-relative notification-item-track"
-                                     th:each="a, aStat : ${announcements}" th:if="${aStat.index < 6}"
-                                     onclick="showAnnouncementDetail(this)"
-                                     th:data-announcement-id="${a.id}"
-                                     th:data-title="${a.title}"
-                                     th:data-category="${a.category != null ? a.category : 'THÔNG BÁO'}"
-                                     th:data-author="${a.author != null ? a.author.fullName : 'Ban chủ nhiệm Khoa'}"
-                                     th:data-created-at="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm') : ''}"
-                                     th:data-period-id="${a.period != null ? a.period.id : ''}"
-                                     th:data-period="${a.period != null ? a.period.name : ''}"
-                                     th:data-content="${a.content}">
-                                    <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <i class="fa-solid fa-bullhorn text-xs"></i>
+                                     th:each="n, nStat : ${topbarNotifications}" th:if="${nStat.index < 6}"
+                                     th:data-target-url="${n.targetUrl}"
+                                     onclick="if(this.dataset.targetUrl){ window.location.href=this.dataset.targetUrl; } else { showAnnouncementDetail(this); }"
+                                     th:data-announcement-id="${n.id}"
+                                     th:data-title="${n.title}"
+                                     th:data-category="${n.category}"
+                                     th:data-author="${n.author}"
+                                     th:data-created-at="${n.createdAtFormatted}"
+                                     th:data-content="${n.content}">
+                                    <div class="w-8 h-8 rounded-xl d-flex align-items-center justify-content-center flex-shrink-0 mt-0.5"
+                                         th:classappend="${n.iconBgClass != null ? n.iconBgClass : 'bg-blue-50 text-blue-600'}">
+                                        <i th:class="${n.iconClass != null ? n.iconClass : 'fa-solid fa-bullhorn text-xs'}"></i>
                                     </div>
                                     <div class="text-xs overflow-hidden flex-grow-1">
-                                        <p class="mb-0.5 fw-semibold text-slate-800 text-truncate" th:text="${a.title}">Tiêu đề thông báo</p>
-                                        <span class="text-slate-400" th:text="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy') : 'Hôm nay'}">Hôm nay</span>
+                                        <p class="mb-0.5 fw-semibold text-slate-800 text-truncate" th:text="${n.title}">Tiêu đề thông báo</p>
+                                        <span class="text-slate-400" th:text="${n.createdAtFormatted}">Hôm nay</span>
                                     </div>
                                     <span class="unread-dot w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1.5" title="Chưa đọc"></span>
                                 </div>
                             </th:block>
-                            <div th:if="${announcements == null || announcements.isEmpty()}" class="p-4 text-center text-slate-400 text-xs">
+
+                            <!-- Option B: announcements fallback (LOẠI BỎ TRIỆT ĐỂ THÔNG BÁO DO CHÍNH NGƯỜI ĐĂNG TẠO RA) -->
+                            <th:block th:if="${topbarNotifications == null && announcements != null && !announcements.isEmpty()}">
+                                <th:block th:each="a, aStat : ${announcements}">
+                                    <div th:if="${a.author == null || user == null || a.author.id != user.id}"
+                                         class="p-2.5 rounded-2xl hover:bg-slate-50 transition cursor-pointer d-flex gap-2.5 align-items-start position-relative notification-item-track"
+                                         onclick="showAnnouncementDetail(this)"
+                                         th:data-announcement-id="${a.id}"
+                                         th:data-title="${a.title}"
+                                         th:data-category="${a.category != null ? a.category : 'THÔNG BÁO'}"
+                                         th:data-author="${a.author != null ? a.author.fullName : 'Ban chủ nhiệm Khoa'}"
+                                         th:data-created-at="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm') : ''}"
+                                         th:data-period-id="${a.period != null ? a.period.id : ''}"
+                                         th:data-period="${a.period != null ? a.period.name : ''}"
+                                         th:data-content="${a.content}">
+                                        <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0 mt-0.5">
+                                            <i class="fa-solid fa-bullhorn text-xs"></i>
+                                        </div>
+                                        <div class="text-xs overflow-hidden flex-grow-1">
+                                            <p class="mb-0.5 fw-semibold text-slate-800 text-truncate" th:text="${a.title}">Tiêu đề thông báo</p>
+                                            <span class="text-slate-400" th:text="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy') : 'Hôm nay'}">Hôm nay</span>
+                                        </div>
+                                        <span class="unread-dot w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1.5" title="Chưa đọc"></span>
+                                    </div>
+                                </th:block>
+                            </th:block>
+
+                            <!-- Empty Placeholder when no notifications -->
+                            <div id="topbarNoNotificationsPlaceholder" class="p-4 text-center text-slate-400 text-xs">
                                 <i class="fa-regular fa-bell-slash text-xl mb-1 d-block opacity-40"></i>
                                 Chưa có thông báo mới nào.
                             </div>
@@ -130,7 +206,7 @@
                             data-bs-toggle="dropdown" 
                             aria-expanded="false" 
                             title="Tài khoản cá nhân">
-                        <div class="w-8 h-8 rounded-full bg-emerald-500 text-white d-flex align-items-center justify-content-center fw-bold shadow-xs" style="font-size: 0.85rem;">
+                        <div class="w-8 h-8 rounded-full text-white d-flex align-items-center justify-content-center fw-bold shadow-xs" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; background-color: #10b981 !important; color: #ffffff !important; font-size: 0.85rem; border-radius: 50%;">
                             <span th:text="${user != null && user.fullName != null && user.fullName.length() > 0 ? user.fullName.substring(0, 1) : 'U'}">U</span>
                         </div>
                     </button>
@@ -157,39 +233,35 @@
                         </li>
 
                         <!-- Quick Role Switch Section (Lấy trực tiếp từ Neon DB) -->
-                        <th:block th:if="${testAccounts != null && !testAccounts.isEmpty()}">
-                            <li><hr class="dropdown-divider my-1.5 border-slate-100"></li>
-                            <li class="px-3 py-1">
-                                <div class="d-flex align-items-center justify-content-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                                    <span>Chuyển tài khoản (Neon DB)</span>
-                                    <span class="badge bg-emerald-100 text-emerald-700 rounded-full text-[9px] px-1.5 py-0.5">Test sẵn</span>
+                        <li th:if="${testAccounts != null && !testAccounts.isEmpty()}"><hr class="dropdown-divider my-1.5 border-slate-100"></li>
+                        <li th:if="${testAccounts != null && !testAccounts.isEmpty()}" class="px-3 py-1">
+                            <div class="d-flex align-items-center justify-content-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                <span>Chuyển tài khoản (Neon DB)</span>
+                                <span class="badge bg-emerald-100 text-emerald-700 rounded-full text-[9px] px-1.5 py-0.5">Test sẵn</span>
+                            </div>
+                        </li>
+                        <li th:if="${testAccounts != null && !testAccounts.isEmpty()}" th:each="acc : ${testAccounts}">
+                            <a class="dropdown-item d-flex align-items-center justify-content-between py-1.5 px-3 rounded-2xl text-xs transition"
+                               th:classappend="${user != null && user.username == acc.username ? 'bg-blue-50/80 font-bold text-blue-700' : 'text-slate-700 hover:bg-slate-100/80'}"
+                               th:href="@{/auth/switch-role(username=${acc.username})}">
+                                <div class="d-flex align-items-center gap-2 min-w-0">
+                                    <div class="w-6 h-6 rounded-full text-white d-flex align-items-center justify-content-center text-[10px] font-bold flex-shrink-0"
+                                         th:classappend="${acc.role != null && acc.role.code == 'ADMIN' ? 'bg-slate-800' : (acc.role != null && (acc.role.code == 'DEPARTMENT_HEAD' || acc.role.code == 'DIVISION_HEAD') ? 'bg-amber-600' : (acc.role != null && acc.role.code == 'LECTURER' ? 'bg-indigo-600' : 'bg-teal-600'))}">
+                                        <span th:text="${acc.fullName != null && acc.fullName.length() > 0 ? acc.fullName.substring(0, 1) : 'U'}">U</span>
+                                    </div>
+                                    <div class="text-truncate">
+                                        <div class="text-truncate text-[11px]" th:text="${acc.fullName}">Họ Tên</div>
+                                        <div class="text-[10px] text-slate-400 font-normal" th:text="${acc.username}">username</div>
+                                    </div>
                                 </div>
-                            </li>
-                            <th:block th:each="acc : ${testAccounts}">
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center justify-content-between py-1.5 px-3 rounded-2xl text-xs transition"
-                                       th:classappend="${user != null && user.username == acc.username ? 'bg-blue-50/80 font-bold text-blue-700' : 'text-slate-700 hover:bg-slate-100/80'}"
-                                       th:href="@{/auth/switch-role(username=${acc.username})}">
-                                        <div class="d-flex align-items-center gap-2 min-w-0">
-                                            <div class="w-6 h-6 rounded-full text-white d-flex align-items-center justify-content-center text-[10px] font-bold flex-shrink-0"
-                                                 th:classappend="${acc.role != null && acc.role.code == 'ADMIN' ? 'bg-slate-800' : (acc.role != null && (acc.role.code == 'DEPARTMENT_HEAD' || acc.role.code == 'DIVISION_HEAD') ? 'bg-amber-600' : (acc.role != null && acc.role.code == 'LECTURER' ? 'bg-indigo-600' : 'bg-teal-600'))}">
-                                                <span th:text="${acc.fullName != null && acc.fullName.length() > 0 ? acc.fullName.substring(0, 1) : 'U'}">U</span>
-                                            </div>
-                                            <div class="text-truncate">
-                                                <div class="text-truncate text-[11px]" th:text="${acc.fullName}">Họ Tên</div>
-                                                <div class="text-[10px] text-slate-400 font-normal" th:text="${acc.username}">username</div>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-1 flex-shrink-0 ms-2">
-                                            <span class="badge rounded-full px-2 py-0.5 text-[9.5px] font-medium"
-                                                  th:classappend="${acc.role != null && acc.role.code == 'ADMIN' ? 'bg-slate-100 text-slate-800 border border-slate-300' : (acc.role != null && (acc.role.code == 'DEPARTMENT_HEAD' || acc.role.code == 'DIVISION_HEAD') ? 'bg-amber-100 text-amber-800 border border-amber-200' : (acc.role != null && acc.role.code == 'LECTURER' ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' : 'bg-teal-100 text-teal-800 border border-teal-200'))}"
-                                                  th:text="${acc.role != null && acc.role.code == 'ADMIN' ? 'Admin' : (acc.role != null && (acc.role.code == 'DEPARTMENT_HEAD' || acc.role.code == 'DIVISION_HEAD') ? 'Trưởng khoa' : (acc.role != null && acc.role.code == 'LECTURER' ? 'Giảng viên' : 'Sinh viên'))}">Vai trò</span>
-                                            <i th:if="${user != null && user.username == acc.username}" class="fa-solid fa-check text-blue-600 text-[10px] ms-1"></i>
-                                        </div>
-                                    </a>
-                                </li>
-                            </th:block>
-                        </th:block>
+                                <div class="d-flex align-items-center gap-1 flex-shrink-0 ms-2">
+                                    <span class="badge rounded-full px-2 py-0.5 text-[9.5px] font-medium"
+                                          th:classappend="${acc.role != null && acc.role.code == 'ADMIN' ? 'bg-slate-100 text-slate-800 border border-slate-300' : (acc.role != null && (acc.role.code == 'DEPARTMENT_HEAD' || acc.role.code == 'DIVISION_HEAD') ? 'bg-amber-100 text-amber-800 border border-amber-200' : (acc.role != null && acc.role.code == 'LECTURER' ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' : 'bg-teal-100 text-teal-800 border border-teal-200'))}"
+                                          th:text="${acc.role != null && acc.role.code == 'ADMIN' ? 'Admin' : (acc.role != null && (acc.role.code == 'DEPARTMENT_HEAD' || acc.role.code == 'DIVISION_HEAD') ? 'Trưởng khoa' : (acc.role != null && acc.role.code == 'LECTURER' ? 'Giảng viên' : 'Sinh viên'))}">Vai trò</span>
+                                    <i th:if="${user != null && user.username == acc.username}" class="fa-solid fa-check text-blue-600 text-[10px] ms-1"></i>
+                                </div>
+                            </a>
+                        </li>
 
                         <!-- Logout (Spring Security compliant with CSRF) -->
                         <li><hr class="dropdown-divider my-1.5 border-slate-100"></li>

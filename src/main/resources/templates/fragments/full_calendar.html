@@ -259,45 +259,45 @@
                                 <p class="text-slate-400 text-xs mb-0">Lưu vào lịch cá nhân trên TopicHub</p>
                             </div>
                         </div>
-                        <button type="button" class="btn-close rounded-full" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close rounded-full" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
                     </div>
                     <div class="modal-body py-3">
                         <form id="addScheduleForm" onsubmit="fullCalendarApp.saveCustomNote(event)">
                             <div class="mb-3">
                                 <label class="form-label text-xs font-bold text-slate-700">Tiêu đề sự kiện / Công việc <span class="text-rose-500">*</span></label>
-                                <input type="text" id="noteTitle" class="form-control rounded-2xl text-xs py-2.5 border-slate-200 focus:ring-2 focus:ring-teal-400" placeholder="Ví dụ: Họp nhóm SV đề tài 04, Ôn tập phản biện..." required>
+                                <input type="text" id="noteTitle" class="form-control rounded-2xl text-xs py-2.5 border-slate-200 focus:ring-2 focus:ring-teal-400" placeholder="Ví dụ: Họp nhóm SV đề tài 04, Ôn tập phản biện..." required title="Họp nhóm SV đề tài 04, Ôn tập phản biện..." aria-label="Họp nhóm SV đề tài 04, Ôn tập phản biện...">
                             </div>
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
                                     <label class="form-label text-xs font-bold text-slate-700">Ngày diễn ra <span class="text-rose-500">*</span></label>
-                                    <input type="date" id="noteDate" class="form-control rounded-2xl text-xs py-2 border-slate-200" required>
+                                    <input type="date" id="noteDate" class="form-control rounded-2xl text-xs py-2 border-slate-200" required title="noteDate" aria-label="noteDate">
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label text-xs font-bold text-slate-700">Giờ (Thời gian)</label>
-                                    <input type="time" id="noteTime" class="form-control rounded-2xl text-xs py-2 border-slate-200" value="09:00">
+                                    <input type="time" id="noteTime" class="form-control rounded-2xl text-xs py-2 border-slate-200" value="09:00" title="noteTime" aria-label="noteTime">
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label text-xs font-bold text-slate-700">Địa điểm / Phòng họp</label>
-                                <input type="text" id="noteLocation" class="form-control rounded-2xl text-xs py-2 border-slate-200" placeholder="Ví dụ: Phòng H6.2 hoặc Google Meet">
+                                <input type="text" id="noteLocation" class="form-control rounded-2xl text-xs py-2 border-slate-200" placeholder="Ví dụ: Phòng H6.2 hoặc Google Meet" title="Phòng H6.2 hoặc Google Meet" aria-label="Phòng H6.2 hoặc Google Meet">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label text-xs font-bold text-slate-700">Màu sắc đánh dấu</label>
                                 <div class="d-flex align-items-center gap-2">
                                     <label class="cursor-pointer">
-                                        <input type="radio" name="noteColor" value="cal-event-teal" checked class="form-check-input me-1 text-teal-600"> <span class="badge bg-teal-100 text-teal-800 rounded-full px-2 py-1 text-xs">Xanh ngọc (Teal)</span>
+                                        <input type="radio" name="noteColor" value="cal-event-teal" checked class="form-check-input me-1 text-teal-600" placeholder="noteColor" title="noteColor" aria-label="noteColor"> <span class="badge bg-teal-100 text-teal-800 rounded-full px-2 py-1 text-xs">Xanh ngọc (Teal)</span>
                                     </label>
                                     <label class="cursor-pointer">
-                                        <input type="radio" name="noteColor" value="cal-event-indigo" class="form-check-input me-1 text-indigo-600"> <span class="badge bg-indigo-100 text-indigo-800 rounded-full px-2 py-1 text-xs">Tím than</span>
+                                        <input type="radio" name="noteColor" value="cal-event-indigo" class="form-check-input me-1 text-indigo-600" placeholder="noteColor" title="noteColor" aria-label="noteColor"> <span class="badge bg-indigo-100 text-indigo-800 rounded-full px-2 py-1 text-xs">Tím than</span>
                                     </label>
                                     <label class="cursor-pointer">
-                                        <input type="radio" name="noteColor" value="cal-event-amber" class="form-check-input me-1 text-amber-600"> <span class="badge bg-amber-100 text-amber-800 rounded-full px-2 py-1 text-xs">Vàng cam</span>
+                                        <input type="radio" name="noteColor" value="cal-event-amber" class="form-check-input me-1 text-amber-600" placeholder="noteColor" title="noteColor" aria-label="noteColor"> <span class="badge bg-amber-100 text-amber-800 rounded-full px-2 py-1 text-xs">Vàng cam</span>
                                     </label>
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label text-xs font-bold text-slate-700">Ghi chú chi tiết</label>
-                                <textarea id="noteDesc" class="form-control rounded-2xl text-xs p-2.5 border-slate-200" rows="2" placeholder="Nội dung cần chuẩn bị, tài liệu..."></textarea>
+                                <textarea id="noteDesc" class="form-control rounded-2xl text-xs p-2.5 border-slate-200" rows="2" placeholder="Nội dung cần chuẩn bị, tài liệu..." title="Nội dung cần chuẩn bị, tài liệu..." aria-label="Nội dung cần chuẩn bị, tài liệu..."></textarea>
                             </div>
                             <div class="d-flex justify-content-end gap-2 pt-2">
                                 <button type="button" class="btn btn-light rounded-full text-xs px-4 py-2 font-bold" data-bs-dismiss="modal">Hủy</button>
@@ -323,7 +323,7 @@
                                 <h5 class="modal-title font-black text-slate-900 text-base mt-0.5 mb-0" id="eventDetailTitle">Tiêu đề sự kiện</h5>
                             </div>
                         </div>
-                        <button type="button" class="btn-close rounded-full" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close rounded-full" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
                     </div>
                     <div class="modal-body py-3">
                         <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2.5 text-xs">

@@ -1,31 +1,33 @@
 package topicmanagement.repository;
 
+import org.springframework.lang.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 import topicmanagement.entity.Submission;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     @EntityGraph(attributePaths = {"topic", "group", "student", "student.user", "submittedByStudent", "submittedByStudent.user"})
     @Override
-    Optional<Submission> findById(Long id);
+    @NonNull
+    Optional<Submission> findById(@NonNull Long id);
 
     @EntityGraph(attributePaths = {"topic", "group", "student", "student.user", "submittedByStudent", "submittedByStudent.user"})
     @Override
+    @NonNull
     List<Submission> findAll();
 
     @EntityGraph(attributePaths = {"topic", "group", "student", "student.user", "submittedByStudent", "submittedByStudent.user"})
     @Override
-    Page<Submission> findAll(Pageable pageable);
+    @NonNull
+    Page<Submission> findAll(@NonNull Pageable pageable);
 
     @EntityGraph(attributePaths = {"topic", "group", "student", "student.user", "submittedByStudent", "submittedByStudent.user"})
     List<Submission> findByStudentId(Long studentId);

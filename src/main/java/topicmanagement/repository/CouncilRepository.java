@@ -1,26 +1,27 @@
 package topicmanagement.repository;
 
+import org.springframework.lang.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 import topicmanagement.entity.Council;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface CouncilRepository extends JpaRepository<Council, Long> {
 
     @EntityGraph(attributePaths = {"division", "department", "period", "members", "members.lecturer", "members.lecturer.user"})
     @Override
-    Optional<Council> findById(Long id);
+    @NonNull
+    Optional<Council> findById(@NonNull Long id);
 
     @EntityGraph(attributePaths = {"division", "department", "period", "members", "members.lecturer", "members.lecturer.user"})
     @Override
+    @NonNull
     List<Council> findAll();
 
     @EntityGraph(attributePaths = {"division", "department", "period", "members", "members.lecturer", "members.lecturer.user"})

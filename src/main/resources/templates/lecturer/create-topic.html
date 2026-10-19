@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head th:replace="~{fragments/head :: head('Đề Xuất Đề Tài Mới')}"></head>
+<head th:replace="~{fragments/head :: head('Đề Xuất Đề Tài Mới')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
 <body>
 
     <!-- Left Sidebar -->
@@ -27,12 +31,12 @@
 
                             <div class="col-md-12">
                                 <label class="form-label text-xs font-semibold text-slate-700">Tên đề tài *</label>
-                                <input type="text" name="title" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Nghiên cứu và xây dựng ứng dụng Web phân loại tài liệu bằng học sâu" th:value="${topic != null ? topic.title : ''}" required>
+                                <input type="text" name="title" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Nghiên cứu và xây dựng ứng dụng Web phân loại tài liệu bằng học sâu" th:value="${topic != null ? topic.title : ''}" required title="title" aria-label="title">
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Đợt đăng ký *</label>
-                                <select name="periodId" class="form-select text-xs rounded-xl" required>
+                                <select name="periodId" class="form-select text-xs rounded-xl" required title="periodId" aria-label="periodId">
                                     <option value="">-- Chọn đợt đăng ký đang mở --</option>
                                     <option th:each="p : ${openPeriods}" th:value="${p.id}" 
                                             th:selected="${(selectedPeriodId != null && (selectedPeriodId == p.id || #strings.toString(selectedPeriodId) == #strings.toString(p.id))) || (param.periodId != null && (param.periodId[0] == #strings.toString(p.id) || #strings.toString(param.periodId) == #strings.toString(p.id)))}"
@@ -42,23 +46,20 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Chuyên ngành / Bộ môn *</label>
-                                <select name="majorId" class="form-select text-xs rounded-xl" required>
-                                    <option value="">-- Chọn chuyên ngành --</option>
-                                    <option th:each="m : ${majors}" th:value="${m.id}" 
-                                            th:selected="${(selectedMajorId != null && selectedMajorId.equals(m.id)) || (param.majorId != null && param.majorId[0] == #strings.toString(m.id))}"
-                                            th:text="${m.name + (m.division != null ? ' (' + m.division.name + ')' : '')}"></option>
-                                </select>
+                                <label class="form-label text-xs font-semibold text-slate-700">Khoa / Đơn vị quản lý</label>
+                                <input type="text" class="form-control text-xs rounded-xl bg-slate-50 text-slate-700 font-medium" 
+                                       th:value="${department != null ? department.name : (lecturer != null && lecturer.department != null ? lecturer.department.name : 'Khoa Công nghệ Thông tin')}" readonly title="Trường thông tin" aria-label="Trường thông tin">
+                                <input type="hidden" name="majorId" th:value="${majors != null && !majors.isEmpty() ? majors[0].id : ''}">
                             </div>
 
                             <div class="col-md-6">
                                  <label class="form-label text-xs font-semibold text-slate-700">Giảng viên hướng dẫn chính (GVHD 1)</label>
-                                 <input type="text" class="form-control text-xs rounded-xl bg-slate-50 text-slate-700 font-medium" th:value="${user.fullName + ' (Bạn)'}" readonly>
+                                 <input type="text" class="form-control text-xs rounded-xl bg-slate-50 text-slate-700 font-medium" th:value="${user.fullName + ' (Bạn)'}" readonly title="Trường thông tin" aria-label="Trường thông tin">
                              </div>
 
                              <div class="col-md-6">
                                  <label class="form-label text-xs font-semibold text-slate-700">Giảng viên hướng dẫn phụ (GVHD 2 - Tùy chọn)</label>
-                                 <select name="coSupervisorId" class="form-select text-xs rounded-xl">
+                                 <select name="coSupervisorId" class="form-select text-xs rounded-xl" title="coSupervisorId" aria-label="coSupervisorId">
                                      <option value="">-- Không có GVHD phụ --</option>
                                      <option th:each="l : ${coSupervisors}" th:value="${l.id}" th:text="${(l.user != null ? l.user.fullName : '') + ' (' + l.lecturerCode + ')'}"></option>
                                  </select>
@@ -66,23 +67,23 @@
 
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Số lượng sinh viên trong nhóm (3 - 5 SV) *</label>
-                                <input type="number" name="maxStudents" class="form-control text-xs rounded-xl" value="3" min="3" max="5" required>
+                                <input type="number" name="maxStudents" class="form-control text-xs rounded-xl" value="3" min="3" max="5" required title="maxStudents" aria-label="maxStudents">
                                 <span class="text-slate-400 text-xs mt-1 d-block">Quy định mỗi nhóm từ 3 đến 5 sinh viên.</span>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Mã đề tài (Tùy chọn, để trống sẽ tự sinh)</label>
-                                <input type="text" name="code" class="form-control text-xs rounded-xl font-mono" placeholder="Ví dụ: KLTN-AI-01">
+                                <input type="text" name="code" class="form-control text-xs rounded-xl font-mono" placeholder="Ví dụ: KLTN-AI-01" title="code" aria-label="code">
                             </div>
 
                             <div class="col-12">
                                 <label class="form-label text-xs font-semibold text-slate-700">Mô tả mục tiêu & phạm vi đề tài *</label>
-                                <textarea name="description" class="form-control text-xs rounded-xl" rows="4" placeholder="Mô tả tóm tắt mục tiêu, công nghệ áp dụng và kết quả dự kiến đạt được..." th:text="${topic != null ? topic.description : ''}" required></textarea>
+                                <textarea name="description" class="form-control text-xs rounded-xl" rows="4" placeholder="Mô tả tóm tắt mục tiêu, công nghệ áp dụng và kết quả dự kiến đạt được..." th:text="${topic != null ? topic.description : ''}" required title="description" aria-label="description"></textarea>
                             </div>
 
                             <div class="col-12">
                                 <label class="form-label text-xs font-semibold text-slate-700">Yêu cầu kiến thức đối với sinh viên</label>
-                                <textarea name="requirements" class="form-control text-xs rounded-xl" rows="3" placeholder="Yêu cầu về kỹ năng lập trình (Java, Python, React...), điểm GPA hoặc môn học tiên quyết..." th:text="${topic != null ? topic.requirements : ''}"></textarea>
+                                <textarea name="requirements" class="form-control text-xs rounded-xl" rows="3" placeholder="Yêu cầu về kỹ năng lập trình (Java, Python, React...), điểm GPA hoặc môn học tiên quyết..." th:text="${topic != null ? topic.requirements : ''}" title="requirements" aria-label="requirements"></textarea>
                             </div>
 
                             <div class="col-12 pt-3 border-t border-slate-100 d-flex justify-content-end gap-2">

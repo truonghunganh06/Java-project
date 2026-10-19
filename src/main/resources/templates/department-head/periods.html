@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 
-<head th:replace="~{fragments/head :: head('Quản lý Đợt Đăng ký Đề tài')}"></head>
+<head th:replace="~{fragments/head :: head('Quản lý Đợt Đăng ký Đề tài')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
 
 <body class="bg-slate-50">
 
@@ -25,7 +29,7 @@
                 <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span
                     th:text="${successMessage}"></span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"
-                    style="padding: 0.6rem 0.8rem;"></button>
+                    style="padding: 0.6rem 0.8rem;" aria-label="Đóng" title="Đóng"></button>
             </div>
             <div th:if="${errorMessage}"
                 class="alert alert-danger alert-dismissible fade show rounded-2xl mb-3 py-2 px-3.5 text-xs font-medium border border-rose-200"
@@ -33,7 +37,7 @@
                 <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span
                     th:text="${errorMessage}"></span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"
-                    style="padding: 0.6rem 0.8rem;"></button>
+                    style="padding: 0.6rem 0.8rem;" aria-label="Đóng" title="Đóng"></button>
             </div>
 
             <!-- Clean Compact Page Header -->
@@ -146,12 +150,12 @@
                         <div class="relative flex-grow-1 max-w-xs">
                             <input type="text" id="periodSearchInput"
                                 class="form-control form-control-sm rounded-xl pl-7 text-xs"
-                                placeholder="Tìm kiếm đợt, năm học..." onkeyup="applyAllPeriodFilters()">
+                                placeholder="Tìm kiếm đợt, năm học..." onkeyup="applyAllPeriodFilters()" title="Tìm kiếm đợt, năm học..." aria-label="Tìm kiếm đợt, năm học...">
                             <i
                                 class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-2xs"></i>
                         </div>
                         <select id="periodTypeSelectFilter" class="form-select form-select-sm rounded-xl text-xs"
-                            style="width: 155px;" onchange="applyAllPeriodFilters()">
+                            style="width: 155px;" onchange="applyAllPeriodFilters()" title="periodTypeSelectFilter" aria-label="periodTypeSelectFilter">
                             <option value="all">-- Loại đợt --</option>
                             <option value="KLTN">Khóa luận tốt nghiệp</option>
                             <option value="TLCN">Tiểu luận chuyên ngành</option>
@@ -159,7 +163,7 @@
                             <option value="MON_HOC">Đồ án môn học</option>
                         </select>
                         <select id="periodStatusSelectFilter" class="form-select form-select-sm rounded-xl text-xs"
-                            style="width: 155px;" onchange="applyAllPeriodFilters()">
+                            style="width: 155px;" onchange="applyAllPeriodFilters()" title="periodStatusSelectFilter" aria-label="periodStatusSelectFilter">
                             <option value="all">-- Trạng thái --</option>
                             <option value="PROPOSAL_OPEN">Đang mở ĐX (GV)</option>
                             <option value="REGISTRATION_OPEN">Đang mở ĐK (SV)</option>
@@ -602,7 +606,7 @@
                             <h5 class="modal-title font-bold text-slate-900 text-sm mb-0" id="modalPeriodTitle">Tên đợt đăng ký</h5>
                         </div>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
                 </div>
                 
                 <!-- Body -->
@@ -695,7 +699,7 @@
                 <!-- Footer: All Integrated Action Buttons -->
                 <div class="modal-footer bg-slate-50 border-t border-slate-100 p-3.5 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <!-- Delete Button on the left -->
-                    <form id="modalDeleteForm" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đợt đăng ký này? Thao tác này không thể hoàn tác!');">
+                    <form id="modalDeleteForm" th:action="@{/department-head/periods/0/delete}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đợt đăng ký này? Thao tác này không thể hoàn tác!');">
                         <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-3 py-1.5 text-xs font-semibold">
                             <i class="fa-regular fa-trash-can me-1.5"></i> Xóa đợt này
                         </button>
@@ -707,7 +711,7 @@
                             Đóng
                         </button>
 
-                        <form id="modalStatusForm" method="post">
+                        <form id="modalStatusForm" th:action="@{/department-head/periods/0/status}" method="post">
                             <input type="hidden" name="status" id="modalStatusInput">
                             <button type="submit" class="btn btn-sm rounded-xl px-3 py-1.5 text-xs font-semibold shadow-2xs" id="modalStatusBtn">
                                 <i id="modalStatusIcon" class="fa-solid fa-lock me-1.5"></i>
@@ -733,7 +737,7 @@
                         <h6 class="modal-title font-bold text-slate-900 text-sm"><i
                                 class="fa-solid fa-calendar-plus text-blue-600 me-1.5"></i> Tạo Đợt Đăng Ký Đề Tài Mới
                         </h6>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
                     </div>
                     <div class="modal-body p-4 space-y-3">
 
@@ -779,14 +783,14 @@
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Tên đợt đăng ký *</label>
                                 <input type="text" name="name" class="form-control text-xs rounded-xl"
-                                    placeholder="Ví dụ: Đợt Khóa Luận Tốt Nghiệp HK1 (2026-2027)" required>
+                                    placeholder="Ví dụ: Đợt Khóa Luận Tốt Nghiệp HK1 (2026-2027)" required title="name" aria-label="name">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Loại đợt đào tạo
                                     *</label>
                                 <select id="createPeriodTypeSelect" name="periodType"
                                     class="form-select text-xs rounded-xl" required
-                                    onchange="handlePeriodTypeChange(this.value, '')">
+                                    onchange="handlePeriodTypeChange(this.value, '')" title="periodType" aria-label="periodType">
                                     <option value="KLTN">Khóa luận tốt nghiệp</option>
                                     <option value="TLCN">Tiểu luận chuyên ngành</option>
                                     <option value="NCKH">Nghiên cứu khoa học sinh viên</option>
@@ -796,11 +800,11 @@
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Năm học *</label>
                                 <input type="text" name="academicYear" class="form-control text-xs rounded-xl"
-                                    value="2026-2027" required>
+                                    value="2026-2027" required title="academicYear" aria-label="academicYear">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Học kỳ *</label>
-                                <select name="semester" class="form-select text-xs rounded-xl">
+                                <select name="semester" class="form-select text-xs rounded-xl" title="semester" aria-label="semester">
                                     <option value="1">Học kỳ 1</option>
                                     <option value="2">Học kỳ 2</option>
                                     <option value="3">Học kỳ hè</option>
@@ -811,7 +815,7 @@
                                     mỗi GV phải đề xuất *</label>
                                 <div class="input-group">
                                     <input type="number" name="minTopicsPerLecturer"
-                                        class="form-control text-xs rounded-xl" value="3" min="1" max="20" required>
+                                        class="form-control text-xs rounded-xl" value="3" min="1" max="20" required title="minTopicsPerLecturer" aria-label="minTopicsPerLecturer">
                                     <span class="input-group-text text-xs bg-slate-50 text-slate-500 rounded-xl">đề tài
                                         / giảng viên</span>
                                 </div>
@@ -827,26 +831,26 @@
                                 <label class="form-label text-xs font-semibold text-slate-700">1. GV đề xuất: Bắt
                                     đầu</label>
                                 <input type="date" name="propStart" id="inputPropStart"
-                                    class="form-control text-xs rounded-xl">
+                                    class="form-control text-xs rounded-xl" title="propStart" aria-label="propStart">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">1. GV đề xuất: Hạn
                                     chót</label>
                                 <input type="date" name="propEnd" id="inputPropEnd"
-                                    class="form-control text-xs rounded-xl">
+                                    class="form-control text-xs rounded-xl" title="propEnd" aria-label="propEnd">
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">2. SV đăng ký: Bắt
                                     đầu</label>
                                 <input type="date" name="regStart" id="inputRegStart"
-                                    class="form-control text-xs rounded-xl">
+                                    class="form-control text-xs rounded-xl" title="regStart" aria-label="regStart">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">2. SV đăng ký: Hạn
                                     chót</label>
                                 <input type="date" name="regEnd" id="inputRegEnd"
-                                    class="form-control text-xs rounded-xl">
+                                    class="form-control text-xs rounded-xl" title="regEnd" aria-label="regEnd">
                             </div>
 
                             <!-- Conditional Fields -->
@@ -857,7 +861,7 @@
                                         / TLCN</span>
                                 </label>
                                 <input type="date" name="revDead" id="inputRevDead"
-                                    class="form-control text-xs rounded-xl">
+                                    class="form-control text-xs rounded-xl" title="revDead" aria-label="revDead">
                             </div>
                             <div class="col-md-6" id="fieldCouncilDefenseDate">
                                 <label class="form-label text-xs font-semibold text-slate-700">
@@ -866,7 +870,7 @@
                                         KLTN</span>
                                 </label>
                                 <input type="date" name="defenseDate" id="inputDefenseDate"
-                                    class="form-control text-xs rounded-xl">
+                                    class="form-control text-xs rounded-xl" title="defenseDate" aria-label="defenseDate">
                             </div>
                         </div>
                     </div>
@@ -965,12 +969,12 @@
     <div class="modal fade" id="editPeriodModal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content rounded-2xl border-0 shadow-xl">
-                <form method="post" id="formEditPeriod">
+                <form th:action="@{/department-head/periods/edit}" method="post" id="formEditPeriod">
                     <input type="hidden" id="editPeriodId" name="id">
                     <div class="modal-header border-b border-slate-100 p-3.5">
                         <h6 class="modal-title font-bold text-slate-900 text-sm"><i
                                 class="fa-solid fa-pen-to-square text-blue-600 me-1.5"></i> Chỉnh Sửa Đợt Đăng Ký</h6>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
                     </div>
                     <div class="modal-body p-4 space-y-3">
 
@@ -1017,14 +1021,14 @@
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Tên đợt đăng ký *</label>
                                 <input type="text" id="editName" name="name" class="form-control text-xs rounded-xl"
-                                    required>
+                                    required title="name" aria-label="name">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Loại đợt đào tạo
                                     *</label>
                                 <select id="editPeriodTypeSelect" name="periodType"
                                     class="form-select text-xs rounded-xl" required
-                                    onchange="handlePeriodTypeChange(this.value, 'Edit')">
+                                    onchange="handlePeriodTypeChange(this.value, 'Edit')" title="periodType" aria-label="periodType">
                                     <option value="KLTN">Khóa luận tốt nghiệp</option>
                                     <option value="TLCN">Tiểu luận chuyên ngành</option>
                                     <option value="NCKH">Nghiên cứu khoa học sinh viên</option>
@@ -1034,11 +1038,11 @@
                             <div class="col-md-4">
                                 <label class="form-label text-xs font-semibold text-slate-700">Năm học *</label>
                                 <input type="text" id="editAcademicYear" name="academicYear"
-                                    class="form-control text-xs rounded-xl" required>
+                                    class="form-control text-xs rounded-xl" required title="academicYear" aria-label="academicYear">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-xs font-semibold text-slate-700">Học kỳ *</label>
-                                <select id="editSemester" name="semester" class="form-select text-xs rounded-xl">
+                                <select id="editSemester" name="semester" class="form-select text-xs rounded-xl" title="semester" aria-label="semester">
                                     <option value="1">Học kỳ 1</option>
                                     <option value="2">Học kỳ 2</option>
                                     <option value="3">Học kỳ hè</option>
@@ -1047,7 +1051,7 @@
                             <div class="col-md-4">
                                 <label class="form-label text-xs font-semibold text-slate-700">Trạng thái đợt *</label>
                                 <select id="editStatus" name="status"
-                                    class="form-select text-xs rounded-xl font-semibold">
+                                    class="form-select text-xs rounded-xl font-semibold" title="status" aria-label="status">
                                     <option value="OPEN" class="text-emerald-700">🟢 Đang mở (Hoạt động)</option>
                                     <option value="CLOSED" class="text-rose-700">🔒 Đã đóng (Tạm khóa)</option>
                                 </select>
@@ -1057,7 +1061,7 @@
                                     mỗi GV phải đề xuất *</label>
                                 <div class="input-group">
                                     <input type="number" id="editMinTopicsPerLecturer" name="minTopicsPerLecturer"
-                                        class="form-control text-xs rounded-xl" value="3" min="1" max="20" required>
+                                        class="form-control text-xs rounded-xl" value="3" min="1" max="20" required title="minTopicsPerLecturer" aria-label="minTopicsPerLecturer">
                                     <span class="input-group-text text-xs bg-slate-50 text-slate-500 rounded-xl">đề tài
                                         / giảng viên</span>
                                 </div>
@@ -1071,26 +1075,26 @@
                                 <label class="form-label text-xs font-semibold text-slate-700">1. GV đề xuất: Bắt
                                     đầu</label>
                                 <input type="date" name="propStart" id="editPropStart"
-                                    class="form-control text-xs rounded-xl">
+                                    class="form-control text-xs rounded-xl" title="propStart" aria-label="propStart">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">1. GV đề xuất: Hạn
                                     chót</label>
                                 <input type="date" name="propEnd" id="editPropEnd"
-                                    class="form-control text-xs rounded-xl">
+                                    class="form-control text-xs rounded-xl" title="propEnd" aria-label="propEnd">
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">2. SV đăng ký: Bắt
                                     đầu</label>
                                 <input type="date" name="regStart" id="editRegStart"
-                                    class="form-control text-xs rounded-xl">
+                                    class="form-control text-xs rounded-xl" title="regStart" aria-label="regStart">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">2. SV đăng ký: Hạn
                                     chót</label>
                                 <input type="date" name="regEnd" id="editRegEnd"
-                                    class="form-control text-xs rounded-xl">
+                                    class="form-control text-xs rounded-xl" title="regEnd" aria-label="regEnd">
                             </div>
 
                             <!-- Conditional Fields -->
@@ -1101,7 +1105,7 @@
                                         / TLCN</span>
                                 </label>
                                 <input type="date" name="revDead" id="editRevDead"
-                                    class="form-control text-xs rounded-xl">
+                                    class="form-control text-xs rounded-xl" title="revDead" aria-label="revDead">
                             </div>
                             <div class="col-md-6" id="fieldCouncilDefenseDateEdit">
                                 <label class="form-label text-xs font-semibold text-slate-700">
@@ -1110,7 +1114,7 @@
                                         KLTN</span>
                                 </label>
                                 <input type="date" name="defenseDate" id="editDefenseDate"
-                                    class="form-control text-xs rounded-xl">
+                                    class="form-control text-xs rounded-xl" title="defenseDate" aria-label="defenseDate">
                             </div>
                         </div>
                     </div>
@@ -1137,6 +1141,7 @@
             position: relative;
             overflow: hidden;
             transition: all 0.15s ease-in-out;
+            -webkit-user-select: none;
             user-select: none;
         }
 

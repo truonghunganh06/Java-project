@@ -6,7 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "student_groups")
+@Table(name = "student_groups", indexes = {
+    @Index(name = "idx_student_groups_period_id", columnList = "period_id"),
+    @Index(name = "idx_student_groups_leader_id", columnList = "leader_id"),
+    @Index(name = "idx_student_groups_topic_id", columnList = "topic_id"),
+    @Index(name = "idx_student_groups_status", columnList = "status")
+})
 public class StudentGroup {
 
     @Id

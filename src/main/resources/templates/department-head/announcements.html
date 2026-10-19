@@ -63,37 +63,48 @@
                          th:data-period-id="${a.period != null ? a.period.id : ''}"
                          th:data-period="${a.period != null ? a.period.name : ''}"
                          th:data-content="${a.content}">
-                        <div class="d-flex align-items-start justify-content-between gap-2 mb-2 flex-wrap">
-                            <!-- Left: badges + title (min-w-0 allows truncation) -->
+                        <div class="d-flex align-items-center justify-content-between gap-3 mb-2.5 flex-wrap">
+                            <!-- Left: badges + title -->
                             <div class="d-flex align-items-center gap-2 flex-wrap" style="min-width:0; flex:1 1 0;">
-                                <span th:if="${a.isPinned}" class="badge-pill-pending font-bold flex-shrink-0">
-                                    <i class="fa-solid fa-thumbtack text-amber-500 me-1"></i>Đã ghim
+                                <span th:if="${a.isPinned}" class="badge-pill-pending font-bold flex-shrink-0 d-inline-flex align-items-center gap-1">
+                                    <i class="fa-solid fa-thumbtack text-amber-500"></i> Đã ghim
                                 </span>
-                                <span class="badge-pill-neutral font-medium flex-shrink-0" th:text="${a.getCategoryName()}">Kế hoạch đợt</span>
-                                <h2 class="text-base font-bold text-slate-900 mb-0 ms-1 hover:text-blue-600 transition text-truncate" style="min-width:0;" th:text="${a.title}">Thông báo nộp báo cáo tiến độ</h2>
+                                <span class="badge bg-slate-100 text-slate-700 border border-slate-200/90 rounded-full px-2.5 py-0.5 text-2xs font-semibold flex-shrink-0" th:text="${a.getCategoryName()}">Kế hoạch đợt</span>
+                                <span th:if="${a.period != null}" class="badge bg-indigo-50 text-indigo-700 border border-indigo-200/90 rounded-full px-2.5 py-0.5 text-2xs font-bold flex-shrink-0 d-inline-flex align-items-center gap-1">
+                                    <i class="fa-regular fa-calendar-check text-indigo-500"></i>HK<span th:text="${a.period.semester}">1</span> (<span th:text="${a.period.academicYear}">2026-2027</span>)
+                                </span>
+                                <h2 class="text-sm font-bold text-slate-900 mb-0 ms-1 hover:text-blue-600 transition text-truncate" style="min-width:0;" th:text="${a.title}">Thông báo nộp báo cáo tiến độ</h2>
                             </div>
                             <!-- Right: Actions (Toggle Pin & Delete) + Timestamp -->
                             <div class="d-flex align-items-center gap-2 flex-shrink-0" onclick="event.stopPropagation();">
                                 <form th:action="@{/department-head/announcements/{id}/toggle-pin(id=${a.id})}" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-xs rounded-lg px-2 py-1 text-2xs font-semibold transition"
-                                            th:classappend="${a.isPinned ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+                                    <button type="submit" class="btn btn-xs rounded-lg px-2.5 py-1 text-2xs font-semibold transition d-inline-flex align-items-center gap-1.5 shadow-none"
+                                            th:classappend="${a.isPinned ? 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}"
                                             th:title="${a.isPinned ? 'Bấm để BỎ GHIM thông báo' : 'Bấm để GHIM thông báo lên đầu'}">
-                                        <i class="fa-solid" th:classappend="${a.isPinned ? 'fa-thumbtack-slash text-amber-700' : 'fa-thumbtack text-slate-500'}"></i>
+                                        <i class="fa-solid text-[10px]" th:classappend="${a.isPinned ? 'fa-thumbtack-slash text-amber-700' : 'fa-thumbtack text-slate-500'}"></i>
                                         <span th:text="${a.isPinned ? 'Bỏ ghim' : 'Ghim'}">Ghim</span>
                                     </button>
                                 </form>
                                 <form th:action="@{/department-head/announcements/{id}/delete(id=${a.id})}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa thông báo này?');">
-                                    <button type="submit" class="btn btn-xs btn-outline-danger rounded-lg px-2 py-1 text-2xs" title="Xóa thông báo">
-                                        <i class="fa-solid fa-trash-can"></i>
+                                    <button type="submit" class="btn btn-xs rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200/90 hover:border-rose-200 transition d-inline-flex align-items-center justify-content-center shadow-none" 
+                                            style="width: 26px; height: 26px; padding: 0;" title="Xóa thông báo">
+                                        <i class="fa-regular fa-trash-can text-xs"></i>
                                     </button>
                                 </form>
-                                <span class="text-xs text-slate-400 d-none d-sm-inline ms-1" th:text="${#temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                                <span class="badge bg-slate-50 text-slate-500 border border-slate-200/80 rounded-full px-2.5 py-1 text-2xs font-medium d-none d-sm-inline-flex align-items-center gap-1 ms-1">
+                                    <i class="fa-regular fa-clock text-slate-400"></i>
+                                    <span th:text="${#temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                                </span>
                             </div>
                         </div>
-                        <div class="text-xs text-slate-600 leading-relaxed mt-2 line-clamp-3" th:text="${a.content}">Nội dung chi tiết thông báo...</div>
-                        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-t border-slate-100 text-xs">
-                            <span class="text-slate-500"><i class="fa-solid fa-user-pen text-slate-400 me-1"></i> Người đăng: <strong class="text-slate-800" th:text="${a.author != null ? a.author.fullName : 'Ban chủ nhiệm Khoa'}">Trưởng khoa</strong></span>
-                            <span th:if="${a.period != null}" class="text-blue-600 font-medium"><i class="fa-solid fa-bookmark me-1"></i> Đợt: <span th:text="${a.period.name}"></span></span>
+                        <div class="text-xs text-slate-600 leading-relaxed my-2.5 line-clamp-3" th:text="${a.content}">Nội dung chi tiết thông báo...</div>
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-slate-200/90 text-xs">
+                            <span class="text-slate-500 d-inline-flex align-items-center gap-1.5">
+                                <i class="fa-solid fa-user-pen text-slate-400"></i> Người đăng: <strong class="text-slate-800" th:text="${a.author != null ? a.author.fullName : 'Ban chủ nhiệm Khoa'}">Trưởng khoa</strong>
+                            </span>
+                            <span th:if="${a.period != null}" class="badge bg-blue-50 text-blue-700 border border-blue-200/90 rounded-lg px-2.5 py-1 font-semibold text-xs d-inline-flex align-items-center gap-1.5">
+                                <i class="fa-solid fa-bookmark text-blue-500"></i> Đợt: <span th:text="${a.period.name}"></span>
+                            </span>
                         </div>
                     </div>
                 </div>

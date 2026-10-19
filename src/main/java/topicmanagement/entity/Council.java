@@ -141,4 +141,8 @@ public class Council {
     public void setMembers(List<CouncilMember> members) {
         this.members = members;
     }
+
+    public Major getMajor() {
+        return null;
+    }
 }

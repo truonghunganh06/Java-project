@@ -14,6 +14,10 @@ public class Student {
     private AppUser user;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "department_id")
+    private Department department;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "major_id")
     private Major major;
 
@@ -102,12 +106,16 @@ public class Student {
         this.gpa = gpa;
     }
 
-    @Transient
     public Department getDepartment() {
+        if (department != null) return department;
         if (division != null && division.getDepartment() != null) {
             return division.getDepartment();
         }
         return major != null ? major.getDepartment() : null;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
     }
 
     @Transient

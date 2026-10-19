@@ -16,6 +16,11 @@ import java.time.OffsetDateTime;
         name = "uk_topic_registration_group",
         columnNames = {"topic_id", "group_id"}
     )
+}, indexes = {
+    @Index(name = "idx_topic_reg_topic_id", columnList = "topic_id"),
+    @Index(name = "idx_topic_reg_group_id", columnList = "group_id"),
+    @Index(name = "idx_topic_reg_status", columnList = "status"),
+    @Index(name = "idx_topic_reg_topic_status", columnList = "topic_id, status")
 })
 public class TopicRegistration {
 

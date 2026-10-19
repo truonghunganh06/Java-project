@@ -19,11 +19,9 @@ public class DepartmentHeadService {
     private final MajorRepository majorRepository;
     private final LecturerRepository lecturerRepository;
     private final StudentRepository studentRepository;
-    private final TopicRegistrationRepository registrationRepository;
     private final RegistrationPeriodRepository periodRepository;
     private final StudentGroupRepository studentGroupRepository;
     private final CouncilRepository councilRepository;
-    private final AnnouncementRepository announcementRepository;
 
     public DepartmentHeadService(
             TopicRepository topicRepository,
@@ -32,22 +30,18 @@ public class DepartmentHeadService {
             MajorRepository majorRepository,
             LecturerRepository lecturerRepository,
             StudentRepository studentRepository,
-            TopicRegistrationRepository registrationRepository,
             RegistrationPeriodRepository periodRepository,
             StudentGroupRepository studentGroupRepository,
-            CouncilRepository councilRepository,
-            AnnouncementRepository announcementRepository) {
+            CouncilRepository councilRepository) {
         this.topicRepository = topicRepository;
         this.departmentRepository = departmentRepository;
         this.divisionRepository = divisionRepository;
         this.majorRepository = majorRepository;
         this.lecturerRepository = lecturerRepository;
         this.studentRepository = studentRepository;
-        this.registrationRepository = registrationRepository;
         this.periodRepository = periodRepository;
         this.studentGroupRepository = studentGroupRepository;
         this.councilRepository = councilRepository;
-        this.announcementRepository = announcementRepository;
     }
 
     public Division getDivisionForUser(AppUser user) {
@@ -280,7 +274,20 @@ public class DepartmentHeadService {
     public List<Topic> getDepartmentTopics(Long departmentId, String status, Long majorId, Long periodId, String keyword) {
         List<Topic> topics;
         if (departmentId != null) {
-            topics = topicRepository.findByMajorDepartmentId(departmentId);
+            List<Topic> byDept = topicRepository.findByDepartmentId(departmentId);
+            List<Topic> byMajor = topicRepository.findByMajorDepartmentId(departmentId);
+            Set<Long> seenIds = new HashSet<>();
+            topics = new ArrayList<>();
+            for (Topic t : byDept) {
+                if (t != null && t.getId() != null && seenIds.add(t.getId())) {
+                    topics.add(t);
+                }
+            }
+            for (Topic t : byMajor) {
+                if (t != null && t.getId() != null && seenIds.add(t.getId())) {
+                    topics.add(t);
+                }
+            }
         } else {
             topics = topicRepository.findAll();
         }
@@ -440,7 +447,7 @@ public class DepartmentHeadService {
 
     public List<Student> getStudentsInDepartment(Long departmentId) {
         if (departmentId != null) {
-            return studentRepository.findByMajorDepartmentId(departmentId);
+            return studentRepository.findByDepartmentId(departmentId);
         }
         return studentRepository.findAll();
     }
@@ -479,11 +486,33 @@ public class DepartmentHeadService {
     }
 
     public Map<String, Object> getDepartmentStats(Long departmentId) {
-        List<Topic> topics = getDepartmentTopics(departmentId, "ALL", null, null, null);
+        return getDepartmentStats(departmentId, null, null);
+    }
+
+    public Map<String, Object> getDepartmentStats(Long departmentId, Integer semester, String academicYear) {
+        List<Topic> topics = getDepartmentTopics(departmentId, "ALL", null, null, null).stream()
+                .filter(t -> {
+                    if (semester != null) {
+                        Integer tSem = t.getSemester() != null ? t.getSemester() : (t.getPeriod() != null ? t.getPeriod().getSemester() : null);
+                        if (tSem != null && !tSem.equals(semester)) return false;
+                    }
+                    if (academicYear != null && !academicYear.isBlank()) {
+                        String tYear = t.getAcademicYear() != null ? t.getAcademicYear() : (t.getPeriod() != null ? t.getPeriod().getAcademicYear() : null);
+                        if (tYear != null && !tYear.equalsIgnoreCase(academicYear)) return false;
+                    }
+                    return true;
+                })
+                .toList();
         List<Lecturer> lecturers = getLecturersInDepartment(departmentId);
         List<Student> students = getStudentsInDepartment(departmentId);
         List<Major> majors = getDepartmentMajors(departmentId);
-        List<RegistrationPeriod> periods = getAllPeriods(departmentId);
+        List<RegistrationPeriod> periods = getAllPeriods(departmentId).stream()
+                .filter(p -> {
+                    if (semester != null && p.getSemester() != null && !p.getSemester().equals(semester)) return false;
+                    if (academicYear != null && p.getAcademicYear() != null && !p.getAcademicYear().equalsIgnoreCase(academicYear)) return false;
+                    return true;
+                })
+                .toList();
         List<Council> councils = councilRepository.findByDepartmentId(departmentId);
         List<StudentGroup> groups = studentGroupRepository.findAll();
 
@@ -507,6 +536,7 @@ public class DepartmentHeadService {
         stats.put("totalPeriods", periods.size());
         stats.put("totalCouncils", councils.size());
         stats.put("totalGroups", groups.size());
+        stats.put("totalMajors", majors.size());
 
         return stats;
     }
@@ -540,6 +570,7 @@ public class DepartmentHeadService {
         stats.put("totalPeriods", periods.size());
         stats.put("totalCouncils", councils.size());
         stats.put("totalGroups", groups.size());
+        stats.put("totalMajors", majors.size());
 
         return stats;
     }

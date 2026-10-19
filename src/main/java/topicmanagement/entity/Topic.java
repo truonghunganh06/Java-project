@@ -4,7 +4,15 @@ import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "topics")
+@Table(name = "topics", indexes = {
+    @Index(name = "idx_topics_period_id", columnList = "period_id"),
+    @Index(name = "idx_topics_status", columnList = "status"),
+    @Index(name = "idx_topics_period_status", columnList = "period_id, status"),
+    @Index(name = "idx_topics_department_id", columnList = "department_id"),
+    @Index(name = "idx_topics_division_id", columnList = "division_id"),
+    @Index(name = "idx_topics_major_id", columnList = "major_id"),
+    @Index(name = "idx_topics_supervisor_id", columnList = "supervisor_id")
+})
 public class Topic {
 
     @Id
@@ -17,6 +25,10 @@ public class Topic {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "period_id")
     private RegistrationPeriod period;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "department_id")
+    private Department department;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "major_id")
@@ -295,8 +307,10 @@ public class Topic {
         return coSupervisor != null && lecturer.getId().equals(coSupervisor.getId());
     }
 
-    @Transient
     public Department getDepartment() {
+        if (department != null) {
+            return department;
+        }
         if (division != null && division.getDepartment() != null) {
             return division.getDepartment();
         }
@@ -306,6 +320,21 @@ public class Topic {
         if (period != null && period.getDepartment() != null) {
             return period.getDepartment();
         }
+        if (supervisor != null && supervisor.getDepartment() != null) {
+            return supervisor.getDepartment();
+        }
+        return null;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
+
+    public Student getStudent() {
+        return null;
+    }
+
+    public StudentGroup getGroup() {
         return null;
     }
 }

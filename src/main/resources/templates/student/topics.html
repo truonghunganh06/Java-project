@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head th:replace="~{fragments/head :: head('Danh mục Đề tài')}"></head>
+<head th:replace="~{fragments/head :: head('Danh mục Đề tài')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
 <body>
 
     <!-- Left Sidebar -->
@@ -17,11 +21,11 @@
             <!-- Flash Messages -->
             <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200" role="alert">
                 <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
             </div>
             <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200" role="alert">
                 <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span th:text="${errorMessage}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
             </div>
 
             <!-- Page Header -->
@@ -58,7 +62,7 @@
                     <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 justify-content-xl-end">
                         <!-- Filter: Major -->
                         <div th:if="${majors != null && !majors.isEmpty()}" style="min-width: 160px;">
-                            <select id="filterMajorSelect" class="form-select form-select-sm text-xs rounded-xl border-slate-200" onchange="applyStudentCombinedFilters()">
+                            <select id="filterMajorSelect" class="form-select form-select-sm text-xs rounded-xl border-slate-200" onchange="applyStudentCombinedFilters()" title="filterMajorSelect" aria-label="filterMajorSelect">
                                 <option value="ALL">Tất cả chuyên ngành</option>
                                 <option th:each="m : ${majors}" th:value="${m.name}" th:text="${m.name}">KTPM</option>
                             </select>
@@ -66,7 +70,7 @@
 
                         <!-- Filter: Period -->
                         <div th:if="${periods != null && !periods.isEmpty()}" style="min-width: 160px;">
-                            <select id="filterPeriodSelect" class="form-select form-select-sm text-xs rounded-xl border-slate-200" onchange="applyStudentCombinedFilters()">
+                            <select id="filterPeriodSelect" class="form-select form-select-sm text-xs rounded-xl border-slate-200" onchange="applyStudentCombinedFilters()" title="filterPeriodSelect" aria-label="filterPeriodSelect">
                                 <option value="ALL">Tất cả các đợt</option>
                                 <option th:each="p : ${periods}" th:value="${p.name}" th:text="${p.name}">Đợt 1</option>
                             </select>
@@ -74,7 +78,7 @@
 
                         <!-- Search -->
                         <div class="relative" style="min-width: 200px; flex-grow: 1; max-width: 280px;">
-                            <input type="text" id="studentKeywordInput" class="form-control form-control-sm rounded-xl pl-8 text-xs bg-slate-50 focus:bg-white" placeholder="Tìm theo tên đề tài, mã, GVHD..." onkeyup="applyStudentCombinedFilters()">
+                            <input type="text" id="studentKeywordInput" class="form-control form-control-sm rounded-xl pl-8 text-xs bg-slate-50 focus:bg-white" placeholder="Tìm theo tên đề tài, mã, GVHD..." onkeyup="applyStudentCombinedFilters()" title="Tìm theo tên đề tài, mã, GVHD..." aria-label="Tìm theo tên đề tài, mã, GVHD...">
                             <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
                         </div>
 

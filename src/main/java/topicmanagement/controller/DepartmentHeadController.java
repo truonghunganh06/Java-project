@@ -15,7 +15,6 @@ import topicmanagement.repository.SubmissionRepository;
 
 import java.time.OffsetDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping({"/department-head", "/division-head"})
@@ -24,7 +23,6 @@ public class DepartmentHeadController {
     private final DepartmentHeadService departmentHeadService;
     private final CouncilService councilService;
     private final AnnouncementService announcementService;
-    private final LecturerService lecturerService;
     private final StudentGroupRepository studentGroupRepository;
     private final SubmissionRepository submissionRepository;
     private final GroupRegistrationService groupRegistrationService;
@@ -34,7 +32,6 @@ public class DepartmentHeadController {
             DepartmentHeadService departmentHeadService,
             CouncilService councilService,
             AnnouncementService announcementService,
-            LecturerService lecturerService,
             StudentGroupRepository studentGroupRepository,
             SubmissionRepository submissionRepository,
             GroupRegistrationService groupRegistrationService,
@@ -42,7 +39,6 @@ public class DepartmentHeadController {
         this.departmentHeadService = departmentHeadService;
         this.councilService = councilService;
         this.announcementService = announcementService;
-        this.lecturerService = lecturerService;
         this.studentGroupRepository = studentGroupRepository;
         this.submissionRepository = submissionRepository;
         this.groupRegistrationService = groupRegistrationService;
@@ -62,6 +58,75 @@ public class DepartmentHeadController {
         return user;
     }
 
+    @ModelAttribute("topbarNotifications")
+    public List<topicmanagement.dto.TopbarNotificationDto> populateTopbarNotifications(HttpSession session) {
+        AppUser user = getAuthenticatedDeptHead(session);
+        if (user == null) return Collections.emptyList();
+
+        Department dept = departmentHeadService.getDepartmentForUser(user);
+        Long deptId = dept != null ? dept.getId() : null;
+
+        List<topicmanagement.dto.TopbarNotificationDto> notifications = new ArrayList<>();
+
+        // 1. Thông báo đề tài mới chờ duyệt từ Giảng viên (Ưu tiên hiển thị cho Trưởng khoa)
+        List<Topic> allDeptTopics = departmentHeadService.getDepartmentTopics(deptId, null, null, null, null);
+        List<Topic> pendingTopics = allDeptTopics.stream()
+                .filter(t -> "PENDING".equalsIgnoreCase(t.getStatus()))
+                .limit(5)
+                .toList();
+
+        for (Topic t : pendingTopics) {
+            String authorName = (t.getSupervisor() != null && t.getSupervisor().getUser() != null)
+                    ? t.getSupervisor().getUser().getFullName()
+                    : "Giảng viên";
+            String dateStr = t.getCreatedAt() != null 
+                    ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format(t.getCreatedAt()) 
+                    : "Mới";
+            topicmanagement.dto.TopbarNotificationDto dto = new topicmanagement.dto.TopbarNotificationDto(
+                    "topic-" + t.getId(),
+                    "[ĐỀ TÀI MỚI] " + t.getTitle(),
+                    "GV " + authorName + " vừa gửi đề xuất đề tài mới cần phê duyệt",
+                    "DUYỆT ĐỀ TÀI",
+                    authorName,
+                    dateStr,
+                    "/department-head/topics?status=PENDING",
+                    "fa-solid fa-file-circle-question text-xs",
+                    "bg-amber-50 text-amber-600"
+            );
+            notifications.add(dto);
+        }
+
+        // 2. Thông báo từ cấp trên / toàn trường (LOẠI BỎ TRIỆT ĐỂ CÁC THÔNG BÁO DO CHÍNH TRƯỞNG KHOA TỰ BAN HÀNH)
+        List<Announcement> announcements = deptId != null 
+                ? announcementService.getAnnouncementsByDepartment(deptId) 
+                : announcementService.getAllAnnouncements();
+
+        for (Announcement a : announcements) {
+            // Chặn tuyệt đối: Người tạo thông báo không nhận lại thông báo của chính mình
+            if (a.getAuthor() != null && user.getId().equals(a.getAuthor().getId())) {
+                continue;
+            }
+            String authorName = a.getAuthor() != null ? a.getAuthor().getFullName() : "Ban Giám Hiệu";
+            String dateStr = a.getCreatedAt() != null 
+                    ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format(a.getCreatedAt()) 
+                    : "Mới";
+            topicmanagement.dto.TopbarNotificationDto dto = new topicmanagement.dto.TopbarNotificationDto(
+                    String.valueOf(a.getId()),
+                    a.getTitle(),
+                    a.getContent(),
+                    a.getCategory() != null ? a.getCategory() : "THÔNG BÁO",
+                    authorName,
+                    dateStr,
+                    null,
+                    "fa-solid fa-bullhorn text-xs",
+                    "bg-blue-50 text-blue-600"
+            );
+            notifications.add(dto);
+        }
+
+        return notifications;
+    }
+
     // ==================== DASHBOARD ====================
     @GetMapping("/dashboard")
     public String showDashboard(HttpSession session, Model model) {
@@ -72,23 +137,46 @@ public class DepartmentHeadController {
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
         Division division = departmentHeadService.getDivisionForUser(user);
-        Map<String, Object> stats = (division != null)
-                ? departmentHeadService.getDivisionStats(division.getId(), dept.getId())
-                : departmentHeadService.getDepartmentStats(dept.getId());
+        List<RegistrationPeriod> allDeptPeriods = departmentHeadService.getAllPeriods(dept != null ? dept.getId() : null);
 
-        List<Topic> allDeptTopics = (division != null)
-                ? departmentHeadService.getDivisionTopics(division.getId(), null, null, null, null)
-                : departmentHeadService.getDepartmentTopics(dept.getId(), null, null, null, null);
+        Integer currentSemester = (session != null && session.getAttribute("selectedSemester") != null)
+                ? (Integer) session.getAttribute("selectedSemester")
+                : (allDeptPeriods.isEmpty() ? 1 : (allDeptPeriods.get(0).getSemester() != null ? allDeptPeriods.get(0).getSemester() : 1));
+        String currentAcademicYear = (session != null && session.getAttribute("selectedAcademicYear") != null)
+                ? (String) session.getAttribute("selectedAcademicYear")
+                : (allDeptPeriods.isEmpty() ? "2026-2027" : (allDeptPeriods.get(0).getAcademicYear() != null ? allDeptPeriods.get(0).getAcademicYear() : "2026-2027"));
+
+        Map<String, Object> stats = departmentHeadService.getDepartmentStats(dept != null ? dept.getId() : null, currentSemester, currentAcademicYear);
+        List<Topic> rawTopics = departmentHeadService.getDepartmentTopics(dept != null ? dept.getId() : null, null, null, null, null);
+
+        // Lọc đồng bộ theo học kỳ & năm học đang chọn từ Neon PostgreSQL
+        List<Topic> allDeptTopics = rawTopics.stream()
+                .filter(t -> {
+                    if (currentSemester != null) {
+                        Integer tSem = t.getSemester() != null ? t.getSemester() : (t.getPeriod() != null ? t.getPeriod().getSemester() : null);
+                        if (tSem != null && !tSem.equals(currentSemester)) return false;
+                    }
+                    if (currentAcademicYear != null && !currentAcademicYear.isBlank()) {
+                        String tYear = t.getAcademicYear() != null ? t.getAcademicYear() : (t.getPeriod() != null ? t.getPeriod().getAcademicYear() : null);
+                        if (tYear != null && !tYear.equalsIgnoreCase(currentAcademicYear)) return false;
+                    }
+                    return true;
+                })
+                .toList();
 
         List<Topic> pendingTopics = allDeptTopics.stream()
                 .filter(t -> "PENDING".equalsIgnoreCase(t.getStatus()))
                 .toList();
 
-        List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
-        List<Announcement> announcements = announcementService.getAnnouncementsByDepartment(dept.getId());
-        List<Council> councils = (division != null)
-                ? councilService.getCouncilsByDivision(division.getId())
-                : councilService.getCouncilsByDepartment(dept.getId());
+        List<RegistrationPeriod> periods = allDeptPeriods.stream()
+                .filter(p -> {
+                    if (currentSemester != null && p.getSemester() != null && !p.getSemester().equals(currentSemester)) return false;
+                    if (currentAcademicYear != null && p.getAcademicYear() != null && !p.getAcademicYear().equalsIgnoreCase(currentAcademicYear)) return false;
+                    return true;
+                })
+                .toList();
+        List<Announcement> announcements = announcementService.getAnnouncementsByDepartment(dept != null ? dept.getId() : null);
+        List<Council> councils = councilService.getCouncilsByDepartment(dept != null ? dept.getId() : null);
 
         long countExcellent = allDeptTopics.stream().filter(t -> t.getFinalScore() != null && t.getFinalScore() >= 9.0).count();
         long countGood = allDeptTopics.stream().filter(t -> t.getFinalScore() != null && t.getFinalScore() >= 8.0 && t.getFinalScore() < 9.0).count();
@@ -450,7 +538,7 @@ public class DepartmentHeadController {
             @RequestParam(value = "periodId", required = false) Long periodId,
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "page", defaultValue = "1") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "size", defaultValue = "100") int size,
             HttpSession session,
             Model model) {
 
@@ -465,26 +553,19 @@ public class DepartmentHeadController {
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
                 Math.max(0, page - 1), size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
 
-        org.springframework.data.domain.Page<Topic> topicsPage = (division != null)
-                ? departmentHeadService.getDivisionTopicsPaged(division.getId(), status, majorId, periodId, keyword, pageable)
-                : departmentHeadService.getDepartmentTopicsPaged(dept.getId(), status, majorId, periodId, keyword, pageable);
-
+        org.springframework.data.domain.Page<Topic> topicsPage = departmentHeadService.getDepartmentTopicsPaged(dept != null ? dept.getId() : null, status, majorId, periodId, keyword, pageable);
         List<Topic> topics = topicsPage.getContent();
-
-        List<Major> majors = (division != null)
-                ? departmentHeadService.getDivisionMajors(division.getId())
-                : departmentHeadService.getDepartmentMajors(dept.getId());
-
-        List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
-        List<Lecturer> lecturers = departmentHeadService.getLecturersInDepartment(dept.getId());
-
-        List<Council> councils = (division != null)
-                ? councilService.getCouncilsByDivision(division.getId())
-                : councilService.getCouncilsByDepartment(dept.getId());
-
-        Map<String, Object> stats = (division != null)
-                ? departmentHeadService.getDivisionStats(division.getId(), dept.getId())
-                : departmentHeadService.getDepartmentStats(dept.getId());
+        List<Major> majors = departmentHeadService.getDepartmentMajors(dept != null ? dept.getId() : null);
+        List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept != null ? dept.getId() : null);
+        List<Lecturer> lecturers = departmentHeadService.getLecturersInDepartment(dept != null ? dept.getId() : null);
+        List<Council> councils = councilService.getCouncilsByDepartment(dept != null ? dept.getId() : null);
+        Integer currentSemester = (session != null && session.getAttribute("selectedSemester") != null)
+                ? (Integer) session.getAttribute("selectedSemester")
+                : null;
+        String currentAcademicYear = (session != null && session.getAttribute("selectedAcademicYear") != null)
+                ? (String) session.getAttribute("selectedAcademicYear")
+                : null;
+        Map<String, Object> stats = departmentHeadService.getDepartmentStats(dept != null ? dept.getId() : null, currentSemester, currentAcademicYear);
 
         // Lập bản đồ thành viên từng hội đồng để tự động lọc bỏ hội đồng xung đột với GVHD (batch load)
         List<Long> councilIds = councils.stream().map(Council::getId).toList();
@@ -518,16 +599,14 @@ public class DepartmentHeadController {
         }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
-        Division division = departmentHeadService.getDivisionForUser(user);
         Topic topic = departmentHeadService.getTopicById(id);
-        Long divId = division != null ? division.getId() : null;
         Long deptId = dept != null ? dept.getId() : null;
-        boolean success = departmentHeadService.approveTopic(id, divId, deptId);
+        boolean success = departmentHeadService.approveTopic(id, null, deptId);
 
         if (success) {
             redirectAttributes.addFlashAttribute("successMessage", "Phê duyệt thành công đề tài: '" + (topic != null ? topic.getTitle() : "") + "'!");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể phê duyệt đề tài (không tìm thấy hoặc không thuộc bộ môn của bạn)!");
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể phê duyệt đề tài (không tìm thấy hoặc không thuộc khoa của bạn)!");
         }
 
         return "redirect:/department-head/topics";
@@ -546,16 +625,14 @@ public class DepartmentHeadController {
         }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
-        Division division = departmentHeadService.getDivisionForUser(user);
         Topic topic = departmentHeadService.getTopicById(id);
-        Long divId = division != null ? division.getId() : null;
         Long deptId = dept != null ? dept.getId() : null;
-        boolean success = departmentHeadService.rejectTopic(id, rejectionReason != null ? rejectionReason.trim() : "Chưa đạt yêu cầu", divId, deptId);
+        boolean success = departmentHeadService.rejectTopic(id, rejectionReason != null ? rejectionReason.trim() : "Chưa đạt yêu cầu", null, deptId);
 
         if (success) {
             redirectAttributes.addFlashAttribute("errorMessage", "Đã từ chối đề tài '" + (topic != null ? topic.getTitle() : "") + "'.");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể từ chối đề tài (không tìm thấy hoặc không thuộc bộ môn của bạn)!");
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể từ chối đề tài (không tìm thấy hoặc không thuộc khoa của bạn)!");
         }
         return "redirect:/department-head/topics";
     }
@@ -573,11 +650,9 @@ public class DepartmentHeadController {
         if (user == null) return "redirect:/login";
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
-        Division division = departmentHeadService.getDivisionForUser(user);
-        Long divId = division != null ? division.getId() : null;
         Long deptId = dept != null ? dept.getId() : null;
 
-        boolean success = departmentHeadService.quickEditAndApproveTopic(id, title, description, requirements, divId, deptId);
+        boolean success = departmentHeadService.quickEditAndApproveTopic(id, title, description, requirements, null, deptId);
         if (success) {
             redirectAttributes.addFlashAttribute("successMessage", "Đã hiệu chỉnh và Phê duyệt đề tài thành công để kịp tiến độ công bố!");
         } else {
@@ -639,22 +714,14 @@ public class DepartmentHeadController {
         Department dept = departmentHeadService.getDepartmentForUser(user);
         Division division = departmentHeadService.getDivisionForUser(user);
 
-        List<Council> councils = (division != null)
-                ? councilService.getCouncilsByDivision(division.getId())
-                : (dept != null ? councilService.getCouncilsByDepartment(dept.getId()) : Collections.emptyList());
-
-        List<Lecturer> lecturers = (division != null)
-                ? departmentHeadService.getLecturersInDivision(division.getId())
-                : (dept != null ? departmentHeadService.getLecturersInDepartment(dept.getId()) : Collections.emptyList());
-
+        List<Council> councils = (dept != null ? councilService.getCouncilsByDepartment(dept.getId()) : Collections.emptyList());
+        List<Lecturer> lecturers = (dept != null ? departmentHeadService.getLecturersInDepartment(dept.getId()) : Collections.emptyList());
         List<RegistrationPeriod> periods = (dept != null)
                 ? departmentHeadService.getAllPeriods(dept.getId())
                 : Collections.emptyList();
 
-        // Lấy tất cả đề tài đã duyệt thuộc Khoa/Bộ môn để phục vụ phân công
-        List<Topic> allApprovedTopics = (division != null)
-                ? departmentHeadService.getDivisionTopics(division.getId(), "APPROVED", null, null, null)
-                : (dept != null ? departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, null, null) : Collections.emptyList());
+        // Lấy tất cả đề tài đã duyệt thuộc Khoa để phục vụ phân công
+        List<Topic> allApprovedTopics = (dept != null ? departmentHeadService.getDepartmentTopics(dept.getId(), "APPROVED", null, null, null) : Collections.emptyList());
 
         // Lập bản đồ đề tài đã gán cho từng hội đồng
         Map<Long, List<Topic>> councilTopicsMap = new HashMap<>();

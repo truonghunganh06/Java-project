@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head th:replace="~{fragments/head :: head('Hội Đồng Bảo Vệ')}"></head>
+<head th:replace="~{fragments/head :: head('Hội Đồng Bảo Vệ')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
 <body>
 
     <!-- Left Sidebar -->
@@ -17,11 +21,11 @@
             <!-- Flash messages -->
             <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200" role="alert">
                 <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
             </div>
             <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200" role="alert">
                 <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span th:text="${errorMessage}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
             </div>
 
             <!-- Page Header -->
@@ -38,11 +42,11 @@
             <div class="saas-card p-3 mb-4">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                     <div class="relative flex-grow-1 max-w-md">
-                        <input type="text" class="form-control form-control-sm rounded-xl pl-8 text-xs" placeholder="Tìm kiếm hội đồng, giảng viên, địa điểm..." onkeyup="filterTableByKeyword(this.value)">
+                        <input type="text" class="form-control form-control-sm rounded-xl pl-8 text-xs" placeholder="Tìm kiếm hội đồng, giảng viên, địa điểm..." onkeyup="filterTableByKeyword(this.value)" title="Tìm kiếm hội đồng, giảng viên, địa điểm..." aria-label="Tìm kiếm hội đồng, giảng viên, địa điểm...">
                         <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
                     </div>
                     <div class="d-flex flex-wrap align-items-center gap-2">
-                        <select class="form-select form-select-sm rounded-xl text-xs" style="width: 220px;" onchange="filterTableByAttribute('period', this.value)">
+                        <select class="form-select form-select-sm rounded-xl text-xs" style="width: 220px;" onchange="filterTableByAttribute('period', this.value)" title="Lựa chọn" aria-label="Lựa chọn">
                             <option value="all">-- Tất cả các đợt --</option>
                             <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}"></option>
                         </select>
@@ -82,7 +86,7 @@
                                 <div th:each="m : ${c.members}" class="d-flex justify-content-between align-items-center py-2 px-3 bg-white">
                                     <div>
                                         <span class="font-semibold text-slate-900 text-xs" th:text="${m.lecturer != null && m.lecturer.user != null ? m.lecturer.user.fullName : 'GV'}">TS. Nguyễn Văn A</span>
-                                        <span class="text-slate-400 text-xs d-block" th:text="${m.lecturer != null ? (m.lecturer.academicRank != null ? m.lecturer.academicRank : 'GV') + ' - ' + m.lecturer.lecturerCode : ''}"></span>
+                                        <span class="text-slate-400 text-xs d-block" th:text="${m.lecturer != null ? (m.lecturer.degree != null ? m.lecturer.degree : (m.lecturer.academicTitle != null ? m.lecturer.academicTitle : 'GV')) + ' - ' + (m.lecturer.lecturerCode != null ? m.lecturer.lecturerCode : '') : ''}"></span>
                                     </div>
                                     <div>
                                         <span th:if="${m.councilRole == 'PRESIDENT'}" class="badge-pill-pending font-semibold">
@@ -137,83 +141,87 @@
                         </div>
                     </div>
 
-                    <!-- Modal Assign Topics to Council -->
-                    <div class="modal fade text-start" th:id="'assignTopicsModal-' + ${c.id}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-lg modal-dialog-centered">
-                            <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
-                                <div class="modal-header border-b border-slate-100 bg-gradient-to-r from-purple-50 to-indigo-50 p-4">
-                                    <h6 class="modal-title font-bold text-slate-900 text-sm d-flex align-items-center gap-2">
-                                        <i class="fa-solid fa-users-rectangle text-purple-600"></i>
-                                        Phân công Đề tài vào Hội đồng: <span class="text-purple-700" th:text="${c.name}"></span>
-                                    </h6>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body p-4 space-y-4">
-                                    <!-- Council Info summary -->
-                                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-xs text-slate-700 flex flex-wrap gap-x-4 gap-y-1">
-                                        <div><i class="fa-solid fa-tag text-slate-400 me-1"></i> Mã: <strong th:text="${c.code != null ? c.code : 'HD-' + c.id}"></strong></div>
-                                        <div><i class="fa-regular fa-calendar text-slate-400 me-1"></i> Thời gian: <strong th:text="${c.defenseDate != null ? #temporals.format(c.defenseDate, 'dd/MM/yyyy HH:mm') : 'Chưa định'}"></strong></div>
-                                        <div><i class="fa-solid fa-location-dot text-slate-400 me-1"></i> Phòng: <strong th:text="${c.location != null ? c.location : 'Chưa có'}"></strong></div>
-                                    </div>
-
-                                    <!-- Add topic form -->
-                                    <div class="p-3.5 bg-purple-50/50 rounded-xl border border-purple-100">
-                                        <h6 class="text-xs font-bold text-purple-900 mb-2">Thêm Đề tài vào Hội đồng này:</h6>
-                                        <form th:action="@{/department-head/councils/{id}/assign-topic(id=${c.id})}" method="post" class="d-flex gap-2">
-                                            <select name="topicId" class="form-select text-xs rounded-xl flex-grow border-slate-300" required>
-                                                <option value="">-- Chọn đề tài đã duyệt để gán vào Hội đồng --</option>
-                                                <option th:each="at : ${allApprovedTopics}"
-                                                        th:if="${(at.council == null || at.council.id != c.id) && (councilLecturerIdsMap == null || councilLecturerIdsMap.get(c.id) == null || ((at.supervisor == null || !councilLecturerIdsMap.get(c.id).contains(at.supervisor.id)) && (at.coSupervisor == null || !councilLecturerIdsMap.get(c.id).contains(at.coSupervisor.id))))}"
-                                                        th:value="${at.id}"
-                                                        th:text="'[' + ${at.code} + '] ' + ${at.title} + ' - GVHD: ' + (${at.supervisor != null && at.supervisor.user != null ? at.supervisor.user.fullName : 'N/A'})">
-                                                </option>
-                                            </select>
-                                            <button type="submit" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-3.5 text-xs font-semibold shrink-0">
-                                                <i class="fa-solid fa-plus me-1"></i> Gán đề tài
-                                            </button>
-                                        </form>
-                                        <span class="text-2xs text-slate-500 mt-1.5 d-block italic">
-                                            * Hệ thống tự động ẩn các đề tài mà GVHD/GV đồng HD là thành viên của Hội đồng này để đảm bảo tính khách quan.
-                                        </span>
-                                    </div>
-
-                                    <!-- Current list in modal -->
-                                    <div>
-                                        <h6 class="text-xs font-bold text-slate-800 mb-2">Danh sách đề tài hiện tại trong Hội đồng (<span th:text="${councilTopicsMap != null && councilTopicsMap.get(c.id) != null ? councilTopicsMap.get(c.id).size() : 0}">0</span>):</h6>
-                                        <div th:if="${councilTopicsMap != null && councilTopicsMap.get(c.id) != null && !#lists.isEmpty(councilTopicsMap.get(c.id))}" class="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
-                                            <div th:each="tp : ${councilTopicsMap.get(c.id)}" class="p-3 d-flex justify-content-between align-items-center bg-white hover:bg-slate-50 transition">
-                                                <div>
-                                                    <span class="text-xs font-mono font-bold text-purple-700" th:text="${tp.code}">DT-01</span>
-                                                    <h6 class="text-xs font-bold text-slate-800 mb-0.5" th:text="${tp.title}">Tên đề tài</h6>
-                                                    <div class="text-2xs text-slate-500">
-                                                        GVHD: <strong class="text-slate-700" th:text="${tp.supervisor != null && tp.supervisor.user != null ? tp.supervisor.user.fullName : 'N/A'}"></strong> |
-                                                        SV: <span th:text="${tp.student != null && tp.student.user != null ? tp.student.user.fullName : (tp.group != null ? tp.group.name : 'Chưa có SV')}"></span>
-                                                    </div>
-                                                </div>
-                                                <form th:action="@{/department-head/councils/{id}/unassign-topic(id=${c.id})}" method="post">
-                                                    <input type="hidden" name="topicId" th:value="${tp.id}">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-2.5 py-1 text-xs font-medium" onclick="return confirm('Bạn có chắc muốn hủy phân công đề tài này khỏi hội đồng?')">
-                                                        <i class="fa-solid fa-xmark me-1"></i> Gỡ
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                        <div th:if="${councilTopicsMap == null || councilTopicsMap.get(c.id) == null || #lists.isEmpty(councilTopicsMap.get(c.id))}" class="p-4 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-slate-200">
-                                            Hội đồng chưa có đề tài nào. Hãy chọn đề tài ở khung phía trên và nhấn <strong>Gán đề tài</strong>.
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="modal-footer border-t border-slate-100 bg-slate-50/50 p-3">
-                                    <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-4 text-xs font-medium" data-bs-dismiss="modal">Đóng</button>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
 
         </main>
     </div>
+
+    <!-- Modals Assign Topics to Council -->
+    <th:block th:each="c : ${councils}">
+        <div class="modal fade text-start" th:id="'assignTopicsModal-' + ${c.id}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
+                    <div class="modal-header border-b border-slate-100 bg-gradient-to-r from-purple-50 to-indigo-50 p-4">
+                        <h6 class="modal-title font-bold text-slate-900 text-sm d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-users-rectangle text-purple-600"></i>
+                            Phân công Đề tài vào Hội đồng: <span class="text-purple-700" th:text="${c.name}"></span>
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-4">
+                        <!-- Council Info summary -->
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-xs text-slate-700 flex flex-wrap gap-x-4 gap-y-1">
+                            <div><i class="fa-solid fa-tag text-slate-400 me-1"></i> Mã: <strong th:text="${c.code != null ? c.code : 'HD-' + c.id}"></strong></div>
+                            <div><i class="fa-regular fa-calendar text-slate-400 me-1"></i> Thời gian: <strong th:text="${c.defenseDate != null ? #temporals.format(c.defenseDate, 'dd/MM/yyyy HH:mm') : 'Chưa định'}"></strong></div>
+                            <div><i class="fa-solid fa-location-dot text-slate-400 me-1"></i> Phòng: <strong th:text="${c.location != null ? c.location : 'Chưa có'}"></strong></div>
+                        </div>
+
+                        <!-- Add topic form -->
+                        <div class="p-3.5 bg-purple-50/50 rounded-xl border border-purple-100">
+                            <h6 class="text-xs font-bold text-purple-900 mb-2">Thêm Đề tài vào Hội đồng này:</h6>
+                            <form th:action="@{/department-head/councils/{id}/assign-topic(id=${c.id})}" method="post" class="d-flex gap-2">
+                                <select name="topicId" class="form-select text-xs rounded-xl flex-grow border-slate-300" required title="topicId" aria-label="topicId">
+                                    <option value="">-- Chọn đề tài đã duyệt để gán vào Hội đồng --</option>
+                                    <option th:each="at : ${allApprovedTopics}"
+                                            th:if="${(at.council == null || at.council.id != c.id) && (councilLecturerIdsMap == null || councilLecturerIdsMap.get(c.id) == null || ((at.supervisor == null || !councilLecturerIdsMap.get(c.id).contains(at.supervisor.id)) && (at.coSupervisor == null || !councilLecturerIdsMap.get(c.id).contains(at.coSupervisor.id))))}"
+                                            th:value="${at.id}"
+                                            th:text="'[' + ${at.code} + '] ' + ${at.title} + ' - GVHD: ' + (${at.supervisor != null && at.supervisor.user != null ? at.supervisor.user.fullName : 'N/A'}) + (${at.council != null ? ' (Đang ở HĐ: ' + at.council.name + ')' : ' (Chưa phân công)'})">
+                                    </option>
+                                </select>
+                                <button type="submit" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-3.5 text-xs font-semibold shrink-0">
+                                    <i class="fa-solid fa-plus me-1"></i> Gán đề tài
+                                </button>
+                            </form>
+                            <span class="text-2xs text-slate-500 mt-1.5 d-block italic">
+                                * Hệ thống tự động lọc và ẩn các đề tài có GVHD / GV đồng HD tham gia trong Hội đồng này để đảm bảo tính khách quan.
+                            </span>
+                        </div>
+
+                        <!-- Current list in modal -->
+                        <div>
+                            <h6 class="text-xs font-bold text-slate-800 mb-2">Danh sách đề tài hiện tại trong Hội đồng (<span th:text="${councilTopicsMap != null && councilTopicsMap.get(c.id) != null ? councilTopicsMap.get(c.id).size() : 0}">0</span>):</h6>
+                            <div th:if="${councilTopicsMap != null && councilTopicsMap.get(c.id) != null && !#lists.isEmpty(councilTopicsMap.get(c.id))}" class="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
+                                <div th:each="tp : ${councilTopicsMap.get(c.id)}" class="p-3 d-flex justify-content-between align-items-center bg-white hover:bg-slate-50 transition">
+                                    <div>
+                                        <span class="text-xs font-mono font-bold text-purple-700" th:text="${tp.code}">DT-01</span>
+                                        <h6 class="text-xs font-bold text-slate-800 mb-0.5" th:text="${tp.title}">Tên đề tài</h6>
+                                        <div class="text-2xs text-slate-500">
+                                            GVHD: <strong class="text-slate-700" th:text="${tp.supervisor != null && tp.supervisor.user != null ? tp.supervisor.user.fullName : 'N/A'}"></strong> |
+                                            Ngành: <span class="text-slate-600 font-medium" th:text="${tp.major != null ? tp.major.name : (tp.division != null ? tp.division.name : 'CNTT')}"></span>
+                                        </div>
+                                    </div>
+                                    <form th:action="@{/department-head/councils/{id}/unassign-topic(id=${c.id})}" method="post">
+                                        <input type="hidden" name="topicId" th:value="${tp.id}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-2.5 py-1 text-xs font-medium" onclick="return confirm('Bạn có chắc muốn hủy phân công đề tài này khỏi hội đồng?')">
+                                            <i class="fa-solid fa-xmark me-1"></i> Gỡ
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div th:if="${councilTopicsMap == null || councilTopicsMap.get(c.id) == null || #lists.isEmpty(councilTopicsMap.get(c.id))}" class="p-4 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-slate-200">
+                                Hội đồng chưa có đề tài nào. Hãy chọn đề tài ở khung phía trên và nhấn <strong>Gán đề tài</strong>.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 bg-slate-50/50 p-3">
+                        <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-4 text-xs font-medium" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
 
     <!-- Modal Create Council -->
     <div class="modal fade" id="createCouncilModal" tabindex="-1">
@@ -222,32 +230,32 @@
                 <form th:action="@{/department-head/councils/create}" method="post">
                     <div class="modal-header border-b border-slate-100 p-4">
                         <h6 class="modal-title font-bold text-slate-900 text-sm"><i class="fa-solid fa-scale-balanced text-blue-600 me-1.5"></i> Thành Lập Hội Đồng Bảo Vệ & Phản Biện</h6>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
                     </div>
                     <div class="modal-body p-4 space-y-3">
                         <div class="row g-3">
                             <div class="col-md-8">
                                 <label class="form-label text-xs font-semibold text-slate-700">Tên Hội đồng *</label>
-                                <input type="text" name="name" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Hội đồng Khóa luận Tốt nghiệp 01" required>
+                                <input type="text" name="name" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Hội đồng Khóa luận Tốt nghiệp 01" required title="name" aria-label="name">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-xs font-semibold text-slate-700">Mã Hội đồng</label>
-                                <input type="text" name="code" class="form-control text-xs rounded-xl" placeholder="Ví dụ: HD-CNTT-01">
+                                <input type="text" name="code" class="form-control text-xs rounded-xl" placeholder="Ví dụ: HD-CNTT-01" title="code" aria-label="code">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Gắn với Đợt đăng ký</label>
-                                <select name="periodId" class="form-select text-xs rounded-xl">
+                                <select name="periodId" class="form-select text-xs rounded-xl" title="periodId" aria-label="periodId">
                                     <option value="">-- Chọn đợt đăng ký --</option>
                                     <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}"></option>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Địa điểm / Phòng bảo vệ</label>
-                                <input type="text" name="location" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Phòng A101 / Online Zoom">
+                                <input type="text" name="location" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Phòng A101 / Online Zoom" title="location" aria-label="location">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-slate-700">Ngày giờ bảo vệ</label>
-                                <input type="datetime-local" name="defenseDate" class="form-control text-xs rounded-xl">
+                                <input type="datetime-local" name="defenseDate" class="form-control text-xs rounded-xl" title="defenseDate" aria-label="defenseDate">
                             </div>
 
                             <div class="col-12"><hr class="my-1 border-slate-100"></div>
@@ -260,41 +268,41 @@
 
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-amber-700"><i class="fa-solid fa-crown me-1 text-amber-500"></i> Chủ tịch Hội đồng *</label>
-                                <select name="presidentId" class="form-select text-xs rounded-xl border-amber-200 bg-amber-50/20" required>
+                                <select name="presidentId" class="form-select text-xs rounded-xl border-amber-200 bg-amber-50/20" required title="presidentId" aria-label="presidentId">
                                     <option value="">-- Chọn Chủ tịch --</option>
-                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user.fullName + ' (' + l.lecturerCode + ')'}"></option>
+                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${(l.user != null ? l.user.fullName : 'GV') + ' (' + (l.lecturerCode != null ? l.lecturerCode : '') + ')'}"></option>
                                 </select>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label text-xs font-semibold text-blue-700"><i class="fa-solid fa-pen-fancy me-1 text-blue-500"></i> Thư ký Hội đồng *</label>
-                                <select name="secretaryId" class="form-select text-xs rounded-xl border-blue-200 bg-blue-50/20" required>
+                                <select name="secretaryId" class="form-select text-xs rounded-xl border-blue-200 bg-blue-50/20" required title="secretaryId" aria-label="secretaryId">
                                     <option value="">-- Chọn Thư ký --</option>
-                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user.fullName + ' (' + l.lecturerCode + ')'}"></option>
+                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${(l.user != null ? l.user.fullName : 'GV') + ' (' + (l.lecturerCode != null ? l.lecturerCode : '') + ')'}"></option>
                                 </select>
                             </div>
 
                             <div class="col-md-4">
                                 <label class="form-label text-xs font-semibold text-slate-700">Ủy viên 1 *</label>
-                                <select name="member1Id" class="form-select text-xs rounded-xl" required>
+                                <select name="member1Id" class="form-select text-xs rounded-xl" required title="member1Id" aria-label="member1Id">
                                     <option value="">-- Chọn Ủy viên 1 --</option>
-                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user.fullName}"></option>
+                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user != null ? l.user.fullName : 'GV'}"></option>
                                 </select>
                             </div>
 
                             <div class="col-md-4">
                                 <label class="form-label text-xs font-semibold text-slate-700">Ủy viên 2 (Tùy chọn)</label>
-                                <select name="member2Id" class="form-select text-xs rounded-xl">
+                                <select name="member2Id" class="form-select text-xs rounded-xl" title="member2Id" aria-label="member2Id">
                                     <option value="">-- Không chọn --</option>
-                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user.fullName}"></option>
+                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user != null ? l.user.fullName : 'GV'}"></option>
                                 </select>
                             </div>
 
                             <div class="col-md-4">
                                 <label class="form-label text-xs font-semibold text-slate-700">Ủy viên 3 (Tùy chọn)</label>
-                                <select name="member3Id" class="form-select text-xs rounded-xl">
+                                <select name="member3Id" class="form-select text-xs rounded-xl" title="member3Id" aria-label="member3Id">
                                     <option value="">-- Không chọn --</option>
-                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user.fullName}"></option>
+                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user != null ? l.user.fullName : 'GV'}"></option>
                                 </select>
                             </div>
                         </div>

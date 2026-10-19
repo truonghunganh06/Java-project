@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub AI Chat</title>
+</head>
 <body>
     <div th:fragment="aiChatWidget">
         <!-- Floating AI Desktop Virtual Pet Mascot (Black Dot) -->
@@ -111,7 +115,7 @@
                 <form id="aiChatForm" onsubmit="handleAiChatSubmit(event)" class="d-flex align-items-center gap-1.5">
                     <input type="text" id="aiChatInput"
                         class="form-control form-control-sm border-0 bg-slate-100 rounded-2xl text-xs px-3 py-2 text-slate-800"
-                        placeholder="Hỏi Black Dot bất kỳ điều gì..." autocomplete="off" required>
+                        placeholder="Hỏi Black Dot bất kỳ điều gì..." autocomplete="off" required title="Hỏi Black Dot bất kỳ điều gì..." aria-label="Hỏi Black Dot bất kỳ điều gì...">
                     <button type="submit"
                         class="btn btn-sm bg-gradient-to-tr from-slate-900 via-blue-900 to-blue-600 hover:from-slate-800 hover:to-blue-700 text-white rounded-2xl px-3.5 py-2 shadow-xs transition flex-shrink-0">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
@@ -130,7 +134,8 @@
                 display: flex;
                 flex-direction: column;
                 align-items: flex-end;
-                user-select: none;
+                -webkit-user-select: none;
+            user-select: none;
                 cursor: pointer;
                 touch-action: none;
             }
@@ -288,7 +293,7 @@
                 height: 104px;
                 position: relative;
                 cursor: pointer;
-                transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
                 transform-origin: bottom center;
             }
 
@@ -379,7 +384,7 @@
 
             /* Playful Happy Hop */
             .pet-hopping .black-dot-sprite {
-                animation: petHopJoy 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+                animation: petHopJoy 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
             }
 
             .pet-hopping .black-dot-floor-shadow {
@@ -530,7 +535,8 @@
             .ai-chat-header {
                 cursor: grab;
                 touch-action: none;
-                user-select: none;
+                -webkit-user-select: none;
+            user-select: none;
             }
 
             .ai-chat-header:active,

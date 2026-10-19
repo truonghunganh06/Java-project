@@ -319,6 +319,8 @@ public class StudentService {
         return list.stream()
                 // Lọc theo Khoa của sinh viên (nếu có departmentId)
                 .filter(t -> departmentId == null
+                        || (t.getDepartment() != null
+                            && departmentId.equals(t.getDepartment().getId()))
                         || (t.getMajor() != null
                             && t.getMajor().getDepartment() != null
                             && departmentId.equals(t.getMajor().getDepartment().getId()))
@@ -375,6 +377,13 @@ public class StudentService {
         // Nếu nhóm truyền vào là null, tìm nhóm của sinh viên trong đợt của đề tài
         if (group == null) {
             group = getMyActiveGroup(student, topicPeriodId);
+        }
+
+        // GLOBAL VALIDATION: Chặn tuyệt đối đề tài khác Khoa
+        Department studentDept = student.getDepartment();
+        Department topicDept = topic.getDepartment();
+        if (studentDept != null && topicDept != null && !Objects.equals(studentDept.getId(), topicDept.getId())) {
+            return "Sinh viên " + studentDept.getName() + " không được đăng ký đề tài thuộc " + topicDept.getName() + "!";
         }
 
         // Sinh viên bắt buộc phải có nhóm trước khi đăng ký đề tài
@@ -585,6 +594,13 @@ public class StudentService {
     @Cacheable("activePeriods")
     public List<RegistrationPeriod> getAllActivePeriods() {
         return periodRepository.findByIsActiveTrueOrderByIdDesc();
+    }
+
+    public List<RegistrationPeriod> getActivePeriodsForStudent(Student student) {
+        if (student != null && student.getDepartmentId() != null) {
+            return periodRepository.findByDepartmentId(student.getDepartmentId());
+        }
+        return getAllActivePeriods();
     }
 
     @Cacheable("allMajors")

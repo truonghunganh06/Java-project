@@ -102,4 +102,14 @@ public class Lecturer {
     public void setMaxTopicsQuota(Integer maxTopicsQuota) {
         this.maxTopicsQuota = maxTopicsQuota;
     }
+
+    public String getAcademicRank() {
+        if (degree != null && !degree.trim().isEmpty()) {
+            return degree;
+        }
+        if (academicTitle != null && !academicTitle.trim().isEmpty()) {
+            return academicTitle;
+        }
+        return "GV";
+    }
 }

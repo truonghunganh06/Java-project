@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 
-<head th:replace="~{fragments/head :: head('Lỗi máy chủ (500) - TopicHub')}"></head>
+<head th:replace="~{fragments/head :: head('Lỗi máy chủ (500) - TopicHub')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
 
 <body
     class="bg-slate-50 min-h-screen d-flex align-items-center justify-content-center p-3 p-md-4 position-relative overflow-x-hidden">
@@ -142,6 +146,7 @@
 
         .hero-error-text-wrap {
             line-height: 0.8;
+            -webkit-user-select: none;
             user-select: none;
         }
 

@@ -1,31 +1,33 @@
 package topicmanagement.repository;
 
+import org.springframework.lang.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 import topicmanagement.entity.StudentGroup;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface StudentGroupRepository extends JpaRepository<StudentGroup, Long> {
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
     @Override
-    Optional<StudentGroup> findById(Long id);
+    @NonNull
+    Optional<StudentGroup> findById(@NonNull Long id);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
     @Override
+    @NonNull
     List<StudentGroup> findAll();
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
     @Override
-    Page<StudentGroup> findAll(Pageable pageable);
+    @NonNull
+    Page<StudentGroup> findAll(@NonNull Pageable pageable);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
     Optional<StudentGroup> findByGroupCode(String groupCode);

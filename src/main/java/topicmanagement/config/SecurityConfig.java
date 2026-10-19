@@ -68,7 +68,8 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/css/**", "/js/**", "/images/**", "/webjars/**",
                     "/favicon.ico", "/uploads/**", "/error",
-                    "/swagger-ui/**", "/v3/api-docs/**"
+                    "/swagger-ui/**", "/v3/api-docs/**",
+                    "/actuator/**"
                 ).permitAll()
                 // Public auth endpoints
                 .requestMatchers("/", "/login", "/auth/**").permitAll()

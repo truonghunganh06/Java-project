@@ -14,36 +14,30 @@ public class LecturerService {
 
     private final LecturerRepository lecturerRepository;
     private final TopicRepository topicRepository;
-    private final TopicRegistrationRepository registrationRepository;
     private final SubmissionRepository submissionRepository;
     private final MajorRepository majorRepository;
     private final DepartmentRepository departmentRepository;
     private final RegistrationPeriodRepository periodRepository;
     private final StudentGroupRepository studentGroupRepository;
     private final CouncilRepository councilRepository;
-    private final EvaluationRepository evaluationRepository;
 
     public LecturerService(
             LecturerRepository lecturerRepository,
             TopicRepository topicRepository,
-            TopicRegistrationRepository registrationRepository,
             SubmissionRepository submissionRepository,
             MajorRepository majorRepository,
             DepartmentRepository departmentRepository,
             RegistrationPeriodRepository periodRepository,
             StudentGroupRepository studentGroupRepository,
-            CouncilRepository councilRepository,
-            EvaluationRepository evaluationRepository) {
+            CouncilRepository councilRepository) {
         this.lecturerRepository = lecturerRepository;
         this.topicRepository = topicRepository;
-        this.registrationRepository = registrationRepository;
         this.submissionRepository = submissionRepository;
         this.majorRepository = majorRepository;
         this.departmentRepository = departmentRepository;
         this.periodRepository = periodRepository;
         this.studentGroupRepository = studentGroupRepository;
         this.councilRepository = councilRepository;
-        this.evaluationRepository = evaluationRepository;
     }
 
     @Transactional
@@ -116,9 +110,12 @@ public class LecturerService {
 
     @Transactional
     public Topic createTopic(Lecturer supervisor, Long periodId, Long majorId, Long coSupervisorId, Topic topic) {
-        Major major = majorRepository.findById(majorId).orElse(null);
+        Major major = majorId != null ? majorRepository.findById(majorId).orElse(null) : null;
         topic.setMajor(major);
         topic.setSupervisor(supervisor);
+        if (supervisor != null && supervisor.getDepartment() != null) {
+            topic.setDepartment(supervisor.getDepartment());
+        }
 
         if (topic.getDivision() == null) {
             if (supervisor != null && supervisor.getDivision() != null) {
@@ -138,7 +135,7 @@ public class LecturerService {
             topic.setPeriod(period);
         }
 
-        if (coSupervisorId != null && !coSupervisorId.equals(supervisor.getId())) {
+        if (coSupervisorId != null && (supervisor == null || !coSupervisorId.equals(supervisor.getId()))) {
             topic.setCoSupervisor(lecturerRepository.findById(coSupervisorId).orElse(null));
         }
 
@@ -335,6 +332,13 @@ public class LecturerService {
 
     public List<RegistrationPeriod> getAllPeriods() {
         return periodRepository.findAll();
+    }
+
+    public List<RegistrationPeriod> getPeriodsForLecturer(Lecturer lecturer) {
+        if (lecturer != null && lecturer.getDepartment() != null) {
+            return periodRepository.findByDepartmentId(lecturer.getDepartment().getId());
+        }
+        return periodRepository.findByIsActiveTrueOrderByIdDesc();
     }
 
     public static class ProposalProgressDto {

@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head th:replace="~{fragments/head :: head('Bảng điều khiển Giảng viên')}"></head>
+<head th:replace="~{fragments/head :: head('Bảng điều khiển Giảng viên')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
 <body>
 
     <!-- Left Sidebar -->
@@ -17,11 +21,11 @@
             <!-- Alert Messages -->
             <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200" role="alert">
                 <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
             </div>
             <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200" role="alert">
                 <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span th:text="${errorMessage}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
             </div>
 
             <!-- Page Title Header (WellNest Style) -->
@@ -132,16 +136,16 @@
 
                     <!-- Active Proposal Period Alert Banner -->
                     <div th:if="${openProposalPeriods != null && !openProposalPeriods.isEmpty()}" class="anim-fade-up" style="animation-delay:0.06s;">
-                        <div class="p-3 px-4 rounded-3xl bg-gradient-to-r from-blue-500/10 via-blue-50 to-white border border-blue-200/80 shadow-wellnest d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                        <div class="p-3 px-4 rounded-3xl border border-blue-200 shadow-wellnest d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3" style="background: linear-gradient(to right, rgba(59,130,246,0.1), #eff6ff, #ffffff);">
                             <div class="d-flex align-items-center gap-3 overflow-hidden">
-                                <div class="w-9 h-9 rounded-2xl bg-blue-600 text-white flex items-center justify-center flex-shrink-0 text-sm shadow-xs">
+                                <div class="w-9 h-9 rounded-2xl bg-blue-600 text-white d-flex align-items-center justify-content-center flex-shrink-0 text-sm shadow-xs">
                                     <i class="fa-solid fa-bullhorn"></i>
                                 </div>
                                 <div class="d-flex align-items-center gap-2 min-w-0 w-100">
                                     <span class="text-xs font-bold text-slate-800 flex-shrink-0 d-none d-sm-inline">Đợt đề xuất:</span>
                                     <select id="periodSelector" 
                                             class="form-select form-select-sm rounded-full text-xs font-bold text-slate-800 border-slate-200/80 bg-white py-1.5 ps-3.5 pe-8 cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition truncate shadow-2xs"
-                                            onchange="onPeriodChange(this.value)">
+                                            onchange="onPeriodChange(this.value)" title="periodSelector" aria-label="periodSelector">
                                         <option th:each="prog, iter : ${proposalProgressList}" 
                                                 th:value="${prog.period.id}"
                                                 th:selected="${iter.index == 0}"
@@ -186,13 +190,13 @@
                     <div th:if="${rejectedTopics != null && !rejectedTopics.isEmpty()}" class="saas-card rounded-3xl bg-white border border-rose-200/80 shadow-wellnest overflow-hidden anim-fade-up">
                         <div class="p-3 px-4 border-b border-rose-100 d-flex align-items-center justify-content-between bg-rose-50/40">
                             <div class="d-flex align-items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center flex-shrink-0 text-xs">
+                                <div class="w-8 h-8 rounded-full bg-rose-500 text-white d-flex align-items-center justify-content-center flex-shrink-0 text-xs">
                                     <i class="fa-solid fa-triangle-exclamation"></i>
                                 </div>
                                 <div>
-                                    <h6 class="mb-0 font-bold text-rose-900 text-xs">
+                                    <h2 class="mb-0 font-bold text-rose-900 text-xs">
                                         Có <span th:text="${rejectedTopics.size()}">1</span> đề tài bị từ chối cần chỉnh sửa!
-                                    </h6>
+                                    </h2>
                                     <span class="text-xs text-rose-600">Cập nhật lại theo góp ý để Trưởng khoa xem xét lại</span>
                                 </div>
                             </div>
@@ -209,11 +213,11 @@
                     <div class="saas-card rounded-3xl bg-white border border-slate-100 shadow-wellnest overflow-hidden anim-fade-up">
                         <div class="p-4 border-b border-slate-100 d-flex align-items-center justify-content-between bg-white">
                             <div class="d-flex align-items-center gap-2.5">
-                                <div class="w-9 h-9 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 text-sm">
+                                <div class="w-9 h-9 rounded-2xl bg-amber-50 text-amber-600 d-flex align-items-center justify-content-center flex-shrink-0 text-sm">
                                     <i class="fa-solid fa-user-clock"></i>
                                 </div>
                                 <div>
-                                    <h6 class="mb-0 font-bold text-slate-900 text-sm">Nhóm Sinh viên chờ Duyệt</h6>
+                                    <h2 class="mb-0 font-bold text-slate-900 text-sm">Nhóm Sinh viên chờ Duyệt</h2>
                                     <span class="text-xs text-slate-400">Yêu cầu đăng ký hướng dẫn từ sinh viên</span>
                                 </div>
                             </div>
@@ -420,7 +424,7 @@
                     <div class="saas-card rounded-3xl bg-white border border-slate-100 shadow-wellnest overflow-hidden">
                         <div class="p-4 border-b border-slate-100 d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-xs">
+                                <div class="w-8 h-8 rounded-2xl bg-teal-50 text-teal-600 d-flex align-items-center justify-content-center text-xs">
                                     <i class="fa-solid fa-bullhorn"></i>
                                 </div>
                                 <h6 class="mb-0 font-bold text-slate-900 text-xs">Bảng Tin Thông Báo Khoa</h6>
@@ -464,22 +468,22 @@
     <div class="modal fade" id="modalReviewerGrade" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-2xl border-0 shadow-xl">
-                <form id="formReviewerGrade" method="post" action="">
+                <form id="formReviewerGrade" th:action="@{/lecturer/reviews/0/grade}" method="post">
                     <div class="modal-header border-b border-slate-100 p-4">
                         <h6 class="modal-title font-bold text-slate-900 text-sm">
                             <i class="fa-solid fa-clipboard-check text-blue-600 me-1.5"></i> Chấm điểm Phản biện Đề tài (GVPB)
                         </h6>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
                     </div>
                     <div class="modal-body p-4 space-y-3">
                         <p class="font-semibold text-slate-900 text-xs mb-0 p-2.5 bg-slate-50 rounded-xl border border-slate-100" id="reviewerTopicTitle"></p>
                         <div>
                             <label class="form-label text-xs font-semibold text-slate-700">Điểm phản biện (Thang điểm 10) <span class="text-rose-600">*</span></label>
-                            <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" placeholder="vd: 8.5" required>
+                            <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" placeholder="vd: 8.5" required title="score" aria-label="score">
                         </div>
                         <div>
                             <label class="form-label text-xs font-semibold text-slate-700">Nhận xét chi tiết của GVPB <span class="text-rose-600">*</span></label>
-                            <textarea name="comments" class="form-control text-xs rounded-xl" rows="4" placeholder="Nhận xét về ưu điểm, hạn chế và kết quả đạt được..." required></textarea>
+                            <textarea name="comments" class="form-control text-xs rounded-xl" rows="4" placeholder="Nhận xét về ưu điểm, hạn chế và kết quả đạt được..." required title="comments" aria-label="comments"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer border-t border-slate-100 p-3">

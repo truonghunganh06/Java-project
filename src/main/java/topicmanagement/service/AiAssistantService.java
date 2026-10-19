@@ -16,9 +16,7 @@ public class AiAssistantService {
     private final StudentRepository studentRepository;
     private final LecturerRepository lecturerRepository;
     private final RegistrationPeriodRepository periodRepository;
-    private final EvaluationRepository evaluationRepository;
     private final SubmissionRepository submissionRepository;
-    private final AnnouncementRepository announcementRepository;
     private final CouncilRepository councilRepository;
     private final DivisionRepository divisionRepository;
     private final MajorRepository majorRepository;
@@ -33,9 +31,7 @@ public class AiAssistantService {
             StudentRepository studentRepository,
             LecturerRepository lecturerRepository,
             RegistrationPeriodRepository periodRepository,
-            EvaluationRepository evaluationRepository,
             SubmissionRepository submissionRepository,
-            AnnouncementRepository announcementRepository,
             CouncilRepository councilRepository,
             DivisionRepository divisionRepository,
             MajorRepository majorRepository) {
@@ -44,9 +40,7 @@ public class AiAssistantService {
         this.studentRepository = studentRepository;
         this.lecturerRepository = lecturerRepository;
         this.periodRepository = periodRepository;
-        this.evaluationRepository = evaluationRepository;
         this.submissionRepository = submissionRepository;
-        this.announcementRepository = announcementRepository;
         this.councilRepository = councilRepository;
         this.divisionRepository = divisionRepository;
         this.majorRepository = majorRepository;
@@ -178,7 +172,7 @@ public class AiAssistantService {
         if (matched == null) return null;
 
         String fullName = matched.getUser().getFullName();
-        String divName = matched.getDivision() != null ? matched.getDivision().getName() : "Chưa phân bộ môn";
+        String divName = matched.getDepartment() != null ? matched.getDepartment().getName() : (matched.getDivision() != null ? matched.getDivision().getName() : "Khoa CNTT");
         String email = matched.getUser().getEmail() != null ? matched.getUser().getEmail() : "Chưa cập nhật";
         String phone = matched.getUser().getPhone() != null ? matched.getUser().getPhone() : "Chưa cập nhật";
 
@@ -244,7 +238,7 @@ public class AiAssistantService {
             long sup = supervisorCounts.getOrDefault(l.getId(), 0L);
             long rev = reviewerCounts.getOrDefault(l.getId(), 0L);
             String name = l.getUser().getFullName();
-            String div = l.getDivision() != null ? l.getDivision().getName() : "Bộ môn";
+            String div = l.getDepartment() != null ? l.getDepartment().getName() : (l.getDivision() != null ? l.getDivision().getName() : "Khoa CNTT");
 
             sb.append("* **").append(name).append("** (").append(div).append("):\n");
             sb.append("  ➔ Đang phản biện: **").append(rev).append(" đề tài** | Đang hướng dẫn: **").append(sup).append(" đề tài**");

@@ -70,10 +70,11 @@ public class StudentController {
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
-        List<Announcement> announcements = announcementService.getAllAnnouncements();
+        Long deptId = student != null && student.getDepartment() != null ? student.getDepartment().getId() : null;
+        List<Announcement> announcements = announcementService.getAnnouncementsForDepartment(deptId);
         List<Submission> submissions = studentService.getGroupSubmissions(group);
         List<topicmanagement.dto.RegistrationDtos.InvitationResponseDto> myInvitations = groupRegistrationService.getMyPendingInvitations(user);
-        List<RegistrationPeriod> activePeriods = studentService.getAllActivePeriods();
+        List<RegistrationPeriod> activePeriods = studentService.getActivePeriodsForStudent(student);
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
@@ -95,9 +96,10 @@ public class StudentController {
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
-        List<RegistrationPeriod> activePeriods = studentService.getAllActivePeriods();
+        Long deptId = student != null && student.getDepartment() != null ? student.getDepartment().getId() : null;
+        List<RegistrationPeriod> activePeriods = studentService.getActivePeriodsForStudent(student);
         List<Submission> submissions = studentService.getGroupSubmissions(group);
-        List<Announcement> announcements = announcementService.getAllAnnouncements();
+        List<Announcement> announcements = announcementService.getAnnouncementsForDepartment(deptId);
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
@@ -122,7 +124,7 @@ public class StudentController {
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, periodId);
-        List<RegistrationPeriod> activePeriods = studentService.getAllActivePeriods();
+        List<RegistrationPeriod> activePeriods = studentService.getActivePeriodsForStudent(student);
         List<topicmanagement.dto.RegistrationDtos.InvitationResponseDto> myInvitations = groupRegistrationService.getMyPendingInvitations(user);
         List<topicmanagement.dto.RegistrationDtos.InvitationResponseDto> sentInvitations = group != null ? groupRegistrationService.getGroupInvitations(user, group.getId()) : List.of();
 
@@ -410,7 +412,7 @@ public class StudentController {
         List<Topic> topics = studentService.getAvailableTopics(periodId, majorId, keyword, departmentId);
         // Chỉ lấy chuyên ngành thuộc Khoa của sinh viên cho dropdown filter
         List<Major> majors = studentService.getMajorsByDepartment(departmentId);
-        List<RegistrationPeriod> periods = studentService.getAllActivePeriods();
+        List<RegistrationPeriod> periods = studentService.getActivePeriodsForStudent(student);
 
         // Lấy danh sách ID đề tài đã có nhóm đăng ký (để làm mờ/disable nút trên UI)
         java.util.Set<Long> takenTopicIds = studentService.getTakenTopicIds(topics);
