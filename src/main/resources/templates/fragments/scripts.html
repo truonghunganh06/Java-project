@@ -61,6 +61,8 @@
                 </div>
             </div>
 
+        </div>
+
         <!-- Global System & Account Settings Modal (Available across all pages) -->
         <div class="modal fade" id="systemSettingsModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -438,53 +440,70 @@
                 if (event.key === 'Escape') closeSelectMenus();
             });
 
-            // Sidebar Mobile Toggle
-            function toggleSidebar() {
+            let sidebarReturnFocus = null;
+            function toggleSidebar(forceOpen, restoreFocus = true) {
                 const sidebar = document.getElementById('saasSidebar');
-                const overlay = document.getElementById('sidebarOverlay');
-                if (sidebar) sidebar.classList.toggle('show');
-                if (overlay) overlay.classList.toggle('show');
+                if (!sidebar) return;
+                const mobile = window.matchMedia('(max-width: 991.98px)').matches;
+                const wasOpen = sidebar.classList.contains('show');
+                const open = mobile && (typeof forceOpen === 'boolean' ? forceOpen : !wasOpen);
+                if (open && !wasOpen) sidebarReturnFocus = document.activeElement;
+                sidebar.classList.toggle('show', open);
+                sidebar.inert = mobile && !open;
+                sidebar.setAttribute('aria-hidden', String(mobile && !open));
+                document.getElementById('sidebarOverlay')?.classList.toggle('show', open);
+                document.body.classList.toggle('sidebar-open', open);
+                document.getElementById('sidebarMobileToggle')?.setAttribute('aria-expanded', String(open));
+                if (open) document.getElementById('sidebarCloseBtn')?.focus();
+                else if (wasOpen && restoreFocus && sidebarReturnFocus?.isConnected) sidebarReturnFocus.focus();
             }
 
-            // Handle click on Sidebar Brand / Logo
-            function handleSidebarBrandClick(event) {
-                if (document.body.classList.contains('sidebar-collapsed')) {
-                    if (event) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    toggleDesktopSidebar();
-                }
-            }
-
-            // Desktop / Laptop Sidebar Toggle with smooth motion
-            function toggleDesktopSidebar() {
-                const isCollapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+            function syncSidebarCollapse(isCollapsed) {
+                document.documentElement.classList.toggle('sidebar-collapsed', isCollapsed);
                 document.body.classList.toggle('sidebar-collapsed', isCollapsed);
-                try {
-                    localStorage.setItem('topichub_sidebar_collapsed', isCollapsed ? 'true' : 'false');
-                } catch (e) { }
-
-                const chevron = document.getElementById('sidebarCollapseChevronIcon');
-                if (chevron) {
-                    chevron.className = isCollapsed ? 'fa-solid fa-chevron-right text-slate-400' : 'fa-solid fa-chevron-left text-slate-400';
+                const button = document.getElementById('sidebarDesktopCollapseBtn');
+                const label = isCollapsed ? 'Mở rộng menu' : 'Thu gọn menu';
+                if (button) {
+                    button.setAttribute('aria-expanded', String(!isCollapsed));
+                    button.setAttribute('aria-label', label);
+                    button.title = label;
                 }
+                const chevron = document.getElementById('sidebarCollapseChevronIcon');
+                if (chevron) chevron.className = isCollapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left';
             }
 
-            // Sync Desktop Sidebar collapse state & chevron icon on page load
+            function toggleDesktopSidebar() {
+                const collapsed = !document.documentElement.classList.contains('sidebar-collapsed');
+                syncSidebarCollapse(collapsed);
+                try { localStorage.setItem('topichub_sidebar_collapsed', String(collapsed)); } catch (e) { }
+            }
+
             document.addEventListener('DOMContentLoaded', function () {
-                try {
-                    if (window.innerWidth >= 992) {
-                        const savedState = localStorage.getItem('topichub_sidebar_collapsed');
-                        const isCollapsed = (savedState === 'true');
-                        document.documentElement.classList.toggle('sidebar-collapsed', isCollapsed);
-                        document.body.classList.toggle('sidebar-collapsed', isCollapsed);
-                        const chevron = document.getElementById('sidebarCollapseChevronIcon');
-                        if (chevron) {
-                            chevron.className = isCollapsed ? 'fa-solid fa-chevron-right text-slate-400' : 'fa-solid fa-chevron-left text-slate-400';
+                try { syncSidebarCollapse(localStorage.getItem('topichub_sidebar_collapsed') === 'true'); } catch (e) { }
+                toggleSidebar(false, false);
+                window.matchMedia('(max-width: 991.98px)').addEventListener('change', () => toggleSidebar(false, false));
+                const sidebar = document.getElementById('saasSidebar');
+                sidebar?.addEventListener('click', function (event) {
+                    if (event.target.closest('.workspace-footer button')) toggleSidebar(false, false);
+                });
+                document.getElementById('systemSettingsModal')?.addEventListener('hidden.bs.modal', function () {
+                    if (sidebar?.inert) document.getElementById('sidebarMobileToggle')?.focus();
+                });
+                sidebar?.addEventListener('keydown', function (event) {
+                    if (!sidebar.classList.contains('show')) return;
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        toggleSidebar(false);
+                    } else if (event.key === 'Tab') {
+                        const controls = [...sidebar.querySelectorAll('a, button')].filter(el => el.getClientRects().length);
+                        const first = controls[0], last = controls[controls.length - 1];
+                        if (event.shiftKey && document.activeElement === first) {
+                            event.preventDefault(); last?.focus();
+                        } else if (!event.shiftKey && document.activeElement === last) {
+                            event.preventDefault(); first?.focus();
                         }
                     }
-                } catch (e) { }
+                });
             });
 
             // Universal Spring Security CSRF Helpers

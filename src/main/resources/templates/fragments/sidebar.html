@@ -1,235 +1,159 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-
-<body>
-    <aside class="saas-sidebar" id="saasSidebar" th:fragment="sidebar(activePage, user)">
-        <!-- ================= CAPSULE 1: MAIN NAVIGATION CAPSULE (IMAGE 4 STYLE) ================= -->
-        <div class="sidebar-capsule sidebar-capsule-main">
-            <!-- Brand / Logo Header with Small Arrow Toggle Button -->
-            <div class="sidebar-capsule-header d-flex align-items-center justify-content-between">
-                <a class="sidebar-capsule-brand d-flex align-items-center gap-2.5 text-decoration-none"
-                    th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
-                    <div class="sidebar-capsule-logo flex-shrink-0">
-                        <i class="fa-solid fa-shapes"></i>
-                    </div>
-                    <div class="sidebar-brand-text d-flex flex-column">
-                        <span class="fw-extrabold text-slate-900 tracking-tight"
-                            style="font-size: 1.05rem; font-family: 'Plus Jakarta Sans', sans-serif;">TopicHub</span>
-                        <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]"
-                            th:text="${user != null && user.role != null ? user.role.name : 'Hệ Thống'}">Quản Lý Đề
-                            Tài</span>
-                    </div>
+    <body>
+        <th:block th:fragment="sidebar(activePage, user)">
+        <aside class="saas-sidebar workspace-sidebar" id="saasSidebar" aria-label="Điều hướng chính">
+            <div class="workspace-header">
+                <a class="workspace-brand" th:href="@{${user != null &amp;&amp; user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}" aria-label="TopicHub — trang tổng quan">
+                    <span class="workspace-wordmark">TopicHub</span>
+                    <span class="workspace-monogram" aria-hidden="true">TH</span>
                 </a>
-
-                <!-- Sleek Small Arrow / Chevron Collapse Button (Replaces 3-bar hamburger) -->
-                <button id="sidebarDesktopCollapseBtn" class="sidebar-chevron-btn d-none d-lg-flex" type="button"
-                    onclick="toggleDesktopSidebar()" aria-label="Thu gọn hoặc mở rộng Sidebar"
-                    title="Thu gọn / Mở rộng Menu">
-                    <i class="fa-solid fa-chevron-left text-slate-400" id="sidebarCollapseChevronIcon"></i>
+                <button id="sidebarDesktopCollapseBtn" class="workspace-toggle workspace-desktop-toggle" type="button" onclick="toggleDesktopSidebar()" aria-label="Thu gọn menu" title="Thu gọn menu" aria-controls="saasSidebar" aria-expanded="true">
+                    <i class="fa-solid fa-chevron-left" id="sidebarCollapseChevronIcon" aria-hidden="true"></i>
                 </button>
-
-                <!-- Mobile Close Button -->
-                <button id="sidebarCloseBtn"
-                    class="btn btn-sm btn-light border border-slate-200/80 d-lg-none rounded-full ms-1" type="button"
-                    onclick="toggleSidebar()" aria-label="Đóng menu" title="Đóng menu"
-                    style="width:28px; height:28px; padding:0; display:flex; align-items:center; justify-content:center;">
-                    <i class="fa-solid fa-xmark text-slate-500" style="font-size:0.75rem;"></i>
+                <button id="sidebarCloseBtn" class="workspace-toggle workspace-mobile-close" type="button" onclick="toggleSidebar()" aria-label="Đóng menu" title="Đóng menu" aria-controls="saasSidebar">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                 </button>
             </div>
-
-            <!-- Navigation Links Scroll Container -->
-            <div class="sidebar-nav-container">
-                <!-- ================= ADMIN MENU ================= -->
-                <div th:if="${user != null && user.role != null && user.role.code == 'ADMIN'}">
-                    <div class="sidebar-section-title">Tổng quan</div>
-                    <a th:href="@{/admin/dashboard}" class="saas-nav-link"
-                        th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Bảng điều khiển">
-                        <i class="fa-solid fa-chart-pie"></i>
-                        <span>Bảng điều khiển</span>
+            <nav class="workspace-navigation" aria-label="Chức năng">
+                <div th:if="${user != null &amp;&amp; user.role != null &amp;&amp; user.role.code == 'ADMIN'}">
+                    <a th:href="@{/admin/dashboard}" class="workspace-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Tổng quan" aria-label="Tổng quan" th:attr="aria-current=${activePage == 'dashboard' ? 'page' : null}">
+                        <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
+                        <span>Tổng quan</span>
                     </a>
-
-                    <div class="sidebar-section-title mt-2">Quản trị hệ thống</div>
-                    <a th:href="@{/admin/users}" class="saas-nav-link"
-                        th:classappend="${activePage == 'users' ? 'active' : ''}" title="Quản lý tài khoản">
-                        <i class="fa-solid fa-users-gear"></i>
+                    <a th:href="@{/admin/users}" class="workspace-link" th:classappend="${activePage == 'users' ? 'active' : ''}" title="Quản lý tài khoản" aria-label="Quản lý tài khoản" th:attr="aria-current=${activePage == 'users' ? 'page' : null}">
+                        <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
                         <span>Quản lý tài khoản</span>
                     </a>
-                    <a th:href="@{/admin/departments}" class="saas-nav-link"
-                        th:classappend="${activePage == 'departments' ? 'active' : ''}" title="Khoa đào tạo">
-                        <i class="fa-solid fa-building-columns"></i>
+                    <a th:href="@{/admin/departments}" class="workspace-link" th:classappend="${activePage == 'departments' ? 'active' : ''}" title="Khoa đào tạo" aria-label="Khoa đào tạo" th:attr="aria-current=${activePage == 'departments' ? 'page' : null}">
+                        <i class="fa-solid fa-building-columns" aria-hidden="true"></i>
                         <span>Khoa đào tạo</span>
                     </a>
                 </div>
-
-                <!-- ================= DEPARTMENT HEAD / DIVISION HEAD MENU ================= -->
-                <div
-                    th:if="${user != null && user.role != null && (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD')}">
-                    <div class="sidebar-section-title">Tổng quan</div>
-                    <a th:href="@{/department-head/dashboard}" class="saas-nav-link"
-                        th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Bảng điều khiển">
-                        <i class="fa-solid fa-chart-pie"></i>
-                        <span>Bảng điều khiển</span>
+                <div th:if="${user != null &amp;&amp; user.role != null &amp;&amp; (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD')}">
+                    <a th:href="@{/department-head/dashboard}" class="workspace-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Tổng quan" aria-label="Tổng quan" th:attr="aria-current=${activePage == 'dashboard' ? 'page' : null}">
+                        <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
+                        <span>Tổng quan</span>
                     </a>
-                    <a th:href="@{/department-head/schedule}" class="saas-nav-link"
-                        th:classappend="${activePage == 'schedule' ? 'active' : ''}" title="Lịch kế hoạch & Đợt">
-                        <i class="fa-solid fa-calendar-days"></i>
-                        <span>Lịch kế hoạch &amp; Đợt</span>
+                    <a th:href="@{/department-head/schedule}" class="workspace-link" th:classappend="${activePage == 'schedule' ? 'active' : ''}" title="Lịch công tác" aria-label="Lịch công tác" th:attr="aria-current=${activePage == 'schedule' ? 'page' : null}">
+                        <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+                        <span>Lịch công tác</span>
                     </a>
-
-                    <div class="sidebar-section-title mt-2">Đề tài &amp; Đợt</div>
-                    <a th:href="@{/department-head/topics}" class="saas-nav-link"
-                        th:classappend="${activePage == 'topics' ? 'active' : ''}" title="Quản lý Đề tài">
-                        <i class="fa-solid fa-book-open-reader"></i>
-                        <span>Quản lý Đề tài</span>
+                    <div class="workspace-section">Đào tạo</div>
+                    <a th:href="@{/department-head/topics}" class="workspace-link" th:classappend="${activePage == 'topics' ? 'active' : ''}" title="Đề tài" aria-label="Đề tài" th:attr="aria-current=${activePage == 'topics' ? 'page' : null}">
+                        <i class="fa-solid fa-book-open-reader" aria-hidden="true"></i>
+                        <span>Đề tài</span>
                     </a>
-                    <a th:href="@{/department-head/periods}" class="saas-nav-link"
-                        th:classappend="${activePage == 'periods' ? 'active' : ''}" title="Đợt đăng ký KLTN">
-                        <i class="fa-solid fa-calendar-plus"></i>
+                    <a th:href="@{/department-head/periods}" class="workspace-link" th:classappend="${activePage == 'periods' ? 'active' : ''}" title="Đợt đăng ký" aria-label="Đợt đăng ký" th:attr="aria-current=${activePage == 'periods' ? 'page' : null}">
+                        <i class="fa-solid fa-calendar-plus" aria-hidden="true"></i>
                         <span>Đợt đăng ký</span>
                     </a>
-                    <a th:href="@{/department-head/councils}" class="saas-nav-link"
-                        th:classappend="${activePage == 'councils' ? 'active' : ''}" title="Hội đồng chấm bảo vệ">
-                        <i class="fa-solid fa-scale-balanced"></i>
-                        <span>Hội đồng chấm</span>
+                    <a th:href="@{/department-head/councils}" class="workspace-link" th:classappend="${activePage == 'councils' ? 'active' : ''}" title="Hội đồng" aria-label="Hội đồng" th:attr="aria-current=${activePage == 'councils' ? 'page' : null}">
+                        <i class="fa-solid fa-scale-balanced" aria-hidden="true"></i>
+                        <span>Hội đồng</span>
                     </a>
-                    <a th:href="@{/department-head/results}" class="saas-nav-link"
-                        th:classappend="${activePage == 'results' ? 'active' : ''}" title="Công bố kết quả">
-                        <i class="fa-solid fa-square-poll-vertical"></i>
-                        <span>Công bố kết quả</span>
+                    <a th:href="@{/department-head/results}" class="workspace-link" th:classappend="${activePage == 'results' ? 'active' : ''}" title="Kết quả" aria-label="Kết quả" th:attr="aria-current=${activePage == 'results' ? 'page' : null}">
+                        <i class="fa-solid fa-square-poll-vertical" aria-hidden="true"></i>
+                        <span>Kết quả</span>
                     </a>
-
-                    <div class="sidebar-section-title mt-2">Nhân sự &amp; Bảng tin</div>
-                    <a th:href="@{/department-head/personnel}" class="saas-nav-link"
-                        th:classappend="${activePage == 'personnel' || activePage == 'lecturers' || activePage == 'students' ? 'active' : ''}"
-                        title="Quản lý Nhân sự">
-                        <i class="fa-solid fa-user-group"></i>
-                        <span>Quản lý Nhân sự</span>
+                    <div class="workspace-section">Quản lý</div>
+                    <a th:href="@{/department-head/personnel}" class="workspace-link" th:classappend="${activePage == 'personnel' || activePage == 'lecturers' || activePage == 'students' ? 'active' : ''}" title="Nhân sự" aria-label="Nhân sự" th:attr="aria-current=${activePage == 'personnel' || activePage == 'lecturers' || activePage == 'students' ? 'page' : null}">
+                        <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+                        <span>Nhân sự</span>
                     </a>
-                    <a th:href="@{/department-head/announcements}" class="saas-nav-link"
-                        th:classappend="${activePage == 'announcements' ? 'active' : ''}" title="Bảng tin thông báo">
-                        <i class="fa-solid fa-bullhorn"></i>
-                        <span>Bảng tin thông báo</span>
+                    <a th:href="@{/department-head/announcements}" class="workspace-link" th:classappend="${activePage == 'announcements' ? 'active' : ''}" title="Thông báo" aria-label="Thông báo" th:attr="aria-current=${activePage == 'announcements' ? 'page' : null}">
+                        <i class="fa-solid fa-bullhorn" aria-hidden="true"></i>
+                        <span>Thông báo</span>
                     </a>
                 </div>
-
-                <!-- ================= LECTURER MENU ================= -->
-                <div th:if="${user != null && user.role != null && user.role.code == 'LECTURER'}">
-                    <div class="sidebar-section-title">Tổng quan</div>
-                    <a th:href="@{/lecturer/dashboard}" class="saas-nav-link"
-                        th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Bảng điều khiển">
-                        <i class="fa-solid fa-chart-pie"></i>
-                        <span>Bảng điều khiển</span>
+                <div th:if="${user != null &amp;&amp; user.role != null &amp;&amp; user.role.code == 'LECTURER'}">
+                    <a th:href="@{/lecturer/dashboard}" class="workspace-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Tổng quan" aria-label="Tổng quan" th:attr="aria-current=${activePage == 'dashboard' ? 'page' : null}">
+                        <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
+                        <span>Tổng quan</span>
                     </a>
-                    <a th:href="@{/lecturer/schedule}" class="saas-nav-link"
-                        th:classappend="${activePage == 'schedule' ? 'active' : ''}" title="Lịch trình & Sự kiện">
-                        <i class="fa-solid fa-calendar-days"></i>
-                        <span>Lịch trình &amp; Sự kiện</span>
+                    <a th:href="@{/lecturer/schedule}" class="workspace-link" th:classappend="${activePage == 'schedule' ? 'active' : ''}" title="Lịch công tác" aria-label="Lịch công tác" th:attr="aria-current=${activePage == 'schedule' ? 'page' : null}">
+                        <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+                        <span>Lịch công tác</span>
                     </a>
-
-                    <div class="sidebar-section-title mt-2">Hướng dẫn Đề tài</div>
-                    <a th:href="@{/lecturer/topics}" class="saas-nav-link"
-                        th:classappend="${activePage == 'topics' || activePage == 'create-topic' ? 'active' : ''}"
-                        title="Đề tài của tôi">
-                        <i class="fa-solid fa-book-bookmark"></i>
+                    <div class="workspace-section">Hướng dẫn</div>
+                    <a th:href="@{/lecturer/topics}" class="workspace-link" th:classappend="${activePage == 'topics' || activePage == 'create-topic' ? 'active' : ''}" title="Đề tài của tôi" aria-label="Đề tài của tôi" th:attr="aria-current=${activePage == 'topics' || activePage == 'create-topic' ? 'page' : null}">
+                        <i class="fa-solid fa-book-bookmark" aria-hidden="true"></i>
                         <span>Đề tài của tôi</span>
                     </a>
-                    <a th:href="@{/lecturer/registrations}" class="saas-nav-link"
-                        th:classappend="${activePage == 'registrations' ? 'active' : ''}" title="Nhóm SV hướng dẫn">
-                        <i class="fa-solid fa-users"></i>
-                        <span>Nhóm SV hướng dẫn</span>
-                    </a>
-                    <a th:href="@{/lecturer/submissions}" class="saas-nav-link"
-                        th:classappend="${activePage == 'submissions' ? 'active' : ''}" title="Bài nộp tiến độ">
-                        <i class="fa-solid fa-file-arrow-up"></i>
-                        <span>Bài nộp tiến độ</span>
-                    </a>
-
-                    <div class="sidebar-section-title mt-2">Phản biện &amp; Hội đồng</div>
-                    <a th:href="@{/lecturer/reviews}" class="saas-nav-link"
-                        th:classappend="${activePage == 'reviews' ? 'active' : ''}" title="Chấm phản biện (GVPB)">
-                        <i class="fa-solid fa-clipboard-check"></i>
-                        <span>Chấm phản biện</span>
-                    </a>
-                    <a th:href="@{/lecturer/councils}" class="saas-nav-link"
-                        th:classappend="${activePage == 'councils' ? 'active' : ''}" title="Hội đồng bảo vệ">
-                        <i class="fa-solid fa-scale-balanced"></i>
-                        <span>Hội đồng bảo vệ</span>
-                    </a>
-                </div>
-
-                <!-- ================= STUDENT MENU ================= -->
-                <div th:if="${user != null && user.role != null && user.role.code == 'STUDENT'}">
-                    <div class="sidebar-section-title">Tổng quan</div>
-                    <a th:href="@{/student/dashboard}" class="saas-nav-link"
-                        th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Bảng điều khiển">
-                        <i class="fa-solid fa-chart-pie"></i>
-                        <span>Bảng điều khiển</span>
-                    </a>
-                    <a th:href="@{/student/schedule}" class="saas-nav-link"
-                        th:classappend="${activePage == 'schedule' ? 'active' : ''}" title="Lịch trình & Hạn chót">
-                        <i class="fa-solid fa-calendar-days"></i>
-                        <span>Lịch trình &amp; Hạn chót</span>
-                    </a>
-
-                    <div class="sidebar-section-title mt-2">Đề tài &amp; Nhóm</div>
-                    <a th:href="@{/student/group}" class="saas-nav-link"
-                        th:classappend="${activePage == 'group' ? 'active' : ''}" title="Nhóm sinh viên">
-                        <i class="fa-solid fa-users"></i>
+                    <a th:href="@{/lecturer/registrations}" class="workspace-link" th:classappend="${activePage == 'registrations' ? 'active' : ''}" title="Nhóm sinh viên" aria-label="Nhóm sinh viên" th:attr="aria-current=${activePage == 'registrations' ? 'page' : null}">
+                        <i class="fa-solid fa-users" aria-hidden="true"></i>
                         <span>Nhóm sinh viên</span>
                     </a>
-                    <a th:href="@{/student/topics}" class="saas-nav-link"
-                        th:classappend="${activePage == 'topics' ? 'active' : ''}" title="Tra cứu đề tài">
-                        <i class="fa-solid fa-magnifying-glass"></i>
+                    <a th:href="@{/lecturer/submissions}" class="workspace-link" th:classappend="${activePage == 'submissions' ? 'active' : ''}" title="Báo cáo tiến độ" aria-label="Báo cáo tiến độ" th:attr="aria-current=${activePage == 'submissions' ? 'page' : null}">
+                        <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
+                        <span>Báo cáo tiến độ</span>
+                    </a>
+                    <div class="workspace-section">Đánh giá</div>
+                    <a th:href="@{/lecturer/reviews}" class="workspace-link" th:classappend="${activePage == 'reviews' ? 'active' : ''}" title="Phản biện" aria-label="Phản biện" th:attr="aria-current=${activePage == 'reviews' ? 'page' : null}">
+                        <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>
+                        <span>Phản biện</span>
+                    </a>
+                    <a th:href="@{/lecturer/councils}" class="workspace-link" th:classappend="${activePage == 'councils' ? 'active' : ''}" title="Hội đồng" aria-label="Hội đồng" th:attr="aria-current=${activePage == 'councils' ? 'page' : null}">
+                        <i class="fa-solid fa-scale-balanced" aria-hidden="true"></i>
+                        <span>Hội đồng</span>
+                    </a>
+                </div>
+                <div th:if="${user != null &amp;&amp; user.role != null &amp;&amp; user.role.code == 'STUDENT'}">
+                    <a th:href="@{/student/dashboard}" class="workspace-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Tổng quan" aria-label="Tổng quan" th:attr="aria-current=${activePage == 'dashboard' ? 'page' : null}">
+                        <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
+                        <span>Tổng quan</span>
+                    </a>
+                    <a th:href="@{/student/schedule}" class="workspace-link" th:classappend="${activePage == 'schedule' ? 'active' : ''}" title="Lịch công tác" aria-label="Lịch công tác" th:attr="aria-current=${activePage == 'schedule' ? 'page' : null}">
+                        <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+                        <span>Lịch công tác</span>
+                    </a>
+                    <div class="workspace-section">Đề tài</div>
+                    <a th:href="@{/student/group}" class="workspace-link" th:classappend="${activePage == 'group' ? 'active' : ''}" title="Nhóm sinh viên" aria-label="Nhóm sinh viên" th:attr="aria-current=${activePage == 'group' ? 'page' : null}">
+                        <i class="fa-solid fa-users" aria-hidden="true"></i>
+                        <span>Nhóm sinh viên</span>
+                    </a>
+                    <a th:href="@{/student/topics}" class="workspace-link" th:classappend="${activePage == 'topics' ? 'active' : ''}" title="Tra cứu đề tài" aria-label="Tra cứu đề tài" th:attr="aria-current=${activePage == 'topics' ? 'page' : null}">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                         <span>Tra cứu đề tài</span>
                     </a>
-                    <a th:href="@{/student/my-topic}" class="saas-nav-link"
-                        th:classappend="${activePage == 'my-topic' ? 'active' : ''}" title="Đề tài của nhóm">
-                        <i class="fa-solid fa-book-open"></i>
+                    <a th:href="@{/student/my-topic}" class="workspace-link" th:classappend="${activePage == 'my-topic' ? 'active' : ''}" title="Đề tài của nhóm" aria-label="Đề tài của nhóm" th:attr="aria-current=${activePage == 'my-topic' ? 'page' : null}">
+                        <i class="fa-solid fa-book-open" aria-hidden="true"></i>
                         <span>Đề tài của nhóm</span>
                     </a>
-
-                    <div class="sidebar-section-title mt-2">Tiến độ &amp; Kết quả</div>
-                    <a th:href="@{/student/submissions}" class="saas-nav-link"
-                        th:classappend="${activePage == 'submissions' ? 'active' : ''}" title="Nộp báo cáo">
-                        <i class="fa-solid fa-file-arrow-up"></i>
+                    <div class="workspace-section">Theo dõi</div>
+                    <a th:href="@{/student/submissions}" class="workspace-link" th:classappend="${activePage == 'submissions' ? 'active' : ''}" title="Nộp báo cáo" aria-label="Nộp báo cáo" th:attr="aria-current=${activePage == 'submissions' ? 'page' : null}">
+                        <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
                         <span>Nộp báo cáo</span>
                     </a>
-                    <a th:href="@{/student/results}" class="saas-nav-link"
-                        th:classappend="${activePage == 'results' ? 'active' : ''}" title="Kết quả đánh giá">
-                        <i class="fa-solid fa-award"></i>
+                    <a th:href="@{/student/results}" class="workspace-link" th:classappend="${activePage == 'results' ? 'active' : ''}" title="Kết quả đánh giá" aria-label="Kết quả đánh giá" th:attr="aria-current=${activePage == 'results' ? 'page' : null}">
+                        <i class="fa-solid fa-award" aria-hidden="true"></i>
                         <span>Kết quả đánh giá</span>
                     </a>
                 </div>
+            </nav>
+            <div class="workspace-footer">
+                <button type="button" class="workspace-utility" data-bs-toggle="modal" data-bs-target="#systemSettingsModal" title="Cài đặt" aria-label="Cài đặt">
+                    <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                    <span>Cài đặt</span>
+                </button>
+                <button type="button" class="workspace-utility" onclick="toggleAiChat()" title="Trợ giúp" aria-label="Trợ giúp">
+                    <i class="fa-regular fa-circle-question" aria-hidden="true"></i>
+                    <span>Trợ giúp</span>
+                </button>
+                <a th:href="@{/logout}" class="workspace-utility" title="Đăng xuất" aria-label="Đăng xuất">
+                    <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                    <span>Đăng xuất</span>
+                </a>
+                <div class="workspace-account" th:title="${user != null ? user.fullName : ''}">
+                    <i class="fa-regular fa-user" aria-hidden="true"></i>
+                    <div class="workspace-account-text">
+                        <span class="workspace-account-name" th:text="${user != null ? user.fullName : ''}"></span>
+                        <span class="workspace-account-role" th:text="${user != null &amp;&amp; user.role != null ? user.role.name : ''}"></span>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <!-- ================= CAPSULE 2: BOTTOM UTILITY CAPSULE ================= -->
-        <div class="sidebar-capsule sidebar-capsule-bottom">
-            <!-- Settings / Account Button -->
-            <button type="button" class="sidebar-bottom-link d-flex align-items-center border-0 bg-transparent"
-                data-bs-toggle="modal" data-bs-target="#systemSettingsModal" title="Cài đặt hệ thống &amp; Tài khoản">
-                <i class="fa-solid fa-gear"></i>
-                <span class="sidebar-bottom-label">Cài đặt</span>
-            </button>
-
-            <!-- Help / Guide Button -->
-            <button type="button" class="sidebar-bottom-link d-flex align-items-center border-0 bg-transparent"
-                onclick="toggleAiChat()" title="Trợ lý AI &amp; Hướng dẫn">
-                <i class="fa-regular fa-circle-question"></i>
-                <span class="sidebar-bottom-label">Trợ giúp</span>
-            </button>
-
-            <!-- Logout Button -->
-            <a th:href="@{/logout}" class="sidebar-bottom-link d-flex align-items-center logout-btn"
-                title="Đăng xuất khỏi hệ thống">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                <span class="sidebar-bottom-label">Đăng xuất</span>
-            </a>
-        </div>
-    </aside>
-
-    <!-- Overlay for mobile screens -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-</body>
-
+        </aside>
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+        </th:block>
+    </body>
 </html>
