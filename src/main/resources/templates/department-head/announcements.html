@@ -31,14 +31,46 @@
                 </button>
             </div>
 
-            <!-- In-Page Search Toolbar -->
+            <!-- In-Page Search & Category Filter Toolbar -->
             <div class="p-2.5 bg-white border border-slate-200/80 rounded-2xl shadow-xs mb-3">
-                <div class="relative max-w-md">
-                    <input type="text" class="form-control form-control-sm rounded-xl pl-8 text-xs" 
-                           id="announcementSearchInput"
-                           placeholder="Tìm kiếm thông báo theo tiêu đề, người đăng, nội dung..." 
-                           onkeyup="filterAnnouncements(this.value)">
-                    <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none"></i>
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2.5">
+                    <!-- Left: Quick Filter Category Pills -->
+                    <div class="d-flex flex-wrap align-items-center gap-1.5" id="announcementCategoryFilters">
+                        <button type="button" class="btn btn-xs rounded-xl px-3 py-1.5 text-xs font-semibold category-filter-btn active"
+                                onclick="filterAnnouncementsByCategory('ALL', this)">
+                            <i class="fa-solid fa-list-check me-1"></i> Tất cả
+                        </button>
+                        <button type="button" class="btn btn-xs rounded-xl px-3 py-1.5 text-xs font-semibold category-filter-btn"
+                                onclick="filterAnnouncementsByCategory('GENERAL', this)">
+                            <i class="fa-solid fa-bullhorn text-blue-500 me-1"></i> Chung
+                        </button>
+                        <button type="button" class="btn btn-xs rounded-xl px-3 py-1.5 text-xs font-semibold category-filter-btn"
+                                onclick="filterAnnouncementsByCategory('PERIOD', this)">
+                            <i class="fa-regular fa-calendar-check text-indigo-500 me-1"></i> Kế hoạch đợt
+                        </button>
+                        <button type="button" class="btn btn-xs rounded-xl px-3 py-1.5 text-xs font-semibold category-filter-btn"
+                                onclick="filterAnnouncementsByCategory('SCHEDULE', this)">
+                            <i class="fa-solid fa-users-rectangle text-purple-500 me-1"></i> Lịch bảo vệ
+                        </button>
+                        <button type="button" class="btn btn-xs rounded-xl px-3 py-1.5 text-xs font-semibold category-filter-btn"
+                                onclick="filterAnnouncementsByCategory('URGENT', this)">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-500 me-1"></i> Khẩn cấp
+                        </button>
+                    </div>
+
+                    <!-- Right: Search Input & Dynamic Counter Badge -->
+                    <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-lg-end">
+                        <div class="relative flex-grow-1" style="max-width: 360px;">
+                            <input type="text" class="form-control form-control-sm rounded-xl pl-8 text-xs bg-slate-50 focus:bg-white" 
+                                   id="announcementSearchInput"
+                                   placeholder="Tìm kiếm thông báo theo tiêu đề, người đăng, nội dung..." 
+                                   onkeyup="applyAnnouncementFilters()"
+                                   title="Tìm kiếm thông báo" aria-label="Tìm kiếm thông báo">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none"></i>
+                        </div>
+                        <span id="announcementCountBadge" class="badge-pill-neutral font-medium text-xs whitespace-nowrap"
+                              th:text="'Tổng: ' + (${announcements != null ? announcements.size() : 0}) + ' thông báo'"></span>
+                    </div>
                 </div>
             </div>
 
@@ -51,7 +83,8 @@
                     </div>
                 </div>
 
-                <div th:each="a : ${announcements}" class="col-12 announcement-item-wrapper">
+                <div th:each="a : ${announcements}" class="col-12 announcement-item-wrapper"
+                     th:data-category-code="${a.category != null ? a.category : 'GENERAL'}">
                     <div class="saas-card p-4 position-relative cursor-pointer hover:border-slate-300 transition" 
                          th:classappend="${a.isPinned ? 'border-amber-300 bg-amber-50/10' : ''}"
                          onclick="showAnnouncementDetail(this)"
@@ -170,17 +203,57 @@
     <!-- Scripts Fragment -->
     <div th:replace="~{fragments/scripts :: scripts}"></div>
 
+    <style>
+        .category-filter-btn {
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #475569;
+            transition: all 0.15s ease;
+        }
+        .category-filter-btn:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+        .category-filter-btn.active {
+            background: #0f172a !important;
+            color: #ffffff !important;
+            border-color: #0f172a !important;
+        }
+    </style>
+
     <script>
-        function filterAnnouncements(keyword) {
-            const q = (keyword || '').toLowerCase().trim();
+        let currentAnnouncementCategory = 'ALL';
+
+        function filterAnnouncementsByCategory(category, btn) {
+            currentAnnouncementCategory = category;
+            document.querySelectorAll('.category-filter-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            applyAnnouncementFilters();
+        }
+
+        function applyAnnouncementFilters() {
+            const searchInput = document.getElementById('announcementSearchInput');
+            const q = (searchInput ? searchInput.value : '').toLowerCase().trim();
             const items = document.querySelectorAll('.announcement-item-wrapper');
             let visibleCount = 0;
+
             items.forEach(card => {
+                const itemCategory = (card.getAttribute('data-category-code') || 'GENERAL').toUpperCase();
                 const text = card.textContent.toLowerCase();
-                const match = text.includes(q);
-                card.style.display = match ? '' : 'none';
-                if (match) visibleCount++;
+                
+                const matchCategory = (currentAnnouncementCategory === 'ALL' || itemCategory === currentAnnouncementCategory);
+                const matchKeyword = !q || text.includes(q);
+
+                const isVisible = matchCategory && matchKeyword;
+                card.style.display = isVisible ? '' : 'none';
+                if (isVisible) visibleCount++;
             });
+
+            const badge = document.getElementById('announcementCountBadge');
+            if (badge) {
+                badge.textContent = 'Hiển thị: ' + visibleCount + ' thông báo';
+            }
+
             const emptyMsg = document.getElementById('emptyAnnouncementMsg');
             if (emptyMsg) {
                 emptyMsg.style.display = (visibleCount === 0 && items.length > 0) ? 'block' : '';

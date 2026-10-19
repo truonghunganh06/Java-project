@@ -19,6 +19,14 @@ public class GlobalModelAttributes {
 
     private static final List<String> TEST_USERNAMES = List.of(
             "admin",
+            "head_cntt",
+            "head_qtkd",
+            "gv_cntt01",
+            "gv_cntt02",
+            "gv_qtkd01",
+            "sv_cntt01",
+            "sv_cntt02",
+            "sv_qtkd01",
             "truongkhoa",
             "giangvien01",
             "giangvien02",

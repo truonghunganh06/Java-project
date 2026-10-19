@@ -255,12 +255,15 @@ public class AdminController {
 
         List<Department> departments = adminService.getAllDepartments();
         List<Major> majors = adminService.getAllMajors();
+        List<Division> divisions = adminService.getAllDivisions();
 
         model.addAttribute("user", user);
         model.addAttribute("departments", departments);
         model.addAttribute("majors", majors);
+        model.addAttribute("divisions", divisions);
         model.addAttribute("newDepartment", new Department());
         model.addAttribute("newMajor", new Major());
+        model.addAttribute("newDivision", new Division());
 
         return "admin/departments";
     }
@@ -385,6 +388,71 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái Chuyên ngành thành công!");
         } else {
             redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy Chuyên ngành!");
+        }
+
+        return "redirect:/admin/departments";
+    }
+
+    // ==================== DIVISIONS ====================
+
+    @PostMapping("/divisions/create")
+    public String createDivision(
+            @ModelAttribute Division division,
+            @RequestParam("departmentId") Long departmentId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser admin = getAuthenticatedAdmin(session);
+        if (admin == null) return "redirect:/login";
+
+        String error = adminService.createDivision(division, departmentId);
+        if (error == null) {
+            redirectAttributes.addFlashAttribute("successMessage", "Thêm mới Bộ môn '" + division.getName() + "' thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", error);
+        }
+
+        return "redirect:/admin/departments";
+    }
+
+    @PostMapping("/divisions/{id}/edit")
+    public String editDivision(
+            @PathVariable("id") Long id,
+            @RequestParam("name") String name,
+            @RequestParam("code") String code,
+            @RequestParam("departmentId") Long departmentId,
+            @RequestParam(value = "isActive", required = false) Boolean isActive,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser admin = getAuthenticatedAdmin(session);
+        if (admin == null) return "redirect:/login";
+
+        boolean activeStatus = Boolean.TRUE.equals(isActive);
+        String error = adminService.updateDivision(id, name, code, departmentId, activeStatus);
+        if (error == null) {
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật Bộ môn thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", error);
+        }
+
+        return "redirect:/admin/departments";
+    }
+
+    @PostMapping("/divisions/{id}/toggle-status")
+    public String toggleDivisionStatus(
+            @PathVariable("id") Long id,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser admin = getAuthenticatedAdmin(session);
+        if (admin == null) return "redirect:/login";
+
+        boolean success = adminService.toggleDivisionActive(id);
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái Bộ môn thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy Bộ môn!");
         }
 
         return "redirect:/admin/departments";

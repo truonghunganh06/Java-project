@@ -54,8 +54,8 @@
             <!-- Unified SaaS Control Center (Stage KPI Filter Bar + Dropdowns & Search) -->
             <div class="saas-card p-3.5 mb-4 shadow-sm">
                 <!-- Row 1: Workflow Stages as Sleek Interactive Filter Pills -->
-                <div class="d-flex flex-wrap align-items-center gap-2 pb-3 mb-3 border-b border-slate-100">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider me-1">Trạng thái:</span>
+                <div class="d-flex flex-wrap align-items-center gap-2 pb-3 mb-3 border-b border-slate-100 px-1">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider me-1 d-inline-flex align-items-center">Trạng thái:</span>
                     
                     <!-- KPI 1: All Topics -->
                     <button type="button" class="workflow-kpi-pill active d-inline-flex align-items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition"
@@ -112,47 +112,41 @@
                         </div>
                     </div>
 
-                    <!-- Right: Dropdown Filters & Search -->
+                    <!-- Right: Dropdown Filters & Search (Grouped with Reset Button) -->
                     <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 justify-content-xl-end">
                         <!-- Filter: Period -->
-                        <div style="min-width: 150px;">
+                        <div style="min-width: 140px; max-width: 190px;" class="flex-shrink-1">
                             <select id="filterPeriodSelect" class="form-select form-select-sm text-xs rounded-xl border-slate-200 py-1.5" onchange="applyCombinedFilters()" title="filterPeriodSelect" aria-label="filterPeriodSelect">
                                 <option value="ALL">Tất cả đợt đăng ký</option>
                                 <option th:each="p : ${periods}" th:value="${p.name}" th:text="${p.name}">Đợt 1</option>
                             </select>
                         </div>
 
-                        <!-- Filter: Major / Division -->
-                        <div style="min-width: 160px;">
-                            <select id="filterMajorSelect" class="form-select form-select-sm text-xs rounded-xl border-slate-200 py-1.5" onchange="applyCombinedFilters()" title="filterMajorSelect" aria-label="filterMajorSelect">
-                                <option value="ALL">Tất cả chuyên ngành</option>
-                                <option th:each="m : ${majors}" th:value="${m.name}" th:text="${m.name}">Kỹ thuật Phần mềm</option>
-                            </select>
-                        </div>
-
                         <!-- Filter: Supervisor -->
-                        <div th:if="${lecturers != null && !lecturers.isEmpty()}" style="min-width: 160px;">
+                        <div th:if="${lecturers != null && !lecturers.isEmpty()}" style="min-width: 150px; max-width: 200px;" class="flex-shrink-1">
                             <select id="filterSupervisorSelect" class="form-select form-select-sm text-xs rounded-xl border-slate-200 py-1.5" onchange="applyCombinedFilters()" title="filterSupervisorSelect" aria-label="filterSupervisorSelect">
                                 <option value="ALL">Tất cả GV hướng dẫn</option>
                                 <option th:each="l : ${lecturers}" th:value="${l.user != null ? l.user.fullName : l.id}" th:text="${l.user != null ? l.user.fullName : 'GV'}">TS. Nguyễn Văn A</option>
                             </select>
                         </div>
 
-                        <!-- Search Input -->
-                        <div class="search-box-wrapper" style="min-width: 220px; flex-grow: 1; max-width: 300px;">
-                            <i class="fa-solid fa-magnifying-glass search-box-icon text-slate-400"></i>
-                            <input type="text" id="topicKeywordInput"
-                                class="form-control form-control-sm rounded-xl text-xs bg-slate-50 focus:bg-white"
-                                placeholder="Tìm theo tên đề tài, mã, GVHD..."
-                                onkeyup="applyCombinedFilters()" title="Tìm theo tên đề tài, mã, GVHD..." aria-label="Tìm theo tên đề tài, mã, GVHD...">
-                        </div>
+                        <!-- Search Input + Reset Button Group (Tethered together so reset never wraps alone) -->
+                        <div class="d-flex align-items-center gap-1.5 flex-nowrap flex-grow-1" style="min-width: 220px; max-width: 320px;">
+                            <div class="search-box-wrapper w-full">
+                                <i class="fa-solid fa-magnifying-glass search-box-icon text-slate-400"></i>
+                                <input type="text" id="topicKeywordInput"
+                                    class="form-control form-control-sm rounded-xl text-xs bg-slate-50 focus:bg-white"
+                                    placeholder="Tìm theo tên đề tài, mã, GVHD..."
+                                    onkeyup="applyCombinedFilters()" title="Tìm theo tên đề tài, mã, GVHD..." aria-label="Tìm theo tên đề tài, mã, GVHD...">
+                            </div>
 
-                        <!-- Reset Filter Button -->
-                        <button type="button" onclick="resetAllFilters()"
-                            class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-600 hover:bg-slate-100"
-                            title="Đặt lại toàn bộ bộ lọc">
-                            <i class="fa-solid fa-rotate-left text-xs"></i>
-                        </button>
+                            <button type="button" onclick="resetAllFilters()"
+                                class="btn btn-sm btn-light border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100 flex-shrink-0 d-inline-flex align-items-center justify-content-center"
+                                style="height: 31px; width: 31px; padding: 0;"
+                                title="Đặt lại toàn bộ bộ lọc">
+                                <i class="fa-solid fa-rotate-left text-xs"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1046,8 +1040,6 @@
             if (kw) kw.value = '';
             const pSel = document.getElementById('filterPeriodSelect');
             if (pSel) pSel.value = 'ALL';
-            const mSel = document.getElementById('filterMajorSelect');
-            if (mSel) mSel.value = 'ALL';
             const sSel = document.getElementById('filterSupervisorSelect');
             if (sSel) sSel.value = 'ALL';
             const firstPill = document.querySelector('.workflow-kpi-pill');
@@ -1063,9 +1055,6 @@
             const pSel = document.getElementById('filterPeriodSelect');
             const selectedPeriod = pSel ? pSel.value : 'ALL';
 
-            const mSel = document.getElementById('filterMajorSelect');
-            const selectedMajor = mSel ? mSel.value : 'ALL';
-
             const sSel = document.getElementById('filterSupervisorSelect');
             const selectedSupervisor = sSel ? sSel.value : 'ALL';
 
@@ -1078,7 +1067,6 @@
                 const hasReviewer = row.getAttribute('data-has-reviewer') === 'true';
                 const hasCouncil = row.getAttribute('data-has-council') === 'true';
                 const rowPeriod = row.getAttribute('data-topic-period') || '';
-                const rowMajor = row.getAttribute('data-topic-major') || '';
                 const rowSupervisor = row.getAttribute('data-topic-supervisor') || '';
                 const text = row.textContent.toLowerCase();
 
@@ -1100,11 +1088,10 @@
                 }
 
                 const matchesPeriod = (selectedPeriod === 'ALL' || rowPeriod === selectedPeriod);
-                const matchesMajor = (selectedMajor === 'ALL' || rowMajor.includes(selectedMajor) || selectedMajor.includes(rowMajor));
                 const matchesSupervisor = (selectedSupervisor === 'ALL' || rowSupervisor.includes(selectedSupervisor) || selectedSupervisor.includes(rowSupervisor));
                 const matchesKeyword = !keyword || text.includes(keyword);
 
-                if (matchesStage && matchesPeriod && matchesMajor && matchesSupervisor && matchesKeyword) {
+                if (matchesStage && matchesPeriod && matchesSupervisor && matchesKeyword) {
                     row.style.display = '';
                     visibleRowCount++;
                 } else {
@@ -1119,7 +1106,6 @@
                 const hasReviewer = card.getAttribute('data-has-reviewer') === 'true';
                 const hasCouncil = card.getAttribute('data-has-council') === 'true';
                 const cardPeriod = card.getAttribute('data-topic-period') || '';
-                const cardMajor = card.getAttribute('data-topic-major') || '';
                 const cardSupervisor = card.getAttribute('data-topic-supervisor') || '';
                 const text = card.textContent.toLowerCase();
 
@@ -1137,11 +1123,10 @@
                 }
 
                 const matchesPeriod = (selectedPeriod === 'ALL' || cardPeriod === selectedPeriod);
-                const matchesMajor = (selectedMajor === 'ALL' || cardMajor.includes(selectedMajor) || selectedMajor.includes(cardMajor));
                 const matchesSupervisor = (selectedSupervisor === 'ALL' || cardSupervisor.includes(selectedSupervisor) || selectedSupervisor.includes(cardSupervisor));
                 const matchesKeyword = !keyword || text.includes(keyword);
 
-                if (matchesStage && matchesPeriod && matchesMajor && matchesSupervisor && matchesKeyword) {
+                if (matchesStage && matchesPeriod && matchesSupervisor && matchesKeyword) {
                     card.style.display = '';
                 } else {
                     card.style.display = 'none';

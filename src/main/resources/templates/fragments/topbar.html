@@ -210,7 +210,7 @@
                             <span th:text="${user != null && user.fullName != null && user.fullName.length() > 0 ? user.fullName.substring(0, 1) : 'U'}">U</span>
                         </div>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-100 rounded-3xl p-2 mt-2" style="min-width: 280px; z-index: 1060;">
+                    <ul class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-100 rounded-3xl p-2 mt-2" style="min-width: 300px; max-height: 480px; overflow-y: auto; z-index: 1060;">
                         <!-- User Info Header -->
                         <li class="px-3 py-2.5 bg-slate-50/80 rounded-2xl mb-2 border border-slate-100/80">
                             <div class="d-flex align-items-center gap-2.5">

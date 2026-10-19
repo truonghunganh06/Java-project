@@ -451,6 +451,101 @@ public class AdminService {
         return false;
     }
 
+    // ==================== DIVISIONS ====================
+
+    public List<Division> getAllDivisions() {
+        return divisionRepository.findAll();
+    }
+
+    public Division getDivisionById(Long id) {
+        if (id == null) return null;
+        return divisionRepository.findById(id).orElse(null);
+    }
+
+    @Transactional
+    public String createDivision(Division division, Long departmentId) {
+        if (division == null) return "Thông tin bộ môn không hợp lệ!";
+        if (division.getCode() == null || division.getCode().trim().isEmpty()) {
+            return "Mã bộ môn không được để trống!";
+        }
+        if (division.getName() == null || division.getName().trim().isEmpty()) {
+            return "Tên bộ môn không được để trống!";
+        }
+        if (departmentId == null) {
+            return "Vui lòng chọn Khoa trực thuộc!";
+        }
+        Department dept = getDepartmentById(departmentId);
+        if (dept == null) {
+            return "Khoa trực thuộc không tồn tại!";
+        }
+
+        String cleanCode = division.getCode().trim().toUpperCase();
+        if (divisionRepository.findByCodeIgnoreCase(cleanCode).isPresent()) {
+            return "Mã bộ môn '" + cleanCode + "' đã tồn tại trên hệ thống!";
+        }
+
+        division.setCode(cleanCode);
+        division.setName(division.getName().trim());
+        division.setDepartment(dept);
+        if (division.getIsActive() == null) {
+            division.setIsActive(true);
+        }
+        Division saved = divisionRepository.save(division);
+        System.out.println("[DB-ADMIN] createDivision: ĐÃ TẠO BỘ MÔN MỚI VÀO DB! (Mã: " + saved.getCode() + ", Tên: " + saved.getName() + ")");
+        return null;
+    }
+
+    @Transactional
+    public String updateDivision(Long id, String name, String code, Long departmentId, Boolean isActive) {
+        if (id == null) return "Mã định danh bộ môn không hợp lệ!";
+        Optional<Division> opt = divisionRepository.findById(id);
+        if (opt.isEmpty()) {
+            return "Không tìm thấy Bộ môn với ID: " + id;
+        }
+        if (code == null || code.trim().isEmpty()) {
+            return "Mã bộ môn không được để trống!";
+        }
+        if (name == null || name.trim().isEmpty()) {
+            return "Tên bộ môn không được để trống!";
+        }
+        if (departmentId == null) {
+            return "Vui lòng chọn Khoa trực thuộc!";
+        }
+        Department dept = getDepartmentById(departmentId);
+        if (dept == null) {
+            return "Khoa trực thuộc không tồn tại!";
+        }
+
+        String cleanCode = code.trim().toUpperCase();
+        Optional<Division> existingCodeDiv = divisionRepository.findByCodeIgnoreCase(cleanCode);
+        if (existingCodeDiv.isPresent() && !existingCodeDiv.get().getId().equals(id)) {
+            return "Mã bộ môn '" + cleanCode + "' đã được sử dụng bởi bộ môn khác (" + existingCodeDiv.get().getName() + ")!";
+        }
+
+        Division d = opt.get();
+        d.setName(name.trim());
+        d.setCode(cleanCode);
+        d.setDepartment(dept);
+        if (isActive != null) d.setIsActive(isActive);
+        divisionRepository.save(d);
+        System.out.println("[DB-ADMIN] updateDivision(" + id + "): Đã cập nhật bộ môn '" + cleanCode + "' vào DB");
+        return null;
+    }
+
+    @Transactional
+    public boolean toggleDivisionActive(Long id) {
+        if (id == null) return false;
+        Optional<Division> opt = divisionRepository.findById(id);
+        if (opt.isPresent()) {
+            Division d = opt.get();
+            d.setIsActive(!Boolean.TRUE.equals(d.getIsActive()));
+            divisionRepository.save(d);
+            System.out.println("[DB-ADMIN] toggleDivisionActive(" + id + "): Trạng thái mới isActive=" + d.getIsActive());
+            return true;
+        }
+        return false;
+    }
+
     // ==================== SYSTEM STATS ====================
 
     public Map<String, Object> getSystemStats() {

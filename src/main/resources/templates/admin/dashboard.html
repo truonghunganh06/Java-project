@@ -70,10 +70,10 @@
                 <div class="col-12 col-md-4">
                     <div class="stat-card">
                         <div>
-                            <div class="stat-label">Khoa / Viện đào tạo</div>
+                            <div class="stat-label">Khoa đào tạo</div>
                             <div class="stat-value" th:text="${stats != null ? stats['totalDepartments'] : 0}">0</div>
                             <div class="text-slate-500 text-xs mt-2">
-                                <a th:href="@{/admin/departments}" class="text-blue-600 font-medium hover:underline">Danh sách Khoa &rarr;</a>
+                                <a th:href="@{/admin/departments}" class="text-blue-600 font-medium hover:underline">Quản lý Khoa &rarr;</a>
                             </div>
                         </div>
                         <div class="stat-icon-wrapper bg-indigo-50 text-indigo-600">
@@ -86,14 +86,14 @@
                 <div class="col-12 col-md-4">
                     <div class="stat-card">
                         <div>
-                            <div class="stat-label">Chuyên ngành / Bộ môn</div>
-                            <div class="stat-value" th:text="${stats != null ? stats['totalMajors'] : 0}">0</div>
+                            <div class="stat-label">Cán bộ &amp; Giảng viên</div>
+                            <div class="stat-value" th:text="${stats != null ? ((stats['lecturerCount'] != null ? stats['lecturerCount'] : 0) + (stats['deptHeadCount'] != null ? stats['deptHeadCount'] : 0)) : 0}">0</div>
                             <div class="text-slate-500 text-xs mt-2">
-                                <a th:href="@{/admin/departments}" class="text-blue-600 font-medium hover:underline">Cơ cấu chuyên ngành &rarr;</a>
+                                <a th:href="@{/admin/users}" class="text-blue-600 font-medium hover:underline">Danh sách tài khoản &rarr;</a>
                             </div>
                         </div>
                         <div class="stat-icon-wrapper bg-emerald-50 text-emerald-600">
-                            <i class="fa-solid fa-diagram-project"></i>
+                            <i class="fa-solid fa-chalkboard-user"></i>
                         </div>
                     </div>
                 </div>
@@ -207,7 +207,7 @@
                                     <i class="fa-solid fa-building-columns text-xs"></i>
                                 </div>
                                 <div>
-                                    <div class="font-semibold text-slate-900 text-xs">Thêm Khoa / Chuyên ngành</div>
+                                    <div class="font-semibold text-slate-900 text-xs">Quản lý Khoa đào tạo</div>
                                     <div class="text-slate-400 text-xs mt-0.5">Cập nhật cơ cấu tổ chức đào tạo</div>
                                 </div>
                             </a>

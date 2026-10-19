@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TopicHub · Complete Database Schema &amp; ER Model (Toàn bộ 27 Bảng Neon DB)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-paper-2: #ffffff;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-soft:    #8d99ae;
+      --color-rule:    rgba(45, 49, 66, 0.12);
+      --color-accent:  #bf4520;
+      --color-accent-tint: rgba(191, 69, 32, 0.08);
+      --color-link:    #2563eb;
+      --font-sans:     'Geist', system-ui, -apple-system, sans-serif;
+      --font-serif:    'Instrument Serif', Georgia, serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2.5rem 1.5rem;
+      line-height: 1.5;
+    }
+
+    .diagram-container {
+      max-width: 1860px;
+      width: 100%;
+    }
+
+    .header-section {
+      margin-bottom: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 3.2vw + 1rem, 2.85rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--color-ink);
+    }
+
+    .subtitle {
+      font-size: 0.88rem;
+      color: var(--color-muted);
+      max-width: 1200px;
+    }
+
+    .summary-badge-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--color-paper-2);
+      border: 1px solid var(--color-rule);
+      border-radius: 9999px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--color-muted);
+    }
+
+    .stat-chip strong {
+      color: var(--color-ink);
+      font-family: var(--font-mono);
+    }
+
+    .stat-chip.accent {
+      border-color: rgba(191, 69, 32, 0.3);
+      background: var(--color-accent-tint);
+      color: var(--color-accent);
+    }
+
+    .svg-scroll-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      background: var(--color-paper-2);
+      border: 1px solid var(--color-rule);
+      border-radius: 14px;
+      padding: 1.25rem;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      min-width: 1780px;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="diagram-container">
+    <div class="header-section">
+      <p class="eyebrow">TopicHub · Complete Database Schema &amp; Architecture</p>
+      <h1>Sơ đồ Cơ sở Dữ liệu Toàn diện (Chính xác Toàn bộ 27 Bảng Neon DB)</h1>
+      <p class="subtitle">
+        Lược đồ quan hệ thực thể (ER) và bảng vật lý chuẩn 100% được truy vấn trực tiếp từ <strong>Neon PostgreSQL</strong>. 
+        Biểu diễn đầy đủ <strong>27 bảng</strong> theo 5 phân hệ logic: Xác thực &amp; Truyền thông (6 bảng), Đơn vị đào tạo &amp; Hồ sơ (5 bảng), Đợt đăng ký &amp; Đề tài (Core - 4 bảng), Nhóm sinh viên &amp; Yêu cầu (5 bảng), Báo cáo &amp; Hội đồng đánh giá (7 bảng).
+      </p>
+
+      <div class="summary-badge-bar">
+        <span class="stat-chip accent"><strong>27</strong> Bảng dữ liệu thực tế (Neon DB)</span>
+        <span class="stat-chip"><strong>5</strong> Phân hệ nghiệp vụ chuẩn</span>
+        <span class="stat-chip"><strong>PostgreSQL 16</strong> Neon Pooled Connection</span>
+        <span class="stat-chip"><strong>Spring Data JPA</strong> ORM Mapping</span>
+        <span class="stat-chip"><strong>Khoa đào tạo</strong> Trọng tâm quản lý đơn vị</span>
+      </div>
+    </div>
+
+    <div class="svg-scroll-wrapper">
+      <svg viewBox="0 0 1820 1660" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="er-full-title er-full-desc">
+        <title id="er-full-title">TopicHub 27-Table Database ER Model</title>
+        <desc id="er-full-desc">Sơ đồ chi tiết toàn bộ 27 bảng thực thể của cơ sở dữ liệu PostgreSQL cho dự án TopicHub</desc>
+
+        <defs>
+          <pattern id="er-grid-dots" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="2" cy="2" r="0.75" fill="rgba(45,49,66,0.12)"/>
+          </pattern>
+          <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+            <polygon points="0 0, 7 2.5, 0 5" fill="#4f5d75"/>
+          </marker>
+          <marker id="arr-accent" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+            <polygon points="0 0, 7 2.5, 0 5" fill="#bf4520"/>
+          </marker>
+          <marker id="arr-link" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+            <polygon points="0 0, 7 2.5, 0 5" fill="#2563eb"/>
+          </marker>
+        </defs>
+
+        <!-- Canvas Background -->
+        <rect width="100%" height="100%" fill="#fafafa" rx="10"/>
+        <rect width="100%" height="100%" fill="url(#er-grid-dots)" rx="10"/>
+
+        <!-- ======================================================== -->
+        <!-- ZONE CONTAINERS (5 Subsystem Groupings)                  -->
+        <!-- ======================================================== -->
+        <!-- Zone 1: Auth & Identity (6 Tables) -->
+        <rect x="25" y="45" width="875" height="445" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.18)" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="40" y="65" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="9" font-weight="700" letter-spacing="0.1em">PHÂN HỆ 1: XÁC THỰC, TÀI KHOẢN &amp; TRUYỀN THÔNG (6 TABLES)</text>
+
+        <!-- Zone 3: Registration Periods & Topics (Core - 4 Tables) -->
+        <rect x="915" y="45" width="880" height="445" rx="8" fill="rgba(191,69,32,0.02)" stroke="rgba(191,69,32,0.25)" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="930" y="65" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9" font-weight="700" letter-spacing="0.1em">PHÂN HỆ 3: ĐỢT ĐĂNG KÝ &amp; ĐỀ TÀI TỐT NGHIỆP (4 TABLES - TRỌNG TÂM CORE)</text>
+
+        <!-- Zone 2: Academic Units & Profiles (5 Tables) -->
+        <rect x="25" y="510" width="1770" height="280" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.18)" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="40" y="530" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="9" font-weight="700" letter-spacing="0.1em">PHÂN HỆ 2: ĐƠN VỊ ĐÀO TẠO &amp; HỒ SƠ HỌC VỤ (5 TABLES)</text>
+
+        <!-- Zone 4: Student Groups & Requests (5 Tables) -->
+        <rect x="25" y="810" width="1770" height="280" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.18)" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="40" y="830" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="9" font-weight="700" letter-spacing="0.1em">PHÂN HỆ 4: NHÓM SINH VIÊN (3–5 SV) &amp; VÒNG ĐỜI THÀNH VIÊN (5 TABLES)</text>
+
+        <!-- Zone 5: Submissions, Councils, Assignments & Grading (7 Tables) -->
+        <rect x="25" y="1110" width="1770" height="445" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.18)" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="40" y="1130" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="9" font-weight="700" letter-spacing="0.1em">PHÂN HỆ 5: BÁO CÁO, HỘI ĐỒNG PHẢN BIỆN (3–5 GV), PHÂN CÔNG &amp; CHẤM ĐIỂM (7 TABLES)</text>
+
+        <!-- ======================================================== -->
+        <!-- CONNECTOR LINES & RELATIONSHIPS (27 Tables Network)      -->
+        <!-- ======================================================== -->
+        <!-- roles -> users (1:N) & roles -> app_users (1:N) -->
+        <path d="M 215,140 H 250" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+        <path d="M 135,230 V 250 Q 135,258 143,258 H 530 Q 538,258 538,250 V 225" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- app_users -> announcements (1:N author) -->
+        <path d="M 600,295 V 320 Q 600,328 592,328 H 220 Q 212,328 212,336 V 345" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- app_users -> notifications (1:N created_by) -->
+        <path d="M 640,295 V 345" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- notifications -> announcement_reads (1:N) -->
+        <path d="M 565,410 H 600" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- app_users -> announcement_reads (1:N user_id) -->
+        <path d="M 720,295 V 345" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- app_users -> lecturers (1:1) -->
+        <path d="M 620,295 V 500 Q 620,508 628,508 H 860 Q 868,508 868,516 V 555" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- app_users -> students (1:1) -->
+        <path d="M 650,295 V 490 Q 650,498 658,498 H 1170 Q 1178,498 1178,506 V 555" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- departments -> divisions (1:N) -->
+        <path d="M 265,630 H 295" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- divisions -> majors (1:N) -->
+        <path d="M 525,630 H 555" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- departments -> lecturers (1:N department_id) -->
+        <path d="M 155,720 V 750 Q 155,758 163,758 H 840 Q 848,758 848,750 V 730 H 860" fill="none" stroke="#2563eb" stroke-width="1.2" marker-end="url(#arr-link)"/>
+
+        <!-- majors -> students (1:N major_id) -->
+        <path d="M 785,630 H 1160" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- registration_periods -> topics (1:N) -->
+        <path d="M 1180,160 H 1210" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- topics -> topic_supervisors (1:N) -->
+        <path d="M 1480,150 H 1515" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- topics -> topic_registrations (1:N) -->
+        <path d="M 1345,295 V 335" fill="none" stroke="#bf4520" stroke-width="1.4" marker-end="url(#arr-accent)"/>
+
+        <!-- lecturers (GVHD) -> topics (1:N supervisor_id) -->
+        <path d="M 970,555 V 320 Q 970,312 978,312 H 1220 Q 1228,312 1228,304 V 295" fill="none" stroke="#bf4520" stroke-width="1.5" marker-end="url(#arr-accent)"/>
+
+        <!-- student_groups -> group_members (1:N) -->
+        <path d="M 295,930 H 325" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- student_groups -> group_invitations (1:N) -->
+        <path d="M 295,960 H 595" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- student_groups -> group_leave_requests (1:N) -->
+        <path d="M 295,990 H 865" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- student_groups -> group_dissolve_requests (1:N) -->
+        <path d="M 295,1020 H 1135" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- topics -> student_groups (1:1 approved) -->
+        <path d="M 1310,295 V 790 Q 1310,798 1302,798 H 190 Q 182,798 182,806 V 855" fill="none" stroke="#bf4520" stroke-width="1.3" marker-end="url(#arr-accent)"/>
+
+        <!-- submissions -> topics & student_groups -->
+        <path d="M 180,1070 V 1145" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- topic_registrations -> reports (1:N) -->
+        <path d="M 1450,470 V 1090 Q 1450,1098 1442,1098 H 470 Q 462,1098 462,1106 V 1145" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- councils -> council_members (1:3..5) -->
+        <path d="M 865,1230 H 895" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- councils -> topic_assignments (1:N) -->
+        <path d="M 1155,1230 H 1185" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- topic_assignments -> scores (1:N) -->
+        <path d="M 1315,1340 V 1400 Q 1315,1408 1307,1408 H 1140" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- evaluations -> topics & groups (1:N) -->
+        <path d="M 735,1340 V 1370" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- ======================================================== -->
+        <!-- TABLE BOXES (ALL 27 TABLES IN NEON POSTGRESQL)           -->
+        <!-- ======================================================== -->
+
+        <!-- 1. roles -->
+        <g id="tbl-roles" transform="translate(45, 80)">
+          <rect width="170" height="150" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="170" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="170" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">roles</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="160" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  code</text>
+          <text x="160" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(50) [UQ]</text>
+          <text x="10" y="90" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  name</text>
+          <text x="160" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(100)</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  description</text>
+          <text x="160" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TEXT</text>
+        </g>
+
+        <!-- 2. users (Legacy Accounts Table in Neon) -->
+        <g id="tbl-users" transform="translate(250, 80)">
+          <rect width="215" height="215" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="215" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="215" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#8d99ae"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7" font-weight="600" text-anchor="middle">LEGACY</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">users</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="205" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  username</text>
+          <text x="205" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(100)</text>
+          <text x="10" y="90" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  password_hash</text>
+          <text x="205" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(255)</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  full_name</text>
+          <text x="205" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(255)</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  email / phone</text>
+          <text x="205" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(150)</text>
+          <text x="10" y="156" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ role_id</text>
+          <text x="205" y="156" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK roles)</text>
+          <text x="10" y="178" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  is_active</text>
+          <text x="205" y="178" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BOOLEAN</text>
+          <text x="10" y="200" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  created_at / upd</text>
+          <text x="205" y="200" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMP</text>
+        </g>
+
+        <!-- 3. app_users (Active Spring Security Accounts) -->
+        <g id="tbl-app-users" transform="translate(485, 80)">
+          <rect width="235" height="215" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="235" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="235" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">app_users (Active)</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="225" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  username</text>
+          <text x="225" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(100) [UQ]</text>
+          <text x="10" y="90" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  password</text>
+          <text x="225" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BCRYPT(255)</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  full_name</text>
+          <text x="225" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(255)</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  email / phone</text>
+          <text x="225" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(150)</text>
+          <text x="10" y="156" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ role_id</text>
+          <text x="225" y="156" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK roles)</text>
+          <text x="10" y="178" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  is_active</text>
+          <text x="225" y="178" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BOOLEAN</text>
+          <text x="10" y="200" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  created_at / upd</text>
+          <text x="225" y="200" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ</text>
+        </g>
+
+        <!-- 4. announcements -->
+        <g id="tbl-announcements" transform="translate(45, 310)">
+          <rect width="250" height="160" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="250" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="250" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">announcements</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="240" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  title / category</text>
+          <text x="240" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(255)</text>
+          <text x="10" y="90" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  content</text>
+          <text x="240" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TEXT</text>
+          <text x="10" y="112" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ author_id</text>
+          <text x="240" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK app_users)</text>
+          <text x="10" y="134" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5">→ period_id</text>
+          <text x="240" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK periods)</text>
+          <text x="10" y="152" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  is_urgent / created_at</text>
+          <text x="240" y="152" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BOOL / TIMESTAMP</text>
+        </g>
+
+        <!-- 5. notifications -->
+        <g id="tbl-notifications" transform="translate(315, 310)">
+          <rect width="250" height="160" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="250" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="250" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">notifications</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="240" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ created_by</text>
+          <text x="240" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK app_users)</text>
+          <text x="10" y="90" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  title / type</text>
+          <text x="240" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(255)</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  content</text>
+          <text x="240" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TEXT</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  is_published / pub_at</text>
+          <text x="240" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BOOL / TIMESTAMPTZ</text>
+          <text x="10" y="152" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  created_at</text>
+          <text x="240" y="152" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ</text>
+        </g>
+
+        <!-- 6. announcement_reads -->
+        <g id="tbl-announcement-reads" transform="translate(585, 310)">
+          <rect width="295" height="145" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="295" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="295" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">announcement_reads</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="285" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ notification_id</text>
+          <text x="285" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK notifications)</text>
+          <text x="10" y="90" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ user_id</text>
+          <text x="285" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK app_users)</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  read_at</text>
+          <text x="285" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ</text>
+          <text x="10" y="132" fill="#8d99ae" font-family="'Geist', sans-serif" font-size="8.5">Đánh dấu đã đọc thông báo</text>
+        </g>
+
+        <!-- 7. registration_periods -->
+        <g id="tbl-periods" transform="translate(935, 80)">
+          <rect width="245" height="215" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="245" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="245" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">registration_periods</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="235" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  name</text>
+          <text x="235" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(255)</text>
+          <text x="10" y="90" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  semester / acad_year</text>
+          <text x="235" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">INT / VARCHAR(20)</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  phase1_start / end</text>
+          <text x="235" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ (GĐ1)</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  phase2_start / end</text>
+          <text x="235" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ (GĐ2)</text>
+          <text x="10" y="156" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  min_size / max_size</text>
+          <text x="235" y="156" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">INT (3..5 SV)</text>
+          <text x="10" y="178" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  max_groups_per_topic</text>
+          <text x="235" y="178" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">INT (1 nhóm/đề tài)</text>
+          <text x="10" y="200" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  status</text>
+          <text x="235" y="200" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">ACTIVE / CLOSED</text>
+        </g>
+
+        <!-- 8. topics (CORE) -->
+        <g id="tbl-topics" transform="translate(1210, 80)">
+          <rect width="270" height="215" rx="6" fill="#ffffff" stroke="#bf4520" stroke-width="1.8"/>
+          <rect width="270" height="26" rx="6" fill="#fff5f2" stroke="#bf4520" stroke-width="1.8"/>
+          <line x1="0" y1="26" x2="270" y2="26" stroke="#bf4520" stroke-width="1"/>
+          <rect x="6" y="5" width="40" height="15" rx="2" fill="#bf4520"/>
+          <text x="26" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="700" text-anchor="middle">CORE</text>
+          <text x="52" y="17" fill="#bf4520" font-family="'Geist', sans-serif" font-size="11" font-weight="700">topics (Đề tài tốt nghiệp)</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="260" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  code</text>
+          <text x="260" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(50) [UQ]</text>
+          <text x="10" y="90" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  title / description</text>
+          <text x="260" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(500) / TEXT</text>
+          <text x="10" y="112" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ period_id</text>
+          <text x="260" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK periods)</text>
+          <text x="10" y="134" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ supervisor_id</text>
+          <text x="260" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK lecturers - GVHD)</text>
+          <text x="10" y="156" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ department_id</text>
+          <text x="260" y="156" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK departments)</text>
+          <text x="10" y="178" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  max_students</text>
+          <text x="260" y="178" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">INT (Quota: 3..5)</text>
+          <text x="10" y="200" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">  status</text>
+          <text x="260" y="200" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">APPROVED / PENDING</text>
+        </g>
+
+        <!-- 9. topic_supervisors (Đồng hướng dẫn) -->
+        <g id="tbl-topic-supervisors" transform="translate(1515, 80)">
+          <rect width="260" height="155" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="260" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="260" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">topic_supervisors</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="250" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ topic_id</text>
+          <text x="250" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK topics)</text>
+          <text x="10" y="90" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ lecturer_id</text>
+          <text x="250" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK lecturers)</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  role</text>
+          <text x="250" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(50) [CO_SUPERVISOR]</text>
+          <text x="10" y="138" fill="#8d99ae" font-family="'Geist', sans-serif" font-size="8.5">Quản lý giảng viên đồng hướng dẫn</text>
+        </g>
+
+        <!-- 10. topic_registrations -->
+        <g id="tbl-topic-registrations" transform="translate(1210, 310)">
+          <rect width="270" height="160" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="270" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="270" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">topic_registrations</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="260" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ topic_id</text>
+          <text x="260" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK topics)</text>
+          <text x="10" y="90" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ group_id</text>
+          <text x="260" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK groups) [UQ]</text>
+          <text x="10" y="112" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5">→ period_id</text>
+          <text x="260" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK periods)</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  status</text>
+          <text x="260" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">REGISTERED / APPROVED</text>
+          <text x="10" y="152" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  registered_at</text>
+          <text x="260" y="152" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ</text>
+        </g>
+
+        <!-- 11. departments -->
+        <g id="tbl-departments" transform="translate(45, 555)">
+          <rect width="220" height="165" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="220" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="220" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">departments (Khoa đào tạo)</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="210" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  code</text>
+          <text x="210" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(50) [UQ]</text>
+          <text x="10" y="90" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  name</text>
+          <text x="210" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(255)</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  description</text>
+          <text x="210" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TEXT</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  created_at</text>
+          <text x="210" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ</text>
+          <text x="10" y="152" fill="#2563eb" font-family="'Geist', sans-serif" font-size="8.5">Trọng tâm quản trị đơn vị đào tạo</text>
+        </g>
+
+        <!-- 12. divisions -->
+        <g id="tbl-divisions" transform="translate(295, 555)">
+          <rect width="230" height="165" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="230" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="230" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">divisions (Bộ môn)</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="220" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ department_id</text>
+          <text x="220" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK depts)</text>
+          <text x="10" y="90" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  code</text>
+          <text x="220" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(50) [UQ]</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  name</text>
+          <text x="220" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(255)</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  description</text>
+          <text x="220" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TEXT</text>
+        </g>
+
+        <!-- 13. majors -->
+        <g id="tbl-majors" transform="translate(555, 555)">
+          <rect width="230" height="165" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="230" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="230" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">majors (Chuyên ngành)</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="220" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ division_id</text>
+          <text x="220" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK divisions)</text>
+          <text x="10" y="90" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  code</text>
+          <text x="220" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(50) [UQ]</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  name</text>
+          <text x="220" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(255)</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  description</text>
+          <text x="220" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TEXT</text>
+        </g>
+
+        <!-- 14. lecturers -->
+        <g id="tbl-lecturers" transform="translate(860, 555)">
+          <rect width="270" height="215" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="270" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="270" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">lecturers (Giảng viên / GVHD)</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="260" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ user_id</text>
+          <text x="260" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK app_users) [UQ]</text>
+          <text x="10" y="90" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ department_id</text>
+          <text x="260" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK departments)</text>
+          <text x="10" y="112" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5">→ division_id</text>
+          <text x="260" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK divisions)</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  lecturer_code</text>
+          <text x="260" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(50) [UQ]</text>
+          <text x="10" y="156" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  academic_degree</text>
+          <text x="260" y="156" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TS / ThS / PGS</text>
+          <text x="10" y="178" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  specialization</text>
+          <text x="260" y="178" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(255)</text>
+          <text x="10" y="200" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">  max_groups</text>
+          <text x="260" y="200" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">INT (Quota: tối đa 5 nhóm)</text>
+        </g>
+
+        <!-- 15. students -->
+        <g id="tbl-students" transform="translate(1160, 555)">
+          <rect width="270" height="215" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="270" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="270" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">students (Hồ sơ Sinh viên)</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="260" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ user_id</text>
+          <text x="260" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK app_users) [UQ]</text>
+          <text x="10" y="90" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ major_id</text>
+          <text x="260" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK majors)</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  student_code</text>
+          <text x="260" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(50) [UQ]</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  class_name</text>
+          <text x="260" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(50)</text>
+          <text x="10" y="156" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  gpa</text>
+          <text x="260" y="156" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">DOUBLE PRECISION</text>
+          <text x="10" y="178" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">  has_group</text>
+          <text x="260" y="178" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BOOL (Chỉ thuộc 1 nhóm)</text>
+          <text x="10" y="200" fill="#8d99ae" font-family="'Geist', sans-serif" font-size="8.5">Ràng buộc không tham gia 2 nhóm</text>
+        </g>
+
+        <!-- 16. student_groups -->
+        <g id="tbl-student-groups" transform="translate(45, 855)">
+          <rect width="250" height="215" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="250" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="250" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">student_groups (3–5 SV)</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="240" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  code</text>
+          <text x="240" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(50) [UQ]</text>
+          <text x="10" y="90" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  name</text>
+          <text x="240" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(255)</text>
+          <text x="10" y="112" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ period_id</text>
+          <text x="240" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK periods)</text>
+          <text x="10" y="134" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ leader_id</text>
+          <text x="240" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK students - Trưởng)</text>
+          <text x="10" y="156" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ topic_id</text>
+          <text x="240" y="156" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK topics) [UQ]</text>
+          <text x="10" y="178" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">  current_size</text>
+          <text x="240" y="178" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">INT (Quy định 3..5 SV)</text>
+          <text x="10" y="200" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  status</text>
+          <text x="240" y="200" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">OPEN/FULL/ASSIGNED</text>
+        </g>
+
+        <!-- 17. group_members -->
+        <g id="tbl-group-members" transform="translate(325, 855)">
+          <rect width="245" height="185" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="245" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="245" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">group_members</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="235" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ group_id</text>
+          <text x="235" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK groups)</text>
+          <text x="10" y="90" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ student_id</text>
+          <text x="235" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK students) [UQ]</text>
+          <text x="10" y="112" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">  role</text>
+          <text x="235" y="112" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">LEADER / MEMBER</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  joined_at</text>
+          <text x="235" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ</text>
+          <text x="10" y="156" fill="#8d99ae" font-family="'Geist', sans-serif" font-size="8.5">Chặn 1 SV tham gia 2 nhóm</text>
+        </g>
+
+        <!-- 18. group_invitations -->
+        <g id="tbl-group-invitations" transform="translate(595, 855)">
+          <rect width="245" height="185" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="245" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="245" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">group_invitations</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="235" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ group_id</text>
+          <text x="235" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK groups)</text>
+          <text x="10" y="90" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ student_id</text>
+          <text x="235" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK students)</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  status</text>
+          <text x="235" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">PENDING/ACCEPTED/REJECTED</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  created_at / expires_at</text>
+          <text x="235" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ</text>
+          <text x="10" y="156" fill="#8d99ae" font-family="'Geist', sans-serif" font-size="8.5">Lời mời gia nhập từ nhóm trưởng</text>
+        </g>
+
+        <!-- 19. group_leave_requests -->
+        <g id="tbl-group-leave" transform="translate(865, 855)">
+          <rect width="245" height="185" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="245" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="245" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">group_leave_requests</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="235" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ group_id</text>
+          <text x="235" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK groups)</text>
+          <text x="10" y="90" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ student_id</text>
+          <text x="235" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK students)</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  reason</text>
+          <text x="235" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TEXT</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  status / created_at</text>
+          <text x="235" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">PENDING / APPROVED</text>
+          <text x="10" y="156" fill="#8d99ae" font-family="'Geist', sans-serif" font-size="8.5">Yêu cầu rời nhóm có điều kiện</text>
+        </g>
+
+        <!-- 20. group_dissolve_requests -->
+        <g id="tbl-group-dissolve" transform="translate(1135, 855)">
+          <rect width="255" height="185" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="255" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="255" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">group_dissolve_requests</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="245" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ group_id</text>
+          <text x="245" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK groups)</text>
+          <text x="10" y="90" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ requested_by_student_id</text>
+          <text x="245" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK students)</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  reason</text>
+          <text x="245" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TEXT</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  status / created_at</text>
+          <text x="245" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">PENDING / APPROVED</text>
+          <text x="10" y="156" fill="#8d99ae" font-family="'Geist', sans-serif" font-size="8.5">Yêu cầu giải tán toàn nhóm</text>
+        </g>
+
+        <!-- 21. submissions -->
+        <g id="tbl-submissions" transform="translate(45, 1145)">
+          <rect width="265" height="195" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="265" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="265" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">submissions (Báo cáo đồ án)</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="255" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ topic_id</text>
+          <text x="255" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK topics)</text>
+          <text x="10" y="90" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ group_id</text>
+          <text x="255" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK groups)</text>
+          <text x="10" y="112" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ submitted_by_student_id</text>
+          <text x="255" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (Chỉ Leader nộp)</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  title / file_path</text>
+          <text x="255" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(500)</text>
+          <text x="10" y="156" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  submission_round / grade</text>
+          <text x="255" y="156" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">INT / DOUBLE</text>
+          <text x="10" y="178" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  submitted_at</text>
+          <text x="255" y="178" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ</text>
+        </g>
+
+        <!-- 22. reports (Tiến độ định kỳ) -->
+        <g id="tbl-reports" transform="translate(330, 1145)">
+          <rect width="255" height="195" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="255" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="255" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">reports (Báo cáo tiến độ)</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="245" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ topic_registration_id</text>
+          <text x="245" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK topic_regs)</text>
+          <text x="10" y="90" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  file_name / file_url</text>
+          <text x="245" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR / TEXT</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  version / status</text>
+          <text x="245" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">INT / VARCHAR(50)</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  note</text>
+          <text x="245" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TEXT</text>
+          <text x="10" y="156" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  submitted_at</text>
+          <text x="245" y="156" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ</text>
+          <text x="10" y="178" fill="#8d99ae" font-family="'Geist', sans-serif" font-size="8.5">Nộp báo cáo định kỳ theo đợt</text>
+        </g>
+
+        <!-- 23. councils -->
+        <g id="tbl-councils" transform="translate(605, 1145)">
+          <rect width="260" height="195" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="260" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="260" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">councils (Hội đồng 3–5 GV)</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="250" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  code / name</text>
+          <text x="250" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">VARCHAR(50) [UQ]</text>
+          <text x="10" y="90" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ period_id</text>
+          <text x="250" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK periods)</text>
+          <text x="10" y="112" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ topic_id</text>
+          <text x="250" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK topics) [UQ]</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  defense_date / room</text>
+          <text x="250" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ / VARCHAR</text>
+          <text x="10" y="156" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  status</text>
+          <text x="250" y="156" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">ACTIVE / COMPLETED</text>
+          <text x="10" y="178" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  created_at</text>
+          <text x="250" y="178" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ</text>
+        </g>
+
+        <!-- 24. council_members -->
+        <g id="tbl-council-members" transform="translate(895, 1145)">
+          <rect width="260" height="195" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="260" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="260" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">council_members</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="250" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ council_id</text>
+          <text x="250" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK councils)</text>
+          <text x="10" y="90" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ lecturer_id</text>
+          <text x="250" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK != GVHD)</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  role</text>
+          <text x="250" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">CHỦ TỊCH / THƯ KÝ / UV</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  score / feedback</text>
+          <text x="250" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">DOUBLE / TEXT</text>
+          <text x="10" y="156" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  evaluated_at</text>
+          <text x="250" y="156" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ</text>
+          <text x="10" y="178" fill="#bf4520" font-family="'Geist', sans-serif" font-size="8.5">Không chấm đề tài do mình hướng dẫn</text>
+        </g>
+
+        <!-- 25. topic_assignments -->
+        <g id="tbl-topic-assignments" transform="translate(1185, 1145)">
+          <rect width="265" height="195" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="265" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="265" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">topic_assignments</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="255" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ council_id</text>
+          <text x="255" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK councils)</text>
+          <text x="10" y="90" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ council_member_id</text>
+          <text x="255" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK members)</text>
+          <text x="10" y="112" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ topic_registration_id</text>
+          <text x="255" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK topic_regs)</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  status</text>
+          <text x="255" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">ASSIGNED / GRADED</text>
+          <text x="10" y="156" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  assigned_at</text>
+          <text x="255" y="156" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ</text>
+          <text x="10" y="178" fill="#8d99ae" font-family="'Geist', sans-serif" font-size="8.5">Phân công chấm đề tài cho từng GV</text>
+        </g>
+
+        <!-- 26. evaluations -->
+        <g id="tbl-evaluations" transform="translate(605, 1370)">
+          <rect width="260" height="165" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="260" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="260" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">evaluations (Chấm tổng hợp)</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="250" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ topic_id / group_id</text>
+          <text x="250" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK)</text>
+          <text x="10" y="90" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ lecturer_id</text>
+          <text x="250" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK GV chấm)</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  evaluation_type</text>
+          <text x="250" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">SUPERVISOR/COUNCIL</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  score / is_submitted</text>
+          <text x="250" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">DOUBLE / BOOL</text>
+          <text x="10" y="152" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  evaluated_at</text>
+          <text x="250" y="152" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ</text>
+        </g>
+
+        <!-- 27. scores -->
+        <g id="tbl-scores" transform="translate(895, 1370)">
+          <rect width="260" height="165" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <rect width="260" height="26" rx="6" fill="#f8fafc" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="0" y1="26" x2="260" y2="26" stroke="#2d3142" stroke-width="1"/>
+          <rect x="6" y="5" width="34" height="15" rx="2" fill="#2d3142"/>
+          <text x="23" y="16" fill="#ffffff" font-family="'Geist Mono', monospace" font-size="7.5" font-weight="600" text-anchor="middle">TABLE</text>
+          <text x="46" y="17" fill="#2d3142" font-family="'Geist', sans-serif" font-size="11" font-weight="700">scores (Bảng điểm chi tiết)</text>
+          <!-- fields -->
+          <text x="10" y="46" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600"># id</text>
+          <text x="250" y="46" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (PK)</text>
+          <text x="10" y="68" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="9.5" font-weight="600">→ topic_assignment_id</text>
+          <text x="250" y="68" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">BIGINT (FK assignments)</text>
+          <text x="10" y="90" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  score</text>
+          <text x="250" y="90" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">NUMERIC(4,2) (Thang 10)</text>
+          <text x="10" y="112" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  comment</text>
+          <text x="250" y="112" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TEXT</text>
+          <text x="10" y="134" fill="#2d3142" font-family="'Geist Mono', monospace" font-size="9.5">  submitted_at / updated_at</text>
+          <text x="250" y="134" fill="#8d99ae" font-family="'Geist Mono', monospace" font-size="8" text-anchor="end">TIMESTAMPTZ</text>
+          <text x="10" y="152" fill="#8d99ae" font-family="'Geist', sans-serif" font-size="8.5">Điểm số từng thành viên HĐ chấm</text>
+        </g>
+
+        <!-- Compliance & Rubric Information Card -->
+        <g id="box-rubric-summary" transform="translate(1185, 1370)">
+          <rect width="590" height="165" rx="6" fill="#f8fafc" stroke="#bf4520" stroke-width="1.2" stroke-dasharray="3,3"/>
+          <text x="18" y="28" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="10.5" font-weight="700">RÀNG BUỘC NGHIỆP VỤ BẮT BUỘC (THEO RUBRIC CHẤM ĐỒ ÁN)</text>
+          
+          <circle cx="24" cy="52" r="3.5" fill="#bf4520"/>
+          <text x="36" y="55" fill="#2d3142" font-family="'Geist', sans-serif" font-size="10"><strong>Nhóm sinh viên:</strong> Bắt buộc 3–5 sinh viên. Có đúng 1 nhóm trưởng đại diện nộp báo cáo.</text>
+
+          <circle cx="24" cy="74" r="3.5" fill="#bf4520"/>
+          <text x="36" y="77" fill="#2d3142" font-family="'Geist', sans-serif" font-size="10"><strong>Không trùng nhóm:</strong> Sinh viên đã ở nhóm A tuyệt đối không được tham gia nhóm B.</text>
+
+          <circle cx="24" cy="96" r="3.5" fill="#bf4520"/>
+          <text x="36" y="99" fill="#2d3142" font-family="'Geist', sans-serif" font-size="10"><strong>Hội đồng 3–5 giảng viên:</strong> Loại bỏ GVHD khỏi danh sách chấm đề tài (tránh xung đột lợi ích).</text>
+
+          <circle cx="24" cy="118" r="3.5" fill="#bf4520"/>
+          <text x="36" y="121" fill="#2d3142" font-family="'Geist', sans-serif" font-size="10"><strong>Đợt 2 giai đoạn:</strong> GĐ1 Giảng viên đề xuất &amp; Trưởng khoa duyệt; GĐ2 Sinh viên lập nhóm đăng ký.</text>
+
+          <circle cx="24" cy="140" r="3.5" fill="#2563eb"/>
+          <text x="36" y="143" fill="#2563eb" font-family="'Geist', sans-serif" font-size="10"><strong>Phân vùng tra cứu:</strong> Sinh viên chỉ tra cứu điểm và kết quả trong đợt nhóm mình tham gia.</text>
+        </g>
+
+        <!-- ======================================================== -->
+        <!-- BOTTOM STRIP LEGEND (Editorial Standard)                 -->
+        <!-- ======================================================== -->
+        <g id="full-diagram-legend" transform="translate(25, 1590)">
+          <rect width="1770" height="42" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+          
+          <text x="20" y="26" fill="#4f5d75" font-family="'Geist Mono', monospace" font-size="10" font-weight="700">CHÚ GIẢI THỰC THỂ:</text>
+
+          <text x="150" y="26" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="10.5" font-weight="700"># PK</text>
+          <text x="180" y="26" fill="#4f5d75" font-family="'Geist', sans-serif" font-size="10">Khóa chính (Identity ID)</text>
+
+          <text x="330" y="26" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="10.5" font-weight="700">→ FK</text>
+          <text x="365" y="26" fill="#4f5d75" font-family="'Geist', sans-serif" font-size="10">Khóa ngoại (Tham chiếu bảng liên quan)</text>
+
+          <rect x="590" y="14" width="36" height="16" rx="2" fill="#fff5f2" stroke="#bf4520" stroke-width="1.2"/>
+          <text x="608" y="26" fill="#bf4520" font-family="'Geist Mono', monospace" font-size="8.5" font-weight="700" text-anchor="middle">CORE</text>
+          <text x="635" y="26" fill="#bf4520" font-family="'Geist', sans-serif" font-size="10" font-weight="600">topics (Đề tài tốt nghiệp - Trọng tâm hệ thống)</text>
+
+          <line x1="900" y1="21" x2="930" y2="21" stroke="#4f5d75" stroke-width="1.2"/>
+          <text x="940" y="26" fill="#4f5d75" font-family="'Geist', sans-serif" font-size="10">Quan hệ 1:1 hoặc 1:N</text>
+
+          <line x1="1080" y1="21" x2="1110" y2="21" stroke="#bf4520" stroke-width="1.5"/>
+          <text x="1120" y="26" fill="#bf4520" font-family="'Geist', sans-serif" font-size="10" font-weight="600">Luồng duyệt &amp; hướng dẫn đề tài</text>
+
+          <text x="1450" y="26" fill="#2563eb" font-family="'Geist Mono', monospace" font-size="10" font-weight="600">POSTGRESQL (NEON) · TOÀN BỘ CHÍNH XÁC 27 TABLES</text>
+        </g>
+
+      </svg>
+    </div>
+  </div>
+
+</body>
+</html>
