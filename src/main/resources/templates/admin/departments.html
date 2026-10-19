@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TopicHub</title>
 </head>
-<body>
+<body class="workspace-page">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('departments', ${user})}"></aside>
@@ -57,11 +57,11 @@
                     <table class="table table-saas mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 15%;">Mã khoa</th>
-                                <th style="width: 35%;">Tên Khoa đào tạo</th>
-                                <th style="width: 30%;">Mô tả giới thiệu</th>
-                                <th style="width: 10%;" class="text-center">Trạng thái</th>
-                                <th style="width: 10%;" class="text-end pe-3">Thao tác</th>
+                                <th style="width: 15%;" scope="col">Mã khoa</th>
+                                <th style="width: 35%;" scope="col">Tên Khoa đào tạo</th>
+                                <th style="width: 30%;" scope="col">Mô tả giới thiệu</th>
+                                <th style="width: 10%;" class="text-center" scope="col">Trạng thái</th>
+                                <th style="width: 10%;" class="text-end pe-3" scope="col">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -91,7 +91,8 @@
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </button>
                                         <form th:action="@{/admin/departments/{id}/toggle-status(id=${d.id})}" method="post" class="d-inline"
-                                              th:onsubmit="'return confirm(\'Bạn có chắc chắn muốn ' + (${d.isActive} ? 'TẠM KHÓA' : 'MỞ KHÓA') + ' khoa ' + ${d.name} + '?\');'">
+                                              th:data-confirm-message="${'Bạn có chắc chắn muốn ' + (d.isActive ? 'TẠM KHÓA' : 'MỞ KHÓA') + ' khoa ' + d.name + '?'}"
+                                              onsubmit="return confirm(this.dataset.confirmMessage)">
                                             <button type="submit" class="btn btn-xs btn-light border border-slate-200 rounded-lg py-1 px-2 text-xs"
                                                     th:classappend="${d.isActive} ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'"
                                                     th:title="${d.isActive} ? 'Tạm khóa khoa' : 'Mở khóa khoa'">
@@ -125,18 +126,18 @@
                                 <div class="modal-body p-4 space-y-3">
                                     <div>
                                         <label class="form-label text-xs font-semibold text-slate-700">Mã khoa <span class="text-rose-600">*</span></label>
-                                        <input type="text" name="code" th:value="${d.code}" class="form-control text-xs rounded-xl" required title="code" aria-label="code">
+                                        <input type="text" name="code" th:value="${d.code}" class="form-control text-xs rounded-xl" required title="Mã khoa" aria-label="Mã khoa">
                                     </div>
                                     <div>
                                         <label class="form-label text-xs font-semibold text-slate-700">Tên khoa <span class="text-rose-600">*</span></label>
-                                        <input type="text" name="name" th:value="${d.name}" class="form-control text-xs rounded-xl" required title="name" aria-label="name">
+                                        <input type="text" name="name" th:value="${d.name}" class="form-control text-xs rounded-xl" required title="Tên khoa" aria-label="Tên khoa">
                                     </div>
                                     <div>
                                         <label class="form-label text-xs font-semibold text-slate-700">Mô tả giới thiệu</label>
-                                        <textarea name="description" th:text="${d.description}" rows="3" class="form-control text-xs rounded-xl" title="description" aria-label="description"></textarea>
+                                        <textarea name="description" th:text="${d.description}" rows="3" class="form-control text-xs rounded-xl" title="Mô tả giới thiệu" aria-label="Mô tả giới thiệu"></textarea>
                                     </div>
                                     <div class="form-check form-switch pt-1">
-                                        <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${d.isActive}" th:id="'activeDeptCheck-' + ${d.id}" placeholder="isActive" title="isActive" aria-label="isActive">
+                                        <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${d.isActive}" th:id="'activeDeptCheck-' + ${d.id}" placeholder="isActive" title="Kích hoạt khoa đào tạo" aria-label="Kích hoạt khoa đào tạo">
                                         <label class="form-check-label text-xs font-semibold text-slate-700" th:for="'activeDeptCheck-' + ${d.id}">Kích hoạt khoa đào tạo</label>
                                     </div>
                                 </div>
@@ -164,16 +165,16 @@
                     </div>
                     <div class="modal-body p-4 space-y-3">
                         <div>
-                            <label class="form-label text-xs font-semibold text-slate-700">Mã khoa (Viết tắt) <span class="text-rose-600">*</span></label>
-                            <input type="text" name="code" class="form-control text-xs rounded-xl" placeholder="VD: FIT, FET, FEB..." required title="code" aria-label="code">
+                            <label class="form-label text-xs font-semibold text-slate-700" for="field-admin-departments-4">Mã khoa (Viết tắt) <span class="text-rose-600">*</span></label>
+                            <input type="text" name="code" class="form-control text-xs rounded-xl" placeholder="VD: FIT, FET, FEB..." required title="Mã khoa (Viết tắt)" aria-label="Mã khoa (Viết tắt)" id="field-admin-departments-4">
                         </div>
                         <div>
-                            <label class="form-label text-xs font-semibold text-slate-700">Tên đầy đủ của Khoa <span class="text-rose-600">*</span></label>
-                            <input type="text" name="name" class="form-control text-xs rounded-xl" placeholder="VD: Khoa Công nghệ Thông tin" required title="name" aria-label="name">
+                            <label class="form-label text-xs font-semibold text-slate-700" for="field-admin-departments-5">Tên đầy đủ của Khoa <span class="text-rose-600">*</span></label>
+                            <input type="text" name="name" class="form-control text-xs rounded-xl" placeholder="VD: Khoa Công nghệ Thông tin" required title="Tên đầy đủ của Khoa" aria-label="Tên đầy đủ của Khoa" id="field-admin-departments-5">
                         </div>
                         <div>
-                            <label class="form-label text-xs font-semibold text-slate-700">Mô tả giới thiệu</label>
-                            <textarea name="description" rows="3" class="form-control text-xs rounded-xl" placeholder="VD: Đào tạo các chuyên ngành cử nhân và kỹ sư..." title="description" aria-label="description"></textarea>
+                            <label class="form-label text-xs font-semibold text-slate-700" for="field-admin-departments-6">Mô tả giới thiệu</label>
+                            <textarea name="description" rows="3" class="form-control text-xs rounded-xl" placeholder="VD: Đào tạo các chuyên ngành cử nhân và kỹ sư..." title="Mô tả giới thiệu" aria-label="Mô tả giới thiệu" id="field-admin-departments-6"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer border-t border-slate-100 p-3">

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TopicHub</title>
 </head>
-<body>
+<body class="workspace-page">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('lecturers', ${user})}"></aside>
@@ -30,7 +30,7 @@
             </div>
 
             <!-- Universal 1-Row Toolbar -->
-            <div class="saas-card p-3 mb-4">
+            <div class="saas-card p-3 mb-4 workspace-filterbar">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                     <div class="relative flex-grow-1 max-w-md">
                         <input type="text" class="form-control form-control-sm rounded-xl pl-8 text-xs" placeholder="Tìm kiếm theo tên giảng viên, mã GV, email..." onkeyup="filterTableByKeyword(this.value)" title="Tìm kiếm theo tên giảng viên, mã GV, email..." aria-label="Tìm kiếm theo tên giảng viên, mã GV, email...">
@@ -56,11 +56,11 @@
                     <table class="table table-saas mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 28%;">Giảng viên</th>
-                                <th style="width: 14%;">Mã GV</th>
-                                <th style="width: 18%;">Học hàm / Học vị</th>
-                                <th style="width: 20%;">Email & Liên hệ</th>
-                                <th style="width: 20%;">Chỉ tiêu hướng dẫn</th>
+                                <th style="width: 28%;" scope="col">Giảng viên</th>
+                                <th style="width: 14%;" scope="col">Mã GV</th>
+                                <th style="width: 18%;" scope="col">Học hàm / Học vị</th>
+                                <th style="width: 20%;" scope="col">Email & Liên hệ</th>
+                                <th style="width: 20%;" scope="col">Chỉ tiêu hướng dẫn</th>
                             </tr>
                         </thead>
                         <tbody>

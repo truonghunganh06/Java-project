@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>TopicHub</title>
     </head>
-    <body class="dashboard-page">
+    <body class="dashboard-page workspace-page">
         <a class="db-skip" href="#dashboard-main">Đến nội dung chính</a>
         <!-- Left Sidebar -->
         <aside th:replace="~{fragments/sidebar :: sidebar('dashboard', ${user})}"></aside>
@@ -198,31 +198,31 @@
                                 <div class="col-md-6">
                                     <label class="form-label text-xs font-semibold text-slate-700" for="admin-dialog-0-username">Tên đăng nhập <span class="text-rose-600">*</span>
                                     </label>
-                                    <input type="text" name="username" class="form-control text-xs rounded-xl" placeholder="vd: nguyen.vana" required id="admin-dialog-0-username">
+                                    <input type="text" name="username" class="form-control text-xs rounded-xl" placeholder="vd: nguyen.vana" required id="admin-dialog-0-username" aria-label="Tên đăng nhập" title="Tên đăng nhập">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label text-xs font-semibold text-slate-700" for="admin-dialog-0-passwordHash">Mật khẩu ban đầu <span class="text-rose-600">*</span>
                                     </label>
-                                    <input type="password" name="passwordHash" autocomplete="new-password" class="form-control text-xs rounded-xl" placeholder="••••••••" required id="admin-dialog-0-passwordHash">
+                                    <input type="password" name="passwordHash" autocomplete="new-password" class="form-control text-xs rounded-xl" placeholder="••••••••" required id="admin-dialog-0-passwordHash" aria-label="Mật khẩu ban đầu" title="Mật khẩu ban đầu">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label text-xs font-semibold text-slate-700" for="admin-dialog-0-fullName">Họ và Tên đầy đủ <span class="text-rose-600">*</span>
                                     </label>
-                                    <input type="text" name="fullName" class="form-control text-xs rounded-xl" placeholder="vd: Nguyễn Văn A" required id="admin-dialog-0-fullName">
+                                    <input type="text" name="fullName" class="form-control text-xs rounded-xl" placeholder="vd: Nguyễn Văn A" required id="admin-dialog-0-fullName" aria-label="Họ và Tên đầy đủ" title="Họ và Tên đầy đủ">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label text-xs font-semibold text-slate-700" for="admin-dialog-0-email">Địa chỉ Email <span class="text-rose-600">*</span>
                                     </label>
-                                    <input type="email" name="email" class="form-control text-xs rounded-xl" placeholder="vana@university.edu.vn" required id="admin-dialog-0-email">
+                                    <input type="email" name="email" class="form-control text-xs rounded-xl" placeholder="vana@university.edu.vn" required id="admin-dialog-0-email" aria-label="Địa chỉ Email" title="Địa chỉ Email">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label text-xs font-semibold text-slate-700" for="admin-dialog-0-phone">Số điện thoại</label>
-                                    <input type="text" name="phone" class="form-control text-xs rounded-xl" placeholder="0901234567" id="admin-dialog-0-phone">
+                                    <input type="text" name="phone" class="form-control text-xs rounded-xl" placeholder="0901234567" id="admin-dialog-0-phone" aria-label="Số điện thoại" title="Số điện thoại">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label text-xs font-semibold text-slate-700" for="admin-dialog-0-roleId">Vai trò hệ thống <span class="text-rose-600">*</span>
                                     </label>
-                                    <select name="roleId" class="form-select text-xs rounded-xl" required id="admin-dialog-0-roleId">
+                                    <select name="roleId" class="form-select text-xs rounded-xl" required id="admin-dialog-0-roleId" aria-label="Vai trò hệ thống" title="Vai trò hệ thống">
                                         <option value="">-- Chọn vai trò --</option>
                                         <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}"></option>
                                     </select>
@@ -255,26 +255,26 @@
                                 <div>
                                     <label class="form-label text-xs font-semibold text-slate-700" th:for="${'admin-dialog-1-fullName-' + u.id}">Họ và tên <span class="text-rose-600">*</span>
                                     </label>
-                                    <input type="text" name="fullName" th:value="${u.fullName}" class="form-control text-xs rounded-xl" required th:id="${'admin-dialog-1-fullName-' + u.id}">
+                                    <input type="text" name="fullName" th:value="${u.fullName}" class="form-control text-xs rounded-xl" required th:id="${'admin-dialog-1-fullName-' + u.id}" aria-label="Họ và tên" title="Họ và tên">
                                 </div>
                                 <div>
                                     <label class="form-label text-xs font-semibold text-slate-700" th:for="${'admin-dialog-1-email-' + u.id}">Email <span class="text-rose-600">*</span>
                                     </label>
-                                    <input type="email" name="email" th:value="${u.email}" class="form-control text-xs rounded-xl" required th:id="${'admin-dialog-1-email-' + u.id}">
+                                    <input type="email" name="email" th:value="${u.email}" class="form-control text-xs rounded-xl" required th:id="${'admin-dialog-1-email-' + u.id}" aria-label="Email" title="Email">
                                 </div>
                                 <div>
                                     <label class="form-label text-xs font-semibold text-slate-700" th:for="${'admin-dialog-1-phone-' + u.id}">Số điện thoại</label>
-                                    <input type="text" name="phone" th:value="${u.phone}" class="form-control text-xs rounded-xl" placeholder="VD: 0912345678" th:id="${'admin-dialog-1-phone-' + u.id}">
+                                    <input type="text" name="phone" th:value="${u.phone}" class="form-control text-xs rounded-xl" placeholder="VD: 0912345678" th:id="${'admin-dialog-1-phone-' + u.id}" aria-label="Số điện thoại" title="Số điện thoại">
                                 </div>
                                 <div>
                                     <label class="form-label text-xs font-semibold text-slate-700" th:for="${'admin-dialog-1-roleId-' + u.id}">Vai trò hệ thống <span class="text-rose-600">*</span>
                                     </label>
-                                    <select name="roleId" class="form-select text-xs rounded-xl" required th:id="${'admin-dialog-1-roleId-' + u.id}">
+                                    <select name="roleId" class="form-select text-xs rounded-xl" required th:id="${'admin-dialog-1-roleId-' + u.id}" aria-label="Vai trò hệ thống" title="Vai trò hệ thống">
                                         <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}" th:selected="${u.role != null and u.role.id == r.id}"></option>
                                     </select>
                                 </div>
                                 <div class="form-check form-switch pt-1">
-                                    <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${u.isActive}" th:id="${'admin-dialog-1-isActive-' + u.id}" placeholder="isActive">
+                                    <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${u.isActive}" th:id="${'admin-dialog-1-isActive-' + u.id}" placeholder="isActive" aria-label="Kích hoạt tài khoản" title="Kích hoạt tài khoản">
                                     <label class="form-check-label text-xs font-semibold text-slate-700" th:for="${'admin-dialog-1-isActive-' + u.id}">Kích hoạt tài khoản</label>
                                 </div>
                             </div>

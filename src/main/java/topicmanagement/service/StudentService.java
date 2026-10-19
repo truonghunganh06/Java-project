@@ -513,7 +513,6 @@ public class StudentService {
             sub.setTopic(group.getTopic());
             sub.setGroup(group);
             sub.setSubmittedByStudent(student);
-            sub.setStudent(student);
             sub.setTitle(title != null && !title.isBlank() ? title.trim() : ("Báo cáo đợt " + (round != null ? round : 1)));
             sub.setSubmissionRound(round != null ? round : 1);
             sub.setFilePath(storedFile.getFilePath());

@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>TopicHub</title>
     </head>
-    <body class="dashboard-page">
+    <body class="dashboard-page workspace-page">
         <a class="db-skip" href="#dashboard-main">Đến nội dung chính</a>
         <!-- Left Sidebar -->
         <aside th:replace="~{fragments/sidebar :: sidebar('dashboard', ${user})}"></aside>
@@ -309,14 +309,14 @@
                                     <div class="mb-3">
                                         <label class="form-label text-xs font-semibold text-slate-700" for="student-dialog-0-periodId">Đợt đăng ký <span class="text-rose-500">*</span>
                                         </label>
-                                        <select name="periodId" class="form-select form-select-sm text-xs rounded-xl" required id="student-dialog-0-periodId">
+                                        <select name="periodId" class="form-select form-select-sm text-xs rounded-xl" required id="student-dialog-0-periodId" aria-label="Đợt đăng ký" title="Đợt đăng ký">
                                             <option th:each="p : ${activePeriods}" th:value="${p.id}" th:text="${p.name + ' (' + p.getPeriodTypeName() + ')'}"></option>
                                         </select>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label text-xs font-semibold text-slate-700" for="student-dialog-0-groupName">Tên nhóm của bạn <span class="text-rose-500">*</span>
                                         </label>
-                                        <input type="text" name="groupName" class="form-control form-control-sm text-xs rounded-xl" placeholder="Ví dụ: Nhóm AI Solution K16" required id="student-dialog-0-groupName">
+                                        <input type="text" name="groupName" class="form-control form-control-sm text-xs rounded-xl" placeholder="Ví dụ: Nhóm AI Solution K16" required id="student-dialog-0-groupName" aria-label="Tên nhóm của bạn" title="Tên nhóm của bạn">
                                         <span class="text-[11px] text-slate-400 mt-1 d-block">Bạn sẽ là <strong>Nhóm trưởng</strong>, có quyền mời thêm 1-2 thành viên và chọn đề tài.</span>
                                     </div>
                                     <div class="d-flex justify-content-end gap-2 pt-2 border-t border-slate-100">
@@ -333,7 +333,7 @@
                                     <div class="mb-3">
                                         <label class="form-label text-xs font-semibold text-slate-700" for="student-dialog-0-groupCode">Nhập mã nhóm (Group Code) <span class="text-rose-500">*</span>
                                         </label>
-                                        <input type="text" name="groupCode" class="form-control text-xs rounded-xl font-mono font-bold uppercase tracking-wider text-center" placeholder="Ví dụ: GRP-ABC123" required id="student-dialog-0-groupCode">
+                                        <input type="text" name="groupCode" class="form-control text-xs rounded-xl font-mono font-bold uppercase tracking-wider text-center" placeholder="Ví dụ: GRP-ABC123" required id="student-dialog-0-groupCode" aria-label="Nhập mã nhóm (Group Code)" title="Nhập mã nhóm (Group Code)">
                                         <span class="text-[11px] text-slate-400 mt-1 d-block">Nhập mã nhóm 6 ký tự do Nhóm trưởng cung cấp để cùng thực hiện đề tài.</span>
                                     </div>
                                     <div class="d-flex justify-content-end gap-2 pt-2 border-t border-slate-100">

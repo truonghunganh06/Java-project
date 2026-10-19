@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head th:replace="~{fragments/head :: head('Bảng Tin & Thông Báo')}"></head>
-<body>
+<body class="workspace-page">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('announcements', ${user})}"></aside>
@@ -65,7 +65,7 @@
                                    id="announcementSearchInput"
                                    placeholder="Tìm kiếm thông báo theo tiêu đề, người đăng, nội dung..." 
                                    onkeyup="applyAnnouncementFilters()"
-                                   title="Tìm kiếm thông báo" aria-label="Tìm kiếm thông báo">
+                                   title="Tìm kiếm thông báo theo tiêu đề, người đăng, nội dung..." aria-label="Tìm kiếm thông báo theo tiêu đề, người đăng, nội dung...">
                             <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none"></i>
                         </div>
                         <span id="announcementCountBadge" class="badge-pill-neutral font-medium text-xs whitespace-nowrap"
@@ -158,12 +158,12 @@
                     <div class="modal-body p-4 space-y-3">
                         <div class="row g-3">
                             <div class="col-md-12">
-                                <label class="form-label text-xs font-semibold text-slate-700">Tiêu đề thông báo *</label>
-                                <input type="text" name="title" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Kế hoạch Đăng ký Khóa Luận Tốt Nghiệp HK1 (2026-2027)" required>
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-announcements-1">Tiêu đề thông báo *</label>
+                                <input type="text" name="title" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Kế hoạch Đăng ký Khóa Luận Tốt Nghiệp HK1 (2026-2027)" required aria-label="Tiêu đề thông báo" title="Tiêu đề thông báo" id="field-department-head-announcements-1">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Chủ đề phân loại</label>
-                                <select name="category" class="form-select text-xs rounded-xl">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-announcements-2">Chủ đề phân loại</label>
+                                <select name="category" class="form-select text-xs rounded-xl" aria-label="Chủ đề phân loại" title="Chủ đề phân loại" id="field-department-head-announcements-2">
                                     <option value="GENERAL">Thông báo chung</option>
                                     <option value="PERIOD">Kế hoạch đợt đăng ký</option>
                                     <option value="SCHEDULE">Lịch bảo vệ hội đồng</option>
@@ -171,19 +171,19 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Gắn với Đợt đăng ký (nếu có)</label>
-                                <select name="periodId" class="form-select text-xs rounded-xl">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-announcements-3">Gắn với Đợt đăng ký (nếu có)</label>
+                                <select name="periodId" class="form-select text-xs rounded-xl" aria-label="Gắn với Đợt đăng ký (nếu có)" title="Gắn với Đợt đăng ký (nếu có)" id="field-department-head-announcements-3">
                                     <option value="">-- Không gắn đợt cụ thể --</option>
                                     <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}"></option>
                                 </select>
                             </div>
                             <div class="col-md-12">
-                                <label class="form-label text-xs font-semibold text-slate-700">Nội dung chi tiết *</label>
-                                <textarea name="content" class="form-control text-xs rounded-xl" rows="6" placeholder="Nhập nội dung thông báo, các lưu ý, quy định cho Giảng viên & Sinh viên..." required></textarea>
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-announcements-4">Nội dung chi tiết *</label>
+                                <textarea name="content" class="form-control text-xs rounded-xl" rows="6" placeholder="Nhập nội dung thông báo, các lưu ý, quy định cho Giảng viên & Sinh viên..." required aria-label="Nội dung chi tiết" title="Nội dung chi tiết" id="field-department-head-announcements-4"></textarea>
                             </div>
                             <div class="col-md-12">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="isPinned" id="isPinned" value="true">
+                                    <input class="form-check-input" type="checkbox" name="isPinned" id="isPinned" value="true" aria-label="Ghim thông báo này lên đầu bảng tin" title="Ghim thông báo này lên đầu bảng tin">
                                     <label class="form-check-label text-xs font-semibold text-slate-700" for="isPinned">
                                         <i class="fa-solid fa-thumbtack text-amber-500 me-1"></i> Ghim thông báo này lên đầu bảng tin
                                     </label>

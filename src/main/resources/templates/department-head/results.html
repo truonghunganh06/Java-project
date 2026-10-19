@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TopicHub</title>
 </head>
-<body>
+<body class="workspace-page">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('results', ${user})}"></aside>
@@ -122,11 +122,11 @@
                     <table class="table table-results table-fixed w-full mb-0 align-middle">
                         <thead>
                             <tr>
-                                <th style="width: 36%;" class="py-2.5 px-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Đề Tài & Nhóm Sinh Viên</th>
-                                <th style="width: 14%;" class="py-2.5 px-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">GV Hướng Dẫn</th>
-                                <th style="width: 14%;" class="py-2.5 px-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">GV Phản Biện</th>
-                                <th style="width: 15%;" class="py-2.5 px-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Hội Đồng</th>
-                                <th style="width: 21%;" class="text-end py-2.5 px-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Tổng Điểm & Thao Tác</th>
+                                <th style="width: 36%;" class="py-2.5 px-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider" scope="col">Đề Tài & Nhóm Sinh Viên</th>
+                                <th style="width: 14%;" class="py-2.5 px-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider" scope="col">GV Hướng Dẫn</th>
+                                <th style="width: 14%;" class="py-2.5 px-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider" scope="col">GV Phản Biện</th>
+                                <th style="width: 15%;" class="py-2.5 px-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider" scope="col">Hội Đồng</th>
+                                <th style="width: 21%;" class="text-end py-2.5 px-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider" scope="col">Tổng Điểm & Thao Tác</th>
                             </tr>
                         </thead>
                         <tbody>

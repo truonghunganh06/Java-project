@@ -7,7 +7,7 @@
     <title>TopicHub</title>
 </head>
 
-<body class="bg-slate-50">
+<body class="bg-slate-50 workspace-page">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('periods', ${user})}"></aside>
@@ -129,7 +129,7 @@
             </div>
 
             <!-- Universal 1-Row Toolbar -->
-            <div class="saas-card p-2.5 mb-3">
+            <div class="saas-card p-2.5 mb-3 workspace-filterbar">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2.5">
                     <!-- Left: View Mode Toggle -->
                     <div class="view-mode-toggle bg-slate-100 p-0.5 rounded-xl d-inline-flex border border-slate-200">
@@ -187,8 +187,8 @@
                     <table class="table table-saas mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 32%;">Đợt Đăng Ký & Trạng Thái</th>
-                                <th style="width: 68%;">Tiến Trình 4 Mốc Thời Gian</th>
+                                <th style="width: 32%;" scope="col">Đợt Đăng Ký & Trạng Thái</th>
+                                <th style="width: 68%;" scope="col">Tiến Trình 4 Mốc Thời Gian</th>
                             </tr>
                         </thead>
                         <tbody id="periodTableBody">
@@ -215,7 +215,7 @@
                                 th:data-reg-start="${p.studentRegistrationStart != null ? #temporals.format(p.studentRegistrationStart, 'dd/MM/yyyy HH:mm') : ''}"
                                 th:data-reg-end="${p.studentRegistrationEnd != null ? #temporals.format(p.studentRegistrationEnd, 'dd/MM/yyyy HH:mm') : ''}"
                                 th:data-rev-dead="${p.reviewerDeadline != null ? #temporals.format(p.reviewerDeadline, 'dd/MM/yyyy HH:mm') : ''}"
-                                th:data-defense-date="${p.councilDefenseDate != null ? #temporals.format(p.councilDefenseDate, 'dd/MM/yyyy HH:mm') : ''}">
+                                th:data-defense-date="${p.councilDefenseDate != null ? #temporals.format(p.councilDefenseDate, 'dd/MM/yyyy HH:mm') : ''}" tabindex="0" onkeydown="if (event.target === this &amp;&amp; (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
 
                                 <!-- Column 1: Info & Badges -->
                                 <td class="align-middle">
@@ -781,16 +781,16 @@
 
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Tên đợt đăng ký *</label>
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-periods-4">Tên đợt đăng ký *</label>
                                 <input type="text" name="name" class="form-control text-xs rounded-xl"
-                                    placeholder="Ví dụ: Đợt Khóa Luận Tốt Nghiệp HK1 (2026-2027)" required title="name" aria-label="name">
+                                    placeholder="Ví dụ: Đợt Khóa Luận Tốt Nghiệp HK1 (2026-2027)" required title="Tên đợt đăng ký" aria-label="Tên đợt đăng ký" id="field-department-head-periods-4">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Loại đợt đào tạo
+                                <label class="form-label text-xs font-semibold text-slate-700" for="createPeriodTypeSelect">Loại đợt đào tạo
                                     *</label>
                                 <select id="createPeriodTypeSelect" name="periodType"
                                     class="form-select text-xs rounded-xl" required
-                                    onchange="handlePeriodTypeChange(this.value, '')" title="periodType" aria-label="periodType">
+                                    onchange="handlePeriodTypeChange(this.value, '')" title="Loại đợt đào tạo" aria-label="Loại đợt đào tạo">
                                     <option value="KLTN">Khóa luận tốt nghiệp</option>
                                     <option value="TLCN">Tiểu luận chuyên ngành</option>
                                     <option value="NCKH">Nghiên cứu khoa học sinh viên</option>
@@ -798,24 +798,24 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Năm học *</label>
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-periods-6">Năm học *</label>
                                 <input type="text" name="academicYear" class="form-control text-xs rounded-xl"
-                                    value="2026-2027" required title="academicYear" aria-label="academicYear">
+                                    value="2026-2027" required title="Năm học" aria-label="Năm học" id="field-department-head-periods-6">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Học kỳ *</label>
-                                <select name="semester" class="form-select text-xs rounded-xl" title="semester" aria-label="semester">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-periods-7">Học kỳ *</label>
+                                <select name="semester" class="form-select text-xs rounded-xl" title="Học kỳ" aria-label="Học kỳ" id="field-department-head-periods-7">
                                     <option value="1">Học kỳ 1</option>
                                     <option value="2">Học kỳ 2</option>
                                     <option value="3">Học kỳ hè</option>
                                 </select>
                             </div>
                             <div class="col-md-12">
-                                <label class="form-label text-xs font-semibold text-slate-700">Chỉ tiêu đề tài tối thiểu
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-periods-8">Chỉ tiêu đề tài tối thiểu
                                     mỗi GV phải đề xuất *</label>
                                 <div class="input-group">
                                     <input type="number" name="minTopicsPerLecturer"
-                                        class="form-control text-xs rounded-xl" value="3" min="1" max="20" required title="minTopicsPerLecturer" aria-label="minTopicsPerLecturer">
+                                        class="form-control text-xs rounded-xl" value="3" min="1" max="20" required title="Chỉ tiêu đề tài tối thiểu mỗi GV phải đề xuất" aria-label="Chỉ tiêu đề tài tối thiểu mỗi GV phải đề xuất" id="field-department-head-periods-8">
                                     <span class="input-group-text text-xs bg-slate-50 text-slate-500 rounded-xl">đề tài
                                         / giảng viên</span>
                                 </div>
@@ -828,49 +828,49 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">1. GV đề xuất: Bắt
+                                <label class="form-label text-xs font-semibold text-slate-700" for="inputPropStart">1. GV đề xuất: Bắt
                                     đầu</label>
                                 <input type="date" name="propStart" id="inputPropStart"
-                                    class="form-control text-xs rounded-xl" title="propStart" aria-label="propStart">
+                                    class="form-control text-xs rounded-xl" title="1. GV đề xuất: Bắt đầu" aria-label="1. GV đề xuất: Bắt đầu">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">1. GV đề xuất: Hạn
+                                <label class="form-label text-xs font-semibold text-slate-700" for="inputPropEnd">1. GV đề xuất: Hạn
                                     chót</label>
                                 <input type="date" name="propEnd" id="inputPropEnd"
-                                    class="form-control text-xs rounded-xl" title="propEnd" aria-label="propEnd">
+                                    class="form-control text-xs rounded-xl" title="1. GV đề xuất: Hạn chót" aria-label="1. GV đề xuất: Hạn chót">
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">2. SV đăng ký: Bắt
+                                <label class="form-label text-xs font-semibold text-slate-700" for="inputRegStart">2. SV đăng ký: Bắt
                                     đầu</label>
                                 <input type="date" name="regStart" id="inputRegStart"
-                                    class="form-control text-xs rounded-xl" title="regStart" aria-label="regStart">
+                                    class="form-control text-xs rounded-xl" title="2. SV đăng ký: Bắt đầu" aria-label="2. SV đăng ký: Bắt đầu">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">2. SV đăng ký: Hạn
+                                <label class="form-label text-xs font-semibold text-slate-700" for="inputRegEnd">2. SV đăng ký: Hạn
                                     chót</label>
                                 <input type="date" name="regEnd" id="inputRegEnd"
-                                    class="form-control text-xs rounded-xl" title="regEnd" aria-label="regEnd">
+                                    class="form-control text-xs rounded-xl" title="2. SV đăng ký: Hạn chót" aria-label="2. SV đăng ký: Hạn chót">
                             </div>
 
                             <!-- Conditional Fields -->
                             <div class="col-md-6" id="fieldReviewerDeadline">
-                                <label class="form-label text-xs font-semibold text-slate-700">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="inputRevDead">
                                     3. Hạn nộp điểm GVPB <span
                                         class="badge bg-blue-50 text-blue-700 border border-blue-200 text-[10px] px-1 py-0.2 rounded font-normal">KLTN
                                         / TLCN</span>
                                 </label>
                                 <input type="date" name="revDead" id="inputRevDead"
-                                    class="form-control text-xs rounded-xl" title="revDead" aria-label="revDead">
+                                    class="form-control text-xs rounded-xl" title="3. Hạn nộp điểm GVPB KLTN / TLCN" aria-label="3. Hạn nộp điểm GVPB KLTN / TLCN">
                             </div>
                             <div class="col-md-6" id="fieldCouncilDefenseDate">
-                                <label class="form-label text-xs font-semibold text-slate-700">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="inputDefenseDate">
                                     4. Ngày báo cáo Hội đồng <span
                                         class="badge bg-purple-50 text-purple-700 border border-purple-200 text-[10px] px-1 py-0.2 rounded font-normal">Chỉ
                                         KLTN</span>
                                 </label>
                                 <input type="date" name="defenseDate" id="inputDefenseDate"
-                                    class="form-control text-xs rounded-xl" title="defenseDate" aria-label="defenseDate">
+                                    class="form-control text-xs rounded-xl" title="4. Ngày báo cáo Hội đồng Chỉ KLTN" aria-label="4. Ngày báo cáo Hội đồng Chỉ KLTN">
                             </div>
                         </div>
                     </div>
@@ -1019,16 +1019,16 @@
 
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Tên đợt đăng ký *</label>
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editName">Tên đợt đăng ký *</label>
                                 <input type="text" id="editName" name="name" class="form-control text-xs rounded-xl"
-                                    required title="name" aria-label="name">
+                                    required title="Tên đợt đăng ký" aria-label="Tên đợt đăng ký">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Loại đợt đào tạo
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editPeriodTypeSelect">Loại đợt đào tạo
                                     *</label>
                                 <select id="editPeriodTypeSelect" name="periodType"
                                     class="form-select text-xs rounded-xl" required
-                                    onchange="handlePeriodTypeChange(this.value, 'Edit')" title="periodType" aria-label="periodType">
+                                    onchange="handlePeriodTypeChange(this.value, 'Edit')" title="Loại đợt đào tạo" aria-label="Loại đợt đào tạo">
                                     <option value="KLTN">Khóa luận tốt nghiệp</option>
                                     <option value="TLCN">Tiểu luận chuyên ngành</option>
                                     <option value="NCKH">Nghiên cứu khoa học sinh viên</option>
@@ -1036,32 +1036,32 @@
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label text-xs font-semibold text-slate-700">Năm học *</label>
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editAcademicYear">Năm học *</label>
                                 <input type="text" id="editAcademicYear" name="academicYear"
-                                    class="form-control text-xs rounded-xl" required title="academicYear" aria-label="academicYear">
+                                    class="form-control text-xs rounded-xl" required title="Năm học" aria-label="Năm học">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label text-xs font-semibold text-slate-700">Học kỳ *</label>
-                                <select id="editSemester" name="semester" class="form-select text-xs rounded-xl" title="semester" aria-label="semester">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editSemester">Học kỳ *</label>
+                                <select id="editSemester" name="semester" class="form-select text-xs rounded-xl" title="Học kỳ" aria-label="Học kỳ">
                                     <option value="1">Học kỳ 1</option>
                                     <option value="2">Học kỳ 2</option>
                                     <option value="3">Học kỳ hè</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label text-xs font-semibold text-slate-700">Trạng thái đợt *</label>
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editStatus">Trạng thái đợt *</label>
                                 <select id="editStatus" name="status"
-                                    class="form-select text-xs rounded-xl font-semibold" title="status" aria-label="status">
+                                    class="form-select text-xs rounded-xl font-semibold" title="Trạng thái đợt" aria-label="Trạng thái đợt">
                                     <option value="OPEN" class="text-emerald-700">🟢 Đang mở (Hoạt động)</option>
                                     <option value="CLOSED" class="text-rose-700">🔒 Đã đóng (Tạm khóa)</option>
                                 </select>
                             </div>
                             <div class="col-md-12">
-                                <label class="form-label text-xs font-semibold text-slate-700">Chỉ tiêu đề tài tối thiểu
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editMinTopicsPerLecturer">Chỉ tiêu đề tài tối thiểu
                                     mỗi GV phải đề xuất *</label>
                                 <div class="input-group">
                                     <input type="number" id="editMinTopicsPerLecturer" name="minTopicsPerLecturer"
-                                        class="form-control text-xs rounded-xl" value="3" min="1" max="20" required title="minTopicsPerLecturer" aria-label="minTopicsPerLecturer">
+                                        class="form-control text-xs rounded-xl" value="3" min="1" max="20" required title="Chỉ tiêu đề tài tối thiểu mỗi GV phải đề xuất" aria-label="Chỉ tiêu đề tài tối thiểu mỗi GV phải đề xuất">
                                     <span class="input-group-text text-xs bg-slate-50 text-slate-500 rounded-xl">đề tài
                                         / giảng viên</span>
                                 </div>
@@ -1072,49 +1072,49 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">1. GV đề xuất: Bắt
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editPropStart">1. GV đề xuất: Bắt
                                     đầu</label>
                                 <input type="date" name="propStart" id="editPropStart"
-                                    class="form-control text-xs rounded-xl" title="propStart" aria-label="propStart">
+                                    class="form-control text-xs rounded-xl" title="1. GV đề xuất: Bắt đầu" aria-label="1. GV đề xuất: Bắt đầu">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">1. GV đề xuất: Hạn
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editPropEnd">1. GV đề xuất: Hạn
                                     chót</label>
                                 <input type="date" name="propEnd" id="editPropEnd"
-                                    class="form-control text-xs rounded-xl" title="propEnd" aria-label="propEnd">
+                                    class="form-control text-xs rounded-xl" title="1. GV đề xuất: Hạn chót" aria-label="1. GV đề xuất: Hạn chót">
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">2. SV đăng ký: Bắt
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editRegStart">2. SV đăng ký: Bắt
                                     đầu</label>
                                 <input type="date" name="regStart" id="editRegStart"
-                                    class="form-control text-xs rounded-xl" title="regStart" aria-label="regStart">
+                                    class="form-control text-xs rounded-xl" title="2. SV đăng ký: Bắt đầu" aria-label="2. SV đăng ký: Bắt đầu">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">2. SV đăng ký: Hạn
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editRegEnd">2. SV đăng ký: Hạn
                                     chót</label>
                                 <input type="date" name="regEnd" id="editRegEnd"
-                                    class="form-control text-xs rounded-xl" title="regEnd" aria-label="regEnd">
+                                    class="form-control text-xs rounded-xl" title="2. SV đăng ký: Hạn chót" aria-label="2. SV đăng ký: Hạn chót">
                             </div>
 
                             <!-- Conditional Fields -->
                             <div class="col-md-6" id="fieldReviewerDeadlineEdit">
-                                <label class="form-label text-xs font-semibold text-slate-700">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editRevDead">
                                     3. Hạn nộp điểm GVPB <span
                                         class="badge bg-blue-50 text-blue-700 border border-blue-200 text-[10px] px-1 py-0.2 rounded font-normal">KLTN
                                         / TLCN</span>
                                 </label>
                                 <input type="date" name="revDead" id="editRevDead"
-                                    class="form-control text-xs rounded-xl" title="revDead" aria-label="revDead">
+                                    class="form-control text-xs rounded-xl" title="3. Hạn nộp điểm GVPB KLTN / TLCN" aria-label="3. Hạn nộp điểm GVPB KLTN / TLCN">
                             </div>
                             <div class="col-md-6" id="fieldCouncilDefenseDateEdit">
-                                <label class="form-label text-xs font-semibold text-slate-700">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editDefenseDate">
                                     4. Ngày báo cáo Hội đồng <span
                                         class="badge bg-purple-50 text-purple-700 border border-purple-200 text-[10px] px-1 py-0.2 rounded font-normal">Chỉ
                                         KLTN</span>
                                 </label>
                                 <input type="date" name="defenseDate" id="editDefenseDate"
-                                    class="form-control text-xs rounded-xl" title="defenseDate" aria-label="defenseDate">
+                                    class="form-control text-xs rounded-xl" title="4. Ngày báo cáo Hội đồng Chỉ KLTN" aria-label="4. Ngày báo cáo Hội đồng Chỉ KLTN">
                             </div>
                         </div>
                     </div>

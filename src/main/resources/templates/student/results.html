@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TopicHub</title>
 </head>
-<body>
+<body class="workspace-page">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('results', ${user})}"></aside>
@@ -33,7 +33,7 @@
             </div>
 
             <!-- Period Selector -->
-            <div th:if="${participatedPeriods != null && !#lists.isEmpty(participatedPeriods)}" class="saas-card p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div th:if="${participatedPeriods != null && !#lists.isEmpty(participatedPeriods)}" class="saas-card p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3 workspace-filterbar">
                 <div class="d-flex align-items-center gap-2">
                     <i class="fa-regular fa-calendar-check text-blue-600"></i>
                     <span class="text-xs font-semibold text-slate-700">Đợt tham gia:</span>

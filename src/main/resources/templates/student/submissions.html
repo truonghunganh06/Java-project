@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TopicHub</title>
 </head>
-<body>
+<body class="workspace-page">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('submissions', ${user})}"></aside>
@@ -46,12 +46,12 @@
 
                         <form th:action="@{/student/submissions/upload}" method="post" enctype="multipart/form-data">
                             <div class="mb-3">
-                                <label class="form-label text-xs font-semibold text-slate-700">Đề tài của nhóm</label>
-                                <input type="text" class="form-control text-xs rounded-xl bg-slate-50 text-slate-700" th:value="${group.topic != null ? group.topic.title : 'Chưa đăng ký đề tài'}" readonly title="Trường thông tin" aria-label="Trường thông tin">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-student-submissions-0">Đề tài của nhóm</label>
+                                <input type="text" class="form-control text-xs rounded-xl bg-slate-50 text-slate-700" th:value="${group.topic != null ? group.topic.title : 'Chưa đăng ký đề tài'}" readonly title="Đề tài của nhóm" aria-label="Đề tài của nhóm" id="field-student-submissions-0">
                             </div>
                             <div class="mb-3">
-                                <label class="form-label text-xs font-semibold text-slate-700">Đợt / Vòng nộp báo cáo *</label>
-                                <select name="round" class="form-select text-xs rounded-xl" required title="round" aria-label="round">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-student-submissions-1">Đợt / Vòng nộp báo cáo *</label>
+                                <select name="round" class="form-select text-xs rounded-xl" required title="Đợt / Vòng nộp báo cáo" aria-label="Đợt / Vòng nộp báo cáo" id="field-student-submissions-1">
                                     <option value="1">Báo cáo tiến độ Lần 1 (Đề cương chi tiết)</option>
                                     <option value="2">Báo cáo tiến độ Lần 2 (Tiến độ 50%)</option>
                                     <option value="3">Báo cáo tiến độ Lần 3 (Tiến độ 80%)</option>
@@ -59,12 +59,12 @@
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label text-xs font-semibold text-slate-700">Tiêu đề bài nộp *</label>
-                                <input type="text" name="title" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Báo cáo hoàn thiện Module AI và Database" required title="title" aria-label="title">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-student-submissions-2">Tiêu đề bài nộp *</label>
+                                <input type="text" name="title" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Báo cáo hoàn thiện Module AI và Database" required title="Tiêu đề bài nộp" aria-label="Tiêu đề bài nộp" id="field-student-submissions-2">
                             </div>
                             <div class="mb-4">
-                                <label class="form-label text-xs font-semibold text-slate-700">Tập tin đính kèm (PDF, DOCX, ZIP tối đa 25MB) *</label>
-                                <input type="file" name="file" class="form-control text-xs rounded-xl" title="file" aria-label="file">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-student-submissions-3">Tập tin đính kèm (PDF, DOCX, ZIP tối đa 25MB) *</label>
+                                <input type="file" name="file" class="form-control text-xs rounded-xl" title="Tập tin đính kèm (PDF, DOCX, ZIP tối đa 25MB)" aria-label="Tập tin đính kèm (PDF, DOCX, ZIP tối đa 25MB)" id="field-student-submissions-3">
                             </div>
                             <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 py-2 w-100 text-xs font-semibold shadow-sm" th:disabled="${group.topic == null}">
                                 <i class="fa-solid fa-cloud-arrow-up me-1.5 text-xs"></i> Gửi bài nộp báo cáo
@@ -100,10 +100,10 @@
                             <table class="table table-saas mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Vòng / Tiêu đề</th>
-                                        <th>Người nộp</th>
-                                        <th>Thời gian</th>
-                                        <th>Điểm & Nhận xét</th>
+                                        <th scope="col">Vòng / Tiêu đề</th>
+                                        <th scope="col">Người nộp</th>
+                                        <th scope="col">Thời gian</th>
+                                        <th scope="col">Điểm & Nhận xét</th>
                                     </tr>
                                 </thead>
                                 <tbody>

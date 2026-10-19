@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TopicHub</title>
 </head>
-<body>
+<body class="workspace-page">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('councils', ${user})}"></aside>
@@ -39,7 +39,7 @@
             </div>
 
             <!-- Universal 1-Row Toolbar -->
-            <div class="saas-card p-3 mb-4">
+            <div class="saas-card p-3 mb-4 workspace-filterbar">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                     <div class="relative flex-grow-1 max-w-md">
                         <input type="text" class="form-control form-control-sm rounded-xl pl-8 text-xs" placeholder="Tìm kiếm hội đồng, giảng viên, địa điểm..." onkeyup="filterTableByKeyword(this.value)" title="Tìm kiếm hội đồng, giảng viên, địa điểm..." aria-label="Tìm kiếm hội đồng, giảng viên, địa điểm...">
@@ -235,27 +235,27 @@
                     <div class="modal-body p-4">
                         <div class="row g-3">
                             <div class="col-md-8">
-                                <label class="form-label text-xs font-semibold text-slate-700">Tên Hội đồng *</label>
-                                <input type="text" name="name" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Hội đồng Khóa luận Tốt nghiệp 01" required title="name" aria-label="name">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-councils-5">Tên Hội đồng *</label>
+                                <input type="text" name="name" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Hội đồng Khóa luận Tốt nghiệp 01" required title="Tên Hội đồng" aria-label="Tên Hội đồng" id="field-department-head-councils-5">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label text-xs font-semibold text-slate-700">Mã Hội đồng</label>
-                                <input type="text" name="code" class="form-control text-xs rounded-xl" placeholder="Ví dụ: HD-CNTT-01" title="code" aria-label="code">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-councils-6">Mã Hội đồng</label>
+                                <input type="text" name="code" class="form-control text-xs rounded-xl" placeholder="Ví dụ: HD-CNTT-01" title="Mã Hội đồng" aria-label="Mã Hội đồng" id="field-department-head-councils-6">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Gắn với Đợt đăng ký</label>
-                                <select name="periodId" class="form-select text-xs rounded-xl" title="periodId" aria-label="periodId">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-councils-7">Gắn với Đợt đăng ký</label>
+                                <select name="periodId" class="form-select text-xs rounded-xl" title="Gắn với Đợt đăng ký" aria-label="Gắn với Đợt đăng ký" id="field-department-head-councils-7">
                                     <option value="">-- Chọn đợt đăng ký --</option>
                                     <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}"></option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Địa điểm / Phòng bảo vệ</label>
-                                <input type="text" name="location" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Phòng A101 / Online Zoom" title="location" aria-label="location">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-councils-8">Địa điểm / Phòng bảo vệ</label>
+                                <input type="text" name="location" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Phòng A101 / Online Zoom" title="Địa điểm / Phòng bảo vệ" aria-label="Địa điểm / Phòng bảo vệ" id="field-department-head-councils-8">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700">Ngày giờ bảo vệ</label>
-                                <input type="datetime-local" name="defenseDate" class="form-control text-xs rounded-xl" title="defenseDate" aria-label="defenseDate">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-councils-9">Ngày giờ bảo vệ</label>
+                                <input type="datetime-local" name="defenseDate" class="form-control text-xs rounded-xl" title="Ngày giờ bảo vệ" aria-label="Ngày giờ bảo vệ" id="field-department-head-councils-9">
                             </div>
 
                             <div class="col-12"><hr class="my-1 border-slate-100"></div>
@@ -267,40 +267,40 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-amber-700"><i class="fa-solid fa-crown me-1 text-amber-500"></i> Chủ tịch Hội đồng *</label>
-                                <select name="presidentId" class="form-select text-xs rounded-xl border-amber-200 bg-amber-50/20" required title="presidentId" aria-label="presidentId">
+                                <label class="form-label text-xs font-semibold text-amber-700" for="field-department-head-councils-10"><i class="fa-solid fa-crown me-1 text-amber-500"></i> Chủ tịch Hội đồng *</label>
+                                <select name="presidentId" class="form-select text-xs rounded-xl border-amber-200 bg-amber-50/20" required title="Chủ tịch Hội đồng" aria-label="Chủ tịch Hội đồng" id="field-department-head-councils-10">
                                     <option value="">-- Chọn Chủ tịch --</option>
                                     <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${(l.user != null ? l.user.fullName : 'GV') + ' (' + (l.lecturerCode != null ? l.lecturerCode : '') + ')'}"></option>
                                 </select>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-blue-700"><i class="fa-solid fa-pen-fancy me-1 text-blue-500"></i> Thư ký Hội đồng *</label>
-                                <select name="secretaryId" class="form-select text-xs rounded-xl border-blue-200 bg-blue-50/20" required title="secretaryId" aria-label="secretaryId">
+                                <label class="form-label text-xs font-semibold text-blue-700" for="field-department-head-councils-11"><i class="fa-solid fa-pen-fancy me-1 text-blue-500"></i> Thư ký Hội đồng *</label>
+                                <select name="secretaryId" class="form-select text-xs rounded-xl border-blue-200 bg-blue-50/20" required title="Thư ký Hội đồng" aria-label="Thư ký Hội đồng" id="field-department-head-councils-11">
                                     <option value="">-- Chọn Thư ký --</option>
                                     <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${(l.user != null ? l.user.fullName : 'GV') + ' (' + (l.lecturerCode != null ? l.lecturerCode : '') + ')'}"></option>
                                 </select>
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label text-xs font-semibold text-slate-700">Ủy viên 1 *</label>
-                                <select name="member1Id" class="form-select text-xs rounded-xl" required title="member1Id" aria-label="member1Id">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-councils-12">Ủy viên 1 *</label>
+                                <select name="member1Id" class="form-select text-xs rounded-xl" required title="Ủy viên 1" aria-label="Ủy viên 1" id="field-department-head-councils-12">
                                     <option value="">-- Chọn Ủy viên 1 --</option>
                                     <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user != null ? l.user.fullName : 'GV'}"></option>
                                 </select>
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label text-xs font-semibold text-slate-700">Ủy viên 2 (Tùy chọn)</label>
-                                <select name="member2Id" class="form-select text-xs rounded-xl" title="member2Id" aria-label="member2Id">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-councils-13">Ủy viên 2 (Tùy chọn)</label>
+                                <select name="member2Id" class="form-select text-xs rounded-xl" title="Ủy viên 2 (Tùy chọn)" aria-label="Ủy viên 2 (Tùy chọn)" id="field-department-head-councils-13">
                                     <option value="">-- Không chọn --</option>
                                     <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user != null ? l.user.fullName : 'GV'}"></option>
                                 </select>
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label text-xs font-semibold text-slate-700">Ủy viên 3 (Tùy chọn)</label>
-                                <select name="member3Id" class="form-select text-xs rounded-xl" title="member3Id" aria-label="member3Id">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-councils-14">Ủy viên 3 (Tùy chọn)</label>
+                                <select name="member3Id" class="form-select text-xs rounded-xl" title="Ủy viên 3 (Tùy chọn)" aria-label="Ủy viên 3 (Tùy chọn)" id="field-department-head-councils-14">
                                     <option value="">-- Không chọn --</option>
                                     <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${l.user != null ? l.user.fullName : 'GV'}"></option>
                                 </select>

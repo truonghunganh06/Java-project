@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TopicHub</title>
 </head>
-<body>
+<body class="workspace-page">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('registrations', ${user})}"></aside>
@@ -40,7 +40,7 @@
             </div>
 
             <!-- Universal 1-Row Toolbar -->
-            <div class="saas-card p-3 mb-4">
+            <div class="saas-card p-3 mb-4 workspace-filterbar">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                     <div class="search-box-wrapper flex-grow-1 max-w-md">
                         <i class="fa-solid fa-magnifying-glass search-box-icon text-slate-400"></i>
@@ -70,11 +70,11 @@
                     <table class="table table-saas mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 20%;">Tên nhóm & Mã</th>
-                                <th style="width: 28%;">Đề tài đăng ký</th>
-                                <th style="width: 18%;">Trưởng nhóm</th>
-                                <th style="width: 18%;">Thành viên nhóm</th>
-                                <th style="width: 16%;">Trạng thái & Thao tác</th>
+                                <th style="width: 20%;" scope="col">Tên nhóm & Mã</th>
+                                <th style="width: 28%;" scope="col">Đề tài đăng ký</th>
+                                <th style="width: 18%;" scope="col">Trưởng nhóm</th>
+                                <th style="width: 18%;" scope="col">Thành viên nhóm</th>
+                                <th style="width: 16%;" scope="col">Trạng thái & Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -173,12 +173,12 @@
 
                             <div>
                                 <label class="form-label text-xs font-semibold text-slate-700">Điểm quá trình GVHD (Thang 10) <span class="text-rose-600">*</span></label>
-                                <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" th:value="${g.topic.advisorScore}" placeholder="vd: 8.5" required title="score" aria-label="score">
+                                <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" th:value="${g.topic.advisorScore}" placeholder="vd: 8.5" required title="Điểm quá trình GVHD (Thang 10)" aria-label="Điểm quá trình GVHD (Thang 10)">
                             </div>
 
                             <div>
                                 <label class="form-label text-xs font-semibold text-slate-700">Nhận xét quá trình thực hiện & thái độ</label>
-                                <textarea name="comments" class="form-control text-xs rounded-xl" rows="3" placeholder="Nhập nhận xét về tinh thần làm việc, tiến độ hoàn thành..." title="comments" aria-label="comments"></textarea>
+                                <textarea name="comments" class="form-control text-xs rounded-xl" rows="3" placeholder="Nhập nhận xét về tinh thần làm việc, tiến độ hoàn thành..." title="Nhận xét quá trình thực hiện &amp; thái độ" aria-label="Nhận xét quá trình thực hiện &amp; thái độ"></textarea>
                             </div>
                         </div>
                         <div class="modal-footer border-t border-slate-100 p-3">

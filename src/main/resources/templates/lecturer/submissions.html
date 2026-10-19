@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TopicHub</title>
 </head>
-<body>
+<body class="workspace-page">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('submissions', ${user})}"></aside>
@@ -37,7 +37,7 @@
             </div>
 
             <!-- Universal 1-Row Toolbar -->
-            <div class="saas-card p-3 mb-4">
+            <div class="saas-card p-3 mb-4 workspace-filterbar">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                     <div class="search-box-wrapper flex-grow-1 max-w-md">
                         <i class="fa-solid fa-magnifying-glass search-box-icon text-slate-400"></i>
@@ -64,12 +64,12 @@
                     <table class="table table-saas">
                         <thead>
                             <tr>
-                                <th>Sinh viên nộp</th>
-                                <th>Đề tài & Tiêu đề bài nộp</th>
-                                <th>Đợt nộp</th>
-                                <th>Tệp đính kèm</th>
-                                <th>Điểm / Nhận xét</th>
-                                <th class="text-end">Hành động</th>
+                                <th scope="col">Sinh viên nộp</th>
+                                <th scope="col">Đề tài & Tiêu đề bài nộp</th>
+                                <th scope="col">Đợt nộp</th>
+                                <th scope="col">Tệp đính kèm</th>
+                                <th scope="col">Điểm / Nhận xét</th>
+                                <th class="text-end" scope="col">Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -146,12 +146,12 @@
 
                             <div>
                                 <label class="form-label text-xs font-semibold text-slate-700">Điểm số (Thang điểm 10) <span class="text-rose-600">*</span></label>
-                                <input type="number" step="0.1" min="0" max="10" name="grade" class="form-control text-xs rounded-xl" th:value="${s.grade}" placeholder="vd: 8.5" required title="grade" aria-label="grade">
+                                <input type="number" step="0.1" min="0" max="10" name="grade" class="form-control text-xs rounded-xl" th:value="${s.grade}" placeholder="vd: 8.5" required title="Điểm số (Thang điểm 10)" aria-label="Điểm số (Thang điểm 10)">
                             </div>
 
                             <div>
                                 <label class="form-label text-xs font-semibold text-slate-700">Nhận xét & Hướng dẫn sinh viên</label>
-                                <textarea name="feedback" class="form-control text-xs rounded-xl" rows="4" placeholder="Nhập nhận xét chi tiết, điểm cần bổ sung..." th:text="${s.feedback}" title="feedback" aria-label="feedback"></textarea>
+                                <textarea name="feedback" class="form-control text-xs rounded-xl" rows="4" placeholder="Nhập nhận xét chi tiết, điểm cần bổ sung..." th:text="${s.feedback}" title="Nhận xét &amp; Hướng dẫn sinh viên" aria-label="Nhận xét &amp; Hướng dẫn sinh viên"></textarea>
                             </div>
                         </div>
                         <div class="modal-footer border-t border-slate-100 p-3">

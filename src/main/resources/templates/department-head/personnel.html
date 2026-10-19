@@ -7,7 +7,7 @@
     <title>TopicHub</title>
 </head>
 
-<body>
+<body class="workspace-page">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('personnel', ${user})}"></aside>
@@ -67,7 +67,7 @@ Sau
             <!-- ================= TAB 1: LECTURERS ================= -->
             <div id="tabLecturers" th:style="${activeTab == 'lecturers' ? 'display: block;' : 'display: none;'}">
                 <!-- 1-Row Toolbar for Lecturers -->
-                <div class="saas-card p-3 mb-4">
+                <div class="saas-card p-3 mb-4 workspace-filterbar">
                     <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                         <div class="relative flex-grow-1 max-w-md">
                             <input type="text" class="form-control form-control-sm rounded-xl pl-8 text-xs"
@@ -97,11 +97,11 @@ Sau
                         <table class="table table-saas mb-0" id="tableLecturers">
                             <thead>
                                 <tr>
-                                    <th style="width: 28%;">Giảng viên</th>
-                                    <th style="width: 14%;">Mã GV</th>
-                                    <th style="width: 18%;">Học hàm / Học vị</th>
-                                    <th style="width: 20%;">Email & Liên hệ</th>
-                                    <th style="width: 20%;">Tải hướng dẫn (Quota)</th>
+                                    <th style="width: 28%;" scope="col">Giảng viên</th>
+                                    <th style="width: 14%;" scope="col">Mã GV</th>
+                                    <th style="width: 18%;" scope="col">Học hàm / Học vị</th>
+                                    <th style="width: 20%;" scope="col">Email & Liên hệ</th>
+                                    <th style="width: 20%;" scope="col">Tải hướng dẫn (Quota)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -176,7 +176,7 @@ Sau
             <!-- ================= TAB 2: STUDENTS & GROUPS ================= -->
             <div id="tabStudents" th:style="${activeTab == 'students' ? 'display: block;' : 'display: none;'}">
                 <!-- 1-Row Toolbar for Students & Groups -->
-                <div class="saas-card p-3 mb-4">
+                <div class="saas-card p-3 mb-4 workspace-filterbar">
                     <form th:action="@{/department-head/personnel}" method="get"
                         class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                         <input type="hidden" name="tab" value="students">
@@ -216,10 +216,10 @@ Sau
                         <table class="table table-saas mb-0" id="tableStudentGroups">
                             <thead>
                                 <tr>
-                                    <th style="width: 22%;">Nhóm Sinh Viên</th>
-                                    <th style="width: 24%;">Trưởng Nhóm / Thành Viên</th>
-                                    <th style="width: 36%;">Đề Tài Đăng Ký & GVHD</th>
-                                    <th style="width: 18%;" class="text-end">Thao tác</th>
+                                    <th style="width: 22%;" scope="col">Nhóm Sinh Viên</th>
+                                    <th style="width: 24%;" scope="col">Trưởng Nhóm / Thành Viên</th>
+                                    <th style="width: 36%;" scope="col">Đề Tài Đăng Ký & GVHD</th>
+                                    <th style="width: 18%;" class="text-end" scope="col">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -320,9 +320,9 @@ Sau
                         <p class="text-xs text-slate-500 mb-3">Tính năng cho phép Trưởng khoa/Bộ môn gộp các nhóm đơn lẻ
                             dưới sĩ số tối thiểu vào 1 nhóm hợp lệ.</p>
                         <div>
-                            <label class="form-label text-xs font-semibold text-slate-700">Chọn Nhóm Đích (Nhóm nhận
+                            <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-personnel-7">Chọn Nhóm Đích (Nhóm nhận
                                 thành viên) *</label>
-                            <select name="targetGroupId" class="form-select text-xs rounded-xl" required title="targetGroupId" aria-label="targetGroupId">
+                            <select name="targetGroupId" class="form-select text-xs rounded-xl" required title="Chọn Nhóm Đích (Nhóm nhận thành viên)" aria-label="Chọn Nhóm Đích (Nhóm nhận thành viên)" id="field-department-head-personnel-7">
                                 <option value="">-- Chọn nhóm đích --</option>
                                 <option th:each="g : ${groups}" th:value="${g.id}"
                                     th:text="${g.groupCode + ' - ' + g.groupName + ' (' + (g.members != null ? g.members.size() : 1) + ' SV)'}">
@@ -330,9 +330,9 @@ Sau
                             </select>
                         </div>
                         <div>
-                            <label class="form-label text-xs font-semibold text-slate-700">Chọn Nhóm Nguồn (Sẽ giải tán
+                            <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-personnel-8">Chọn Nhóm Nguồn (Sẽ giải tán
                                 sau khi gộp) *</label>
-                            <select name="sourceGroupId" class="form-select text-xs rounded-xl" required title="sourceGroupId" aria-label="sourceGroupId">
+                            <select name="sourceGroupId" class="form-select text-xs rounded-xl" required title="Chọn Nhóm Nguồn (Sẽ giải tán sau khi gộp)" aria-label="Chọn Nhóm Nguồn (Sẽ giải tán sau khi gộp)" id="field-department-head-personnel-8">
                                 <option value="">-- Chọn nhóm nguồn --</option>
                                 <option th:each="g : ${groups}" th:value="${g.id}"
                                     th:text="${g.groupCode + ' - ' + g.groupName + ' (' + (g.members != null ? g.members.size() : 1) + ' SV)'}">

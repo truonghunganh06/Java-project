@@ -23,10 +23,6 @@ public class Submission {
     @JoinColumn(name = "submitted_by_student_id")
     private Student submittedByStudent; // Chỉ Leader mới được nộp
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id")
-    private Student student;
-
     @Column(nullable = false, length = 200)
     private String title;
 
@@ -88,11 +84,11 @@ public class Submission {
     }
 
     public Student getStudent() {
-        return student;
+        return submittedByStudent;
     }
 
     public void setStudent(Student student) {
-        this.student = student;
+        this.submittedByStudent = student;
     }
 
     public String getTitle() {

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TopicHub</title>
 </head>
-<body>
+<body class="workspace-page">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('users', ${user})}"></aside>
@@ -40,11 +40,11 @@
             </div>
 
             <!-- Universal 1-Row Toolbar -->
-            <div class="saas-card p-3 mb-4">
+            <div class="saas-card p-3 mb-4 workspace-filterbar">
                 <form th:action="@{/admin/users}" method="get" class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                     <div class="search-box-wrapper flex-grow-1 max-w-md">
                         <i class="fa-solid fa-magnifying-glass search-box-icon text-slate-400"></i>
-                        <input type="text" name="keyword" th:value="${keyword}" class="form-control form-control-sm rounded-xl text-xs" placeholder="Tìm theo họ tên, username hoặc email..." onkeyup="filterTableByKeyword(this.value)" title="keyword" aria-label="keyword">
+                        <input type="text" name="keyword" th:value="${keyword}" class="form-control form-control-sm rounded-xl text-xs" placeholder="Tìm theo họ tên, username hoặc email..." onkeyup="filterTableByKeyword(this.value)" title="Tìm theo họ tên, username hoặc email..." aria-label="Tìm theo họ tên, username hoặc email...">
                     </div>
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <select name="role" class="form-select form-select-sm rounded-xl text-xs" style="width: 180px;" onchange="this.form.submit()" title="role" aria-label="role">
@@ -70,11 +70,11 @@
                     <table class="table table-saas mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 28%;">Họ và tên</th>
-                                <th style="width: 20%;">Tên đăng nhập</th>
-                                <th style="width: 26%;">Email / Số điện thoại</th>
-                                <th style="width: 14%;">Vai trò</th>
-                                <th style="width: 12%;" class="text-center">Trạng thái</th>
+                                <th style="width: 28%;" scope="col">Họ và tên</th>
+                                <th style="width: 20%;" scope="col">Tên đăng nhập</th>
+                                <th style="width: 26%;" scope="col">Email / Số điện thoại</th>
+                                <th style="width: 14%;" scope="col">Vai trò</th>
+                                <th style="width: 12%;" class="text-center" scope="col">Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -92,7 +92,7 @@
                                 th:data-user-role="${u.role != null ? u.role.name : ''}"
                                 th:data-user-active="${u.isActive}"
                                 onclick="openUserActionModal(this)"
-                                title="Nhấp để xem chi tiết và thao tác">
+                                title="Nhấp để xem chi tiết và thao tác" tabindex="0" onkeydown="if (event.target === this &amp;&amp; (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
                                 <td>
                                     <div class="d-flex align-items-center gap-2.5">
                                         <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-xs flex-shrink-0" th:text="${u.fullName != null and !u.fullName.isEmpty() ? u.fullName.substring(0, 1) : 'U'}">U</div>
@@ -143,19 +143,19 @@
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label text-xs font-semibold text-slate-700">Họ và tên</label>
-                                            <input type="text" name="fullName" th:value="${u.fullName}" class="form-control text-xs rounded-xl" required title="fullName" aria-label="fullName">
+                                            <input type="text" name="fullName" th:value="${u.fullName}" class="form-control text-xs rounded-xl" required title="Họ và tên" aria-label="Họ và tên">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label text-xs font-semibold text-slate-700">Email</label>
-                                            <input type="email" name="email" th:value="${u.email}" class="form-control text-xs rounded-xl" required title="email" aria-label="email">
+                                            <input type="email" name="email" th:value="${u.email}" class="form-control text-xs rounded-xl" required title="Email" aria-label="Email">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label text-xs font-semibold text-slate-700">Số điện thoại</label>
-                                            <input type="text" name="phone" th:value="${u.phone}" class="form-control text-xs rounded-xl" title="phone" aria-label="phone">
+                                            <input type="text" name="phone" th:value="${u.phone}" class="form-control text-xs rounded-xl" title="Số điện thoại" aria-label="Số điện thoại">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label text-xs font-semibold text-slate-700">Vai trò hệ thống</label>
-                                            <select name="roleId" class="form-select text-xs rounded-xl" required title="roleId" aria-label="roleId">
+                                            <select name="roleId" class="form-select text-xs rounded-xl" required title="Vai trò hệ thống" aria-label="Vai trò hệ thống">
                                                 <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}" th:selected="${u.role != null and u.role.id == r.id}"></option>
                                             </select>
                                         </div>
@@ -170,23 +170,23 @@
                                         <div class="row g-2">
                                             <div class="col-md-4">
                                                 <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Mã số sinh viên (MSSV)</label>
-                                                <input type="text" name="studentCode" th:value="${stu != null ? stu.studentCode : u.username}" class="form-control text-xs rounded-lg" required>
+                                                <input type="text" name="studentCode" th:value="${stu != null ? stu.studentCode : u.username}" class="form-control text-xs rounded-lg" required aria-label="Mã số sinh viên (MSSV)" title="Mã số sinh viên (MSSV)">
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Lớp sinh hoạt</label>
-                                                <input type="text" name="className" th:value="${stu != null ? stu.className : ''}" class="form-control text-xs rounded-lg" placeholder="VD: 21DTH01">
+                                                <input type="text" name="className" th:value="${stu != null ? stu.className : ''}" class="form-control text-xs rounded-lg" placeholder="VD: 21DTH01" aria-label="Lớp sinh hoạt" title="Lớp sinh hoạt">
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Niên khóa</label>
-                                                <input type="text" name="academicYear" th:value="${stu != null ? stu.academicYear : ''}" class="form-control text-xs rounded-lg" placeholder="VD: 2021-2025">
+                                                <input type="text" name="academicYear" th:value="${stu != null ? stu.academicYear : ''}" class="form-control text-xs rounded-lg" placeholder="VD: 2021-2025" aria-label="Niên khóa" title="Niên khóa">
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Điểm GPA tích lũy</label>
-                                                <input type="number" step="0.01" min="0" max="4" name="gpa" th:value="${stu != null ? stu.gpa : ''}" class="form-control text-xs rounded-lg" placeholder="0.00 - 4.00">
+                                                <input type="number" step="0.01" min="0" max="4" name="gpa" th:value="${stu != null ? stu.gpa : ''}" class="form-control text-xs rounded-lg" placeholder="0.00 - 4.00" aria-label="Điểm GPA tích lũy" title="Điểm GPA tích lũy">
                                             </div>
                                             <div class="col-md-8">
                                                 <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Chuyên ngành đào tạo</label>
-                                                <select name="majorId" class="form-select text-xs rounded-lg">
+                                                <select name="majorId" class="form-select text-xs rounded-lg" aria-label="Chuyên ngành đào tạo" title="Chuyên ngành đào tạo">
                                                     <option value="">-- Chọn chuyên ngành --</option>
                                                     <option th:each="m : ${majors}" th:value="${m.id}" th:text="${m.name + ' (' + m.code + ')'}" th:selected="${stu != null and stu.major != null and stu.major.id == m.id}"></option>
                                                 </select>
@@ -203,11 +203,11 @@
                                         <div class="row g-2">
                                             <div class="col-md-4">
                                                 <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Mã Giảng viên</label>
-                                                <input type="text" name="lecturerCode" th:value="${lec != null ? lec.lecturerCode : u.username}" class="form-control text-xs rounded-lg" required>
+                                                <input type="text" name="lecturerCode" th:value="${lec != null ? lec.lecturerCode : u.username}" class="form-control text-xs rounded-lg" required aria-label="Mã Giảng viên" title="Mã Giảng viên">
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Học hàm</label>
-                                                <select name="academicTitle" class="form-select text-xs rounded-lg">
+                                                <select name="academicTitle" class="form-select text-xs rounded-lg" aria-label="Học hàm" title="Học hàm">
                                                     <option value="" th:selected="${lec == null or lec.academicTitle == null}">Không</option>
                                                     <option value="GS" th:selected="${lec != null and lec.academicTitle == 'GS'}">Giáo sư (GS)</option>
                                                     <option value="PGS" th:selected="${lec != null and lec.academicTitle == 'PGS'}">Phó Giáo sư (PGS)</option>
@@ -215,7 +215,7 @@
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Học vị</label>
-                                                <select name="degree" class="form-select text-xs rounded-lg">
+                                                <select name="degree" class="form-select text-xs rounded-lg" aria-label="Học vị" title="Học vị">
                                                     <option value="ThS" th:selected="${lec != null and lec.degree == 'ThS'}">Thạc sĩ (ThS)</option>
                                                     <option value="TS" th:selected="${lec != null and lec.degree == 'TS'}">Tiến sĩ (TS)</option>
                                                     <option value="ThS.GVC" th:selected="${lec != null and lec.degree == 'ThS.GVC'}">Thạc sĩ - GVC</option>
@@ -224,27 +224,27 @@
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Chỉ tiêu HD tối đa (nhóm/đợt)</label>
-                                                <input type="number" name="maxTopicsQuota" th:value="${lec != null ? lec.maxTopicsQuota : 5}" min="1" max="15" class="form-control text-xs rounded-lg">
+                                                <input type="number" name="maxTopicsQuota" th:value="${lec != null ? lec.maxTopicsQuota : 5}" min="1" max="15" class="form-control text-xs rounded-lg" aria-label="Chỉ tiêu HD tối đa (nhóm/đợt)" title="Chỉ tiêu HD tối đa (nhóm/đợt)">
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Khoa quản lý</label>
-                                                <select name="departmentId" class="form-select text-xs rounded-lg">
+                                                <select name="departmentId" class="form-select text-xs rounded-lg" aria-label="Khoa quản lý" title="Khoa quản lý">
                                                     <option value="">-- Chọn Khoa --</option>
                                                     <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name + ' (' + d.code + ')'}" th:selected="${lec != null and lec.department != null and lec.department.id == d.id}"></option>
                                                 </select>
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Bộ môn trực thuộc</label>
-                                                <select name="divisionId" class="form-select text-xs rounded-lg">
+                                                <select name="divisionId" class="form-select text-xs rounded-lg" aria-label="Bộ môn trực thuộc" title="Bộ môn trực thuộc">
                                                     <option value="">-- Chọn Bộ môn --</option>
-                                                    <option th:each="div : ${divisions}" th:value="${div.id}" th:text="${div.name + ' (' + div.code + ')'}" th:selected="${lec != null and lec.division != null and lec.division.id == div.id}"></option>
+                                                    <option th:each="division : ${divisions}" th:value="${division.id}" th:text="${division.name + ' (' + division.code + ')'}" th:selected="${lec != null and lec.division != null and lec.division.id == division.id}"></option>
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="form-check form-switch pt-1">
-                                        <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${u.isActive}" th:id="'activeCheck-' + ${u.id}" placeholder="isActive" title="isActive" aria-label="isActive">
+                                        <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${u.isActive}" th:id="'activeCheck-' + ${u.id}" placeholder="isActive" title="Kích hoạt tài khoản" aria-label="Kích hoạt tài khoản">
                                         <label class="form-check-label text-xs font-semibold text-slate-700" th:for="'activeCheck-' + ${u.id}">Kích hoạt tài khoản</label>
                                     </div>
                                 </div>
@@ -270,7 +270,7 @@
                                     <p class="text-xs text-slate-500 mb-2">Đặt lại mật khẩu cho tài khoản <strong class="text-slate-900" th:text="${u.username}"></strong>:</p>
                                     <div>
                                         <label class="form-label text-xs font-semibold text-slate-700">Mật khẩu mới</label>
-                                        <input type="text" name="newPassword" value="123456" class="form-control text-xs rounded-xl" required title="newPassword" aria-label="newPassword">
+                                        <input type="text" name="newPassword" value="123456" class="form-control text-xs rounded-xl" required title="Mật khẩu mới" aria-label="Mật khẩu mới">
                                     </div>
                                 </div>
                                 <div class="modal-footer border-t border-slate-100 p-3">
@@ -297,31 +297,31 @@
                     </div>
                     <div class="modal-body p-4 space-y-3">
                         <div>
-                            <label class="form-label text-xs font-semibold text-slate-700">Tên đăng nhập (Username / MSSV / Mã GV) <span class="text-rose-600">*</span></label>
-                            <input type="text" name="username" class="form-control text-xs rounded-xl" placeholder="VD: lecturer02, 20210099..." required title="username" aria-label="username">
+                            <label class="form-label text-xs font-semibold text-slate-700" for="field-admin-users-20">Tên đăng nhập (Username / MSSV / Mã GV) <span class="text-rose-600">*</span></label>
+                            <input type="text" name="username" class="form-control text-xs rounded-xl" placeholder="VD: lecturer02, 20210099..." required title="Tên đăng nhập (Username / MSSV / Mã GV)" aria-label="Tên đăng nhập (Username / MSSV / Mã GV)" id="field-admin-users-20">
                         </div>
                         <div>
-                            <label class="form-label text-xs font-semibold text-slate-700">Họ và tên đầy đủ <span class="text-rose-600">*</span></label>
-                            <input type="text" name="fullName" class="form-control text-xs rounded-xl" placeholder="VD: Nguyễn Văn B" required title="fullName" aria-label="fullName">
+                            <label class="form-label text-xs font-semibold text-slate-700" for="field-admin-users-21">Họ và tên đầy đủ <span class="text-rose-600">*</span></label>
+                            <input type="text" name="fullName" class="form-control text-xs rounded-xl" placeholder="VD: Nguyễn Văn B" required title="Họ và tên đầy đủ" aria-label="Họ và tên đầy đủ" id="field-admin-users-21">
                         </div>
                         <div>
-                            <label class="form-label text-xs font-semibold text-slate-700">Email <span class="text-rose-600">*</span></label>
-                            <input type="email" name="email" class="form-control text-xs rounded-xl" placeholder="VD: user@topicmanagement.edu.vn" required title="email" aria-label="email">
+                            <label class="form-label text-xs font-semibold text-slate-700" for="field-admin-users-22">Email <span class="text-rose-600">*</span></label>
+                            <input type="email" name="email" class="form-control text-xs rounded-xl" placeholder="VD: user@topicmanagement.edu.vn" required title="Email" aria-label="Email" id="field-admin-users-22">
                         </div>
                         <div>
-                            <label class="form-label text-xs font-semibold text-slate-700">Số điện thoại</label>
-                            <input type="text" name="phone" class="form-control text-xs rounded-xl" placeholder="VD: 0912345678" title="phone" aria-label="phone">
+                            <label class="form-label text-xs font-semibold text-slate-700" for="field-admin-users-23">Số điện thoại</label>
+                            <input type="text" name="phone" class="form-control text-xs rounded-xl" placeholder="VD: 0912345678" title="Số điện thoại" aria-label="Số điện thoại" id="field-admin-users-23">
                         </div>
                         <div>
-                            <label class="form-label text-xs font-semibold text-slate-700">Vai trò <span class="text-rose-600">*</span></label>
-                            <select name="roleId" class="form-select text-xs rounded-xl" required title="roleId" aria-label="roleId">
+                            <label class="form-label text-xs font-semibold text-slate-700" for="field-admin-users-24">Vai trò <span class="text-rose-600">*</span></label>
+                            <select name="roleId" class="form-select text-xs rounded-xl" required title="Vai trò" aria-label="Vai trò" id="field-admin-users-24">
                                 <option value="">-- Chọn vai trò --</option>
                                 <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}"></option>
                             </select>
                         </div>
                         <div>
-                            <label class="form-label text-xs font-semibold text-slate-700">Mật khẩu ban đầu</label>
-                            <input type="password" name="passwordHash" value="123456" class="form-control text-xs rounded-xl" placeholder="Mặc định: 123456" title="passwordHash" aria-label="passwordHash">
+                            <label class="form-label text-xs font-semibold text-slate-700" for="field-admin-users-25">Mật khẩu ban đầu</label>
+                            <input type="password" name="passwordHash" value="123456" class="form-control text-xs rounded-xl" placeholder="Mặc định: 123456" title="Mật khẩu ban đầu" aria-label="Mật khẩu ban đầu" id="field-admin-users-25">
                             <span class="text-slate-400 text-xs">Mặc định là <code>123456</code> nếu để trống.</span>
                         </div>
                     </div>

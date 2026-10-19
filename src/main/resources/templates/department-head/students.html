@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TopicHub</title>
 </head>
-<body>
+<body class="workspace-page">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('students', ${user})}"></aside>
@@ -43,7 +43,7 @@
             </div>
 
             <!-- Universal 1-Row Toolbar (Period Selector & Quick Search) -->
-            <div class="saas-card p-3 mb-4">
+            <div class="saas-card p-3 mb-4 workspace-filterbar">
                 <form th:action="@{/department-head/students}" method="get" class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                     <div class="relative flex-grow-1 max-w-lg">
                         <input type="text" class="form-control form-control-sm rounded-xl pl-8 text-xs" placeholder="Tìm kiếm theo mã nhóm, tên nhóm, sinh viên, đề tài..." onkeyup="filterTableByKeyword(this.value)" title="Tìm kiếm theo mã nhóm, tên nhóm, sinh viên, đề tài..." aria-label="Tìm kiếm theo mã nhóm, tên nhóm, sinh viên, đề tài...">
@@ -74,11 +74,11 @@
                     <table class="table table-saas table-fixed w-full mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 20%;" class="align-middle py-3.5 px-4">Nhóm Sinh Viên</th>
-                                <th style="width: 20%;" class="align-middle py-3.5 px-4">Trưởng Nhóm / Thành Viên</th>
-                                <th style="width: 35%;" class="align-middle py-3.5 px-4">Đề Tài Đăng Ký & GVHD</th>
-                                <th style="width: 15%;" class="align-middle text-center py-3.5 px-4">Tiến Độ</th>
-                                <th style="width: 10%;" class="align-middle text-end py-3.5 px-4 pr-6">Chi Tiết</th>
+                                <th style="width: 20%;" class="align-middle py-3.5 px-4" scope="col">Nhóm Sinh Viên</th>
+                                <th style="width: 20%;" class="align-middle py-3.5 px-4" scope="col">Trưởng Nhóm / Thành Viên</th>
+                                <th style="width: 35%;" class="align-middle py-3.5 px-4" scope="col">Đề Tài Đăng Ký & GVHD</th>
+                                <th style="width: 15%;" class="align-middle text-center py-3.5 px-4" scope="col">Tiến Độ</th>
+                                <th style="width: 10%;" class="align-middle text-end py-3.5 px-4 pr-6" scope="col">Chi Tiết</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -90,7 +90,7 @@
                             </tr>
                             <tr th:each="g : ${groups}" class="filterable-row cursor-pointer hover:bg-slate-50/80 transition"
                                 th:data-group-status="${g.topic == null ? 'unassigned' : (g.topic.finalScore != null ? 'scored' : (groupSubmissionsMap != null && groupSubmissionsMap.get(g.id) != null && !groupSubmissionsMap.get(g.id).isEmpty() ? 'submitted' : 'pending'))}"
-                                onclick="openGroupDetailDrawer(this)">
+                                onclick="openGroupDetailDrawer(this)" tabindex="0" onkeydown="if (event.target === this &amp;&amp; (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
                                 
                                 <!-- Cột 1: Nhóm (20%) -->
                                 <td class="align-middle py-3.5 px-4">
@@ -393,15 +393,15 @@
                             <i class="fa-solid fa-circle-info me-1 text-blue-600"></i> Tính năng hỗ trợ Trưởng bộ môn gộp 2 nhóm thiếu người thành 1 nhóm chuẩn. Toàn bộ thành viên nhóm nguồn sẽ được chuyển sang nhóm đích, đề tài nhóm nguồn (nếu có) được giải phóng về <strong>APPROVED</strong>.
                         </div>
                         <div class="mb-3">
-                            <label class="form-label font-semibold text-slate-700">Chọn Nhóm Nguồn (Sẽ bị giải tán sau khi chuyển SV) *</label>
-                            <select name="sourceGroupId" class="form-select text-xs rounded-xl" required title="sourceGroupId" aria-label="sourceGroupId">
+                            <label class="form-label font-semibold text-slate-700" for="field-department-head-students-5">Chọn Nhóm Nguồn (Sẽ bị giải tán sau khi chuyển SV) *</label>
+                            <select name="sourceGroupId" class="form-select text-xs rounded-xl" required title="Chọn Nhóm Nguồn (Sẽ bị giải tán sau khi chuyển SV)" aria-label="Chọn Nhóm Nguồn (Sẽ bị giải tán sau khi chuyển SV)" id="field-department-head-students-5">
                                 <option value="">-- Chọn nhóm nguồn --</option>
                                 <option th:each="g : ${groups}" th:value="${g.id}" th:text="${g.groupName + ' (' + g.groupCode + ') - ' + g.members.size() + ' SV - TT: ' + g.status}"></option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label font-semibold text-slate-700">Chọn Nhóm Đích (Nhận toàn bộ SV nhóm nguồn) *</label>
-                            <select name="targetGroupId" class="form-select text-xs rounded-xl" required title="targetGroupId" aria-label="targetGroupId">
+                            <label class="form-label font-semibold text-slate-700" for="field-department-head-students-6">Chọn Nhóm Đích (Nhận toàn bộ SV nhóm nguồn) *</label>
+                            <select name="targetGroupId" class="form-select text-xs rounded-xl" required title="Chọn Nhóm Đích (Nhận toàn bộ SV nhóm nguồn)" aria-label="Chọn Nhóm Đích (Nhận toàn bộ SV nhóm nguồn)" id="field-department-head-students-6">
                                 <option value="">-- Chọn nhóm đích --</option>
                                 <option th:each="g : ${groups}" th:value="${g.id}" th:text="${g.groupName + ' (' + g.groupCode + ') - ' + g.members.size() + ' SV - TT: ' + g.status}"></option>
                             </select>

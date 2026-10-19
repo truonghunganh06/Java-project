@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TopicHub</title>
 </head>
-<body>
+<body class="workspace-page">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('reviews', ${user})}"></aside>
@@ -37,7 +37,7 @@
             </div>
 
             <!-- Universal 1-Row Toolbar -->
-            <div class="saas-card p-3 mb-4">
+            <div class="saas-card p-3 mb-4 workspace-filterbar">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                     <div class="search-box-wrapper flex-grow-1 max-w-md">
                         <i class="fa-solid fa-magnifying-glass search-box-icon text-slate-400"></i>
@@ -59,11 +59,11 @@
                     <table class="table table-saas">
                         <thead>
                             <tr>
-                                <th style="width: 35%;">Mã & Tên đề tài</th>
-                                <th style="width: 20%;">Đợt & Bộ môn</th>
-                                <th style="width: 20%;">GV Hướng dẫn</th>
-                                <th style="width: 13%;">Hạn nộp điểm</th>
-                                <th style="width: 12%;" class="text-end">Chấm điểm phản biện</th>
+                                <th style="width: 35%;" scope="col">Mã & Tên đề tài</th>
+                                <th style="width: 20%;" scope="col">Đợt & Bộ môn</th>
+                                <th style="width: 20%;" scope="col">GV Hướng dẫn</th>
+                                <th style="width: 13%;" scope="col">Hạn nộp điểm</th>
+                                <th style="width: 12%;" class="text-end" scope="col">Chấm điểm phản biện</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -129,11 +129,11 @@
                             </div>
                             <div>
                                 <label class="form-label text-xs font-semibold text-slate-700">Điểm phản biện (Thang điểm 10) *</label>
-                                <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" placeholder="Ví dụ: 8.5" th:value="${existingEvaluationsMap != null && existingEvaluationsMap.get(t.id) != null ? existingEvaluationsMap.get(t.id).score : ''}" required title="score" aria-label="score">
+                                <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" placeholder="Ví dụ: 8.5" th:value="${existingEvaluationsMap != null && existingEvaluationsMap.get(t.id) != null ? existingEvaluationsMap.get(t.id).score : ''}" required title="Điểm phản biện (Thang điểm 10)" aria-label="Điểm phản biện (Thang điểm 10)">
                             </div>
                             <div>
                                 <label class="form-label text-xs font-semibold text-slate-700">Nhận xét & Đánh giá chi tiết *</label>
-                                <textarea name="comments" class="form-control text-xs rounded-xl" rows="5" placeholder="Nhận xét về tính mới, khối lượng công việc, điểm mạnh, điểm yếu và câu hỏi dành cho sinh viên..." th:text="${existingEvaluationsMap != null && existingEvaluationsMap.get(t.id) != null ? existingEvaluationsMap.get(t.id).comments : ''}" required title="comments" aria-label="comments"></textarea>
+                                <textarea name="comments" class="form-control text-xs rounded-xl" rows="5" placeholder="Nhận xét về tính mới, khối lượng công việc, điểm mạnh, điểm yếu và câu hỏi dành cho sinh viên..." th:text="${existingEvaluationsMap != null && existingEvaluationsMap.get(t.id) != null ? existingEvaluationsMap.get(t.id).comments : ''}" required title="Nhận xét &amp; Đánh giá chi tiết" aria-label="Nhận xét &amp; Đánh giá chi tiết"></textarea>
                             </div>
                         </div>
                         <div class="modal-footer border-t border-slate-100 p-3">

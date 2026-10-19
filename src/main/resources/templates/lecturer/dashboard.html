@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>TopicHub</title>
     </head>
-    <body class="dashboard-page">
+    <body class="dashboard-page workspace-page">
         <a class="db-skip" href="#dashboard-main">Đến nội dung chính</a>
         <!-- Left Sidebar -->
         <aside th:replace="~{fragments/sidebar :: sidebar('dashboard', ${user})}"></aside>
@@ -293,12 +293,12 @@
                             <div>
                                 <label class="form-label text-xs font-semibold text-slate-700" for="lecturer-dialog-0-score">Điểm phản biện (Thang điểm 10) <span class="text-rose-600">*</span>
                                 </label>
-                                <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" placeholder="vd: 8.5" required id="lecturer-dialog-0-score">
+                                <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" placeholder="vd: 8.5" required id="lecturer-dialog-0-score" aria-label="Điểm phản biện (Thang điểm 10)" title="Điểm phản biện (Thang điểm 10)">
                             </div>
                             <div>
                                 <label class="form-label text-xs font-semibold text-slate-700" for="lecturer-dialog-0-comments">Nhận xét chi tiết của GVPB <span class="text-rose-600">*</span>
                                 </label>
-                                <textarea name="comments" class="form-control text-xs rounded-xl" rows="4" placeholder="Nhận xét về ưu điểm, hạn chế và kết quả đạt được..." required id="lecturer-dialog-0-comments"></textarea>
+                                <textarea name="comments" class="form-control text-xs rounded-xl" rows="4" placeholder="Nhận xét về ưu điểm, hạn chế và kết quả đạt được..." required id="lecturer-dialog-0-comments" aria-label="Nhận xét chi tiết của GVPB" title="Nhận xét chi tiết của GVPB"></textarea>
                             </div>
                         </div>
                         <div class="modal-footer border-t border-slate-100 p-3">
