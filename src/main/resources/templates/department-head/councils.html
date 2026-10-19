@@ -153,16 +153,16 @@
         <div class="modal fade text-start" th:id="'assignTopicsModal-' + ${c.id}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
-                    <div class="modal-header border-b border-slate-100 bg-gradient-to-r from-purple-50 to-indigo-50 p-4">
+                    <div class="modal-header border-b border-slate-100 p-4" style="background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%);">
                         <h6 class="modal-title font-bold text-slate-900 text-sm d-flex align-items-center gap-2">
                             <i class="fa-solid fa-users-rectangle text-purple-600"></i>
                             Phân công Đề tài vào Hội đồng: <span class="text-purple-700" th:text="${c.name}"></span>
                         </h6>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
                     </div>
-                    <div class="modal-body p-4 space-y-4">
+                    <div class="modal-body p-4 d-flex flex-column gap-3">
                         <!-- Council Info summary -->
-                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-xs text-slate-700 flex flex-wrap gap-x-4 gap-y-1">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-xs text-slate-700 d-flex flex-wrap gap-3 align-items-center">
                             <div><i class="fa-solid fa-tag text-slate-400 me-1"></i> Mã: <strong th:text="${c.code != null ? c.code : 'HD-' + c.id}"></strong></div>
                             <div><i class="fa-regular fa-calendar text-slate-400 me-1"></i> Thời gian: <strong th:text="${c.defenseDate != null ? #temporals.format(c.defenseDate, 'dd/MM/yyyy HH:mm') : 'Chưa định'}"></strong></div>
                             <div><i class="fa-solid fa-location-dot text-slate-400 me-1"></i> Phòng: <strong th:text="${c.location != null ? c.location : 'Chưa có'}"></strong></div>
@@ -180,7 +180,7 @@
                                             th:text="'[' + ${at.code} + '] ' + ${at.title} + ' - GVHD: ' + (${at.supervisor != null && at.supervisor.user != null ? at.supervisor.user.fullName : 'N/A'}) + (${at.council != null ? ' (Đang ở HĐ: ' + at.council.name + ')' : ' (Chưa phân công)'})">
                                     </option>
                                 </select>
-                                <button type="submit" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-3.5 text-xs font-semibold shrink-0">
+                                <button type="submit" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-3.5 text-xs font-semibold flex-shrink-0">
                                     <i class="fa-solid fa-plus me-1"></i> Gán đề tài
                                 </button>
                             </form>
@@ -232,7 +232,7 @@
                         <h6 class="modal-title font-bold text-slate-900 text-sm"><i class="fa-solid fa-scale-balanced text-blue-600 me-1.5"></i> Thành Lập Hội Đồng Bảo Vệ & Phản Biện</h6>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
                     </div>
-                    <div class="modal-body p-4 space-y-3">
+                    <div class="modal-body p-4">
                         <div class="row g-3">
                             <div class="col-md-8">
                                 <label class="form-label text-xs font-semibold text-slate-700">Tên Hội đồng *</label>
