@@ -11,6 +11,8 @@ import topicmanagement.entity.Announcement;
 import java.util.List;
 
 public interface AnnouncementRepository extends JpaRepository<Announcement, Long> {
+    @Query(value = "SELECT * FROM announcements WHERE id = :id FOR UPDATE", nativeQuery = true)
+    java.util.Optional<Announcement> findForUpdate(@Param("id") Long id);
     @Modifying
     @Query(value = "INSERT INTO announcements (event_key, department_id, period_id, title, content, category, is_pinned, created_at) "
             + "VALUES (:eventKey, :departmentId, :periodId, :title, :content, 'PERIOD', false, :createdAt) "

@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
+import jakarta.persistence.EntityManager;
 import topicmanagement.entity.*;
 import topicmanagement.repository.*;
 
@@ -26,6 +27,7 @@ public class CouncilService {
     private final StudentGroupRepository groupRepository;
     private final EmailService emailService;
     private final TransactionTemplate publicationTransaction;
+    private final EntityManager entityManager;
 
     public CouncilService(
             CouncilRepository councilRepository,
@@ -37,7 +39,8 @@ public class CouncilService {
             DepartmentRepository departmentRepository,
             StudentGroupRepository groupRepository,
             EmailService emailService,
-            PlatformTransactionManager transactionManager) {
+            PlatformTransactionManager transactionManager,
+            EntityManager entityManager) {
         this.councilRepository = councilRepository;
         this.councilMemberRepository = councilMemberRepository;
         this.evaluationRepository = evaluationRepository;
@@ -49,6 +52,7 @@ public class CouncilService {
         this.emailService = emailService;
         this.publicationTransaction = new TransactionTemplate(transactionManager);
         this.publicationTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        this.entityManager = entityManager;
     }
 
     public List<Council> getAllCouncils() {
@@ -292,6 +296,9 @@ public class CouncilService {
         RegistrationPeriod period = periodId != null ? periodRepository.findById(periodId).orElse(null) : null;
         validateCouncilScope(actor, council.getDepartment(), period);
         List<Topic> assignedTopics = topicRepository.findByCouncilId(councilId);
+        if (assignedTopics.stream().anyMatch(t -> Boolean.TRUE.equals(t.getIsFinalized()))) {
+            throw new IllegalArgumentException("Cần thu hồi công bố điểm trước khi sửa hội đồng có đề tài đã công bố!");
+        }
         if (assignedTopics.stream().anyMatch(t -> t.getPeriod() == null
                 || !Objects.equals(t.getPeriod().getId(), period.getId()))) {
             throw new IllegalArgumentException("Không được đổi đợt của hội đồng đang có đề tài thuộc đợt khác!");
@@ -331,16 +338,27 @@ public class CouncilService {
         }
 
         System.out.println("[DB-COUNCIL] Cập nhật Hội đồng ID=" + councilId + ": " + trimmedName);
+        for (Topic assigned : assignedTopics.stream().sorted(Comparator.comparing(Topic::getId)).toList()) {
+            Topic locked = topicRepository.findForPublication(assigned.getId()).orElseThrow();
+            entityManager.refresh(locked);
+            if (Boolean.TRUE.equals(locked.getIsFinalized())) {
+                throw new IllegalArgumentException("Cần thu hồi công bố điểm trước khi sửa hội đồng có đề tài đã công bố!");
+            }
+            calculateAndSetFinalScore(locked);
+        }
         return savedCouncil;
     }
 
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN', 'DEPARTMENT_HEAD', 'DIVISION_HEAD')")
     public boolean assignTopicToCouncil(AppUser actor, Long topicId, Long councilId) {
-        Topic topic = topicRepository.findById(topicId).orElse(null);
         Council council = councilId != null ? councilRepository.findForUpdate(councilId).orElse(null) : null;
+        Topic topic = topicRepository.findForPublication(topicId).orElse(null);
+        if (topic != null) entityManager.refresh(topic);
 
         if (topic == null || !canManageScope(actor, topic.getDepartment())) return false;
+        if (Boolean.TRUE.equals(topic.getIsFinalized())) return Objects.equals(
+                topic.getCouncil() != null ? topic.getCouncil().getId() : null, councilId);
         if (councilId != null && council == null) return false;
 
         if (council != null) {
@@ -374,16 +392,20 @@ public class CouncilService {
 
         topic.setCouncil(council);
         topicRepository.save(topic);
+        calculateAndSetFinalScore(topic);
         return true;
     }
 
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN', 'DEPARTMENT_HEAD', 'DIVISION_HEAD')")
     public boolean assignReviewer(AppUser actor, Long topicId, Long reviewerId) {
-        Topic topic = topicRepository.findById(topicId).orElse(null);
+        Topic topic = topicRepository.findForPublication(topicId).orElse(null);
+        if (topic != null) entityManager.refresh(topic);
         Lecturer reviewer = reviewerId != null ? lecturerRepository.findById(reviewerId).orElse(null) : null;
 
         if (topic == null || !canManageScope(actor, topic.getDepartment())) return false;
+        if (Boolean.TRUE.equals(topic.getIsFinalized())) return Objects.equals(
+                topic.getReviewer() != null ? topic.getReviewer().getId() : null, reviewerId);
         if (reviewerId != null && reviewer == null) return false;
 
         if (reviewer != null) {
@@ -401,6 +423,7 @@ public class CouncilService {
 
         topic.setReviewer(reviewer);
         topicRepository.save(topic);
+        calculateAndSetFinalScore(topic);
         return true;
     }
 
@@ -484,15 +507,60 @@ public class CouncilService {
     }
 
     public List<Evaluation> getEvaluationsForTopic(Long topicId) {
-        return evaluationRepository.findByTopicId(topicId);
+        Topic topic = topicRepository.findById(topicId).orElse(null);
+        if (topic == null) return List.of();
+        List<StudentGroup> groups = groupRepository.findByTopicId(topicId);
+        if (groups.size() != 1) return List.of();
+        StudentGroup group = groups.get(0);
+        return filterCurrentEvaluations(topic, group, evaluationRepository.findByGroupId(group.getId()), councilLecturerIds(topic));
     }
 
     public List<Evaluation> getEvaluationsByTopic(Long topicId) {
-        return evaluationRepository.findByTopicId(topicId);
+        return getEvaluationsForTopic(topicId);
     }
 
     public Optional<Evaluation> getEvaluation(Long topicId, Long lecturerId, String evaluationType) {
-        return evaluationRepository.findByTopicIdAndLecturerIdAndEvaluationType(topicId, lecturerId, evaluationType);
+        return getEvaluationsForTopic(topicId).stream()
+                .filter(e -> Objects.equals(e.getLecturer().getId(), lecturerId)
+                        && e.getEvaluationType().equalsIgnoreCase(evaluationType)).findFirst();
+    }
+
+    private Set<Long> supervisorIds(Topic topic) {
+        Set<Long> ids = new HashSet<>();
+        if (topic.getSupervisor() != null) ids.add(topic.getSupervisor().getId());
+        if (topic.getCoSupervisor() != null) ids.add(topic.getCoSupervisor().getId());
+        return ids;
+    }
+
+    private Set<Long> councilLecturerIds(Topic topic) {
+        if (topic.getCouncil() == null) return Set.of();
+        return councilMemberRepository.findByCouncilId(topic.getCouncil().getId()).stream()
+                .filter(m -> m.getLecturer() != null).map(m -> m.getLecturer().getId()).collect(Collectors.toSet());
+    }
+
+    private List<Evaluation> filterCurrentEvaluations(Topic topic, StudentGroup group, List<Evaluation> evaluations, Set<Long> councilIds) {
+        if (group == null || group.getTopic() == null || !Objects.equals(group.getTopic().getId(), topic.getId())
+                || group.getPeriod() == null || topic.getPeriod() == null
+                || !Objects.equals(group.getPeriod().getId(), topic.getPeriod().getId())
+                || group.getStatus() == null
+                || List.of("DRAFT", "REJECTED", "DISSOLVED").contains(group.getStatus())) return List.of();
+        Set<Long> supervisors = supervisorIds(topic);
+        return evaluations.stream().filter(e -> e.getGroup() != null && Objects.equals(e.getGroup().getId(), group.getId())
+                && e.getTopic() != null && Objects.equals(e.getTopic().getId(), topic.getId())
+                && Boolean.TRUE.equals(e.getIsSubmitted()) && e.getScore() != null && Double.isFinite(e.getScore())
+                && e.getScore() >= 0 && e.getScore() <= 10 && e.getLecturer() != null && e.getLecturer().getId() != null)
+                .filter(e -> switch (Objects.toString(e.getEvaluationType(), "").toUpperCase(Locale.ROOT)) {
+                    case "SUPERVISOR" -> supervisors.contains(e.getLecturer().getId());
+                    case "REVIEWER" -> topic.getReviewer() != null && !supervisors.contains(e.getLecturer().getId())
+                            && Objects.equals(topic.getReviewer().getId(), e.getLecturer().getId());
+                    case "COUNCIL" -> !supervisors.contains(e.getLecturer().getId()) && councilIds.contains(e.getLecturer().getId());
+                    default -> false;
+                }).toList();
+    }
+
+    private boolean hasAllGrades(List<Evaluation> evaluations, String type, Set<Long> expectedIds) {
+        return !expectedIds.isEmpty() && evaluations.stream().filter(e -> type.equalsIgnoreCase(e.getEvaluationType()))
+                .map(e -> e.getLecturer().getId()).collect(Collectors.toSet()).containsAll(expectedIds);
     }
 
     public boolean isTopicFinalized(Long topicId) {
@@ -504,10 +572,11 @@ public class CouncilService {
 
     @Transactional
     public boolean submitEvaluation(Long topicId, Long lecturerId, String evaluationType, Double score, String comments) {
-        Topic topic = topicRepository.findById(topicId).orElse(null);
+        Topic topic = topicRepository.findForPublication(topicId).orElse(null);
         Lecturer lecturer = lecturerRepository.findById(lecturerId).orElse(null);
 
         if (topic == null || lecturer == null || evaluationType == null) return false;
+        entityManager.refresh(topic);
 
         // Khóa sửa điểm nếu đề tài đã được công bố kết quả chính thức cho sinh viên (isFinalized = true)
         if (Boolean.TRUE.equals(topic.getIsFinalized())) {
@@ -521,7 +590,7 @@ public class CouncilService {
         }
 
         List<StudentGroup> groups = groupRepository.findByTopicId(topicId);
-        if (groups.isEmpty()) {
+        if (groups.size() != 1) {
             System.err.println("[DB-EVAL] Lỗi! Đề tài ID=" + topicId + " chưa có nhóm sinh viên đăng ký thực hiện, tuyệt đối không được chấm điểm!");
             return false;
         }
@@ -573,7 +642,8 @@ public class CouncilService {
             return false;
         }
 
-        Evaluation eval = evaluationRepository.findByTopicIdAndLecturerIdAndEvaluationType(topicId, lecturerId, evalTypeUpper)
+        Evaluation eval = evaluationRepository.findByTopicIdAndGroupIdAndLecturerIdAndEvaluationType(
+                        topicId, groups.get(0).getId(), lecturerId, evalTypeUpper)
                 .orElse(new Evaluation());
 
         eval.setTopic(topic);
@@ -619,7 +689,7 @@ public class CouncilService {
             return;
         }
 
-        List<Evaluation> evals = evaluationRepository.findByTopicId(topic.getId());
+        List<Evaluation> evals = getEvaluationsForTopic(topic.getId());
         if (evals.isEmpty()) {
             topic.setAdvisorScore(null);
             topic.setReviewerScore(null);
@@ -634,7 +704,7 @@ public class CouncilService {
                 .filter(e -> "SUPERVISOR".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null)
                 .toList();
         Double advisorScore = null;
-        if (!supervisorEvals.isEmpty()) {
+        if (hasAllGrades(evals, "SUPERVISOR", supervisorIds(topic))) {
             double avg = supervisorEvals.stream().mapToDouble(Evaluation::getScore).average().orElse(0.0);
             advisorScore = roundScore(avg);
         }
@@ -656,14 +726,11 @@ public class CouncilService {
                 .toList();
         Double councilScore = null;
         if (topic.getCouncil() != null) {
-            List<CouncilMember> assignedMembers = councilMemberRepository.findByCouncilId(topic.getCouncil().getId());
-            if (!assignedMembers.isEmpty() && councilEvals.size() >= assignedMembers.size()) {
+            Set<Long> councilIds = councilLecturerIds(topic);
+            if (councilIds.size() >= 3 && councilIds.size() <= 5 && hasAllGrades(evals, "COUNCIL", councilIds)) {
                 double avg = councilEvals.stream().mapToDouble(Evaluation::getScore).average().orElse(0.0);
                 councilScore = roundScore(avg);
             }
-        } else if (!councilEvals.isEmpty()) {
-            double avg = councilEvals.stream().mapToDouble(Evaluation::getScore).average().orElse(0.0);
-            councilScore = roundScore(avg);
         }
 
         topic.setAdvisorScore(advisorScore);
@@ -694,13 +761,6 @@ public class CouncilService {
                 if (advisorScore != null && reviewerScore != null && councilScore != null) {
                     // Đầy đủ 3 trạm: GVHD + GVPB + Hội đồng
                     finalScore = roundScore((advisorScore + reviewerScore + councilScore) / 3.0);
-                } else if (councilScore != null && advisorScore != null) {
-                    // Fallback nếu có GVHD và Hội đồng bảo vệ đã chấm đủ
-                    int count = 1;
-                    double sum = councilScore;
-                    if (advisorScore != null) { sum += advisorScore; count++; }
-                    if (reviewerScore != null) { sum += reviewerScore; count++; }
-                    finalScore = roundScore(sum / count);
                 }
                 break;
         }
@@ -720,51 +780,15 @@ public class CouncilService {
      */
     public boolean isTopicFullyGraded(Topic topic) {
         if (topic == null || topic.getId() == null) return false;
-        List<Evaluation> evals = evaluationRepository.findByTopicId(topic.getId());
-
-        // 1. Phải có điểm của GVHD (SUPERVISOR)
-        boolean hasSupervisorScore = evals.stream()
-                .anyMatch(e -> "SUPERVISOR".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null);
-        if (!hasSupervisorScore) return false;
-
-        RegistrationPeriod period = topic.getPeriod();
-        String periodType = (period != null && period.getPeriodType() != null)
-                ? period.getPeriodType().trim().toUpperCase()
-                : "KLTN";
-
-        // 2. Với TLCN: nếu có phân công GVPB thì GVPB phải chấm xong
-        if ("TLCN".equals(periodType)) {
-            if (topic.getReviewer() != null) {
-                boolean hasReviewerScore = evals.stream()
-                        .anyMatch(e -> "REVIEWER".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null);
-                if (!hasReviewerScore) return false;
-            }
-        }
-
-        // 3. Với KLTN:
-        if ("KLTN".equals(periodType)) {
-            if (topic.getReviewer() != null) {
-                boolean hasReviewerScore = evals.stream()
-                        .anyMatch(e -> "REVIEWER".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null);
-                if (!hasReviewerScore) return false;
-            }
-            if (topic.getCouncil() != null) {
-                List<CouncilMember> assignedMembers = councilMemberRepository.findByCouncilId(topic.getCouncil().getId());
-                if (!assignedMembers.isEmpty()) {
-                    Set<Long> gradedLecturerIds = evals.stream()
-                            .filter(e -> "COUNCIL".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null && e.getLecturer() != null)
-                            .map(e -> e.getLecturer().getId())
-                            .collect(Collectors.toSet());
-                    for (CouncilMember m : assignedMembers) {
-                        if (m.getLecturer() != null && !gradedLecturerIds.contains(m.getLecturer().getId())) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-
-        return topic.getFinalScore() != null;
+        List<Evaluation> evaluations = getEvaluationsForTopic(topic.getId());
+        if (!hasAllGrades(evaluations, "SUPERVISOR", supervisorIds(topic))) return false;
+        String type = topic.getPeriod() != null ? topic.getPeriod().getPeriodType() : null;
+        if ("MON_HOC".equalsIgnoreCase(type) || "NCKH".equalsIgnoreCase(type)) return topic.getFinalScore() != null;
+        if (topic.getReviewer() == null || !hasAllGrades(evaluations, "REVIEWER", Set.of(topic.getReviewer().getId()))) return false;
+        if ("TLCN".equalsIgnoreCase(type)) return topic.getFinalScore() != null;
+        Set<Long> councilIds = councilLecturerIds(topic);
+        return "KLTN".equalsIgnoreCase(type) && councilIds.size() >= 3 && councilIds.size() <= 5
+                && hasAllGrades(evaluations, "COUNCIL", councilIds) && topic.getFinalScore() != null;
     }
 
     /**
@@ -776,8 +800,11 @@ public class CouncilService {
     public PublicationResult publishTopicResults(Long topicId, Boolean isFinalized) {
         PublicationTarget target = publicationTransaction.execute(status -> {
             Topic topic = topicRepository.findForPublication(topicId).orElse(null);
-            if (topic == null || Boolean.TRUE.equals(topic.getIsFinalized()) == Boolean.TRUE.equals(isFinalized)) return null;
+            if (topic == null) return null;
+            entityManager.refresh(topic);
+            if (Boolean.TRUE.equals(topic.getIsFinalized()) == Boolean.TRUE.equals(isFinalized)) return null;
             List<StudentGroup> groups = groupRepository.findByTopicId(topicId);
+            if (Boolean.TRUE.equals(isFinalized)) calculateAndSetFinalScore(topic);
             if (groups.isEmpty() || (Boolean.TRUE.equals(isFinalized) && !isTopicFullyGraded(topic))) return null;
             topic.setIsFinalized(Boolean.TRUE.equals(isFinalized));
             topicRepository.saveAndFlush(topic);
@@ -830,31 +857,23 @@ public class CouncilService {
     }
 
     public Map<Long, List<Evaluation>> getEvaluationsMapForTopics(List<Topic> topics) {
-        Map<Long, List<Evaluation>> map = new HashMap<>();
-        if (topics == null || topics.isEmpty()) return map;
-
-        List<Long> topicIds = topics.stream().map(Topic::getId).filter(Objects::nonNull).toList();
-        if (topicIds.isEmpty()) return map;
-
-        List<StudentGroup> allGroups = groupRepository.findByTopicIdIn(topicIds);
-        Set<Long> topicsWithGroups = allGroups.stream()
-                .filter(g -> g.getTopic() != null)
-                .map(g -> g.getTopic().getId())
-                .collect(Collectors.toSet());
-
-        List<Evaluation> allEvaluations = evaluationRepository.findByTopicIdIn(topicIds);
-        Map<Long, List<Evaluation>> evalsByTopicId = allEvaluations.stream()
-                .filter(e -> e.getTopic() != null)
-                .collect(Collectors.groupingBy(e -> e.getTopic().getId()));
-
-        for (Long topicId : topicIds) {
-            if (topicsWithGroups.contains(topicId)) {
-                map.put(topicId, evalsByTopicId.getOrDefault(topicId, Collections.emptyList()));
-            } else {
-                map.put(topicId, Collections.emptyList());
-            }
+        Map<Long, List<Evaluation>> result = new HashMap<>();
+        if (topics == null || topics.isEmpty()) return result;
+        Map<Long, StudentGroup> groups = getGroupsMapForTopics(topics);
+        List<Long> groupIds = groups.values().stream().map(StudentGroup::getId).toList();
+        Map<Long, List<Evaluation>> evaluations = groupIds.isEmpty() ? Map.of()
+                : evaluationRepository.findByGroupIdIn(groupIds).stream()
+                    .collect(Collectors.groupingBy(e -> e.getGroup().getId()));
+        List<Long> councilIds = topics.stream().filter(t -> t.getCouncil() != null)
+                .map(t -> t.getCouncil().getId()).distinct().toList();
+        Map<Long, Set<Long>> councilLecturers = getCouncilLecturerIdsMap(councilIds);
+        for (Topic topic : topics) {
+            StudentGroup group = groups.get(topic.getId());
+            Set<Long> ids = topic.getCouncil() != null ? councilLecturers.getOrDefault(topic.getCouncil().getId(), Set.of()) : Set.of();
+            result.put(topic.getId(), filterCurrentEvaluations(topic, group,
+                    group != null ? evaluations.getOrDefault(group.getId(), List.of()) : List.of(), ids));
         }
-        return map;
+        return result;
     }
 
     public Map<Long, StudentGroup> getGroupsMapForTopics(List<Topic> topics) {

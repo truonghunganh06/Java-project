@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
+    @Query(value = "SELECT * FROM lecturers WHERE id = :id FOR UPDATE", nativeQuery = true)
+    Optional<Lecturer> findForQuota(@Param("id") Long id);
     @Override
     @NonNull
     @EntityGraph(attributePaths = {"user", "department"})

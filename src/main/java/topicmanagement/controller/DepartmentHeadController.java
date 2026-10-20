@@ -1207,8 +1207,11 @@ public class DepartmentHeadController {
             return "redirect:/login";
         }
 
-        announcementService.deleteAnnouncement(id);
-        redirectAttributes.addFlashAttribute("successMessage", "Đã xóa thông báo!");
+        if (announcementService.deleteAnnouncement(user, id)) {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa thông báo!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa: thông báo không tồn tại hoặc không thuộc khoa quản lý!");
+        }
         return "redirect:/department-head/announcements";
     }
 
@@ -1219,11 +1222,11 @@ public class DepartmentHeadController {
             return "redirect:/login";
         }
 
-        boolean ok = announcementService.togglePin(id);
+        boolean ok = announcementService.togglePin(user, id);
         if (ok) {
             redirectAttributes.addFlashAttribute("successMessage", "Đã thay đổi trạng thái ghim thông báo!");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy thông báo!");
+            redirectAttributes.addFlashAttribute("errorMessage", "Thông báo không tồn tại hoặc không thuộc khoa quản lý!");
         }
         return "redirect:/department-head/announcements";
     }

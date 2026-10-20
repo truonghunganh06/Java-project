@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface StudentGroupRepository extends JpaRepository<StudentGroup, Long> {
+    @Query(value = "SELECT * FROM student_groups WHERE id = :id FOR UPDATE", nativeQuery = true)
+    Optional<StudentGroup> findForMembership(@Param("id") Long id);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
     @Override
