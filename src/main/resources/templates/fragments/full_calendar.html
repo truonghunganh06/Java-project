@@ -25,11 +25,11 @@
                      th:data-id="${'review-' + rt.id}"
                      data-type="REVIEW"
                      data-type-name="Chấm phản biện (GVPB)"
-                     th:data-title="${'GVPB: ' + rt.titleVi}"
+                     th:data-title="${'GVPB: ' + rt.title}"
                      th:data-date="${rt.period != null && rt.period.reviewerDeadline != null ? #temporals.format(rt.period.reviewerDeadline, 'yyyy-MM-dd') : '2026-09-25'}"
                      data-time="17:00"
                      data-location="Nộp phiếu điểm trực tuyến"
-                     th:data-code="${rt.topicCode != null ? rt.topicCode : ''}"
+                     th:data-code="${rt.code != null ? rt.code : ''}"
                      data-color-class="cal-event-cyan"
                      data-icon="fa-clipboard-check"
                      data-action-url="/lecturer/reviews">
