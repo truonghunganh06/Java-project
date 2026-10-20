@@ -492,27 +492,45 @@
                 // Case 2: DOM Element or Object passed
                 let data = {};
                 if (source instanceof HTMLElement) {
+                    let el = source;
+                    if (!el.dataset.topicId && !el.dataset.id && !el.dataset.topicTitle && !el.dataset.title) {
+                        const child = el.querySelector('[data-topic-id], [data-topic-title], [data-topic-code]');
+                        if (child) el = child;
+                    }
                     data = {
-                        id: source.dataset.topicId || source.dataset.id,
-                        code: source.dataset.topicCode || source.dataset.code,
-                        title: source.dataset.topicTitle || source.dataset.title,
-                        period: source.dataset.topicPeriod || source.dataset.period,
-                        major: source.dataset.topicMajor || source.dataset.major,
-                        supervisor: source.dataset.topicSupervisor || source.dataset.supervisor,
-                        coSupervisor: source.dataset.topicCoSupervisor || source.dataset.coSupervisor,
-                        reviewer: source.dataset.topicReviewer || source.dataset.reviewer,
-                        council: source.dataset.topicCouncil || source.dataset.council,
-                        maxStudents: source.dataset.topicMaxStudents || source.dataset.maxStudents,
-                        status: source.dataset.topicStatus || source.dataset.status,
-                        description: source.dataset.topicDescription || source.dataset.description,
-                        requirements: source.dataset.topicRequirements || source.dataset.requirements,
-                        groupName: source.dataset.topicGroupName || source.dataset.groupName,
-                        leaderName: source.dataset.topicLeaderName || source.dataset.leaderName,
-                        leaderCode: source.dataset.topicLeaderCode || source.dataset.leaderCode,
-                        role: source.dataset.topicRole || source.dataset.role,
-                        department: source.dataset.topicDepartment || source.dataset.department || '',
-                        hasGroupTopic: source.dataset.topicHasGroup === 'true'
+                        id: el.dataset.topicId || el.dataset.id,
+                        code: el.dataset.topicCode || el.dataset.code,
+                        title: el.dataset.topicTitle || el.dataset.title,
+                        period: el.dataset.topicPeriod || el.dataset.period,
+                        major: el.dataset.topicMajor || el.dataset.major || el.dataset.topicDepartment || el.dataset.department,
+                        supervisor: el.dataset.topicSupervisor || el.dataset.supervisor,
+                        coSupervisor: el.dataset.topicCoSupervisor || el.dataset.coSupervisor,
+                        reviewer: el.dataset.topicReviewer || el.dataset.reviewer,
+                        council: el.dataset.topicCouncil || el.dataset.council,
+                        maxStudents: el.dataset.topicMaxStudents || el.dataset.maxStudents,
+                        status: el.dataset.topicStatus || el.dataset.status,
+                        description: el.dataset.topicDescription || el.dataset.description,
+                        requirements: el.dataset.topicRequirements || el.dataset.requirements,
+                        groupName: el.dataset.topicGroupName || el.dataset.groupName,
+                        leaderName: el.dataset.topicLeaderName || el.dataset.leaderName,
+                        leaderCode: el.dataset.topicLeaderCode || el.dataset.leaderCode,
+                        role: el.dataset.topicRole || el.dataset.role,
+                        department: el.dataset.topicDepartment || el.dataset.department || '',
+                        hasGroupTopic: el.dataset.topicHasGroup === 'true'
                     };
+
+                    // Nếu có topic ID, đồng bộ thêm từ REST API để đảm bảo thông tin luôn mới nhất
+                    if (data.id && /^\d+$/.test(data.id)) {
+                        fetch('/api/topics/' + data.id)
+                            .then(res => res.ok ? res.json() : null)
+                            .then(apiData => {
+                                if (apiData) {
+                                    apiData.role = data.role;
+                                    renderTopicDrawer(apiData);
+                                }
+                            })
+                            .catch(() => {});
+                    }
                 } else {
                     data = source;
                 }
@@ -527,7 +545,7 @@
                 const code = decodeUnicode(data.code) || 'DT-N/A';
                 const title = decodeUnicode(data.title) || 'Chi tiết đề tài';
                 const period = decodeUnicode(data.period) || 'Chung';
-                const major = decodeUnicode(data.major) || 'CNTT';
+                const major = decodeUnicode(data.major || data.departmentName) || 'Khoa CNTT';
                 const supervisor = decodeUnicode(data.supervisor) || 'Chưa phân công';
                 const coSupervisor = decodeUnicode(data.coSupervisor) || 'Không có';
                 const reviewer = decodeUnicode(data.reviewer) || 'Chưa phân công GVPB';

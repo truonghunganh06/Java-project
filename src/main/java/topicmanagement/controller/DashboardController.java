@@ -51,18 +51,23 @@ public class DashboardController {
 
     @GetMapping("/switch-semester")
     public String switchSemester(
-            @org.springframework.web.bind.annotation.RequestParam("semester") Integer semester,
+            @org.springframework.web.bind.annotation.RequestParam(value = "semester", required = false) Integer semester,
             @org.springframework.web.bind.annotation.RequestParam(value = "academicYear", required = false) String academicYear,
             jakarta.servlet.http.HttpServletRequest request,
             HttpSession session) {
         if (session != null) {
-            session.setAttribute("selectedSemester", semester);
+            if (semester != null) {
+                session.setAttribute("selectedSemester", semester);
+            }
             if (academicYear != null && !academicYear.isBlank()) {
-                session.setAttribute("selectedAcademicYear", academicYear);
+                session.setAttribute("selectedAcademicYear", academicYear.trim());
             }
         }
         String referer = request.getHeader("Referer");
-        return "redirect:" + (referer != null && !referer.isBlank() ? referer : "/dashboard");
+        if (referer != null && !referer.isBlank() && !referer.contains("/switch-semester") && !referer.contains("/login")) {
+            return "redirect:" + referer;
+        }
+        return "redirect:/dashboard";
     }
 
     @GetMapping("/schedule")

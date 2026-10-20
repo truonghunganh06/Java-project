@@ -33,55 +33,80 @@
                     </th:block>
                     <span class="text-slate-900 font-bold text-truncate" style="max-width: 240px;" th:text="${pageTitle != null ? pageTitle : 'Bảng điều khiển'}">Bảng điều khiển</span>
                 </nav>
+            </div>
 
+            <!-- Right Controls: Semester Switcher + Search Bar + Action Buttons -->
+            <div class="d-flex align-items-center gap-2 gap-md-2.5">
                 <!-- Current Semester & Academic Year Capsule Dropdown Switcher -->
-                <div class="dropdown d-none d-md-inline-block ms-1.5">
-                    <button class="btn btn-xs rounded-full bg-slate-100 hover:bg-slate-200/80 border border-slate-200/90 text-xs font-semibold text-slate-700 shadow-2xs d-inline-flex align-items-center gap-1.5 px-3 py-1.5 transition" 
+                <div class="dropdown d-none d-sm-inline-block">
+                    <button class="btn btn-xs rounded-full bg-white hover:bg-slate-50 border border-slate-200/90 text-xs font-semibold text-slate-700 shadow-2xs d-inline-flex align-items-center gap-1.5 px-3 py-1.5 transition" 
                             type="button" 
                             id="semesterSwitcherDropdown" 
                             data-bs-toggle="dropdown" 
                             aria-expanded="false" 
-                            title="Bấm để chọn/thay đổi học kỳ">
-                        <i class="fa-regular fa-calendar-check text-blue-600 text-xs"></i>
+                            title="Bấm để chọn/thay đổi học kỳ & năm học">
+                        <i class="fa-solid fa-calendar-check text-blue-600 text-xs"></i>
                         <span>HK<strong class="text-slate-900" th:text="${currentSemester != null ? currentSemester : 1}">1</strong> · <span class="text-slate-600" th:text="${currentAcademicYear != null ? currentAcademicYear : '2026-2027'}">2026-2027</span></span>
                         <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 ms-0.5"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-start shadow-wellnest-lg border border-slate-200 rounded-2xl p-1.5 text-xs mt-1" aria-labelledby="semesterSwitcherDropdown" style="min-width: 210px; z-index: 1060;">
-                        <li class="px-2.5 py-1 text-2xs font-bold text-slate-400 uppercase tracking-wider">Học kỳ hiển thị</li>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-200 rounded-2xl p-2 text-xs mt-1" aria-labelledby="semesterSwitcherDropdown" style="min-width: 220px; z-index: 1060;">
+                        <!-- Section: Học kỳ -->
+                        <li class="px-2.5 py-1 text-2xs font-bold text-slate-400 uppercase tracking-wider d-flex align-items-center justify-content-between">
+                            <span>Học kỳ</span>
+                            <span class="badge bg-blue-50 text-blue-600 border border-blue-100 rounded text-[9px] font-semibold" th:text="'HK' + ${currentSemester != null ? currentSemester : 1}">HK1</span>
+                        </li>
                         <li>
-                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between" 
-                               th:classappend="${(currentSemester == 1) ? 'active font-bold' : ''}"
+                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between transition" 
+                               th:classappend="${(currentSemester == 1 || currentSemester == null) ? 'bg-blue-50/70 font-bold text-blue-700' : 'text-slate-700 hover:bg-slate-50'}"
                                th:href="@{/switch-semester(semester=1, academicYear=${currentAcademicYear != null ? currentAcademicYear : '2026-2027'})}">
-                                <span><i class="fa-solid fa-graduation-cap me-1.5 text-slate-400"></i>Học kỳ 1</span>
-                                <i th:if="${currentSemester == 1}" class="fa-solid fa-check text-xs text-blue-600"></i>
+                                <span><i class="fa-solid fa-graduation-cap me-2" th:classappend="${currentSemester == 1 || currentSemester == null ? 'text-blue-600' : 'text-slate-400'}"></i>Học kỳ 1</span>
+                                <i th:if="${currentSemester == 1 || currentSemester == null}" class="fa-solid fa-check text-xs text-blue-600"></i>
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between" 
-                               th:classappend="${(currentSemester == 2) ? 'active font-bold' : ''}"
+                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between transition" 
+                               th:classappend="${currentSemester == 2 ? 'bg-blue-50/70 font-bold text-blue-700' : 'text-slate-700 hover:bg-slate-50'}"
                                th:href="@{/switch-semester(semester=2, academicYear=${currentAcademicYear != null ? currentAcademicYear : '2026-2027'})}">
-                                <span><i class="fa-solid fa-graduation-cap me-1.5 text-slate-400"></i>Học kỳ 2</span>
+                                <span><i class="fa-solid fa-graduation-cap me-2" th:classappend="${currentSemester == 2 ? 'text-blue-600' : 'text-slate-400'}"></i>Học kỳ 2</span>
                                 <i th:if="${currentSemester == 2}" class="fa-solid fa-check text-xs text-blue-600"></i>
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between" 
-                               th:classappend="${(currentSemester == 3) ? 'active font-bold' : ''}"
+                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between transition" 
+                               th:classappend="${currentSemester == 3 ? 'bg-blue-50/70 font-bold text-blue-700' : 'text-slate-700 hover:bg-slate-50'}"
                                th:href="@{/switch-semester(semester=3, academicYear=${currentAcademicYear != null ? currentAcademicYear : '2026-2027'})}">
-                                <span><i class="fa-solid fa-sun me-1.5 text-amber-500"></i>Học kỳ hè</span>
+                                <span><i class="fa-solid fa-sun me-2" th:classappend="${currentSemester == 3 ? 'text-amber-500' : 'text-slate-400'}"></i>Học kỳ hè</span>
                                 <i th:if="${currentSemester == 3}" class="fa-solid fa-check text-xs text-blue-600"></i>
                             </a>
                         </li>
-                        <li><hr class="dropdown-divider my-1 border-slate-100"></li>
-                        <li class="px-2.5 py-1 text-2xs text-slate-500">
-                            Năm học: <strong class="text-slate-700" th:text="${currentAcademicYear != null ? currentAcademicYear : '2026-2027'}">2026-2027</strong>
+
+                        <!-- Divider -->
+                        <li><hr class="dropdown-divider my-1.5 border-slate-100"></li>
+
+                        <!-- Section: Năm học -->
+                        <li class="px-2.5 py-1 text-2xs font-bold text-slate-400 uppercase tracking-wider d-flex align-items-center justify-content-between">
+                            <span>Năm học</span>
+                            <span class="text-slate-500 font-semibold" th:text="${currentAcademicYear != null ? currentAcademicYear : '2026-2027'}">2026-2027</span>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between transition" 
+                               th:classappend="${currentAcademicYear == '2026-2027' || currentAcademicYear == null ? 'bg-blue-50/70 font-bold text-blue-700' : 'text-slate-700 hover:bg-slate-50'}"
+                               th:href="@{/switch-semester(semester=${currentSemester != null ? currentSemester : 1}, academicYear='2026-2027')}">
+                                <span><i class="fa-regular fa-calendar-days me-2" th:classappend="${currentAcademicYear == '2026-2027' || currentAcademicYear == null ? 'text-blue-600' : 'text-slate-400'}"></i>2026 - 2027 (Hiện hành)</span>
+                                <i th:if="${currentAcademicYear == '2026-2027' || currentAcademicYear == null}" class="fa-solid fa-check text-xs text-blue-600"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between transition" 
+                               th:classappend="${currentAcademicYear == '2025-2026' ? 'bg-blue-50/70 font-bold text-blue-700' : 'text-slate-700 hover:bg-slate-50'}"
+                               th:href="@{/switch-semester(semester=${currentSemester != null ? currentSemester : 1}, academicYear='2025-2026')}">
+                                <span><i class="fa-regular fa-calendar-days me-2" th:classappend="${currentAcademicYear == '2025-2026' ? 'text-blue-600' : 'text-slate-400'}"></i>2025 - 2026</span>
+                                <i th:if="${currentAcademicYear == '2025-2026'}" class="fa-solid fa-check text-xs text-blue-600"></i>
+                            </a>
                         </li>
                     </ul>
                 </div>
-            </div>
 
-            <!-- Right Controls: Search Bar + Action Buttons -->
-            <div class="d-flex align-items-center gap-2.5">
                 <!-- Search Bar Capsule -->
                 <div class="topbar-search-wrapper position-relative d-none d-md-flex align-items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 transition" style="width: 280px; box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);">
                     <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs flex-shrink-0"></i>

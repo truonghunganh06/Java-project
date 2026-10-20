@@ -129,31 +129,19 @@
             </div>
 
             <!-- Universal 1-Row Toolbar -->
+            <!-- Workspace Filterbar -->
             <div class="saas-card p-2.5 mb-3 workspace-filterbar">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2.5">
-                    <!-- Left: View Mode Toggle -->
-                    <div class="view-mode-toggle bg-slate-100 p-0.5 rounded-xl d-inline-flex border border-slate-200">
-                        <button type="button" id="viewBtnTable"
-                            class="btn btn-xs rounded-lg px-2.5 py-1 text-xs font-semibold view-toggle-btn active"
-                            onclick="setPeriodViewMode('table')">
-                            <i class="fa-solid fa-table-list me-1"></i> Bảng
-                        </button>
-                        <button type="button" id="viewBtnCards"
-                            class="btn btn-xs rounded-lg px-2.5 py-1 text-xs font-semibold view-toggle-btn text-slate-600"
-                            onclick="setPeriodViewMode('cards')">
-                            <i class="fa-solid fa-timeline me-1"></i> Thẻ
-                        </button>
+                    <!-- Left: Search Input -->
+                    <div class="relative flex-grow-1" style="min-width: 220px; max-width: 360px;">
+                        <input type="text" id="periodSearchInput"
+                            class="form-control form-control-sm rounded-xl pl-7 text-xs"
+                            placeholder="Tìm kiếm đợt, năm học..." onkeyup="applyAllPeriodFilters()" title="Tìm kiếm đợt, năm học..." aria-label="Tìm kiếm đợt, năm học...">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-2xs"></i>
                     </div>
 
-                    <!-- Center & Right: Search and Filters -->
-                    <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 justify-content-lg-end">
-                        <div class="relative flex-grow-1 max-w-xs">
-                            <input type="text" id="periodSearchInput"
-                                class="form-control form-control-sm rounded-xl pl-7 text-xs"
-                                placeholder="Tìm kiếm đợt, năm học..." onkeyup="applyAllPeriodFilters()" title="Tìm kiếm đợt, năm học..." aria-label="Tìm kiếm đợt, năm học...">
-                            <i
-                                class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-2xs"></i>
-                        </div>
+                    <!-- Right: Filters and Count Badge -->
+                    <div class="d-flex flex-wrap align-items-center gap-2">
                         <select id="periodTypeSelectFilter" class="form-select form-select-sm rounded-xl text-xs"
                             style="width: 155px;" onchange="applyAllPeriodFilters()" title="periodTypeSelectFilter" aria-label="periodTypeSelectFilter">
                             <option value="all">-- Loại đợt --</option>
@@ -215,7 +203,13 @@
                                 th:data-reg-start="${p.studentRegistrationStart != null ? #temporals.format(p.studentRegistrationStart, 'dd/MM/yyyy HH:mm') : ''}"
                                 th:data-reg-end="${p.studentRegistrationEnd != null ? #temporals.format(p.studentRegistrationEnd, 'dd/MM/yyyy HH:mm') : ''}"
                                 th:data-rev-dead="${p.reviewerDeadline != null ? #temporals.format(p.reviewerDeadline, 'dd/MM/yyyy HH:mm') : ''}"
-                                th:data-defense-date="${p.councilDefenseDate != null ? #temporals.format(p.councilDefenseDate, 'dd/MM/yyyy HH:mm') : ''}" tabindex="0" onkeydown="if (event.target === this &amp;&amp; (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
+                                th:data-defense-date="${p.councilDefenseDate != null ? #temporals.format(p.councilDefenseDate, 'dd/MM/yyyy HH:mm') : ''}"
+                                th:data-prop-start-iso="${p.lecturerProposalStart != null ? #temporals.format(p.lecturerProposalStart, 'yyyy-MM-dd') : ''}"
+                                th:data-prop-end-iso="${p.lecturerProposalEnd != null ? #temporals.format(p.lecturerProposalEnd, 'yyyy-MM-dd') : ''}"
+                                th:data-reg-start-iso="${p.studentRegistrationStart != null ? #temporals.format(p.studentRegistrationStart, 'yyyy-MM-dd') : ''}"
+                                th:data-reg-end-iso="${p.studentRegistrationEnd != null ? #temporals.format(p.studentRegistrationEnd, 'yyyy-MM-dd') : ''}"
+                                th:data-rev-dead-iso="${p.reviewerDeadline != null ? #temporals.format(p.reviewerDeadline, 'yyyy-MM-dd') : ''}"
+                                th:data-defense-date-iso="${p.councilDefenseDate != null ? #temporals.format(p.councilDefenseDate, 'yyyy-MM-dd') : ''}" tabindex="0" onkeydown="if (event.target === this &amp;&amp; (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
 
                                 <!-- Column 1: Info & Badges -->
                                 <td class="align-middle">
@@ -1474,12 +1468,43 @@
         async function openEditPeriodModal(periodId) {
             clearModalError('editPeriodModal');
             try {
-                const res = await fetch(`/department-head/periods/${periodId}/json`);
-                if (!res.ok) {
+                // 1. Populate immediately from table row dataset (Zero latency, reliable)
+                const row = document.querySelector(`.period-row[data-period-id="${periodId}"]`);
+                let p = null;
+                if (row) {
+                    p = {
+                        id: periodId,
+                        name: row.getAttribute('data-period-name') || '',
+                        periodType: row.getAttribute('data-period-type') || 'KLTN',
+                        academicYear: row.getAttribute('data-academic-year') || '2026-2027',
+                        semester: parseInt(row.getAttribute('data-semester') || '1'),
+                        minTopicsPerLecturer: parseInt(row.getAttribute('data-min-topics') || '3'),
+                        status: row.getAttribute('data-status') || 'OPEN',
+                        propStart: row.getAttribute('data-prop-start-iso') || '',
+                        propEnd: row.getAttribute('data-prop-end-iso') || '',
+                        regStart: row.getAttribute('data-reg-start-iso') || '',
+                        regEnd: row.getAttribute('data-reg-end-iso') || '',
+                        revDead: row.getAttribute('data-rev-dead-iso') || '',
+                        defenseDate: row.getAttribute('data-defense-date-iso') || ''
+                    };
+                }
+
+                // 2. Fetch fresh JSON from server in background if available
+                try {
+                    const res = await fetch(`/department-head/periods/${periodId}/json`);
+                    if (res.ok) {
+                        const jsonP = await res.json();
+                        p = Object.assign(p || {}, jsonP);
+                    }
+                } catch (e) {
+                    console.warn('Background fetch for period json was skipped or unavailable, using DOM data:', e);
+                }
+
+                if (!p) {
                     alert('Không thể tải dữ liệu của đợt này!');
                     return;
                 }
-                const p = await res.json();
+
                 document.getElementById('editPeriodId').value = p.id;
                 document.getElementById('editName').value = p.name || '';
                 document.getElementById('editPeriodTypeSelect').value = p.periodType || 'KLTN';
@@ -1507,7 +1532,7 @@
                 const formEdit = document.getElementById('formEditPeriod');
                 formEdit.action = `/department-head/periods/${p.id}/update`;
 
-                const editModal = new bootstrap.Modal(document.getElementById('editPeriodModal'));
+                const editModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('editPeriodModal'));
                 editModal.show();
             } catch (e) {
                 console.error(e);
@@ -1602,12 +1627,20 @@
                 };
             }
 
-            // Action Button: Edit
+            // Action Button: Edit (Seamless Bootstrap transition)
             const editBtn = document.getElementById('modalEditBtn');
             editBtn.onclick = function() {
-                const actionModal = bootstrap.Modal.getInstance(document.getElementById('periodActionModal'));
-                if (actionModal) actionModal.hide();
-                openEditPeriodModal(id);
+                const actionModalEl = document.getElementById('periodActionModal');
+                const actionModal = bootstrap.Modal.getInstance(actionModalEl);
+                if (actionModal && actionModalEl.classList.contains('show')) {
+                    actionModalEl.addEventListener('hidden.bs.modal', function onHidden() {
+                        actionModalEl.removeEventListener('hidden.bs.modal', onHidden);
+                        openEditPeriodModal(id);
+                    });
+                    actionModal.hide();
+                } else {
+                    openEditPeriodModal(id);
+                }
             };
 
             // Show modal
@@ -1717,7 +1750,7 @@
                 });
             }
 
-            // Validation Helper
+            // Validation Helper (Đồng bộ chuẩn nghiệp vụ backend)
             function validatePeriodForm(form, modalId) {
                 clearModalError(modalId);
                 const pStart = form.querySelector('[name="propStart"]')?.value;
@@ -1727,32 +1760,24 @@
                 const revDead = form.querySelector('[name="revDead"]')?.value;
                 const defenseDate = form.querySelector('[name="defenseDate"]')?.value;
 
-                // Check duplicate dates
-                const allDates = [pStart, pEnd, rStart, rEnd, revDead, defenseDate].filter(v => v);
-                const uniqueDates = new Set(allDates);
-                if (allDates.length !== uniqueDates.size) {
-                    showModalError('Các ngày không được trùng nhau. Vui lòng kiểm tra lại.', null, modalId);
-                    return false;
-                }
-
-                if (pStart && pEnd && pEnd <= pStart) {
-                    showModalError('Hạn chót GV đề xuất phải sau ngày bắt đầu đề xuất!', 'propEnd', modalId);
+                if (pStart && pEnd && pEnd < pStart) {
+                    showModalError('Hạn chót GV đề xuất phải từ ngày hoặc sau ngày bắt đầu đề xuất!', 'propEnd', modalId);
                     return false;
                 }
                 if (pEnd && rStart && rStart < pEnd) {
                     showModalError('Thời gian SV bắt đầu đăng ký phải diễn ra từ ngày hoặc sau khi GV kết thúc hạn đề xuất đề tài!', 'regStart', modalId);
                     return false;
                 }
-                if (rStart && rEnd && rEnd <= rStart) {
-                    showModalError('Hạn chót SV đăng ký phải sau ngày bắt đầu đăng ký!', 'regEnd', modalId);
+                if (rStart && rEnd && rEnd < rStart) {
+                    showModalError('Hạn chót SV đăng ký phải từ ngày hoặc sau ngày bắt đầu đăng ký!', 'regEnd', modalId);
                     return false;
                 }
-                if (rEnd && revDead && revDead <= rEnd) {
-                    showModalError('Hạn nộp điểm GVPB phải sau khi kết thúc hạn SV đăng ký đề tài!', 'revDead', modalId);
+                if (rEnd && revDead && revDead < rEnd) {
+                    showModalError('Hạn nộp điểm GVPB phải diễn ra từ ngày hoặc sau khi kết thúc hạn SV đăng ký đề tài!', 'revDead', modalId);
                     return false;
                 }
-                if (revDead && defenseDate && defenseDate <= revDead) {
-                    showModalError('Ngày báo cáo Hội đồng phải diễn ra sau hạn nộp điểm GVPB!', 'defenseDate', modalId);
+                if (revDead && defenseDate && defenseDate < revDead) {
+                    showModalError('Ngày báo cáo Hội đồng phải diễn ra từ ngày hoặc sau hạn nộp điểm GVPB!', 'defenseDate', modalId);
                     return false;
                 }
                 return true;

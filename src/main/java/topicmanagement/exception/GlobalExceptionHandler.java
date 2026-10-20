@@ -36,6 +36,18 @@ public class GlobalExceptionHandler {
         return "error";
     }
 
+    @ExceptionHandler(Exception.class)
+    public Object handleGeneralException(Exception ex, HttpServletRequest request, Model model) {
+        System.err.println("[GLOBAL-ERROR] " + request.getRequestURI() + " -> " + ex.getClass().getName() + ": " + ex.getMessage());
+        ex.printStackTrace();
+        if (isApiRequest(request)) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Lỗi máy chủ: " + (ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName())));
+        }
+        model.addAttribute("errorMessage", "Đã xảy ra lỗi máy chủ (" + ex.getClass().getSimpleName() + "): " + (ex.getMessage() != null ? ex.getMessage() : "Vui lòng liên hệ quản trị viên"));
+        return "error";
+    }
+
     private boolean isApiRequest(HttpServletRequest request) {
         String uri = request.getRequestURI();
         if (uri.startsWith("/api/")) return true;
