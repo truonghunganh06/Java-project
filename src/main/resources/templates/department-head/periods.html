@@ -907,7 +907,7 @@
                                 errorText.textContent = 'Các ngày không được trùng nhau. Vui lòng kiểm tra lại.';
                                 return false;
                             }
-                            if (propStart && propEnd && propStart >= propEnd) {
+                            if (propStart && propEnd && propStart >= propEnd) { 
                                 errorAlert.classList.remove('d-none');
                                 errorText.textContent = 'Ngày bắt đầu GV đề xuất phải trước ngày hạn chót.';
                                 return false;
@@ -1730,10 +1730,11 @@
                 // Check duplicate dates
                 const allDates = [pStart, pEnd, rStart, rEnd, revDead, defenseDate].filter(v => v);
                 const uniqueDates = new Set(allDates);
-                if (allDates.length !== uniqueDates.size) {
-                    showModalError('Các ngày không được trùng nhau. Vui lòng kiểm tra lại.', null, modalId);
-                    return false;
-                }
+                //rang buoc trung nhau
+                // if (allDates.length !== uniqueDates.size) {
+                //     showModalError('Các ngày không được trùng nhau. Vui lòng kiểm tra lại.', null, modalId); 
+                //     return false;
+                // }
 
                 if (pStart && pEnd && pEnd <= pStart) {
                     showModalError('Hạn chót GV đề xuất phải sau ngày bắt đầu đề xuất!', 'propEnd', modalId);

@@ -394,6 +394,42 @@ public class CouncilService {
         return result;
     }
 
+    /**
+     * Đếm số đề tài trong các Hội đồng mà người dùng (với tư cách Giảng viên) là thành viên,
+     * đang có đề tài được phân công và người này chưa nộp phiếu chấm COUNCIL (loại trừ đề tài do chính mình hướng dẫn).
+     */
+    @Transactional(readOnly = true)
+    public int countPendingCouncilGradingForUser(AppUser user) {
+        if (user == null || user.getId() == null) return 0;
+        Lecturer lecturer = lecturerRepository.findByUserId(user.getId()).orElse(null);
+        if (lecturer == null) return 0;
+
+        List<Council> myCouncils = councilRepository.findByLecturerId(lecturer.getId());
+        if (myCouncils == null || myCouncils.isEmpty()) return 0;
+
+        List<Long> councilIds = myCouncils.stream().map(Council::getId).filter(Objects::nonNull).toList();
+        if (councilIds.isEmpty()) return 0;
+
+        List<Topic> assignedTopics = topicRepository.findByCouncilIdIn(councilIds);
+        if (assignedTopics == null || assignedTopics.isEmpty()) return 0;
+
+        Set<Long> gradedTopicIds = evaluationRepository.findByLecturerId(lecturer.getId()).stream()
+                .filter(e -> "COUNCIL".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null && e.getTopic() != null)
+                .map(e -> e.getTopic().getId())
+                .collect(Collectors.toSet());
+
+        Set<Long> pendingTopicIds = new HashSet<>();
+        for (Topic t : assignedTopics) {
+            if (t.isSupervisorOrCoSupervisor(lecturer)) {
+                continue;
+            }
+            if (!gradedTopicIds.contains(t.getId())) {
+                pendingTopicIds.add(t.getId());
+            }
+        }
+        return pendingTopicIds.size();
+    }
+
     public List<CouncilMember> getMembersByCouncil(Long councilId) {
         return councilMemberRepository.findByCouncilId(councilId);
     }

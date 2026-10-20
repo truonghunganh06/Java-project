@@ -39,6 +39,9 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
     List<Topic> findByCouncilId(Long councilId);
 
     @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    List<Topic> findByCouncilIdIn(List<Long> councilIds);
+
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     List<Topic> findByPeriodId(Long periodId);
 
     @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})

@@ -313,7 +313,8 @@ public class LecturerController {
             return "redirect:/lecturer/topics";
         }
 
-        List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
+       
+        List<RegistrationPeriod> periods = lecturerService.getPeriodsForLecturer(lecturer);
         List<Lecturer> coSupervisors = lecturerService.getOtherLecturers(lecturer.getId());
 
         model.addAttribute("user", user);

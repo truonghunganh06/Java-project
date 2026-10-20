@@ -28,6 +28,30 @@
                         <span th:text="${errorMessage}"></span>
                     </span>
                 </div>
+
+                <!-- Council Grading Notice for Department Head -->
+                <div th:if="${pendingCouncilTopicsCount != null && pendingCouncilTopicsCount > 0}" 
+                     class="alert alert-warning alert-dismissible fade show rounded-2xl p-3 mb-4 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 border border-amber-200 bg-amber-50 shadow-xs" 
+                     role="alert">
+                    <div class="d-flex align-items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                            <i class="fa-solid fa-clipboard-check text-base"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-amber-900">
+                                Bạn có <span class="text-amber-700 font-extrabold" th:text="${pendingCouncilTopicsCount}">1</span> đề tài chờ chấm điểm hội đồng
+                            </div>
+                            <div class="text-2xs text-amber-700">
+                                Bạn đang tham gia Hội đồng bảo vệ với tư cách Giảng viên. Vui lòng chấm điểm và nộp phiếu đánh giá.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                        <a th:href="@{/lecturer/councils}" class="btn btn-sm btn-dark rounded-xl px-3 py-1.5 text-xs font-semibold shadow-xs d-inline-flex align-items-center gap-1.5">
+                            <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i> Đi tới chấm điểm hội đồng
+                        </a>
+                    </div>
+                </div>
                 <header class="db-header">
                     <div>
                         <div class="db-eyebrow">

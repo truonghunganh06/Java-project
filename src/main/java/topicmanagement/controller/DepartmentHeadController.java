@@ -210,6 +210,10 @@ public class DepartmentHeadController {
         model.addAttribute("countWithCouncil", countWithCouncil);
         model.addAttribute("countFinalized", countFinalized);
 
+        // Đếm số đề tài chờ chấm điểm hội đồng của Trưởng khoa (nếu có hồ sơ Giảng viên và là thành viên hội đồng)
+        int pendingCouncilTopicsCount = councilService.countPendingCouncilGradingForUser(user);
+        model.addAttribute("pendingCouncilTopicsCount", pendingCouncilTopicsCount);
+
         return "department-head/dashboard";
     }
 
