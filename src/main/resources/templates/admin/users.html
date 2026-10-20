@@ -81,7 +81,9 @@
                             <tr th:if="${users == null or users.isEmpty()}">
                                 <td colspan="5" class="text-center py-5 text-muted text-xs">Không tìm thấy tài khoản người dùng phù hợp.</td>
                             </tr>
-                            <tr th:each="u : ${users}" class="filterable-row cursor-pointer hover:bg-slate-50/80 transition"
+                            <tr th:each="u : ${users}"
+                                th:with="stu=${studentMap != null ? studentMap.get(u.id) : null}, lec=${lecturerMap != null ? lecturerMap.get(u.id) : null}"
+                                class="filterable-row cursor-pointer hover:bg-slate-50/80 transition"
                                 th:data-role="${u.role != null ? u.role.code : ''}"
                                 th:data-status="${u.isActive ? 'ACTIVE' : 'LOCKED'}"
                                 th:data-user-id="${u.id}"
@@ -90,6 +92,7 @@
                                 th:data-user-email="${u.email}"
                                 th:data-user-phone="${u.phone != null ? u.phone : ''}"
                                 th:data-user-role="${u.role != null ? u.role.name : ''}"
+                                th:data-user-department="${lec != null and lec.department != null ? lec.department.name : (stu != null and stu.department != null ? stu.department.name : '')}"
                                 th:data-user-active="${u.isActive}"
                                 onclick="openUserActionModal(this)"
                                 title="Nhấp để xem chi tiết và thao tác" tabindex="0" onkeydown="if (event.target === this &amp;&amp; (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
@@ -367,6 +370,10 @@
                             <span class="text-slate-500"><i class="fa-solid fa-shield-halved text-slate-400 me-1.5"></i>Vai trò:</span>
                             <span class="badge-pill-neutral font-semibold text-xs" id="uActionRole">Giảng viên</span>
                         </div>
+                        <div class="justify-content-between align-items-center d-none" id="uActionDepartmentRow" style="display: none;">
+                            <span class="text-slate-500"><i class="fa-solid fa-building text-slate-400 me-1.5"></i>Khoa quản lý:</span>
+                            <span class="font-medium text-slate-800" id="uActionDepartment"></span>
+                        </div>
                     </div>
 
                     <div class="pt-2">
@@ -399,6 +406,27 @@
     <div th:replace="~{fragments/scripts :: scripts}"></div>
 
     <script>
+        function cleanupModalBackdrops() {
+            if (!document.querySelector('.modal.show')) {
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+            }
+        }
+
+        document.addEventListener('hidden.bs.modal', function () {
+            cleanupModalBackdrops();
+            setTimeout(cleanupModalBackdrops, 150);
+        });
+
+        document.addEventListener('click', function(e) {
+            const dismissBtn = e.target.closest('[data-bs-dismiss="modal"]');
+            if (dismissBtn) {
+                setTimeout(cleanupModalBackdrops, 350);
+            }
+        });
+
         function openUserActionModal(row) {
             const userId = row.getAttribute('data-user-id');
             const fullName = row.getAttribute('data-user-fullname') || 'Người dùng';
@@ -406,6 +434,7 @@
             const email = row.getAttribute('data-user-email') || 'Chưa cập nhật';
             const phone = row.getAttribute('data-user-phone') || 'Chưa cập nhật';
             const role = row.getAttribute('data-user-role') || 'N/A';
+            const department = row.getAttribute('data-user-department') || '';
             const isActive = row.getAttribute('data-user-active') === 'true';
 
             document.getElementById('uActionAvatar').textContent = fullName.trim().charAt(0).toUpperCase() || 'U';
@@ -414,6 +443,22 @@
             document.getElementById('uActionEmail').textContent = email;
             document.getElementById('uActionPhone').textContent = phone;
             document.getElementById('uActionRole').textContent = role;
+
+            const deptRow = document.getElementById('uActionDepartmentRow');
+            const deptText = document.getElementById('uActionDepartment');
+            if (deptRow && deptText) {
+                if (department && department.trim() !== '') {
+                    deptText.textContent = department.trim();
+                    deptRow.classList.remove('d-none');
+                    deptRow.classList.add('d-flex');
+                    deptRow.style.removeProperty('display');
+                } else {
+                    deptText.textContent = '';
+                    deptRow.classList.add('d-none');
+                    deptRow.classList.remove('d-flex');
+                    deptRow.style.display = 'none';
+                }
+            }
 
             const badge = document.getElementById('uActionStatusBadge');
             const toggleBtn = document.getElementById('uBtnToggleStatus');
@@ -439,25 +484,51 @@
             const actionModal = bootstrap.Modal.getOrCreateInstance(actionModalEl);
 
             document.getElementById('uBtnEdit').onclick = function() {
-                actionModal.hide();
-                setTimeout(() => {
+                let opened = false;
+                const openEditModal = function() {
+                    if (opened) return;
+                    opened = true;
+                    actionModalEl.removeEventListener('hidden.bs.modal', openEditModal);
+                    // Dọn sạch backdrop còn sót và gỡ class modal-open khỏi body khi đóng userActionModal
+                    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('overflow');
+                    document.body.style.removeProperty('padding-right');
+
                     const editModalEl = document.getElementById('editUserModal-' + userId);
                     if (editModalEl) {
-                        const editModal = new bootstrap.Modal(editModalEl);
+                        const editModal = bootstrap.Modal.getOrCreateInstance(editModalEl);
                         editModal.show();
                     }
-                }, 350);
+                };
+
+                actionModalEl.addEventListener('hidden.bs.modal', openEditModal, { once: true });
+                actionModal.hide();
+                setTimeout(openEditModal, 300);
             };
 
             document.getElementById('uBtnResetPwd').onclick = function() {
-                actionModal.hide();
-                setTimeout(() => {
+                let opened = false;
+                const openResetModal = function() {
+                    if (opened) return;
+                    opened = true;
+                    actionModalEl.removeEventListener('hidden.bs.modal', openResetModal);
+                    // Dọn sạch backdrop còn sót và gỡ class modal-open khỏi body khi đóng userActionModal
+                    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('overflow');
+                    document.body.style.removeProperty('padding-right');
+
                     const resetModalEl = document.getElementById('resetPwdModal-' + userId);
                     if (resetModalEl) {
-                        const resetModal = new bootstrap.Modal(resetModalEl);
+                        const resetModal = bootstrap.Modal.getOrCreateInstance(resetModalEl);
                         resetModal.show();
                     }
-                }, 350);
+                };
+
+                actionModalEl.addEventListener('hidden.bs.modal', openResetModal, { once: true });
+                actionModal.hide();
+                setTimeout(openResetModal, 300);
             };
 
             actionModal.show();
