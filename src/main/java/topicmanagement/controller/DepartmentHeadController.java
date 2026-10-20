@@ -1267,16 +1267,15 @@ public class DepartmentHeadController {
         List<Lecturer> lecturers = departmentHeadService.getLecturersInDepartment(dept.getId());
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept.getId());
 
-        // Default to first period if none selected
-        Long effectivePeriodId = periodId;
-        if (effectivePeriodId == null && !periods.isEmpty()) {
-            effectivePeriodId = periods.get(0).getId();
-        }
-
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
                 Math.max(0, page - 1), size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
 
-        org.springframework.data.domain.Page<StudentGroup> groupsPage = departmentHeadService.getGroupsInDepartmentAndPeriodPaged(dept.getId(), effectivePeriodId, pageable);
+        org.springframework.data.domain.Page<StudentGroup> groupsPage;
+        if (periodId != null) {
+            groupsPage = departmentHeadService.getGroupsInDepartmentAndPeriodPaged(dept.getId(), periodId, pageable);
+        } else {
+            groupsPage = studentGroupRepository.findByPeriodDepartmentId(dept.getId(), pageable);
+        }
         List<StudentGroup> pagedGroups = groupsPage.getContent();
 
         Map<Long, List<Submission>> groupSubmissionsMap = new HashMap<>();
@@ -1309,7 +1308,7 @@ public class DepartmentHeadController {
         model.addAttribute("groups", pagedGroups);
         model.addAttribute("groupsPage", groupsPage);
         model.addAttribute("periods", periods);
-        model.addAttribute("selectedPeriodId", effectivePeriodId);
+        model.addAttribute("selectedPeriodId", periodId);
         model.addAttribute("groupSubmissionsMap", groupSubmissionsMap);
         model.addAttribute("topicEvaluationsMap", topicEvaluationsMap);
         model.addAttribute("currentPage", page);

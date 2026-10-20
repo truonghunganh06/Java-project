@@ -1584,7 +1584,7 @@
             const statusIcon = document.getElementById('modalStatusIcon');
             const statusText = document.getElementById('modalStatusText');
 
-            if (status === 'OPEN') {
+            if (status !== 'CLOSED') {
                 statusInput.value = 'CLOSED';
                 statusBtn.className = 'btn btn-sm btn-light border border-amber-300 text-amber-700 hover:bg-amber-50 rounded-xl px-3 py-1.5 text-xs font-semibold shadow-2xs';
                 statusIcon.className = 'fa-solid fa-lock text-amber-600 me-1.5';
