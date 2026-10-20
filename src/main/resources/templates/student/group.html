@@ -64,7 +64,7 @@
             <!-- Page Header -->
             <div class="mb-4">
                 <h1 class="text-xl font-bold text-slate-900 mb-1">Quản Lý Nhóm Thực Hiện Đề Tài</h1>
-                <p class="text-xs text-slate-500 mb-0">Quy định: Mỗi nhóm có tối đa <strong>3 thành viên</strong>. Mỗi sinh viên chỉ tham gia <strong>1 nhóm duy nhất</strong> trong đợt. <span class="text-blue-600 font-semibold"><i class="fa-solid fa-crown me-1 text-amber-500"></i>Chỉ Nhóm trưởng mới có quyền nộp báo cáo đề tài.</span></p>
+                <p class="text-xs text-slate-500 mb-0">Quy định: Mỗi nhóm có tối đa <strong>5 thành viên</strong>. Mỗi sinh viên chỉ tham gia <strong>1 nhóm duy nhất</strong> trong đợt. <span class="text-blue-600 font-semibold"><i class="fa-solid fa-crown me-1 text-amber-500"></i>Chỉ Nhóm trưởng mới có quyền nộp báo cáo đề tài.</span></p>
             </div>
 
             <!-- Case 1: Student has a group -->
@@ -91,7 +91,7 @@
                                     <span class="text-xs text-slate-500">Mã nhóm: <strong class="font-mono text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200" th:text="${group.groupCode}">GRP-XYZ</strong></span>
                                 </div>
                                 <div class="text-end">
-                                    <span class="badge-pill-approved font-semibold d-inline-block mb-1" th:text="${group.members.size()} + ' / 3 Thành viên'"></span>
+                                    <span class="badge-pill-approved font-semibold d-inline-block mb-1" th:text="${group.members.size()} + ' / 5 Thành viên'"></span>
                                     <div>
                                         <span th:if="${group.status == 'APPROVED'}" class="badge bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs px-2 py-0.5 rounded-md font-semibold">ĐÃ DUYỆT</span>
                                         <span th:if="${group.status == 'DRAFT'}" class="badge bg-slate-100 text-slate-700 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-semibold">GIAI ĐOẠN DRAFT</span>
@@ -141,7 +141,7 @@
                             </div>
 
                             <!-- Invite Member Form (Bắt tay 2 chiều - Only Leader and if < 3 members) -->
-                            <div th:if="${group.isLeader(student) && group.members.size() < 3}" class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 mb-4">
+                            <div th:if="${group.isLeader(student) && group.members.size() < 5}" class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 mb-4">
                                 <span class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 d-block"><i class="fa-solid fa-user-plus text-blue-600 me-1.5"></i> Mời thành viên bằng Mã Sinh Viên (Bắt tay 2 chiều)</span>
                                 <form th:action="@{/student/group/invite}" method="post" class="row g-2">
                                     <div class="col-sm-8">

@@ -786,3 +786,4 @@ h6, .h6 { font-size: 0.8125rem; font-weight: 600; line-height: 1.45; color: #475
     border-radius: 0.5rem !important;
 }
 
+.modal-backdrop{display:none!important}

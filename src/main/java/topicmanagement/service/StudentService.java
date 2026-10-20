@@ -24,6 +24,7 @@ public class StudentService {
     private final RegistrationPeriodRepository periodRepository;
     private final EvaluationRepository evaluationRepository;
     private final FileStorageService fileStorageService;
+    private final GroupInvitationRepository groupInvitationRepository;
 
     public StudentService(
             StudentRepository studentRepository,
@@ -33,7 +34,8 @@ public class StudentService {
             SubmissionRepository submissionRepository,
             RegistrationPeriodRepository periodRepository,
             EvaluationRepository evaluationRepository,
-            FileStorageService fileStorageService) {
+            FileStorageService fileStorageService,
+            GroupInvitationRepository groupInvitationRepository) {
         this.studentRepository = studentRepository;
         this.topicRepository = topicRepository;
         this.groupRepository = groupRepository;
@@ -42,6 +44,7 @@ public class StudentService {
         this.periodRepository = periodRepository;
         this.evaluationRepository = evaluationRepository;
         this.fileStorageService = fileStorageService;
+        this.groupInvitationRepository = groupInvitationRepository;
     }
 
     /**
@@ -263,6 +266,9 @@ public class StudentService {
         gm.setRoleInGroup("MEMBER");
         gm.setJoinedAt(OffsetDateTime.now());
         groupMemberRepository.save(gm);
+
+        // Tự động xóa/hủy tất cả các lời mời INVITED khác gửi tới sinh viên này để khóa quyền tham gia nhóm khác
+        groupInvitationRepository.deletePendingInvitationsForStudent(student.getId());
 
         System.out.println("[DB-STUDENT] Sinh viên " + student.getStudentCode() + " đã gia nhập nhóm " + group.getGroupCode());
         return null; // success

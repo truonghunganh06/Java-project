@@ -285,7 +285,8 @@ public class GroupRegistrationService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không thuộc nhóm này!");
         }
 
-        return groupInvitationRepository.findByGroupId(group.getId()).stream()
+        return groupInvitationRepository.findByGroupIdAndStatus(group.getId(), "INVITED").stream()
+
                 .map(this::mapToInvitationDto)
                 .collect(Collectors.toList());
     }
