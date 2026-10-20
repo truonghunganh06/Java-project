@@ -159,6 +159,7 @@
                             <div class="db-panel-header">
                                 <div>
                                     <h2>Báo cáo gần đây</h2>
+                                    <p class="text-xs text-slate-500 mb-0">Đánh giá tiến độ từng đợt nộp do GVHD chấm</p>
                                 </div>
                                 <a th:href="@{/student/submissions}" class="db-button">
                                     <span>Tất cả báo cáo</span>
@@ -171,7 +172,7 @@
                                         <tr>
                                             <th scope="col">Báo cáo</th>
                                             <th scope="col">Ngày nộp</th>
-                                            <th scope="col">Đánh giá</th>
+                                            <th scope="col">Điểm tiến độ</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -182,7 +183,7 @@
                                             </td>
                                             <td th:text="${s.submittedAt != null ? #temporals.format(s.submittedAt, 'dd/MM/yyyy') : 'Chưa cập nhật'}"></td>
                                             <td>
-                                                <span class="db-tag" th:text="${s.grade != null ? s.grade + ' / 10' : 'Chờ đánh giá'}"></span>
+                                                <span class="db-tag" title="Điểm đánh giá tiến độ bài nộp định kỳ bởi GVHD" th:text="${s.grade != null ? s.grade + ' / 10' : 'Chờ đánh giá'}"></span>
                                             </td>
                                         </tr>
                                     </tbody>

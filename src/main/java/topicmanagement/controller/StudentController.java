@@ -614,7 +614,7 @@ public class StudentController {
             }
         }
 
-        List<Evaluation> evaluations = studentService.getGroupEvaluations(group);
+        List<Evaluation> evaluations = studentService.getGroupEvaluations(group, student, selectedPeriodId);
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);

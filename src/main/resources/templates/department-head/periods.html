@@ -582,46 +582,55 @@
     </div>
 
     <!-- Period Detail & Actions Modal (Popup thao tác & xem chi tiết khi click vào mục) -->
+    <!-- Period Detail & Actions Modal (Popup thao tác & xem chi tiết khi click vào mục) -->
     <div class="modal fade" id="periodActionModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content rounded-2xl border-0 shadow-xl overflow-hidden">
+            <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
                 <!-- Header -->
-                <div class="modal-header bg-slate-50 border-b border-slate-100 p-4">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg flex-shrink-0">
+                <div class="modal-header bg-slate-50 border-bottom border-slate-100 p-3.5 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3 min-w-0 flex-grow-1">
+                        <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 d-inline-flex align-items-center justify-content-center text-lg flex-shrink-0 shadow-2xs">
                             <i class="fa-solid fa-calendar-check"></i>
                         </div>
-                        <div>
+                        <div class="min-w-0 flex-grow-1">
                             <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                                 <span class="badge bg-slate-200 text-slate-800 font-mono text-xs px-2 py-0.5 rounded font-semibold" id="modalPeriodCode">RP-1</span>
                                 <span class="badge-pill-neutral font-semibold text-xs" id="modalPeriodTypeBadge">Khóa luận</span>
                                 <span id="modalPeriodStatusBadge"></span>
                             </div>
-                            <h5 class="modal-title font-bold text-slate-900 text-sm mb-0" id="modalPeriodTitle">Tên đợt đăng ký</h5>
+                            <h5 class="modal-title font-bold text-slate-900 text-sm md:text-base mb-0 leading-snug text-truncate" id="modalPeriodTitle">Tên đợt đăng ký</h5>
                         </div>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                    <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
                 </div>
                 
                 <!-- Body -->
                 <div class="modal-body p-4 space-y-4">
-                    <!-- Academic specs summary -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-slate-50 rounded-xl border border-slate-100 text-xs">
-                        <div>
-                            <div class="text-slate-400 text-3xs font-semibold uppercase tracking-wider">Năm học</div>
-                            <div class="font-bold text-slate-800 mt-0.5" id="modalPeriodYear">2026-2027</div>
+                    <!-- Academic specs summary: Equal height Bootstrap cards -->
+                    <div class="row g-2.5 mb-2">
+                        <div class="col-6 col-md-3">
+                            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 d-flex flex-column justify-content-between h-100 shadow-2xs">
+                                <span class="text-slate-400 text-[10px] font-semibold uppercase tracking-wider d-block">Năm học</span>
+                                <strong class="font-bold text-slate-800 mt-1 break-words text-xs d-block" id="modalPeriodYear">2026-2027</strong>
+                            </div>
                         </div>
-                        <div>
-                            <div class="text-slate-400 text-3xs font-semibold uppercase tracking-wider">Học kỳ</div>
-                            <div class="font-bold text-slate-800 mt-0.5" id="modalPeriodSemester">Học kỳ 1</div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 d-flex flex-column justify-content-between h-100 shadow-2xs">
+                                <span class="text-slate-400 text-[10px] font-semibold uppercase tracking-wider d-block">Học kỳ</span>
+                                <strong class="font-bold text-slate-800 mt-1 break-words text-xs d-block" id="modalPeriodSemester">Học kỳ 1</strong>
+                            </div>
                         </div>
-                        <div>
-                            <div class="text-slate-400 text-3xs font-semibold uppercase tracking-wider">Quy mô nhóm</div>
-                            <div class="font-bold text-slate-800 mt-0.5" id="modalPeriodStudents">2 - 3 SV</div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 d-flex flex-column justify-content-between h-100 shadow-2xs">
+                                <span class="text-slate-400 text-[10px] font-semibold uppercase tracking-wider d-block">Quy mô nhóm</span>
+                                <strong class="font-bold text-slate-800 mt-1 break-words text-xs d-block" id="modalPeriodStudents">2 - 3 SV</strong>
+                            </div>
                         </div>
-                        <div>
-                            <div class="text-slate-400 text-3xs font-semibold uppercase tracking-wider">Chỉ tiêu đề tài</div>
-                            <div class="font-bold text-slate-800 mt-0.5" id="modalPeriodMinTopics">Tối thiểu 3 ĐT/GV</div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 d-flex flex-column justify-content-between h-100 shadow-2xs">
+                                <span class="text-slate-400 text-[10px] font-semibold uppercase tracking-wider d-block">Chỉ tiêu đề tài</span>
+                                <strong class="font-bold text-slate-800 mt-1 break-words text-xs d-block" id="modalPeriodMinTopics">Tối thiểu 3 ĐT/GV</strong>
+                            </div>
                         </div>
                     </div>
 
@@ -632,58 +641,58 @@
                         </h6>
                         <div class="space-y-2">
                             <!-- Mốc 1 -->
-                            <div class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                <div class="d-flex align-items-center gap-2.5">
-                                    <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold flex-shrink-0">1</span>
-                                    <div>
-                                        <div class="font-semibold text-slate-800 text-xs">Giảng viên đề xuất đề tài</div>
-                                        <div class="text-slate-400 text-2xs">Khoảng thời gian giảng viên nộp đề cương</div>
+                            <div class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between gap-3 shadow-2xs">
+                                <div class="d-flex align-items-center gap-3 min-w-0">
+                                    <span class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 d-inline-flex align-items-center justify-content-center text-xs font-bold flex-shrink-0" id="actionCircle1">1</span>
+                                    <div class="min-w-0">
+                                        <div class="font-semibold text-slate-800 text-xs leading-snug">Giảng viên đề xuất đề tài</div>
+                                        <div class="text-slate-400 text-[11px] mt-0.5 text-truncate">Khoảng thời gian giảng viên nộp đề cương</div>
                                     </div>
                                 </div>
-                                <div class="text-end text-xs">
-                                    <span class="font-mono font-medium text-slate-700" id="modalPropRange">--</span>
+                                <div class="text-end flex-shrink-0">
+                                    <span class="badge bg-slate-50 border border-slate-200 text-slate-700 font-mono text-xs px-2.5 py-1.5 rounded-lg font-medium d-inline-flex align-items-center" id="modalPropRange">--</span>
                                 </div>
                             </div>
 
                             <!-- Mốc 2 -->
-                            <div class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                <div class="d-flex align-items-center gap-2.5">
-                                    <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold flex-shrink-0">2</span>
-                                    <div>
-                                        <div class="font-semibold text-slate-800 text-xs">Sinh viên đăng ký nguyện vọng</div>
-                                        <div class="text-slate-400 text-2xs">Các nhóm sinh viên chọn đề tài và chờ duyệt</div>
+                            <div class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between gap-3 shadow-2xs">
+                                <div class="d-flex align-items-center gap-3 min-w-0">
+                                    <span class="w-8 h-8 rounded-full bg-emerald-600 text-white shadow-xs d-inline-flex align-items-center justify-content-center text-xs font-bold flex-shrink-0" id="actionCircle2">2</span>
+                                    <div class="min-w-0">
+                                        <div class="font-semibold text-slate-800 text-xs leading-snug">Sinh viên đăng ký nguyện vọng</div>
+                                        <div class="text-slate-400 text-[11px] mt-0.5 text-truncate">Các nhóm sinh viên chọn đề tài và chờ duyệt</div>
                                     </div>
                                 </div>
-                                <div class="text-end text-xs">
-                                    <span class="font-mono font-medium text-slate-700" id="modalRegRange">--</span>
+                                <div class="text-end flex-shrink-0">
+                                    <span class="badge bg-slate-50 border border-slate-200 text-slate-700 font-mono text-xs px-2.5 py-1.5 rounded-lg font-medium d-inline-flex align-items-center" id="modalRegRange">--</span>
                                 </div>
                             </div>
 
                             <!-- Mốc 3 -->
-                            <div class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                <div class="d-flex align-items-center gap-2.5">
-                                    <span class="w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-bold flex-shrink-0">3</span>
-                                    <div>
-                                        <div class="font-semibold text-slate-800 text-xs">Hạn chót chấm Giảng viên Phản biện</div>
-                                        <div class="text-slate-400 text-2xs">Hạn GVPB nộp phiếu đánh giá phản biện</div>
+                            <div class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between gap-3 shadow-2xs">
+                                <div class="d-flex align-items-center gap-3 min-w-0">
+                                    <span class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 border border-slate-200 d-inline-flex align-items-center justify-content-center text-xs font-bold flex-shrink-0" id="actionCircle3">3</span>
+                                    <div class="min-w-0">
+                                        <div class="font-semibold text-slate-800 text-xs leading-snug">Hạn chót chấm Giảng viên Phản biện</div>
+                                        <div class="text-slate-400 text-[11px] mt-0.5 text-truncate">Hạn GVPB nộp phiếu đánh giá phản biện</div>
                                     </div>
                                 </div>
-                                <div class="text-end text-xs">
-                                    <span class="font-mono font-medium text-purple-700 font-bold" id="modalRevDead">--</span>
+                                <div class="text-end flex-shrink-0">
+                                    <span class="badge bg-slate-50 border border-slate-200 text-purple-700 font-mono text-xs px-2.5 py-1.5 rounded-lg font-medium d-inline-flex align-items-center" id="modalRevDead">--</span>
                                 </div>
                             </div>
 
                             <!-- Mốc 4 -->
-                            <div class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                <div class="d-flex align-items-center gap-2.5">
-                                    <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold flex-shrink-0">4</span>
-                                    <div>
-                                        <div class="font-semibold text-slate-800 text-xs">Ngày tổ chức Hội đồng Bảo vệ</div>
-                                        <div class="text-slate-400 text-2xs">Sinh viên báo cáo và hội đồng chấm điểm</div>
+                            <div class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between gap-3 shadow-2xs">
+                                <div class="d-flex align-items-center gap-3 min-w-0">
+                                    <span class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 border border-slate-200 d-inline-flex align-items-center justify-content-center text-xs font-bold flex-shrink-0" id="actionCircle4">4</span>
+                                    <div class="min-w-0">
+                                        <div class="font-semibold text-slate-800 text-xs leading-snug">Ngày tổ chức Hội đồng Bảo vệ</div>
+                                        <div class="text-slate-400 text-[11px] mt-0.5 text-truncate">Sinh viên báo cáo và hội đồng chấm điểm</div>
                                     </div>
                                 </div>
-                                <div class="text-end text-xs">
-                                    <span class="font-mono font-medium text-indigo-700 font-bold" id="modalDefenseDate">--</span>
+                                <div class="text-end flex-shrink-0">
+                                    <span class="badge bg-slate-50 border border-slate-200 text-indigo-700 font-mono text-xs px-2.5 py-1.5 rounded-lg font-medium d-inline-flex align-items-center" id="modalDefenseDate">--</span>
                                 </div>
                             </div>
                         </div>
@@ -691,30 +700,30 @@
                 </div>
 
                 <!-- Footer: All Integrated Action Buttons -->
-                <div class="modal-footer bg-slate-50 border-t border-slate-100 p-3.5 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="modal-footer bg-slate-50 border-top border-slate-100 p-3.5 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <!-- Delete Button on the left -->
-                    <form id="modalDeleteForm" th:action="@{/department-head/periods/0/delete}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đợt đăng ký này? Thao tác này không thể hoàn tác!');">
-                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-3 py-1.5 text-xs font-semibold">
-                            <i class="fa-regular fa-trash-can me-1.5"></i> Xóa đợt này
+                    <form id="modalDeleteForm" th:action="@{/department-head/periods/0/delete}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đợt đăng ký này? Thao tác này không thể hoàn tác!');" class="m-0 d-inline-flex">
+                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-3.5 py-2 text-xs font-semibold d-inline-flex align-items-center gap-1.5">
+                            <i class="fa-regular fa-trash-can"></i> <span>Xóa đợt này</span>
                         </button>
                     </form>
 
                     <!-- Status Toggle & Edit on the right -->
-                    <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-600 font-medium" data-bs-dismiss="modal">
+                    <div class="d-inline-flex align-items-center gap-2 m-0">
+                        <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-700 font-medium hover:bg-slate-100 d-inline-flex align-items-center" data-bs-dismiss="modal">
                             Đóng
                         </button>
 
-                        <form id="modalStatusForm" th:action="@{/department-head/periods/0/status}" method="post">
+                        <form id="modalStatusForm" th:action="@{/department-head/periods/0/status}" method="post" class="m-0 d-inline-flex">
                             <input type="hidden" name="status" id="modalStatusInput">
-                            <button type="submit" class="btn btn-sm rounded-xl px-3 py-1.5 text-xs font-semibold shadow-2xs" id="modalStatusBtn">
-                                <i id="modalStatusIcon" class="fa-solid fa-lock me-1.5"></i>
-                                <span id="modalStatusText">Khóa đợt</span>
+                            <button type="submit" class="btn btn-sm rounded-xl px-3.5 py-2 text-xs font-semibold shadow-2xs d-inline-flex align-items-center gap-1.5" id="modalStatusBtn">
+                                <i id="modalStatusIcon" class="fa-solid fa-lock"></i>
+                                <span id="modalStatusText">Khóa đợt (Tạm đóng)</span>
                             </button>
                         </form>
 
-                        <button type="button" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-xs" id="modalEditBtn">
-                            <i class="fa-solid fa-pen-to-square me-1.5"></i> Chỉnh sửa đợt
+                        <button type="button" class="btn btn-sm btn-primary rounded-xl px-3.5 py-2 text-xs font-semibold shadow-xs d-inline-flex align-items-center gap-1.5" id="modalEditBtn">
+                            <i class="fa-solid fa-pen-to-square"></i> <span>Chỉnh sửa đợt</span>
                         </button>
                     </div>
                 </div>
@@ -735,30 +744,27 @@
                     </div>
                     <div class="modal-body p-4 space-y-3">
 
-                        <!-- Roadmap Indicator -->
-                        <div class="p-2 bg-slate-50 border border-slate-200/80 rounded-xl mb-2">
-                            <div
-                                class="d-flex align-items-center justify-content-between text-[11px] font-semibold text-slate-600 flex-wrap gap-1">
-                                <span class="d-inline-flex align-items-center gap-1 text-blue-700">
-                                    <span class="badge bg-blue-600 text-white rounded-full px-1.5 py-0.2">1</span> GV Đề
-                                    xuất
+                        <!-- Dynamic Roadmap Indicator -->
+                        <div class="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl mb-2">
+                            <div class="d-flex align-items-center justify-content-between text-[11px] font-semibold flex-wrap gap-1" id="roadmapCreate">
+                                <span class="d-inline-flex align-items-center gap-1.5 text-emerald-700 font-bold" id="step1Item">
+                                    <span class="badge bg-emerald-600 text-white rounded-full px-2 py-0.5 text-xs shadow-xs" id="step1Badge">1</span>
+                                    <span>GV Đề xuất</span>
                                 </span>
-                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]"></i>
-                                <span class="d-inline-flex align-items-center gap-1 text-emerald-700">
-                                    <span class="badge bg-emerald-600 text-white rounded-full px-1.5 py-0.2">2</span> SV
-                                    Đăng ký
+                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]" id="stepArrow1"></i>
+                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal" id="step2Item">
+                                    <span class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs" id="step2Badge">2</span>
+                                    <span>SV Đăng ký</span>
                                 </span>
-                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]"></i>
-                                <span class="d-inline-flex align-items-center gap-1 text-purple-700"
-                                    id="stepIndicatorReviewer">
-                                    <span class="badge bg-purple-600 text-white rounded-full px-1.5 py-0.2">3</span>
-                                    Chấm GVPB
+                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]" id="stepArrow2"></i>
+                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal" id="stepIndicatorReviewer">
+                                    <span class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs" id="step3Badge">3</span>
+                                    <span>Chấm GVPB</span>
                                 </span>
                                 <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]" id="stepArrowDefense"></i>
-                                <span class="d-inline-flex align-items-center gap-1 text-indigo-700"
-                                    id="stepIndicatorDefense">
-                                    <span class="badge bg-indigo-600 text-white rounded-full px-1.5 py-0.2">4</span> Bảo
-                                    vệ Hội đồng
+                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal" id="stepIndicatorDefense">
+                                    <span class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs" id="step4Badge">4</span>
+                                    <span>Bảo vệ Hội đồng</span>
                                 </span>
                             </div>
                         </div>
@@ -972,31 +978,27 @@
                     </div>
                     <div class="modal-body p-4 space-y-3">
 
-                        <!-- Roadmap Indicator -->
-                        <div class="p-2 bg-slate-50 border border-slate-200/80 rounded-xl mb-2">
-                            <div
-                                class="d-flex align-items-center justify-content-between text-[11px] font-semibold text-slate-600 flex-wrap gap-1">
-                                <span class="d-inline-flex align-items-center gap-1 text-blue-700">
-                                    <span class="badge bg-blue-600 text-white rounded-full px-1.5 py-0.2">1</span> GV Đề
-                                    xuất
+                        <!-- Dynamic Roadmap Indicator -->
+                        <div class="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl mb-2">
+                            <div class="d-flex align-items-center justify-content-between text-[11px] font-semibold flex-wrap gap-1" id="roadmapEdit">
+                                <span class="d-inline-flex align-items-center gap-1.5 text-emerald-700 font-bold" id="step1ItemEdit">
+                                    <span class="badge bg-emerald-600 text-white rounded-full px-2 py-0.5 text-xs shadow-xs" id="step1BadgeEdit">1</span>
+                                    <span>GV Đề xuất</span>
                                 </span>
-                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]"></i>
-                                <span class="d-inline-flex align-items-center gap-1 text-emerald-700">
-                                    <span class="badge bg-emerald-600 text-white rounded-full px-1.5 py-0.2">2</span> SV
-                                    Đăng ký
+                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]" id="stepArrow1Edit"></i>
+                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal" id="step2ItemEdit">
+                                    <span class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs" id="step2BadgeEdit">2</span>
+                                    <span>SV Đăng ký</span>
                                 </span>
-                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]"></i>
-                                <span class="d-inline-flex align-items-center gap-1 text-purple-700"
-                                    id="stepIndicatorReviewerEdit">
-                                    <span class="badge bg-purple-600 text-white rounded-full px-1.5 py-0.2">3</span>
-                                    Chấm GVPB
+                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]" id="stepArrow2Edit"></i>
+                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal" id="stepIndicatorReviewerEdit">
+                                    <span class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs" id="step3BadgeEdit">3</span>
+                                    <span>Chấm GVPB</span>
                                 </span>
-                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]"
-                                    id="stepArrowDefenseEdit"></i>
-                                <span class="d-inline-flex align-items-center gap-1 text-indigo-700"
-                                    id="stepIndicatorDefenseEdit">
-                                    <span class="badge bg-indigo-600 text-white rounded-full px-1.5 py-0.2">4</span> Bảo
-                                    vệ Hội đồng
+                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]" id="stepArrowDefenseEdit"></i>
+                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal" id="stepIndicatorDefenseEdit">
+                                    <span class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs" id="step4BadgeEdit">4</span>
+                                    <span>Bảo vệ Hội đồng</span>
                                 </span>
                             </div>
                         </div>
@@ -1411,6 +1413,7 @@
             const stepRev = document.getElementById('stepIndicatorReviewer' + suffix);
             const stepDef = document.getElementById('stepIndicatorDefense' + suffix);
             const arrowDef = document.getElementById('stepArrowDefense' + suffix);
+            const arrowRev = document.getElementById('stepArrow2' + suffix);
 
             if (type === 'KLTN') {
                 if (revField) revField.style.display = 'block';
@@ -1420,6 +1423,7 @@
                 if (stepRev) stepRev.style.display = 'inline-flex';
                 if (stepDef) stepDef.style.display = 'inline-flex';
                 if (arrowDef) arrowDef.style.display = 'inline-block';
+                if (arrowRev) arrowRev.style.display = 'inline-block';
             } else if (type === 'TLCN') {
                 if (revField) revField.style.display = 'block';
                 if (defField) defField.style.display = 'none';
@@ -1428,6 +1432,7 @@
                 if (stepRev) stepRev.style.display = 'inline-flex';
                 if (stepDef) stepDef.style.display = 'none';
                 if (arrowDef) arrowDef.style.display = 'none';
+                if (arrowRev) arrowRev.style.display = 'inline-block';
             } else {
                 // NCKH, MON_HOC
                 if (revField) revField.style.display = 'none';
@@ -1437,7 +1442,88 @@
                 if (stepRev) stepRev.style.display = 'none';
                 if (stepDef) stepDef.style.display = 'none';
                 if (arrowDef) arrowDef.style.display = 'none';
+                if (arrowRev) arrowRev.style.display = 'none';
             }
+            updateModalRoadmap(suffix);
+        }
+
+        function updateModalRoadmap(suffix = '') {
+            const isEdit = suffix === 'Edit';
+            const propStart = document.getElementById(isEdit ? 'editPropStart' : 'inputPropStart')?.value;
+            const propEnd = document.getElementById(isEdit ? 'editPropEnd' : 'inputPropEnd')?.value;
+            const regStart = document.getElementById(isEdit ? 'editRegStart' : 'inputRegStart')?.value;
+            const regEnd = document.getElementById(isEdit ? 'editRegEnd' : 'inputRegEnd')?.value;
+            const revDead = document.getElementById(isEdit ? 'editRevDead' : 'inputRevDead')?.value;
+            const defenseDate = document.getElementById(isEdit ? 'editDefenseDate' : 'inputDefenseDate')?.value;
+
+            // Today in YYYY-MM-DD
+            const now = new Date();
+            const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+
+            // Tính bước hiện tại đang tới:
+            // 1: GV Đề xuất, 2: SV Đăng ký, 3: Chấm GVPB, 4: Bảo vệ Hội đồng
+            let activeStep = 1;
+            if (defenseDate && today > defenseDate) {
+                activeStep = 5; // Toàn bộ đã xong
+            } else if (revDead && today > revDead) {
+                activeStep = 4; // Đang tới bước 4: Bảo vệ Hội đồng
+            } else if (regEnd && today > regEnd) {
+                activeStep = 3; // Đang tới bước 3: Chấm GVPB
+            } else if (propEnd && today > propEnd) {
+                activeStep = 2; // Đang tới bước 2: SV Đăng ký
+            } else {
+                activeStep = 1; // Đang ở bước 1: GV Đề xuất
+            }
+
+            const stepElements = [
+                {
+                    item: document.getElementById('step1Item' + suffix),
+                    badge: document.getElementById('step1Badge' + suffix),
+                    arrow: document.getElementById('stepArrow1' + suffix),
+                    num: 1
+                },
+                {
+                    item: document.getElementById('step2Item' + suffix),
+                    badge: document.getElementById('step2Badge' + suffix),
+                    arrow: document.getElementById('stepArrow2' + suffix),
+                    num: 2
+                },
+                {
+                    item: document.getElementById('stepIndicatorReviewer' + suffix),
+                    badge: document.getElementById('step3Badge' + suffix),
+                    arrow: document.getElementById('stepArrowDefense' + suffix),
+                    num: 3
+                },
+                {
+                    item: document.getElementById('stepIndicatorDefense' + suffix),
+                    badge: document.getElementById('step4Badge' + suffix),
+                    arrow: null,
+                    num: 4
+                }
+            ];
+
+            stepElements.forEach(s => {
+                if (!s.item || !s.badge) return;
+                if (s.num < activeStep) {
+                    // Bước đã hoàn thành: Xanh lá nhẹ kèm dấu tích
+                    s.item.className = 'd-inline-flex align-items-center gap-1.5 text-emerald-700 font-semibold';
+                    s.badge.className = 'badge bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full px-2 py-0.5 text-xs';
+                    s.badge.innerHTML = '<i class="fa-solid fa-check text-[10px]"></i> ' + s.num;
+                    if (s.arrow) s.arrow.className = 'fa-solid fa-arrow-right text-emerald-400 text-[10px]';
+                } else if (s.num === activeStep) {
+                    // Bước ĐANG TỚI NƠI: Nổi bật XANH LÁ ĐẬM (Active)
+                    s.item.className = 'd-inline-flex align-items-center gap-1.5 text-emerald-700 font-bold';
+                    s.badge.className = 'badge bg-emerald-600 text-white rounded-full px-2 py-0.5 text-xs shadow-xs';
+                    s.badge.textContent = s.num;
+                    if (s.arrow) s.arrow.className = 'fa-solid fa-arrow-right text-slate-300 text-[10px]';
+                } else {
+                    // Bước CHƯA TỚI (Tương lai): Màu xám mờ trung tính
+                    s.item.className = 'd-inline-flex align-items-center gap-1.5 text-slate-400 font-normal';
+                    s.badge.className = 'badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs';
+                    s.badge.textContent = s.num;
+                    if (s.arrow) s.arrow.className = 'fa-solid fa-arrow-right text-slate-200 text-[10px]';
+                }
+            });
         }
 
         function showModalError(msg, inputName, modalId = 'createPeriodModal') {
@@ -1532,6 +1618,8 @@
                 const formEdit = document.getElementById('formEditPeriod');
                 formEdit.action = `/department-head/periods/${p.id}/update`;
 
+                updateModalRoadmap('Edit');
+
                 const editModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('editPeriodModal'));
                 editModal.show();
             } catch (e) {
@@ -1592,11 +1680,46 @@
             document.getElementById('modalPeriodStudents').textContent = minStudents + ' - ' + maxStudents + ' SV/nhóm';
             document.getElementById('modalPeriodMinTopics').textContent = 'Tối thiểu ' + minTopics + ' ĐT/GV';
 
-            // Milestones
+            // Milestones text
             document.getElementById('modalPropRange').textContent = (propStart && propStart !== '--') ? (propStart + ' → ' + propEnd) : 'Chưa thiết lập';
             document.getElementById('modalRegRange').textContent = (regStart && regStart !== '--') ? (regStart + ' → ' + regEnd) : 'Chưa thiết lập';
             document.getElementById('modalRevDead').textContent = (revDead && revDead !== '--') ? revDead : 'Không áp dụng';
             document.getElementById('modalDefenseDate').textContent = (defenseDate && defenseDate !== '--') ? defenseDate : 'Không áp dụng';
+
+            // Dynamic Milestone Active Stages (highlight green wherever the process currently is)
+            const today = new Date().toISOString().slice(0, 10);
+            const propEndIso = el.getAttribute('data-prop-end-iso') || '';
+            const regEndIso = el.getAttribute('data-reg-end-iso') || '';
+            const revDeadIso = el.getAttribute('data-rev-dead-iso') || '';
+            const defenseDateIso = el.getAttribute('data-defense-date-iso') || '';
+
+            let curStep = 1;
+            if (defenseDateIso && today > defenseDateIso) curStep = 5;
+            else if (revDeadIso && today > revDeadIso) curStep = 4;
+            else if (regEndIso && today > regEndIso) curStep = 3;
+            else if (propEndIso && today > propEndIso) curStep = 2;
+            else curStep = 1;
+
+            const circles = [
+                { el: document.getElementById('actionCircle1'), num: 1 },
+                { el: document.getElementById('actionCircle2'), num: 2 },
+                { el: document.getElementById('actionCircle3'), num: 3 },
+                { el: document.getElementById('actionCircle4'), num: 4 }
+            ];
+
+            circles.forEach(c => {
+                if (!c.el) return;
+                if (c.num < curStep) {
+                    c.el.className = 'w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 d-inline-flex align-items-center justify-content-center text-xs font-bold flex-shrink-0';
+                    c.el.innerHTML = '<i class="fa-solid fa-check text-[11px]"></i>';
+                } else if (c.num === curStep) {
+                    c.el.className = 'w-8 h-8 rounded-full bg-emerald-600 text-white shadow-xs d-inline-flex align-items-center justify-content-center text-xs font-bold flex-shrink-0';
+                    c.el.textContent = c.num;
+                } else {
+                    c.el.className = 'w-8 h-8 rounded-full bg-slate-100 text-slate-400 border border-slate-200 d-inline-flex align-items-center justify-content-center text-xs font-bold flex-shrink-0';
+                    c.el.textContent = c.num;
+                }
+            });
 
             // Action Form: Delete
             document.getElementById('modalDeleteForm').action = '/department-head/periods/' + id + '/delete';
@@ -1611,16 +1734,16 @@
 
             if (status === 'OPEN') {
                 statusInput.value = 'CLOSED';
-                statusBtn.className = 'btn btn-sm btn-light border border-amber-300 text-amber-700 hover:bg-amber-50 rounded-xl px-3 py-1.5 text-xs font-semibold shadow-2xs';
-                statusIcon.className = 'fa-solid fa-lock text-amber-600 me-1.5';
+                statusBtn.className = 'btn btn-sm btn-outline-warning text-amber-700 hover:bg-amber-50 rounded-xl px-3.5 py-2 text-xs font-semibold shadow-2xs d-inline-flex align-items-center gap-1.5';
+                statusIcon.className = 'fa-solid fa-lock text-amber-600';
                 statusText.textContent = 'Khóa đợt (Tạm đóng)';
                 statusForm.onsubmit = function() {
                     return confirm('Bạn có chắc muốn KHÓA đợt đăng ký này? Sinh viên sẽ không thể đăng ký mới khi đợt bị khóa.');
                 };
             } else {
                 statusInput.value = 'OPEN';
-                statusBtn.className = 'btn btn-sm btn-light border border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded-xl px-3 py-1.5 text-xs font-semibold shadow-2xs';
-                statusIcon.className = 'fa-solid fa-lock-open text-emerald-600 me-1.5';
+                statusBtn.className = 'btn btn-sm btn-outline-success text-emerald-700 hover:bg-emerald-50 rounded-xl px-3.5 py-2 text-xs font-semibold shadow-2xs d-inline-flex align-items-center gap-1.5';
+                statusIcon.className = 'fa-solid fa-lock-open text-emerald-600';
                 statusText.textContent = 'Mở lại đợt này';
                 statusForm.onsubmit = function() {
                     return confirm('Bạn có chắc muốn MỞ LẠI đợt đăng ký này?');
@@ -1783,17 +1906,42 @@
                 return true;
             }
 
-            // Auto-clear error when user changes any date input (Create Modal)
+            // Auto-clear error & update roadmap when user changes any date input (Create Modal)
             ['inputPropStart', 'inputPropEnd', 'inputRegStart', 'inputRegEnd', 'inputRevDead', 'inputDefenseDate'].forEach(function (id) {
                 const el = document.getElementById(id);
-                if (el) el.addEventListener('change', function () { clearModalError('createPeriodModal'); });
+                if (el) {
+                    el.addEventListener('change', function () { 
+                        clearModalError('createPeriodModal'); 
+                        updateModalRoadmap('');
+                    });
+                    el.addEventListener('input', function () {
+                        updateModalRoadmap('');
+                    });
+                }
             });
 
-            // Auto-clear error when user changes any date input (Edit Modal)
+            // Auto-clear error & update roadmap when user changes any date input (Edit Modal)
             ['editPropStart', 'editPropEnd', 'editRegStart', 'editRegEnd', 'editRevDead', 'editDefenseDate'].forEach(function (id) {
                 const el = document.getElementById(id);
-                if (el) el.addEventListener('change', function () { clearModalError('editPeriodModal'); });
+                if (el) {
+                    el.addEventListener('change', function () { 
+                        clearModalError('editPeriodModal'); 
+                        updateModalRoadmap('Edit');
+                    });
+                    el.addEventListener('input', function () {
+                        updateModalRoadmap('Edit');
+                    });
+                }
             });
+
+            // Init roadmap on Create modal show
+            const createModalEl = document.getElementById('createPeriodModal');
+            if (createModalEl) {
+                createModalEl.addEventListener('show.bs.modal', function () {
+                    clearModalError('createPeriodModal');
+                    updateModalRoadmap('');
+                });
+            }
 
             // Expose AJAX submit functions globally (called from button onclick)
             window.doCreatePeriod = async function () {
@@ -1839,6 +1987,9 @@
                     if (btn) { btn.disabled = false; btn.innerHTML = 'Lưu thay đổi'; }
                 }
             };
+
+            // Initial roadmap render
+            updateModalRoadmap('');
         });
     </script>
 </body>

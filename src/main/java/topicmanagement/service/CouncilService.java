@@ -410,12 +410,25 @@ public class CouncilService {
         return evaluationRepository.findByTopicIdAndLecturerIdAndEvaluationType(topicId, lecturerId, evaluationType);
     }
 
+    public boolean isTopicFinalized(Long topicId) {
+        if (topicId == null) return false;
+        return topicRepository.findById(topicId)
+                .map(t -> Boolean.TRUE.equals(t.getIsFinalized()))
+                .orElse(false);
+    }
+
     @Transactional
     public boolean submitEvaluation(Long topicId, Long lecturerId, String evaluationType, Double score, String comments) {
         Topic topic = topicRepository.findById(topicId).orElse(null);
         Lecturer lecturer = lecturerRepository.findById(lecturerId).orElse(null);
 
         if (topic == null || lecturer == null || evaluationType == null) return false;
+
+        // Khóa sửa điểm nếu đề tài đã được công bố kết quả chính thức cho sinh viên (isFinalized = true)
+        if (Boolean.TRUE.equals(topic.getIsFinalized())) {
+            System.err.println("[DB-EVAL] Lỗi! Đề tài ID=" + topicId + " đã được công bố kết quả điểm chính thức. Yêu cầu Trưởng khoa/bộ môn thu hồi công bố trước khi chỉnh sửa điểm!");
+            return false;
+        }
 
         if (score == null || !Double.isFinite(score) || score < 0.0 || score > 10.0) {
             System.err.println("[DB-EVAL] Điểm không hợp lệ: " + score + " (Điểm phải nằm trong thang điểm từ 0.0 đến 10.0)!");

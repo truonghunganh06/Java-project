@@ -522,18 +522,59 @@ public class StudentService {
     // ==================== RESULTS & EVALUATIONS ====================
 
     /**
-     * BUG-10 FIX: Chỉ trả về evaluations khi đề tài đã được công bố chính thức (isFinalized = true)
+     * BẢO MẬT & PHÂN QUYỀN TRA CỨU ĐIỂM (Rubric Mục 4 & Báo cáo Điểm 2):
+     * Củng cố bảo mật tại tầng Service cho mọi luồng gọi:
+     * 1. Xác minh người đang xem (viewer) là sinh viên hợp lệ.
+     * 2. Xác minh sinh viên phải là thành viên chính thức thuộc nhóm (Group).
+     * 3. Xác minh Đợt (Period): Sinh viên chỉ được tra cứu điểm của Đợt mà nhóm mình tham gia.
+     * 4. Xác minh trạng thái công bố: Đề tài BẮT BUỘC phải có isFinalized = true.
      */
-    public List<Evaluation> getGroupEvaluations(StudentGroup group) {
-        if (group == null || group.getId() == null) return Collections.emptyList();
+    public List<Evaluation> getGroupEvaluations(StudentGroup group, Student viewer, Long periodId) {
+        if (group == null || group.getId() == null || viewer == null || viewer.getId() == null) {
+            return Collections.emptyList();
+        }
+
         StudentGroup freshGroup = groupRepository.findById(group.getId()).orElse(group);
-        if (freshGroup.getTopic() == null || freshGroup.getTopic().getId() == null) return Collections.emptyList();
+        if (freshGroup.getTopic() == null || freshGroup.getTopic().getId() == null) {
+            return Collections.emptyList();
+        }
+
         Topic freshTopic = topicRepository.findById(freshGroup.getTopic().getId()).orElse(freshGroup.getTopic());
-        // Guard: Ẩn điểm cho SV khi chưa được công bố
+        // Guard 1: Đề tài BẮT BUỘC phải được công bố chính thức mới lộ phiếu đánh giá
         if (!Boolean.TRUE.equals(freshTopic.getIsFinalized())) {
             return Collections.emptyList();
         }
+
+        // Guard 2: Sinh viên xem BẮT BUỘC phải là thành viên (Leader hoặc Member) của chính nhóm này
+        boolean isMember = freshGroup.isLeader(viewer) 
+                || groupMemberRepository.findByGroupIdAndStudentId(freshGroup.getId(), viewer.getId()).isPresent();
+        if (!isMember) {
+            return Collections.emptyList();
+        }
+
+        // Guard 3: Kiểm tra Đợt (Period) - Sinh viên chỉ được xem điểm của đợt mình đã tham gia
+        if (freshGroup.getPeriod() != null) {
+            Long groupPeriodId = freshGroup.getPeriod().getId();
+            if (periodId != null && !Objects.equals(groupPeriodId, periodId)) {
+                return Collections.emptyList();
+            }
+            List<RegistrationPeriod> participatedPeriods = getParticipatedPeriods(viewer);
+            boolean periodMatch = participatedPeriods.stream()
+                    .anyMatch(p -> p.getId() != null && p.getId().equals(groupPeriodId));
+            if (!periodMatch) {
+                return Collections.emptyList();
+            }
+        }
+
         return evaluationRepository.findByTopicId(freshTopic.getId());
+    }
+
+    public List<Evaluation> getGroupEvaluations(StudentGroup group, Student viewer) {
+        return getGroupEvaluations(group, viewer, null);
+    }
+
+    public List<Evaluation> getGroupEvaluations(StudentGroup group) {
+        return getGroupEvaluations(group, null, null);
     }
 
     public List<RegistrationPeriod> getParticipatedPeriods(Student student) {
@@ -559,8 +600,64 @@ public class StudentService {
         return getAllActivePeriods();
     }
 
+    /**
+     * Kiểm tra quyền xem điểm tổng kết đề tài:
+     * - ADMIN: được xem
+     * - DEPARTMENT_HEAD: được xem trong khoa quản lý
+     * - LECTURER: được xem nếu là GVHD, GVPB hoặc thành viên Hội đồng đề tài
+     * - STUDENT: CHỈ ĐƯỢC XEM KHI ĐÃ CÔNG BỐ CHÍNH THỨC (isFinalized = true) VÀ LÀ THÀNH VIÊN NHÓM
+     */
+    public boolean canUserViewTopicScore(AppUser user, Topic topic, StudentGroup group) {
+        if (user == null || topic == null) return false;
+        String role = user.getRole() != null ? user.getRole().getCode() : "";
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            return true;
+        }
+        if ("DEPARTMENT_HEAD".equalsIgnoreCase(role)) {
+            if (topic.getDepartment() == null || user.getDepartment() == null) return true;
+            return Objects.equals(topic.getDepartment().getId(), user.getDepartment().getId());
+        }
+        if ("LECTURER".equalsIgnoreCase(role)) {
+            if (topic.getSupervisor() != null && topic.getSupervisor().getUser() != null
+                    && Objects.equals(topic.getSupervisor().getUser().getId(), user.getId())) {
+                return true;
+            }
+            if (topic.getCoSupervisor() != null && topic.getCoSupervisor().getUser() != null
+                    && Objects.equals(topic.getCoSupervisor().getUser().getId(), user.getId())) {
+                return true;
+            }
+            if (topic.getReviewer() != null && topic.getReviewer().getUser() != null
+                    && Objects.equals(topic.getReviewer().getUser().getId(), user.getId())) {
+                return true;
+            }
+            if (topic.getCouncil() != null && topic.getCouncil().getMembers() != null) {
+                boolean inCouncil = topic.getCouncil().getMembers().stream()
+                        .anyMatch(m -> m.getLecturer() != null && m.getLecturer().getUser() != null
+                                && Objects.equals(m.getLecturer().getUser().getId(), user.getId()));
+                if (inCouncil) return true;
+            }
+            return false;
+        }
+        if ("STUDENT".equalsIgnoreCase(role)) {
+            // Chặn đứng IDOR: Đề tài chưa công bố hoặc xem đề tài nhóm khác
+            if (!Boolean.TRUE.equals(topic.getIsFinalized())) {
+                return false;
+            }
+            if (group == null) {
+                return false;
+            }
+            Student student = studentRepository.findByUserId(user.getId()).orElse(null);
+            if (student == null) {
+                return false;
+            }
+            return group.isLeader(student)
+                    || groupMemberRepository.findByGroupIdAndStudentId(group.getId(), student.getId()).isPresent();
+        }
+        return false;
+    }
+
     @Transactional(readOnly = true)
-    public Map<String, Object> getTopicDetailMap(Long id) {
+    public Map<String, Object> getTopicDetailMap(Long id, AppUser currentUser) {
         Topic t = topicRepository.findById(id).orElse(null);
         if (t == null) {
             return null;
@@ -594,9 +691,29 @@ public class StudentService {
         data.put("groupName", group != null ? group.getGroupName() : null);
         data.put("leaderName", group != null && group.getLeader() != null && group.getLeader().getUser() != null ? group.getLeader().getUser().getFullName() : null);
         data.put("leaderCode", group != null && group.getLeader() != null ? group.getLeader().getStudentCode() : null);
-        data.put("finalScore", hasGroup ? t.getFinalScore() : null);
-        data.put("isFinalized", hasGroup ? t.getIsFinalized() : false);
-        data.put("rejectionReason", t.getRejectionReason());
+
+        // BẢO VỆ ĐIỂM SỐ: Tuyệt đối không để lộ finalScore và isFinalized cho người không có thẩm quyền hoặc sinh viên nhóm khác/chưa công bố
+        boolean canViewScore = canUserViewTopicScore(currentUser, t, group);
+        if (canViewScore) {
+            data.put("finalScore", t.getFinalScore());
+            data.put("isFinalized", t.getIsFinalized());
+        }
+
+        // Rejection reason chỉ hiển thị cho GVHD hoặc Trưởng khoa/Admin
+        boolean canViewRejection = currentUser != null && currentUser.getRole() != null && (
+                "ADMIN".equalsIgnoreCase(currentUser.getRole().getCode()) ||
+                "DEPARTMENT_HEAD".equalsIgnoreCase(currentUser.getRole().getCode()) ||
+                (t.getSupervisor() != null && t.getSupervisor().getUser() != null && Objects.equals(t.getSupervisor().getUser().getId(), currentUser.getId()))
+        );
+        if (canViewRejection) {
+            data.put("rejectionReason", t.getRejectionReason());
+        }
+
         return data;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getTopicDetailMap(Long id) {
+        return getTopicDetailMap(id, null);
     }
 }
