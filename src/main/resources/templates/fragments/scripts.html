@@ -467,8 +467,26 @@
                 }
             }
 
+            // Dynamic Topbar Frosted Glass Effect on scroll
+            function initTopbarScrollEffect() {
+                const headerGroup = document.querySelector('.saas-header-group');
+                if (!headerGroup) return;
+
+                const onScroll = () => {
+                    const isScrolled = window.scrollY > 8;
+                    headerGroup.classList.toggle('is-scrolled', isScrolled);
+                };
+
+                window.addEventListener('scroll', onScroll, { passive: true });
+                onScroll(); // Run immediately on load
+            }
+
             // Sync Desktop Sidebar collapse state & chevron icon on page load
             document.addEventListener('DOMContentLoaded', function () {
+                try {
+                    initTopbarScrollEffect();
+                } catch (e) { }
+
                 try {
                     if (window.innerWidth >= 992) {
                         const savedState = localStorage.getItem('topichub_sidebar_collapsed');
