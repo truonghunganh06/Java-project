@@ -195,40 +195,42 @@
     </div>
 
     <!-- Modals for Topic Evaluations (outside saas-main-wrapper to prevent backdrop stacking bugs) -->
-    <th:block th:each="t : ${topics}">
-        <div class="modal fade text-start" th:id="'gradeCouncilModal-' + ${t.id}" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content rounded-2xl border-0 shadow-xl">
-                    <form th:action="@{/lecturer/councils/{topicId}/grade(topicId=${t.id})}" method="post">
-                        <div class="modal-header border-b border-slate-100 p-4">
-                            <h2 class="modal-title font-bold text-slate-900 text-sm">
-                                <i class="fa-solid fa-star text-amber-500 me-1.5"></i>
-                                Phiếu Chấm Điểm Hội Đồng Bảo Vệ
-                            </h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
-                        </div>
-                        <div class="modal-body p-4 space-y-3">
-                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
-                                <span class="text-slate-400 d-block">Đề tài:</span>
-                                <strong class="text-slate-900" th:text="${t.title}"></strong>
+    <th:block th:each="c : ${councils}">
+        <th:block th:each="t : ${councilTopicsMap != null ? councilTopicsMap.get(c.id) : null}">
+            <div class="modal fade text-start" th:id="'gradeCouncilModal-' + ${t.id}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content rounded-2xl border-0 shadow-xl">
+                        <form th:action="@{/lecturer/councils/{topicId}/grade(topicId=${t.id})}" method="post">
+                            <div class="modal-header border-b border-slate-100 p-4">
+                                <h2 class="modal-title font-bold text-slate-900 text-sm">
+                                    <i class="fa-solid fa-star text-amber-500 me-1.5"></i>
+                                    Phiếu Chấm Điểm Hội Đồng Bảo Vệ
+                                </h2>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
                             </div>
-                            <div>
-                                <label class="form-label text-xs font-semibold text-slate-700">Điểm đánh giá Hội đồng (Thang điểm 10) *</label>
-                                <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" th:value="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id) ? existingEvaluationsMap.get(t.id).score : ''}" placeholder="Ví dụ: 9.0" required title="Điểm đánh giá Hội đồng (Thang điểm 10)" aria-label="Điểm đánh giá Hội đồng (Thang điểm 10)">
+                            <div class="modal-body p-4 space-y-3">
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                                    <span class="text-slate-400 d-block">Đề tài:</span>
+                                    <strong class="text-slate-900" th:text="${t.title}"></strong>
+                                </div>
+                                <div>
+                                    <label class="form-label text-xs font-semibold text-slate-700">Điểm đánh giá Hội đồng (Thang điểm 10) *</label>
+                                    <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" th:value="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id) ? existingEvaluationsMap.get(t.id).score : ''}" placeholder="Ví dụ: 9.0" required title="Điểm đánh giá Hội đồng (Thang điểm 10)" aria-label="Điểm đánh giá Hội đồng (Thang điểm 10)">
+                                </div>
+                                <div>
+                                    <label class="form-label text-xs font-semibold text-slate-700">Nhận xét & Đánh giá buổi bảo vệ *</label>
+                                    <textarea name="comments" class="form-control text-xs rounded-xl" rows="4" placeholder="Nhận xét phần trình bày của nhóm, mức độ trả lời câu hỏi và sản phẩm thực tế..." th:text="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id) ? existingEvaluationsMap.get(t.id).comments : ''}" required title="Nhận xét &amp; Đánh giá buổi bảo vệ" aria-label="Nhận xét &amp; Đánh giá buổi bảo vệ"></textarea>
+                                </div>
                             </div>
-                            <div>
-                                <label class="form-label text-xs font-semibold text-slate-700">Nhận xét & Đánh giá buổi bảo vệ *</label>
-                                <textarea name="comments" class="form-control text-xs rounded-xl" rows="4" placeholder="Nhận xét phần trình bày của nhóm, mức độ trả lời câu hỏi và sản phẩm thực tế..." th:text="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id) ? existingEvaluationsMap.get(t.id).comments : ''}" required title="Nhận xét &amp; Đánh giá buổi bảo vệ" aria-label="Nhận xét &amp; Đánh giá buổi bảo vệ"></textarea>
+                            <div class="modal-footer border-t border-slate-100 p-3">
+                                <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu & Nộp phiếu điểm</button>
                             </div>
-                        </div>
-                        <div class="modal-footer border-t border-slate-100 p-3">
-                            <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
-                            <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu & Nộp phiếu điểm</button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
+        </th:block>
     </th:block>
 
     <!-- Scripts Fragment -->

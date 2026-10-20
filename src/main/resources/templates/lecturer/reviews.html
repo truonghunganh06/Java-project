@@ -111,8 +111,8 @@
     </div>
 
     <!-- Modals for Topic Evaluations (outside saas-main-wrapper to prevent backdrop stacking bugs) -->
-    <th:block th:each="t : ${reviewTopics}">
-        <div class="modal fade text-start" th:id="'gradeReviewModal-' + ${t.id}" tabindex="-1">
+    <th:block th:each="t : ${reviewerTopics != null ? reviewerTopics : reviewTopics}">
+        <div class="modal fade text-start" th:id="'gradeReviewModal-' + ${t.id}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content rounded-2xl border-0 shadow-xl">
                     <form th:action="@{/lecturer/reviews/{topicId}/grade(topicId=${t.id})}" method="post">

@@ -621,6 +621,16 @@ public class CouncilService {
     public boolean isTopicFullyGraded(Topic topic) {
         if (topic == null || topic.getId() == null) return false;
         List<Evaluation> evals = evaluationRepository.findByTopicId(topic.getId());
+        return isTopicFullyGraded(topic, evals, null);
+    }
+
+    public boolean isTopicFullyGraded(Topic topic, List<Evaluation> evals) {
+        return isTopicFullyGraded(topic, evals, null);
+    }
+
+    public boolean isTopicFullyGraded(Topic topic, List<Evaluation> evals, Map<Long, List<CouncilMember>> councilMembersMap) {
+        if (topic == null || topic.getId() == null) return false;
+        if (evals == null) evals = Collections.emptyList();
 
         // 1. Phải có điểm của GVHD (SUPERVISOR)
         boolean hasSupervisorScore = evals.stream()
@@ -649,7 +659,9 @@ public class CouncilService {
                 if (!hasReviewerScore) return false;
             }
             if (topic.getCouncil() != null) {
-                List<CouncilMember> assignedMembers = councilMemberRepository.findByCouncilId(topic.getCouncil().getId());
+                List<CouncilMember> assignedMembers = (councilMembersMap != null && topic.getCouncil().getId() != null)
+                        ? councilMembersMap.getOrDefault(topic.getCouncil().getId(), Collections.emptyList())
+                        : councilMemberRepository.findByCouncilId(topic.getCouncil().getId());
                 if (!assignedMembers.isEmpty()) {
                     Set<Long> gradedLecturerIds = evals.stream()
                             .filter(e -> "COUNCIL".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null && e.getLecturer() != null)
@@ -695,7 +707,7 @@ public class CouncilService {
         // Gửi email thông báo kết quả cho từng sinh viên trong nhóm theo Rubric
         if (Boolean.TRUE.equals(isFinalized)) {
             for (StudentGroup g : groups) {
-                emailService.sendTopicResultEmailsToGroup(topic, g);
+                emailService.sendTopicResultEmailsToGroup(topic.getId(), g.getId());
             }
         }
 
@@ -711,16 +723,35 @@ public class CouncilService {
 
         List<Long> topicIds = topics.stream().map(Topic::getId).filter(Objects::nonNull).toList();
         List<StudentGroup> allGroups = groupRepository.findByTopicIdIn(topicIds);
-        Set<Long> topicsWithGroups = allGroups.stream()
-                .filter(g -> g.getTopic() != null)
-                .map(g -> g.getTopic().getId())
-                .collect(Collectors.toSet());
+        Map<Long, List<StudentGroup>> groupsByTopicId = allGroups.stream()
+                .filter(g -> g.getTopic() != null && g.getTopic().getId() != null)
+                .collect(Collectors.groupingBy(g -> g.getTopic().getId()));
+        Set<Long> topicsWithGroups = groupsByTopicId.keySet();
+
+        List<Evaluation> allEvaluations = evaluationRepository.findByTopicIdIn(topicIds);
+        Map<Long, List<Evaluation>> evalsByTopicId = allEvaluations.stream()
+                .filter(e -> e.getTopic() != null && e.getTopic().getId() != null)
+                .collect(Collectors.groupingBy(e -> e.getTopic().getId()));
+
+        List<Long> councilIds = topics.stream()
+                .map(Topic::getCouncil)
+                .filter(Objects::nonNull)
+                .map(Council::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        Map<Long, List<CouncilMember>> membersByCouncilId = councilIds.isEmpty()
+                ? Collections.emptyMap()
+                : councilMemberRepository.findByCouncilIdIn(councilIds).stream()
+                        .filter(m -> m.getCouncil() != null && m.getCouncil().getId() != null)
+                        .collect(Collectors.groupingBy(m -> m.getCouncil().getId()));
 
         int count = 0;
         for (Topic t : topics) {
             if (periodId == null || (t.getPeriod() != null && t.getPeriod().getId().equals(periodId))) {
                 if ("APPROVED".equalsIgnoreCase(t.getStatus()) && topicsWithGroups.contains(t.getId())) {
-                    if (Boolean.TRUE.equals(isFinalized) && !isTopicFullyGraded(t)) {
+                    List<Evaluation> topicEvals = evalsByTopicId.getOrDefault(t.getId(), Collections.emptyList());
+                    if (Boolean.TRUE.equals(isFinalized) && !isTopicFullyGraded(t, topicEvals, membersByCouncilId)) {
                         continue; // Bỏ qua đề tài chưa chấm đủ phiếu
                     }
                     t.setIsFinalized(Boolean.TRUE.equals(isFinalized));
@@ -728,9 +759,9 @@ public class CouncilService {
                     count++;
 
                     if (Boolean.TRUE.equals(isFinalized)) {
-                        List<StudentGroup> grps = groupRepository.findByTopicId(t.getId());
+                        List<StudentGroup> grps = groupsByTopicId.getOrDefault(t.getId(), Collections.emptyList());
                         for (StudentGroup g : grps) {
-                            emailService.sendTopicResultEmailsToGroup(t, g);
+                            emailService.sendTopicResultEmailsToGroup(t.getId(), g.getId());
                         }
                     }
                 }

@@ -187,7 +187,9 @@
                                     Không tìm thấy đề tài nào phù hợp với bộ lọc.
                                 </td>
                             </tr>
-                            <tr th:each="t : ${topicsPage.content}" class="filterable-row topic-item-row cursor-pointer transition hover:bg-blue-50/40"
+                            <tr th:each="t : ${topicsPage.content}"
+                                th:with="group=${topicGroupMap != null ? topicGroupMap.get(t.id) : null}"
+                                class="filterable-row topic-item-row cursor-pointer transition hover:bg-blue-50/40"
                                 th:data-status="${t.status}"
                                 th:data-has-reviewer="${t.reviewer != null ? 'true' : 'false'}"
                                 th:data-has-council="${t.council != null ? 'true' : 'false'}"
@@ -203,6 +205,9 @@
                                 th:data-topic-description="${t.description}"
                                 th:data-topic-requirements="${t.requirements}"
                                 th:data-topic-rejection-reason="${t.rejectionReason}"
+                                th:data-topic-group-name="${group != null ? group.groupName : ''}"
+                                th:data-topic-leader-name="${group != null && group.leader != null && group.leader.user != null ? group.leader.user.fullName : ''}"
+                                th:data-topic-leader-code="${group != null && group.leader != null ? group.leader.studentCode : ''}"
                                 data-topic-role="DEPARTMENT_HEAD"
                                 onclick="openTopicDrawer(this)" tabindex="0" onkeydown="if (event.target === this &amp;&amp; (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
                                 
@@ -376,6 +381,7 @@
                         <div class="kanban-cards-wrapper space-y-3" id="kanbanColPending">
                             <th:block th:each="t : ${topicsPage.content}" th:if="${t.status == 'PENDING'}">
                                 <div class="kanban-card bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-amber-300 transition duration-200"
+                                    th:with="group=${topicGroupMap != null ? topicGroupMap.get(t.id) : null}"
                                     th:data-status="${t.status}"
                                     th:data-has-reviewer="${t.reviewer != null ? 'true' : 'false'}"
                                     th:data-has-council="${t.council != null ? 'true' : 'false'}"
@@ -391,6 +397,9 @@
                                     th:data-topic-description="${t.description}"
                                     th:data-topic-requirements="${t.requirements}"
                                     th:data-topic-rejection-reason="${t.rejectionReason}"
+                                    th:data-topic-group-name="${group != null ? group.groupName : ''}"
+                                    th:data-topic-leader-name="${group != null && group.leader != null && group.leader.user != null ? group.leader.user.fullName : ''}"
+                                    th:data-topic-leader-code="${group != null && group.leader != null ? group.leader.studentCode : ''}"
                                     data-topic-role="DEPARTMENT_HEAD">
                                     <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
                                         <span class="badge bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded font-semibold" th:text="${t.code}">DT-01</span>
@@ -445,6 +454,7 @@
                         <div class="kanban-cards-wrapper space-y-3" id="kanbanColApproved">
                             <th:block th:each="t : ${topicsPage.content}" th:if="${t.status == 'APPROVED'}">
                                 <div class="kanban-card bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 transition duration-200"
+                                    th:with="group=${topicGroupMap != null ? topicGroupMap.get(t.id) : null}"
                                     th:data-status="${t.status}"
                                     th:data-has-reviewer="${t.reviewer != null ? 'true' : 'false'}"
                                     th:data-has-council="${t.council != null ? 'true' : 'false'}"
@@ -460,6 +470,9 @@
                                     th:data-topic-description="${t.description}"
                                     th:data-topic-requirements="${t.requirements}"
                                     th:data-topic-rejection-reason="${t.rejectionReason}"
+                                    th:data-topic-group-name="${group != null ? group.groupName : ''}"
+                                    th:data-topic-leader-name="${group != null && group.leader != null && group.leader.user != null ? group.leader.user.fullName : ''}"
+                                    th:data-topic-leader-code="${group != null && group.leader != null ? group.leader.studentCode : ''}"
                                     data-topic-role="DEPARTMENT_HEAD">
                                     <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
                                         <span class="badge bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded font-semibold" th:text="${t.code}">DT-01</span>
@@ -509,6 +522,7 @@
                         <div class="kanban-cards-wrapper space-y-3" id="kanbanColRejected">
                             <th:block th:each="t : ${topicsPage.content}" th:if="${t.status == 'REJECTED'}">
                                 <div class="kanban-card bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-rose-300 transition duration-200"
+                                    th:with="group=${topicGroupMap != null ? topicGroupMap.get(t.id) : null}"
                                     th:data-status="${t.status}"
                                     th:data-has-reviewer="false"
                                     th:data-has-council="false"
@@ -524,6 +538,9 @@
                                     th:data-topic-description="${t.description}"
                                     th:data-topic-requirements="${t.requirements}"
                                     th:data-topic-rejection-reason="${t.rejectionReason}"
+                                    th:data-topic-group-name="${group != null ? group.groupName : ''}"
+                                    th:data-topic-leader-name="${group != null && group.leader != null && group.leader.user != null ? group.leader.user.fullName : ''}"
+                                    th:data-topic-leader-code="${group != null && group.leader != null ? group.leader.studentCode : ''}"
                                     data-topic-role="DEPARTMENT_HEAD">
                                     <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
                                         <span class="badge bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded font-semibold" th:text="${t.code}">DT-01</span>

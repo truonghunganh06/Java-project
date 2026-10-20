@@ -8,12 +8,15 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import topicmanagement.entity.AppUser;
 import topicmanagement.entity.GroupInvitation;
 import topicmanagement.entity.GroupMember;
 import topicmanagement.entity.Student;
 import topicmanagement.entity.StudentGroup;
 import topicmanagement.entity.Topic;
+import topicmanagement.repository.StudentGroupRepository;
+import topicmanagement.repository.TopicRepository;
 
 import jakarta.mail.internet.MimeMessage;
 import java.util.ArrayList;
@@ -29,12 +32,19 @@ public class EmailService {
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
+    private final TopicRepository topicRepository;
+    private final StudentGroupRepository groupRepository;
 
     @Value("${spring.mail.username:}")
     private String senderEmail;
 
-    public EmailService(@Autowired(required = false) JavaMailSender mailSender) {
+    public EmailService(
+            @Autowired(required = false) JavaMailSender mailSender,
+            TopicRepository topicRepository,
+            StudentGroupRepository groupRepository) {
         this.mailSender = mailSender;
+        this.topicRepository = topicRepository;
+        this.groupRepository = groupRepository;
     }
 
     /**
@@ -302,7 +312,13 @@ public class EmailService {
     /**
      * Gửi email thông báo kết quả điểm số cho tất cả sinh viên trong nhóm thực hiện đề tài.
      */
-    public void sendTopicResultEmailsToGroup(Topic topic, StudentGroup group) {
+    @Async
+    @Transactional
+    public void sendTopicResultEmailsToGroup(Long topicId, Long groupId) {
+        if (topicId == null || groupId == null) return;
+
+        Topic topic = topicRepository.findById(topicId).orElse(null);
+        StudentGroup group = groupRepository.findById(groupId).orElse(null);
         if (topic == null || group == null) return;
 
         List<Student> students = new ArrayList<>();

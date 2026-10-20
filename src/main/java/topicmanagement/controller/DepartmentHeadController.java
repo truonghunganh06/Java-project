@@ -564,10 +564,23 @@ public class DepartmentHeadController {
         List<Long> councilIds = councils.stream().map(Council::getId).toList();
         Map<Long, Set<Long>> councilLecturerIdsMap = councilService.getCouncilLecturerIdsMap(councilIds);
 
+        // Nạp nhóm sinh viên đã gắn đề tài (topicGroupMap) cho drawer chi tiết
+        List<Long> topicIds = topics.stream().map(Topic::getId).filter(Objects::nonNull).toList();
+        Map<Long, StudentGroup> topicGroupMap = new HashMap<>();
+        if (!topicIds.isEmpty()) {
+            List<StudentGroup> groups = studentGroupRepository.findByTopicIdIn(topicIds);
+            for (StudentGroup g : groups) {
+                if (g.getTopic() != null && g.getTopic().getId() != null && !"DISSOLVED".equalsIgnoreCase(g.getStatus())) {
+                    topicGroupMap.put(g.getTopic().getId(), g);
+                }
+            }
+        }
+
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
         model.addAttribute("topics", topics);
         model.addAttribute("topicsPage", topicsPage);
+        model.addAttribute("topicGroupMap", topicGroupMap);
         model.addAttribute("periods", periods);
         model.addAttribute("lecturers", lecturers);
         model.addAttribute("councils", councils);
