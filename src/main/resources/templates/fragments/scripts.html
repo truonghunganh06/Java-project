@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TopicHub Scripts</title>
 </head>
+
 <body>
     <div th:fragment="scripts">
         <!-- Global Announcement Detail Modal (Available across all pages) -->
@@ -25,7 +27,8 @@
                                     class="modal-title font-bold text-slate-900 text-sm mb-0">Tiêu đề thông báo</h6>
                             </div>
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                            title="Đóng"></button>
                     </div>
                     <div class="modal-body p-4 space-y-3">
                         <div
@@ -47,12 +50,15 @@
                             Nội dung chi tiết thông báo...
                         </div>
                     </div>
-                    <div class="modal-footer border-t border-slate-100 p-3 d-flex justify-content-between align-items-center">
+                    <div
+                        class="modal-footer border-t border-slate-100 p-3 d-flex justify-content-between align-items-center">
                         <div id="modalAnnouncementSecondaryActionWrap"></div>
                         <div class="d-flex align-items-center gap-2">
-                            <button type="button" class="btn btn-sm btn-light border rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                            <button type="button"
+                                class="btn btn-sm btn-light border rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100"
                                 data-bs-dismiss="modal">Đóng</button>
-                            <a id="modalAnnouncementPrimaryActionBtn" href="#" class="btn btn-sm bg-slate-900 hover:bg-slate-800 text-teal-300 rounded-xl px-4 py-2 text-xs font-bold shadow-sm d-inline-flex align-items-center gap-1.5 transition border-0 d-none">
+                            <a id="modalAnnouncementPrimaryActionBtn" href="#"
+                                class="btn btn-sm bg-slate-900 hover:bg-slate-800 text-teal-300 rounded-xl px-4 py-2 text-xs font-bold shadow-sm d-inline-flex align-items-center gap-1.5 transition border-0 d-none">
                                 <i id="modalAnnouncementActionIcon" class="fa-solid fa-plus text-xs"></i>
                                 <span id="modalAnnouncementActionText">Đề xuất đề tài ngay</span>
                             </a>
@@ -67,33 +73,43 @@
         <div class="modal fade" id="systemSettingsModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content rounded-3xl border-0 shadow-2xl overflow-hidden">
-                    <div class="modal-header border-b border-slate-100 p-4" style="background: linear-gradient(to right, #f8fafc, rgba(239,246,255,0.5));">
+                    <div class="modal-header border-b border-slate-100 p-4"
+                        style="background: linear-gradient(to right, #f8fafc, rgba(239,246,255,0.5));">
                         <div class="d-flex align-items-center gap-2.5">
-                            <div class="w-10 h-10 rounded-2xl bg-blue-600 text-white d-flex align-items-center justify-content-center shadow-md shadow-blue-500/20 flex-shrink-0">
+                            <div
+                                class="w-10 h-10 rounded-2xl bg-blue-600 text-white d-flex align-items-center justify-content-center shadow-md shadow-blue-500/20 flex-shrink-0">
                                 <i class="fa-solid fa-gear text-base"></i>
                             </div>
                             <div>
-                                <h6 class="modal-title font-bold text-slate-900 text-sm mb-0.5">Cài Đặt Hệ Thống & Tài Khoản</h6>
-                                <p class="text-2xs text-slate-500 mb-0">Quản lý tùy chọn cá nhân, bảo mật tài khoản và giao diện hiển thị.</p>
+                                <h6 class="modal-title font-bold text-slate-900 text-sm mb-0.5">Cài Đặt Hệ Thống & Tài
+                                    Khoản</h6>
+                                <p class="text-2xs text-slate-500 mb-0">Quản lý tùy chọn cá nhân, bảo mật tài khoản và
+                                    giao diện hiển thị.</p>
                             </div>
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                            title="Đóng"></button>
                     </div>
                     <div class="modal-body p-4 space-y-4">
                         <!-- Navigation Tabs within Settings -->
                         <ul class="nav nav-pills gap-2 border-b border-slate-100 pb-3" id="settingsTab" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active rounded-xl px-3 py-1.5 text-xs font-bold" id="tab-profile-tab" data-bs-toggle="pill" data-bs-target="#tab-profile" type="button" role="tab">
+                                <button class="nav-link active rounded-xl px-3 py-1.5 text-xs font-bold"
+                                    id="tab-profile-tab" data-bs-toggle="pill" data-bs-target="#tab-profile"
+                                    type="button" role="tab">
                                     <i class="fa-solid fa-user-circle me-1.5"></i> Hồ sơ & Tài khoản
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link rounded-xl px-3 py-1.5 text-xs font-bold" id="tab-security-tab" data-bs-toggle="pill" data-bs-target="#tab-security" type="button" role="tab">
+                                <button class="nav-link rounded-xl px-3 py-1.5 text-xs font-bold" id="tab-security-tab"
+                                    data-bs-toggle="pill" data-bs-target="#tab-security" type="button" role="tab">
                                     <i class="fa-solid fa-shield-halved me-1.5"></i> Đổi Mật Khẩu
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link rounded-xl px-3 py-1.5 text-xs font-bold" id="tab-preferences-tab" data-bs-toggle="pill" data-bs-target="#tab-preferences" type="button" role="tab">
+                                <button class="nav-link rounded-xl px-3 py-1.5 text-xs font-bold"
+                                    id="tab-preferences-tab" data-bs-toggle="pill" data-bs-target="#tab-preferences"
+                                    type="button" role="tab">
                                     <i class="fa-solid fa-sliders me-1.5"></i> Tùy chọn & Giao diện
                                 </button>
                             </li>
@@ -102,27 +118,47 @@
                         <div class="tab-content pt-1" id="settingsTabContent">
                             <!-- Tab 1: Profile Info -->
                             <div class="tab-pane fade show active space-y-3" id="tab-profile" role="tabpanel">
-                                <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 d-flex align-items-center gap-3">
-                                    <div class="w-12 h-12 rounded-2xl text-white font-black text-lg d-flex align-items-center justify-content-center shadow-md" style="background: linear-gradient(135deg, #2563eb, #4f46e5);">
-                                        <span th:text="${user != null && user.fullName != null ? #strings.substring(user.fullName, 0, 1).toUpperCase() : 'U'}">U</span>
+                                <div
+                                    class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 d-flex align-items-center gap-3">
+                                    <div class="w-12 h-12 rounded-2xl text-white font-black text-lg d-flex align-items-center justify-content-center shadow-md"
+                                        style="background: linear-gradient(135deg, #2563eb, #4f46e5);">
+                                        <span
+                                            th:text="${user != null && user.fullName != null ? #strings.substring(user.fullName, 0, 1).toUpperCase() : 'U'}">U</span>
                                     </div>
                                     <div class="min-w-0 flex-grow">
                                         <div class="d-flex align-items-center gap-2">
-                                            <h6 class="font-bold text-slate-900 text-sm mb-0" th:text="${user != null ? user.fullName : 'Người dùng TopicHub'}">Người dùng</h6>
-                                            <span class="badge bg-blue-100 text-blue-800 text-[10px] font-bold rounded-md px-2 py-0.5" th:text="${user != null && user.role != null ? user.role.name : 'Thành viên'}">Trưởng Khoa</span>
+                                            <h6 class="font-bold text-slate-900 text-sm mb-0"
+                                                th:text="${user != null ? user.fullName : 'Người dùng TopicHub'}">Người
+                                                dùng</h6>
+                                            <span
+                                                class="badge bg-blue-100 text-blue-800 text-[10px] font-bold rounded-md px-2 py-0.5"
+                                                th:text="${user != null && user.role != null ? user.role.name : 'Thành viên'}">Trưởng
+                                                Khoa</span>
                                         </div>
-                                        <p class="text-xs text-slate-500 mb-0 mt-0.5" th:text="${user != null ? user.email : 'user@hcmus.edu.vn'}">email@hcmus.edu.vn</p>
+                                        <p class="text-xs text-slate-500 mb-0 mt-0.5"
+                                            th:text="${user != null ? user.email : 'user@hcmus.edu.vn'}">
+                                            email@hcmus.edu.vn</p>
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
-                                        <label class="form-label text-xs font-semibold text-slate-700 mb-1" for="field-fragments-scripts-0">Tên đăng nhập (Username)</label>
-                                        <input type="text" class="form-control form-control-sm text-xs rounded-xl bg-slate-50 border-slate-200" th:value="${user != null ? user.username : 'user'}" readonly title="Tên đăng nhập (Username)" aria-label="Tên đăng nhập (Username)" id="field-fragments-scripts-0">
+                                        <label class="form-label text-xs font-semibold text-slate-700 mb-1"
+                                            for="field-fragments-scripts-0">Tên đăng nhập (Username)</label>
+                                        <input type="text"
+                                            class="form-control form-control-sm text-xs rounded-xl bg-slate-50 border-slate-200"
+                                            th:value="${user != null ? user.username : 'user'}" readonly
+                                            title="Tên đăng nhập (Username)" aria-label="Tên đăng nhập (Username)"
+                                            id="field-fragments-scripts-0">
                                     </div>
                                     <div>
-                                        <label class="form-label text-xs font-semibold text-slate-700 mb-1" for="field-fragments-scripts-1">Địa chỉ Email</label>
-                                        <input type="email" class="form-control form-control-sm text-xs rounded-xl bg-slate-50 border-slate-200" th:value="${user != null ? user.email : 'email@edu.vn'}" readonly title="Địa chỉ Email" aria-label="Địa chỉ Email" id="field-fragments-scripts-1">
+                                        <label class="form-label text-xs font-semibold text-slate-700 mb-1"
+                                            for="field-fragments-scripts-1">Địa chỉ Email</label>
+                                        <input type="email"
+                                            class="form-control form-control-sm text-xs rounded-xl bg-slate-50 border-slate-200"
+                                            th:value="${user != null ? user.email : 'email@edu.vn'}" readonly
+                                            title="Địa chỉ Email" aria-label="Địa chỉ Email"
+                                            id="field-fragments-scripts-1">
                                     </div>
                                 </div>
                             </div>
@@ -131,27 +167,45 @@
                             <div class="tab-pane fade space-y-3" id="tab-security" role="tabpanel">
                                 <form autocomplete="off" onsubmit="return false;" class="space-y-3">
                                     <!-- Hidden autofill traps to prevent browser from filling page search inputs -->
-                                    <input type="text" style="display:none;" name="fake_user" tabindex="-1" autocomplete="off" title="fake_user" aria-label="fake_user">
-                                    <input type="password" style="display:none;" name="fake_pass" tabindex="-1" autocomplete="new-password" title="fake_pass" aria-label="fake_pass">
+                                    <input type="text" style="display:none;" name="fake_user" tabindex="-1"
+                                        autocomplete="off" title="fake_user" aria-label="fake_user">
+                                    <input type="password" style="display:none;" name="fake_pass" tabindex="-1"
+                                        autocomplete="new-password" title="fake_pass" aria-label="fake_pass">
 
-                                    <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-xs text-blue-900">
-                                        <i class="fa-solid fa-info-circle me-1 text-blue-600"></i> Mật khẩu an toàn phải có tối thiểu 6 ký tự.
+                                    <div
+                                        class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-xs text-blue-900">
+                                        <i class="fa-solid fa-info-circle me-1 text-blue-600"></i> Mật khẩu an toàn phải
+                                        có tối thiểu 6 ký tự.
                                     </div>
                                     <div class="space-y-2.5">
                                         <div>
-                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1" for="currentPassInput">Mật khẩu hiện tại *</label>
-                                            <input type="password" class="form-control form-control-sm text-xs rounded-xl" placeholder="••••••••" id="currentPassInput" autocomplete="new-password" title="Mật khẩu hiện tại" aria-label="Mật khẩu hiện tại">
+                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1"
+                                                for="currentPassInput">Mật khẩu hiện tại *</label>
+                                            <input type="password"
+                                                class="form-control form-control-sm text-xs rounded-xl"
+                                                placeholder="••••••••" id="currentPassInput" autocomplete="new-password"
+                                                title="Mật khẩu hiện tại" aria-label="Mật khẩu hiện tại">
                                         </div>
                                         <div>
-                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1" for="newPassInput">Mật khẩu mới *</label>
-                                            <input type="password" class="form-control form-control-sm text-xs rounded-xl" placeholder="••••••••" id="newPassInput" autocomplete="new-password" title="Mật khẩu mới" aria-label="Mật khẩu mới">
+                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1"
+                                                for="newPassInput">Mật khẩu mới *</label>
+                                            <input type="password"
+                                                class="form-control form-control-sm text-xs rounded-xl"
+                                                placeholder="••••••••" id="newPassInput" autocomplete="new-password"
+                                                title="Mật khẩu mới" aria-label="Mật khẩu mới">
                                         </div>
                                         <div>
-                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1" for="confirmPassInput">Xác nhận mật khẩu mới *</label>
-                                            <input type="password" class="form-control form-control-sm text-xs rounded-xl" placeholder="••••••••" id="confirmPassInput" autocomplete="new-password" title="Xác nhận mật khẩu mới" aria-label="Xác nhận mật khẩu mới">
+                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1"
+                                                for="confirmPassInput">Xác nhận mật khẩu mới *</label>
+                                            <input type="password"
+                                                class="form-control form-control-sm text-xs rounded-xl"
+                                                placeholder="••••••••" id="confirmPassInput" autocomplete="new-password"
+                                                title="Xác nhận mật khẩu mới" aria-label="Xác nhận mật khẩu mới">
                                         </div>
                                     </div>
-                                    <button type="button" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 text-xs font-semibold" onclick="alert('Đã cập nhật mật khẩu mới thành công!')">
+                                    <button type="button"
+                                        class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 text-xs font-semibold"
+                                        onclick="alert('Đã cập nhật mật khẩu mới thành công!')">
                                         <i class="fa-solid fa-key me-1"></i> Đổi mật khẩu
                                     </button>
                                 </form>
@@ -159,31 +213,42 @@
 
                             <!-- Tab 3: Preferences -->
                             <div class="tab-pane fade space-y-3" id="tab-preferences" role="tabpanel">
-                                <div class="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden p-3 bg-slate-50/50 space-y-3 text-xs">
+                                <div
+                                    class="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden p-3 bg-slate-50/50 space-y-3 text-xs">
                                     <div class="d-flex justify-content-between align-items-center pt-1">
                                         <div>
-                                            <strong class="text-slate-800 d-block">Thông báo Email khi có đề xuất mới</strong>
-                                            <span class="text-slate-500 text-2xs">Gửi email tức thời khi có thông báo hoặc đề tài cần duyệt.</span>
+                                            <strong class="text-slate-800 d-block">Thông báo Email khi có đề xuất
+                                                mới</strong>
+                                            <span class="text-slate-500 text-2xs">Gửi email tức thời khi có thông báo
+                                                hoặc đề tài cần duyệt.</span>
                                         </div>
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" checked placeholder="Nhập thông tin" title="Nhập thông tin" aria-label="Nhập thông tin">
+                                            <input class="form-check-input" type="checkbox" checked
+                                                placeholder="Nhập thông tin" title="Nhập thông tin"
+                                                aria-label="Nhập thông tin">
                                         </div>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center pt-3">
                                         <div>
                                             <strong class="text-slate-800 d-block">Âm thanh chuông báo</strong>
-                                            <span class="text-slate-500 text-2xs">Phát chuông nhỏ khi có tin nhắn từ Trợ lý AI hoặc thông báo đợt.</span>
+                                            <span class="text-slate-500 text-2xs">Phát chuông nhỏ khi có tin nhắn từ Trợ
+                                                lý AI hoặc thông báo đợt.</span>
                                         </div>
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" checked placeholder="Nhập thông tin" title="Nhập thông tin" aria-label="Nhập thông tin">
+                                            <input class="form-check-input" type="checkbox" checked
+                                                placeholder="Nhập thông tin" title="Nhập thông tin"
+                                                aria-label="Nhập thông tin">
                                         </div>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center pt-3">
                                         <div>
                                             <strong class="text-slate-800 d-block">Giao diện (Theme)</strong>
-                                            <span class="text-slate-500 text-2xs">Chuyển đổi nhanh chế độ sáng / tối.</span>
+                                            <span class="text-slate-500 text-2xs">Chuyển đổi nhanh chế độ sáng /
+                                                tối.</span>
                                         </div>
-                                        <button type="button" class="btn btn-xs btn-outline-secondary rounded-xl px-2.5 py-1" onclick="toggleTheme()">
+                                        <button type="button"
+                                            class="btn btn-xs btn-outline-secondary rounded-xl px-2.5 py-1"
+                                            onclick="toggleTheme()">
                                             <i class="fa-solid fa-moon me-1"></i> Đổi màu nền
                                         </button>
                                     </div>
@@ -192,7 +257,9 @@
                         </div>
                     </div>
                     <div class="modal-footer border-t border-slate-100 bg-slate-50/50 p-3">
-                        <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-4 text-xs font-semibold" data-bs-dismiss="modal">Đóng</button>
+                        <button type="button"
+                            class="btn btn-sm btn-light border border-slate-200 rounded-xl px-4 text-xs font-semibold"
+                            data-bs-dismiss="modal">Đóng</button>
                     </div>
                 </div>
             </div>
@@ -204,38 +271,50 @@
                 <div class="modal-content rounded-2xl border-0 shadow-2xl">
                     <div class="modal-header border-b border-slate-100 p-4">
                         <div class="d-flex align-items-center gap-2.5">
-                            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0">
                                 <i class="fa-solid fa-book-bookmark text-base"></i>
                             </div>
                             <div>
                                 <div class="d-flex align-items-center gap-2 mb-0.5">
-                                    <span id="drawerTopicCode" class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-bold">DT-01</span>
+                                    <span id="drawerTopicCode"
+                                        class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-bold">DT-01</span>
                                     <span id="drawerTopicStatusBadge" class="badge-pill-pending">Chờ duyệt</span>
                                 </div>
-                                <h5 id="drawerTopicTitle" class="modal-title font-bold text-slate-900 text-sm md:text-base mb-0 line-clamp-1">Tiêu đề đề tài</h5>
+                                <h5 id="drawerTopicTitle"
+                                    class="modal-title font-bold text-slate-900 text-sm md:text-base mb-0 line-clamp-1">
+                                    Tiêu đề đề tài</h5>
                             </div>
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                            title="Đóng"></button>
                     </div>
                     <div class="modal-body p-4 space-y-3">
                         <!-- Rejection Reason Alert if any -->
-                        <div id="drawerTopicRejectionAlert" class="alert alert-danger p-3 rounded-2xl mb-3 border border-rose-200 shadow-sm" style="display: none;">
-                            <div class="fw-bold text-rose-900 text-xs mb-1"><i class="fa-solid fa-triangle-exclamation text-rose-600 me-1"></i> Lý do Trưởng khoa từ chối:</div>
+                        <div id="drawerTopicRejectionAlert"
+                            class="alert alert-danger p-3 rounded-2xl mb-3 border border-rose-200 shadow-sm"
+                            style="display: none;">
+                            <div class="fw-bold text-rose-900 text-xs mb-1"><i
+                                    class="fa-solid fa-triangle-exclamation text-rose-600 me-1"></i> Lý do Trưởng khoa
+                                từ chối:</div>
                             <div id="drawerTopicRejectionText" class="text-rose-700 text-xs"></div>
                         </div>
 
                         <!-- Period & Major & Quota Badges Grid -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                             <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/70">
-                                <span class="text-xs text-slate-400 d-block mb-0.5"><i class="fa-solid fa-building-columns me-1"></i> Khoa quản lý</span>
+                                <span class="text-xs text-slate-400 d-block mb-0.5"><i
+                                        class="fa-solid fa-building-columns me-1"></i> Khoa quản lý</span>
                                 <strong class="text-xs text-slate-800" id="drawerTopicMajor">Khoa CNTT</strong>
                             </div>
                             <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/70">
-                                <span class="text-xs text-slate-400 d-block mb-0.5"><i class="fa-regular fa-calendar-check me-1"></i> Đợt đăng ký</span>
+                                <span class="text-xs text-slate-400 d-block mb-0.5"><i
+                                        class="fa-regular fa-calendar-check me-1"></i> Đợt đăng ký</span>
                                 <strong class="text-xs text-slate-800" id="drawerTopicPeriod">KLTN 2026-2027</strong>
                             </div>
                             <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/70">
-                                <span class="text-xs text-slate-400 d-block mb-0.5"><i class="fa-solid fa-users me-1"></i> Chỉ tiêu</span>
+                                <span class="text-xs text-slate-400 d-block mb-0.5"><i
+                                        class="fa-solid fa-users me-1"></i> Chỉ tiêu</span>
                                 <strong class="text-xs text-slate-800" id="drawerTopicQuota">Tối đa 3 SV</strong>
                             </div>
                         </div>
@@ -243,22 +322,28 @@
                         <!-- Supervisors & Reviewers Grid -->
                         <div class="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-2 text-xs">
                             <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
-                                <i class="fa-solid fa-user-tie text-blue-600 me-1.5"></i> Cán bộ Hướng dẫn &amp; Phản biện
+                                <i class="fa-solid fa-user-tie text-blue-600 me-1.5"></i> Cán bộ Hướng dẫn &amp; Phản
+                                biện
                             </h6>
                             <div class="d-flex justify-content-between py-1 border-b border-slate-100">
-                                <span class="text-slate-500"><i class="fa-solid fa-chalkboard-user text-blue-600 me-1"></i> GV Hướng dẫn chính:</span>
+                                <span class="text-slate-500"><i
+                                        class="fa-solid fa-chalkboard-user text-blue-600 me-1"></i> GV Hướng dẫn
+                                    chính:</span>
                                 <strong id="drawerTopicSupervisor" class="text-slate-900">TS. Nguyễn Văn A</strong>
                             </div>
                             <div class="d-flex justify-content-between py-1 border-b border-slate-100">
-                                <span class="text-slate-500"><i class="fa-solid fa-user-plus text-slate-400 me-1"></i> GV Hướng dẫn phụ:</span>
+                                <span class="text-slate-500"><i class="fa-solid fa-user-plus text-slate-400 me-1"></i>
+                                    GV Hướng dẫn phụ:</span>
                                 <strong id="drawerTopicCoSupervisor" class="text-slate-900">Không có</strong>
                             </div>
                             <div class="d-flex justify-content-between py-1 border-b border-slate-100">
-                                <span class="text-slate-500"><i class="fa-solid fa-user-check text-indigo-600 me-1"></i> GV Phản biện:</span>
+                                <span class="text-slate-500"><i class="fa-solid fa-user-check text-indigo-600 me-1"></i>
+                                    GV Phản biện:</span>
                                 <strong id="drawerTopicReviewer" class="text-slate-900">Chưa phân công</strong>
                             </div>
                             <div class="d-flex justify-content-between py-1">
-                                <span class="text-slate-500"><i class="fa-solid fa-users-rectangle text-purple-600 me-1"></i> Hội đồng:</span>
+                                <span class="text-slate-500"><i
+                                        class="fa-solid fa-users-rectangle text-purple-600 me-1"></i> Hội đồng:</span>
                                 <strong id="drawerTopicCouncil" class="text-slate-900">Chưa phân hội đồng</strong>
                             </div>
                         </div>
@@ -276,9 +361,12 @@
                         <!-- Description -->
                         <div>
                             <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5">
-                                <i class="fa-regular fa-file-lines text-blue-600 me-1.5"></i> Mục tiêu &amp; Mô tả nội dung:
+                                <i class="fa-regular fa-file-lines text-blue-600 me-1.5"></i> Mục tiêu &amp; Mô tả nội
+                                dung:
                             </h6>
-                            <div id="drawerTopicDescription" class="text-xs text-slate-700 leading-relaxed p-3 bg-slate-50/70 border border-slate-100 rounded-xl" style="white-space: pre-line;">
+                            <div id="drawerTopicDescription"
+                                class="text-xs text-slate-700 leading-relaxed p-3 bg-slate-50/70 border border-slate-100 rounded-xl"
+                                style="white-space: pre-line;">
                                 Chưa có mô tả chi tiết.
                             </div>
                         </div>
@@ -288,13 +376,18 @@
                             <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5">
                                 <i class="fa-solid fa-list-check text-blue-600 me-1.5"></i> Yêu cầu &amp; Công nghệ:
                             </h6>
-                            <div id="drawerTopicRequirements" class="text-xs text-slate-700 leading-relaxed p-3 bg-slate-50/70 border border-slate-100 rounded-xl" style="white-space: pre-line;">
+                            <div id="drawerTopicRequirements"
+                                class="text-xs text-slate-700 leading-relaxed p-3 bg-slate-50/70 border border-slate-100 rounded-xl"
+                                style="white-space: pre-line;">
                                 Theo hướng dẫn của Giảng viên.
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer border-t border-slate-100 p-3 d-flex justify-content-between align-items-center">
-                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100" data-bs-dismiss="modal">Đóng</button>
+                    <div
+                        class="modal-footer border-t border-slate-100 p-3 d-flex justify-content-between align-items-center">
+                        <button type="button"
+                            class="btn btn-sm btn-light border rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                            data-bs-dismiss="modal">Đóng</button>
                         <div id="drawerActionButtons" class="d-inline-flex align-items-center gap-2"></div>
                     </div>
                 </div>
@@ -420,7 +513,7 @@
             });
 
             // Universal Spring Security CSRF Helpers
-            window.getCsrfToken = function() {
+            window.getCsrfToken = function () {
                 const meta = document.querySelector('meta[name="_csrf"]');
                 if (meta && meta.content) return meta.content;
                 const input = document.querySelector('input[name="_csrf"]');
@@ -428,14 +521,14 @@
                 return '';
             };
 
-            window.getCsrfParam = function() {
+            window.getCsrfParam = function () {
                 const meta = document.querySelector('meta[name="_csrf_parameter"]');
                 if (meta && meta.content) return meta.content;
                 return '_csrf';
             };
 
             // Safe Modal Switcher: cleanly hides fromModal, waits for hidden.bs.modal, then shows toModal
-            window.switchModal = function(fromModalId, toModalId, setupCallback) {
+            window.switchModal = function (fromModalId, toModalId, setupCallback) {
                 const fromEl = document.getElementById(fromModalId);
                 const toEl = document.getElementById(toModalId);
                 if (!toEl) {
@@ -444,7 +537,7 @@
                 }
 
                 if (setupCallback && typeof setupCallback === 'function') {
-                    try { setupCallback(); } catch(e) { console.error('switchModal callback error:', e); }
+                    try { setupCallback(); } catch (e) { console.error('switchModal callback error:', e); }
                 }
 
                 if (fromEl && fromEl.classList.contains('show')) {
@@ -484,15 +577,9 @@
                 try {
                     if (window.innerWidth >= 992) {
                         const savedState = localStorage.getItem('topichub_sidebar_collapsed');
-                        const isCollapsed = (savedState === 'true');
-                        document.documentElement.classList.toggle('sidebar-collapsed', isCollapsed);
-                        document.body.classList.toggle('sidebar-collapsed', isCollapsed);
-                        const chevron = document.getElementById('sidebarCollapseChevronIcon');
-                        if (chevron) {
-                            chevron.className = isCollapsed ? 'fa-solid fa-chevron-right text-slate-400' : 'fa-solid fa-chevron-left text-slate-400';
-                        }
+                        syncSidebarCollapse(savedState === 'true');
                     }
-                }
+                } catch (e) { }
             }, true);
 
             // Clean UTF-8 Topic Drawer Opener (supports ID number, DOM element, or Object)
@@ -548,7 +635,7 @@
                                     renderTopicDrawer(apiData);
                                 }
                             })
-                            .catch(() => {});
+                            .catch(() => { });
                     }
                 } else {
                     data = source;
@@ -882,7 +969,7 @@
                     .replace(/&/g, "&amp;")
                     .replace(/</g, "&lt;")
                     .replace(/>/g, "&gt;");
-                
+
                 // Format ### Headers
                 safe = safe.replace(/###\s*(.*?)(\n|$)/g, '<div class="fw-bold text-slate-900 mt-2.5 mb-1.5 fs-7">$1</div>');
                 // Format **bold**
@@ -1425,7 +1512,7 @@
 
                     var year = calDate.getFullYear();
                     var month = calDate.getMonth();
-                    
+
                     var monthNames = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
                     title.textContent = monthNames[month] + ', ' + year;
 
@@ -1558,7 +1645,7 @@
             /* =========================================================
              *  FULL CALENDAR CONTROLLER (DOCTORS' SCHEDULE SPECIFICATION)
              * ========================================================= */
-            window.fullCalendarApp = (function() {
+            window.fullCalendarApp = (function () {
                 var currentDate = new Date();
                 var currentView = 'month'; // 'day', 'week', 'month'
                 var currentFilter = 'ALL';
@@ -1569,7 +1656,7 @@
                     serverEvents = [];
                     var eventNodes = document.querySelectorAll('.server-cal-event');
                     if (eventNodes && eventNodes.length > 0) {
-                        eventNodes.forEach(function(node) {
+                        eventNodes.forEach(function (node) {
                             var date = node.dataset.date;
                             if (date) {
                                 serverEvents.push({
@@ -1620,7 +1707,7 @@
                 }
 
                 function getAllEvents() {
-                    var custom = getCustomNotes().map(function(n) {
+                    var custom = getCustomNotes().map(function (n) {
                         return {
                             id: "custom-" + n.id,
                             rawId: n.id,
@@ -1643,7 +1730,7 @@
                 function getFilteredEvents() {
                     var events = getAllEvents();
                     if (currentFilter === 'ALL') return events;
-                    return events.filter(function(ev) {
+                    return events.filter(function (ev) {
                         return ev.type === currentFilter;
                     });
                 }
@@ -1719,7 +1806,7 @@
                 function createCell(dayNum, dateStr, isOtherMonth, isToday, eventsList) {
                     var cell = document.createElement('div');
                     cell.className = 'calendar-cell' + (isOtherMonth ? ' other-month' : '') + (isToday ? ' today' : '');
-                    
+
                     var header = document.createElement('div');
                     header.className = 'day-header';
                     var numSpan = document.createElement('span');
@@ -1731,19 +1818,19 @@
                     var evContainer = document.createElement('div');
                     evContainer.className = 'events-container';
 
-                    var dayEvents = eventsList.filter(function(e) {
+                    var dayEvents = eventsList.filter(function (e) {
                         return e.date === dateStr;
                     });
 
                     var maxVisible = 3;
-                    dayEvents.slice(0, maxVisible).forEach(function(ev) {
+                    dayEvents.slice(0, maxVisible).forEach(function (ev) {
                         var pill = document.createElement('a');
                         pill.href = "javascript:void(0)";
                         pill.className = 'cal-event-pill ' + (ev.colorClass || 'cal-event-teal');
                         pill.title = ev.title + ' (' + (ev.time || '') + ')';
-                        pill.innerHTML = '<span class="fw-bold">' + escapeHtml(ev.title) + '</span>' + 
-                                         (ev.time ? '<span class="d-block opacity-80" style="font-size:0.6rem; font-weight:500;">🕒 ' + escapeHtml(ev.time) + '</span>' : '');
-                        pill.onclick = function(e) {
+                        pill.innerHTML = '<span class="fw-bold">' + escapeHtml(ev.title) + '</span>' +
+                            (ev.time ? '<span class="d-block opacity-80" style="font-size:0.6rem; font-weight:500;">🕒 ' + escapeHtml(ev.time) + '</span>' : '');
+                        pill.onclick = function (e) {
                             e.stopPropagation();
                             showEventDetail(ev);
                         };
@@ -1754,7 +1841,7 @@
                         var moreBtn = document.createElement('span');
                         moreBtn.className = 'badge bg-slate-100 text-slate-600 rounded-full px-2 py-0.5 text-3xs font-bold cursor-pointer hover:bg-slate-200 mt-1';
                         moreBtn.textContent = '+' + (dayEvents.length - maxVisible) + ' sự kiện nữa';
-                        moreBtn.onclick = function(e) {
+                        moreBtn.onclick = function (e) {
                             e.stopPropagation();
                             currentDate = new Date(dateStr + 'T00:00:00');
                             setView('day');
@@ -1764,7 +1851,7 @@
 
                     cell.appendChild(evContainer);
 
-                    cell.ondblclick = function() {
+                    cell.ondblclick = function () {
                         openAddModal(dateStr);
                     };
 
@@ -1790,31 +1877,31 @@
 
                         var col = document.createElement('div');
                         col.className = 'cal-week-col' + (isToday ? ' is-today' : '');
-                        
+
                         var headerHtml = '<div class="cal-week-header">' +
-                                         '<span class="cal-week-day-name">' + shortDayLabels[i] + '</span>' +
-                                         '<div class="cal-week-date-num">' + d.getDate() + '</div>' +
-                                         (isToday ? '<span class="badge bg-teal-500 text-white rounded-full px-2 py-0.5 mt-1" style="font-size: 0.6rem; font-weight: 800; letter-spacing: 0.04em;">HÔM NAY</span>' : '<span class="text-3xs text-slate-400 font-semibold d-block mt-0.5">Thg ' + (d.getMonth() + 1) + '</span>') +
-                                         '</div>';
-                        
+                            '<span class="cal-week-day-name">' + shortDayLabels[i] + '</span>' +
+                            '<div class="cal-week-date-num">' + d.getDate() + '</div>' +
+                            (isToday ? '<span class="badge bg-teal-500 text-white rounded-full px-2 py-0.5 mt-1" style="font-size: 0.6rem; font-weight: 800; letter-spacing: 0.04em;">HÔM NAY</span>' : '<span class="text-3xs text-slate-400 font-semibold d-block mt-0.5">Thg ' + (d.getMonth() + 1) + '</span>') +
+                            '</div>';
+
                         col.innerHTML = headerHtml;
 
                         var evBox = document.createElement('div');
                         evBox.className = 'd-flex flex-column gap-2 flex-grow-1 overflow-y-auto';
 
-                        var dayEvents = allEvents.filter(function(e) { return e.date === dStr; });
+                        var dayEvents = allEvents.filter(function (e) { return e.date === dStr; });
                         if (dayEvents.length === 0) {
                             var emptySlot = document.createElement('div');
                             emptySlot.className = 'cal-empty-week-slot';
                             emptySlot.innerHTML = '<i class="fa-regular fa-calendar-plus text-slate-300 text-lg mb-1.5"></i>' +
-                                                  '<span class="text-3xs font-bold text-slate-400 block">Trống lịch</span>' +
-                                                  '<span class="text-3xs text-teal-600 font-extrabold mt-1 opacity-90">+ Thêm việc</span>';
-                            emptySlot.onclick = (function(targetDate) {
-                                return function() { openAddModal(targetDate); };
+                                '<span class="text-3xs font-bold text-slate-400 block">Trống lịch</span>' +
+                                '<span class="text-3xs text-teal-600 font-extrabold mt-1 opacity-90">+ Thêm việc</span>';
+                            emptySlot.onclick = (function (targetDate) {
+                                return function () { openAddModal(targetDate); };
                             })(dStr);
                             evBox.appendChild(emptySlot);
                         } else {
-                            dayEvents.forEach(function(ev) {
+                            dayEvents.forEach(function (ev) {
                                 var item = document.createElement('div');
                                 var borderClass = 'border-teal';
                                 if (ev.colorClass === 'cal-event-cyan') borderClass = 'border-cyan';
@@ -1824,13 +1911,13 @@
 
                                 item.className = 'cal-week-event-card ' + borderClass;
                                 item.innerHTML = '<div class="d-flex align-items-center justify-content-between mb-1 gap-1 overflow-hidden">' +
-                                                 '<span class="badge bg-white text-slate-700 font-bold border border-slate-200/80 rounded-full px-1.5 py-0.5 text-3xs text-truncate flex-grow-1 text-start" style="font-size: 0.58rem; max-width: 62%;">' + escapeHtml(ev.typeName || ev.type) + '</span>' +
-                                                 (ev.time ? '<span class="text-3xs text-slate-500 font-bold text-nowrap flex-shrink-0" style="font-size: 0.6rem;">' + escapeHtml(ev.time) + '</span>' : '') +
-                                                 '</div>' +
-                                                 '<div class="fw-extrabold text-slate-900 text-xs line-clamp-2 mb-1" style="line-height: 1.35;">' + escapeHtml(ev.title) + '</div>' +
-                                                 (ev.location ? '<div class="text-3xs text-slate-500 font-medium d-flex align-items-center gap-1 overflow-hidden"><i class="fa-solid fa-location-dot text-teal-600 flex-shrink-0" style="font-size: 0.65rem;"></i><span class="text-truncate">' + escapeHtml(ev.location) + '</span></div>' : '');
-                                
-                                item.onclick = function(e) {
+                                    '<span class="badge bg-white text-slate-700 font-bold border border-slate-200/80 rounded-full px-1.5 py-0.5 text-3xs text-truncate flex-grow-1 text-start" style="font-size: 0.58rem; max-width: 62%;">' + escapeHtml(ev.typeName || ev.type) + '</span>' +
+                                    (ev.time ? '<span class="text-3xs text-slate-500 font-bold text-nowrap flex-shrink-0" style="font-size: 0.6rem;">' + escapeHtml(ev.time) + '</span>' : '') +
+                                    '</div>' +
+                                    '<div class="fw-extrabold text-slate-900 text-xs line-clamp-2 mb-1" style="line-height: 1.35;">' + escapeHtml(ev.title) + '</div>' +
+                                    (ev.location ? '<div class="text-3xs text-slate-500 font-medium d-flex align-items-center gap-1 overflow-hidden"><i class="fa-solid fa-location-dot text-teal-600 flex-shrink-0" style="font-size: 0.65rem;"></i><span class="text-truncate">' + escapeHtml(ev.location) + '</span></div>' : '');
+
+                                item.onclick = function (e) {
                                     e.stopPropagation();
                                     showEventDetail(ev);
                                 };
@@ -1841,16 +1928,16 @@
                             addMiniBtn.type = 'button';
                             addMiniBtn.className = 'btn btn-xs w-100 mt-2 py-1.5 rounded-xl border border-dashed border-slate-200 text-slate-400 hover:text-teal-700 hover:border-teal-400 hover:bg-teal-50/50 text-3xs font-bold transition d-flex align-items-center justify-content-center gap-1';
                             addMiniBtn.innerHTML = '<i class="fa-solid fa-plus text-3xs"></i> <span>Thêm việc</span>';
-                            addMiniBtn.onclick = (function(targetDate) {
-                                return function() { openAddModal(targetDate); };
+                            addMiniBtn.onclick = (function (targetDate) {
+                                return function () { openAddModal(targetDate); };
                             })(dStr);
                             evBox.appendChild(addMiniBtn);
                         }
 
                         col.appendChild(evBox);
 
-                        col.ondblclick = (function(targetDate) {
-                            return function() { openAddModal(targetDate); };
+                        col.ondblclick = (function (targetDate) {
+                            return function () { openAddModal(targetDate); };
                         })(dStr);
 
                         grid.appendChild(col);
@@ -1861,47 +1948,47 @@
                     var container = document.getElementById('fullCalDayContent');
                     if (!container) return;
                     var dStr = formatDateYMD(currentDate);
-                    var allEvents = getFilteredEvents().filter(function(e) { return e.date === dStr; });
+                    var allEvents = getFilteredEvents().filter(function (e) { return e.date === dStr; });
 
                     var dayNames = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
                     var dayName = dayNames[currentDate.getDay()];
 
                     var html = '<div class="d-flex align-items-center justify-content-between pb-3 mb-4 border-b border-slate-100">' +
-                               '<div>' +
-                               '<span class="badge bg-teal-100 text-teal-800 rounded-full px-3 py-1 text-xs font-bold mb-1">' + dayName + '</span>' +
-                               '<h3 class="text-xl font-extrabold text-slate-900 mb-0">Lịch trình ngày ' + currentDate.getDate() + '/' + (currentDate.getMonth() + 1) + '/' + currentDate.getFullYear() + '</h3>' +
-                               '</div>' +
-                               '<button type="button" class="btn btn-sm btn-dark rounded-full px-3.5 py-1.5 text-xs font-bold" onclick="fullCalendarApp.openAddModal(\'' + dStr + '\')">' +
-                               '<i class="fa-solid fa-plus me-1"></i> Thêm việc ngày này' +
-                               '</button>' +
-                               '</div>';
+                        '<div>' +
+                        '<span class="badge bg-teal-100 text-teal-800 rounded-full px-3 py-1 text-xs font-bold mb-1">' + dayName + '</span>' +
+                        '<h3 class="text-xl font-extrabold text-slate-900 mb-0">Lịch trình ngày ' + currentDate.getDate() + '/' + (currentDate.getMonth() + 1) + '/' + currentDate.getFullYear() + '</h3>' +
+                        '</div>' +
+                        '<button type="button" class="btn btn-sm btn-dark rounded-full px-3.5 py-1.5 text-xs font-bold" onclick="fullCalendarApp.openAddModal(\'' + dStr + '\')">' +
+                        '<i class="fa-solid fa-plus me-1"></i> Thêm việc ngày này' +
+                        '</button>' +
+                        '</div>';
 
                     if (allEvents.length === 0) {
                         html += '<div class="p-5 text-center text-slate-400">' +
-                                '<i class="fa-regular fa-calendar-check text-4xl mb-2 opacity-30"></i>' +
-                                '<p class="text-xs mb-0">Không có sự kiện hay hạn chót nào trong ngày này.</p>' +
-                                '</div>';
+                            '<i class="fa-regular fa-calendar-check text-4xl mb-2 opacity-30"></i>' +
+                            '<p class="text-xs mb-0">Không có sự kiện hay hạn chót nào trong ngày này.</p>' +
+                            '</div>';
                     } else {
                         html += '<div class="space-y-3">';
-                        allEvents.forEach(function(ev) {
+                        allEvents.forEach(function (ev) {
                             html += '<div class="p-3.5 rounded-2xl border border-slate-200/80 hover:border-teal-300 bg-white transition d-flex align-items-center justify-content-between gap-3 shadow-2xs">' +
-                                    '<div class="d-flex align-items-center gap-3">' +
-                                    '<div class="w-10 h-10 rounded-2xl ' + (ev.colorClass || 'cal-event-teal') + ' d-flex align-items-center justify-content-center flex-shrink-0 text-sm">' +
-                                    '<i class="fa-solid ' + (ev.icon || 'fa-calendar-check') + '"></i>' +
-                                    '</div>' +
-                                    '<div>' +
-                                    '<div class="d-flex align-items-center gap-2">' +
-                                    '<span class="badge bg-slate-100 text-slate-700 font-bold rounded-full px-2 py-0.5 text-3xs">' + escapeHtml(ev.typeName || ev.type) + '</span>' +
-                                    '<span class="text-xs font-bold text-slate-900">' + escapeHtml(ev.title) + '</span>' +
-                                    '</div>' +
-                                    '<div class="text-3xs text-slate-500 mt-1 d-flex gap-3">' +
-                                    '<span><i class="fa-regular fa-clock text-teal-600 me-1"></i>' + escapeHtml(ev.time || 'Cả ngày') + '</span>' +
-                                    (ev.location ? '<span><i class="fa-solid fa-location-dot text-teal-600 me-1"></i>' + escapeHtml(ev.location) + '</span>' : '') +
-                                    '</div>' +
-                                    '</div>' +
-                                    '</div>' +
-                                    '<button type="button" class="btn btn-sm btn-light border border-slate-200/80 rounded-full px-3 py-1 text-xs font-bold" onclick=\'fullCalendarApp.showEventDetail(' + JSON.stringify(ev) + ')\'>Chi tiết</button>' +
-                                    '</div>';
+                                '<div class="d-flex align-items-center gap-3">' +
+                                '<div class="w-10 h-10 rounded-2xl ' + (ev.colorClass || 'cal-event-teal') + ' d-flex align-items-center justify-content-center flex-shrink-0 text-sm">' +
+                                '<i class="fa-solid ' + (ev.icon || 'fa-calendar-check') + '"></i>' +
+                                '</div>' +
+                                '<div>' +
+                                '<div class="d-flex align-items-center gap-2">' +
+                                '<span class="badge bg-slate-100 text-slate-700 font-bold rounded-full px-2 py-0.5 text-3xs">' + escapeHtml(ev.typeName || ev.type) + '</span>' +
+                                '<span class="text-xs font-bold text-slate-900">' + escapeHtml(ev.title) + '</span>' +
+                                '</div>' +
+                                '<div class="text-3xs text-slate-500 mt-1 d-flex gap-3">' +
+                                '<span><i class="fa-regular fa-clock text-teal-600 me-1"></i>' + escapeHtml(ev.time || 'Cả ngày') + '</span>' +
+                                (ev.location ? '<span><i class="fa-solid fa-location-dot text-teal-600 me-1"></i>' + escapeHtml(ev.location) + '</span>' : '') +
+                                '</div>' +
+                                '</div>' +
+                                '</div>' +
+                                '<button type="button" class="btn btn-sm btn-light border border-slate-200/80 rounded-full px-3 py-1 text-xs font-bold" onclick=\'fullCalendarApp.showEventDetail(' + JSON.stringify(ev) + ')\'>Chi tiết</button>' +
+                                '</div>';
                         });
                         html += '</div>';
                     }
@@ -1938,7 +2025,7 @@
 
                 function setView(view) {
                     currentView = view;
-                    ['day', 'week', 'month'].forEach(function(v) {
+                    ['day', 'week', 'month'].forEach(function (v) {
                         var btn = document.getElementById('viewBtn' + v.charAt(0).toUpperCase() + v.slice(1));
                         if (btn) {
                             if (v === view) {
@@ -1984,7 +2071,7 @@
                     document.getElementById('eventDetailDate').textContent = ev.date || '--';
                     document.getElementById('eventDetailTime').textContent = ev.time || 'Cả ngày';
                     document.getElementById('eventDetailLocation').textContent = ev.location || 'Tại Trường / Trực tuyến';
-                    
+
                     var descEl = document.getElementById('eventDetailDesc');
                     var descRow = document.getElementById('eventDetailDescRow');
                     if (ev.desc || ev.location) {
@@ -2065,7 +2152,7 @@
                     if (!confirm('Bạn có chắc muốn xóa ghi chú lịch này không?')) return;
 
                     var notes = getCustomNotes();
-                    notes = notes.filter(function(n) { return n.id !== selectedEvent.rawId; });
+                    notes = notes.filter(function (n) { return n.id !== selectedEvent.rawId; });
                     saveCustomNotes(notes);
 
                     var modalEl = document.getElementById('eventDetailModal');
@@ -2105,12 +2192,12 @@
             /* =========================================================
              *  WELLNEST ACCORDION CATEGORY TREE FILTER CONTROLLER
              * ========================================================= */
-            window.toggleTreeGroup = function(headerBtn) {
+            window.toggleTreeGroup = function (headerBtn) {
                 var group = headerBtn.closest('.tree-group');
                 if (!group) return;
                 var subList = group.querySelector('.tree-sub-list');
                 var isOpen = group.classList.contains('is-open');
-                
+
                 if (isOpen) {
                     group.classList.remove('is-open');
                     if (subList) subList.classList.add('d-none');
@@ -2120,8 +2207,8 @@
                 }
             };
 
-            window.filterByTreeCriteria = function(type, value, el) {
-                document.querySelectorAll('.tree-sub-item').forEach(function(item) {
+            window.filterByTreeCriteria = function (type, value, el) {
+                document.querySelectorAll('.tree-sub-item').forEach(function (item) {
                     item.classList.remove('active');
                 });
                 if (el) el.classList.add('active');
@@ -2129,7 +2216,7 @@
                 var rows = document.querySelectorAll('.topic-item-row, .kanban-card, .student-topic-card');
                 var visibleCount = 0;
 
-                rows.forEach(function(row) {
+                rows.forEach(function (row) {
                     var match = true;
                     if (type === 'ALL') {
                         match = true;
@@ -2174,9 +2261,9 @@
                 }
             };
 
-            window.searchTreeItems = function(keyword) {
+            window.searchTreeItems = function (keyword) {
                 var term = (keyword || '').toLowerCase().trim();
-                document.querySelectorAll('.tree-sub-item').forEach(function(item) {
+                document.querySelectorAll('.tree-sub-item').forEach(function (item) {
                     var text = item.textContent.toLowerCase();
                     if (!term || text.includes(term)) {
                         item.style.display = 'flex';
@@ -2185,9 +2272,9 @@
             };
 
             // Global Protection: Automatically clear unwanted browser autofill on search/filter bars
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 function sanitizeSearchInputs() {
-                    document.querySelectorAll('input').forEach(function(inp) {
+                    document.querySelectorAll('input').forEach(function (inp) {
                         var type = (inp.type || '').toLowerCase();
                         if (type === 'password' || type === 'hidden' || type === 'checkbox' || type === 'radio' || type === 'number') return;
                         var ph = (inp.getAttribute('placeholder') || '').toLowerCase();

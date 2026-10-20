@@ -58,8 +58,8 @@ html[data-theme="dark"] .saas-sidebar.workspace-sidebar {
 .workspace-sidebar :is(a,button):focus-visible { outline: 2px solid var(--nav-strong); outline-offset: 2px; }
 .sidebar-overlay { display: none; }
 @media (min-width: 992px) {
-    html.sidebar-collapsed .saas-sidebar.workspace-sidebar { width: 64px; }
-    html.sidebar-collapsed .saas-main-wrapper { margin-left: 64px; }
+    html.sidebar-collapsed .saas-sidebar.workspace-sidebar { width: 64px !important; padding: 0 !important; }
+    html.sidebar-collapsed .saas-main-wrapper { margin-left: 64px !important; }
     .sidebar-collapsed .workspace-header { flex-direction: column; gap: .375rem; padding: 1rem .5rem .75rem; }
     .sidebar-collapsed .workspace-wordmark, .sidebar-collapsed .workspace-section, .sidebar-collapsed .workspace-link > span, .sidebar-collapsed .workspace-utility > span, .sidebar-collapsed .workspace-account-text { display: none; }
     .sidebar-collapsed .workspace-monogram { display: inline; }
