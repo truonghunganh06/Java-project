@@ -15,86 +15,38 @@ public class DepartmentHeadService {
 
     private final TopicRepository topicRepository;
     private final DepartmentRepository departmentRepository;
-    private final DivisionRepository divisionRepository;
-    private final MajorRepository majorRepository;
     private final LecturerRepository lecturerRepository;
     private final StudentRepository studentRepository;
-    private final TopicRegistrationRepository registrationRepository;
     private final RegistrationPeriodRepository periodRepository;
     private final StudentGroupRepository studentGroupRepository;
     private final CouncilRepository councilRepository;
-    private final AnnouncementRepository announcementRepository;
 
     public DepartmentHeadService(
             TopicRepository topicRepository,
             DepartmentRepository departmentRepository,
-            DivisionRepository divisionRepository,
-            MajorRepository majorRepository,
             LecturerRepository lecturerRepository,
             StudentRepository studentRepository,
-            TopicRegistrationRepository registrationRepository,
             RegistrationPeriodRepository periodRepository,
             StudentGroupRepository studentGroupRepository,
-            CouncilRepository councilRepository,
-            AnnouncementRepository announcementRepository) {
+            CouncilRepository councilRepository) {
         this.topicRepository = topicRepository;
         this.departmentRepository = departmentRepository;
-        this.divisionRepository = divisionRepository;
-        this.majorRepository = majorRepository;
         this.lecturerRepository = lecturerRepository;
         this.studentRepository = studentRepository;
-        this.registrationRepository = registrationRepository;
         this.periodRepository = periodRepository;
         this.studentGroupRepository = studentGroupRepository;
         this.councilRepository = councilRepository;
-        this.announcementRepository = announcementRepository;
-    }
-
-    public Division getDivisionForUser(AppUser user) {
-        if (user != null) {
-            Optional<Lecturer> lecturerOpt = lecturerRepository.findByUserId(user.getId());
-            if (lecturerOpt.isPresent() && lecturerOpt.get().getDivision() != null) {
-                return lecturerOpt.get().getDivision();
-            }
-        }
-        List<Division> divisions = divisionRepository.findAll();
-        if (!divisions.isEmpty()) {
-            return divisions.get(0);
-        }
-        return null;
     }
 
     public Department getDepartmentForUser(AppUser user) {
         if (user != null) {
             Optional<Lecturer> lecturerOpt = lecturerRepository.findByUserId(user.getId());
-            if (lecturerOpt.isPresent()) {
-                Lecturer lec = lecturerOpt.get();
-                if (lec.getDivision() != null && lec.getDivision().getDepartment() != null) {
-                    return lec.getDivision().getDepartment();
-                }
-                if (lec.getDepartment() != null) {
-                    return lec.getDepartment();
-                }
+            if (lecturerOpt.isPresent() && lecturerOpt.get().getDepartment() != null) {
+                return lecturerOpt.get().getDepartment();
             }
         }
-
-        List<Department> departments = departmentRepository.findAll();
-        if (!departments.isEmpty()) {
-            return departments.get(0);
-        }
-
-        Department defaultDept = new Department();
-        defaultDept.setId(1L);
-        defaultDept.setCode("CNTT");
-        defaultDept.setName("Khoa Công nghệ Thông tin");
-        return defaultDept;
-    }
-
-    public List<Division> getDivisionsByDepartment(Long departmentId) {
-        if (departmentId != null) {
-            return divisionRepository.findByDepartmentId(departmentId);
-        }
-        return divisionRepository.findAll();
+        List<Department> depts = departmentRepository.findAll();
+        return !depts.isEmpty() ? depts.get(0) : null;
     }
 
     // ==================== REGISTRATION PERIODS ====================
@@ -113,134 +65,82 @@ public class DepartmentHeadService {
 
     @Transactional
     public RegistrationPeriod createPeriod(Department dept, String name, String periodType, String academicYear, Integer semester,
-                                           OffsetDateTime propStart, OffsetDateTime propEnd,
-                                           OffsetDateTime regStart, OffsetDateTime regEnd,
-                                           OffsetDateTime revDead, OffsetDateTime defenseDate) {
-        return createPeriod(dept, name, periodType, academicYear, semester, propStart, propEnd, regStart, regEnd, revDead, defenseDate, 3);
-    }
+                                         OffsetDateTime lecturerStart, OffsetDateTime lecturerEnd,
+                                         OffsetDateTime studentStart, OffsetDateTime studentEnd,
+                                         OffsetDateTime reviewerDeadline, OffsetDateTime councilDefenseDate,
+                                         Integer minTopicsPerLecturer) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên đợt đăng ký không được để trống!");
+        }
 
-    @Transactional
-    @CacheEvict(value = "activePeriods", allEntries = true)
-    public RegistrationPeriod createPeriod(Department dept, String name, String periodType, String academicYear, Integer semester,
-                                           OffsetDateTime propStart, OffsetDateTime propEnd,
-                                           OffsetDateTime regStart, OffsetDateTime regEnd,
-                                           OffsetDateTime revDead, OffsetDateTime defenseDate,
-                                           Integer minTopicsPerLecturer) {
-        RegistrationPeriod p = new RegistrationPeriod();
-        p.setDepartment(dept);
-        p.setName(name);
-        p.setPeriodType(periodType != null ? periodType : "KLTN");
-        p.setAcademicYear(academicYear != null ? academicYear : "2026-2027");
-        p.setSemester(semester != null ? semester : 1);
-        p.setLecturerProposalStart(propStart != null ? propStart : OffsetDateTime.now());
-        p.setLecturerProposalEnd(propEnd != null ? propEnd : OffsetDateTime.now().plusDays(15));
-        p.setStudentRegistrationStart(regStart != null ? regStart : OffsetDateTime.now().plusDays(16));
-        p.setStudentRegistrationEnd(regEnd != null ? regEnd : OffsetDateTime.now().plusDays(30));
-        p.setReviewerDeadline(revDead != null ? revDead : OffsetDateTime.now().plusDays(60));
-        p.setCouncilDefenseDate(defenseDate != null ? defenseDate : OffsetDateTime.now().plusDays(75));
-        p.setMinTopicsPerLecturer(minTopicsPerLecturer != null && minTopicsPerLecturer > 0 ? minTopicsPerLecturer : 3);
-        p.setStatus("OPEN");
-        p.setIsActive(true);
-        p.setCreatedAt(OffsetDateTime.now());
+        RegistrationPeriod period = new RegistrationPeriod();
+        period.setName(name.trim());
+        period.setDepartment(dept);
+        period.setPeriodType(periodType != null && !periodType.trim().isEmpty() ? periodType.trim() : "KLTN");
+        period.setAcademicYear(academicYear != null && !academicYear.trim().isEmpty() ? academicYear.trim() : "2026-2027");
+        period.setSemester(semester != null ? semester : 1);
+        period.setLecturerProposalStart(lecturerStart);
+        period.setLecturerProposalEnd(lecturerEnd);
+        period.setStudentRegistrationStart(studentStart);
+        period.setStudentRegistrationEnd(studentEnd);
+        period.setReviewerDeadline(reviewerDeadline);
+        period.setCouncilDefenseDate(councilDefenseDate);
+        period.setMinTopicsPerLecturer(minTopicsPerLecturer != null ? minTopicsPerLecturer : 3);
+        period.setMinStudents(3);
+        period.setMaxStudents(5);
+        period.setStatus("ACTIVE");
+        period.setIsActive(true);
+        period.setCreatedAt(OffsetDateTime.now());
 
-        RegistrationPeriod saved = periodRepository.save(p);
-        System.out.println("[DB-HEAD] Đã tạo đợt đăng ký mới: '" + name + "' (ID=" + saved.getId() + ", minTopics=" + saved.getMinTopicsPerLecturer() + ")");
+        RegistrationPeriod saved = periodRepository.save(period);
+        System.out.println("[DB-HEAD] Đã tạo đợt đăng ký mới vào DB: '" + saved.getName() + "' (ID=" + saved.getId() + ")");
         return saved;
     }
 
     @Transactional
-    @CacheEvict(value = "activePeriods", allEntries = true)
+    public RegistrationPeriod updatePeriod(Long id, Long departmentId, String name, String periodType, String academicYear, Integer semester,
+                                         OffsetDateTime lecturerStart, OffsetDateTime lecturerEnd,
+                                         OffsetDateTime studentStart, OffsetDateTime studentEnd,
+                                         OffsetDateTime reviewerDeadline, OffsetDateTime councilDefenseDate,
+                                         Integer minTopicsPerLecturer, String status) {
+        RegistrationPeriod period = getPeriodById(id);
+        if (period == null) return null;
+
+        if (departmentId != null && period.getDepartment() != null
+                && !departmentId.equals(period.getDepartment().getId())) {
+            throw new SecurityException("Không có quyền chỉnh sửa đợt của khoa khác!");
+        }
+
+        if (name != null && !name.trim().isEmpty()) period.setName(name.trim());
+        if (periodType != null && !periodType.trim().isEmpty()) period.setPeriodType(periodType.trim());
+        if (academicYear != null && !academicYear.trim().isEmpty()) period.setAcademicYear(academicYear.trim());
+        if (semester != null) period.setSemester(semester);
+        period.setLecturerProposalStart(lecturerStart);
+        period.setLecturerProposalEnd(lecturerEnd);
+        period.setStudentRegistrationStart(studentStart);
+        period.setStudentRegistrationEnd(studentEnd);
+        period.setReviewerDeadline(reviewerDeadline);
+        period.setCouncilDefenseDate(councilDefenseDate);
+        if (minTopicsPerLecturer != null) period.setMinTopicsPerLecturer(minTopicsPerLecturer);
+        if (status != null && !status.trim().isEmpty()) period.setStatus(status.trim());
+
+        return periodRepository.save(period);
+    }
+
+    @Transactional
     public boolean updatePeriodStatus(Long periodId, String status, Long departmentId) {
         RegistrationPeriod p = getPeriodById(periodId);
         if (p == null) return false;
-        if (departmentId != null && p.getDepartment() != null
-                && !departmentId.equals(p.getDepartment().getId())) {
-            System.err.println("[SECURITY] Cố thay đổi đợt thuộc dept=" + p.getDepartment().getId() + " nhưng user dept=" + departmentId);
-            return false;
+        if (departmentId != null && p.getDepartment() != null && !departmentId.equals(p.getDepartment().getId())) return false;
+        if (status != null && !status.trim().isEmpty()) {
+            p.setStatus(status.trim());
+            periodRepository.save(p);
+            return true;
         }
-        p.setStatus(status);
-        periodRepository.save(p);
-        System.out.println("[DB-HEAD] Cập nhật trạng thái đợt ID=" + periodId + " -> " + status);
-        return true;
+        return false;
     }
 
     @Transactional
-    @CacheEvict(value = "activePeriods", allEntries = true)
-    public RegistrationPeriod updatePeriod(Long id, Long departmentId, String name, String periodType, String academicYear, Integer semester,
-                                           OffsetDateTime propStart, OffsetDateTime propEnd,
-                                           OffsetDateTime regStart, OffsetDateTime regEnd,
-                                           OffsetDateTime revDead, OffsetDateTime defenseDate,
-                                           String status) {
-        return updatePeriod(id, departmentId, name, periodType, academicYear, semester, propStart, propEnd, regStart, regEnd, revDead, defenseDate, status, 3);
-    }
-
-    @Transactional
-    @CacheEvict(value = "activePeriods", allEntries = true)
-    public RegistrationPeriod updatePeriod(Long id, Long departmentId, String name, String periodType, String academicYear, Integer semester,
-                                           OffsetDateTime propStart, OffsetDateTime propEnd,
-                                           OffsetDateTime regStart, OffsetDateTime regEnd,
-                                           OffsetDateTime revDead, OffsetDateTime defenseDate,
-                                           String status, Integer minTopicsPerLecturer) {
-        RegistrationPeriod p = getPeriodById(id);
-        if (p == null) return null;
-        if (departmentId != null && p.getDepartment() != null
-                && !departmentId.equals(p.getDepartment().getId())) {
-            System.err.println("[SECURITY] Cố sửa đợt thuộc dept=" + p.getDepartment().getId() + " nhưng user dept=" + departmentId);
-            return null;
-        }
-        if (name != null && !name.isBlank()) p.setName(name);
-        if (periodType != null && !periodType.isBlank()) p.setPeriodType(periodType);
-        if (academicYear != null && !academicYear.isBlank()) p.setAcademicYear(academicYear);
-        if (semester != null) p.setSemester(semester);
-        if (propStart != null) p.setLecturerProposalStart(propStart);
-        if (propEnd != null) p.setLecturerProposalEnd(propEnd);
-        if (regStart != null) p.setStudentRegistrationStart(regStart);
-        if (regEnd != null) p.setStudentRegistrationEnd(regEnd);
-        if (revDead != null) p.setReviewerDeadline(revDead);
-        if (defenseDate != null) p.setCouncilDefenseDate(defenseDate);
-        if (status != null && !status.isBlank()) p.setStatus(status);
-        if (minTopicsPerLecturer != null && minTopicsPerLecturer > 0) {
-            p.setMinTopicsPerLecturer(minTopicsPerLecturer);
-        }
-
-        RegistrationPeriod saved = periodRepository.save(p);
-        System.out.println("[DB-HEAD] Đã cập nhật đợt ID=" + id + " ('" + p.getName() + "', minTopics=" + p.getMinTopicsPerLecturer() + ")");
-        return saved;
-    }
-
-    /**
-     * Sửa nhanh và Phê duyệt trực tiếp đề tài (Tránh trễ hạn công bố cho sinh viên)
-     */
-    @Transactional
-    public boolean quickEditAndApproveTopic(Long topicId, String title, String description, String requirements, Long divisionId, Long departmentId) {
-        Optional<Topic> opt = topicRepository.findById(topicId);
-        if (opt.isEmpty()) return false;
-        Topic t = opt.get();
-
-        if (!isTopicInScope(t, divisionId, departmentId)) {
-            System.err.println("[SECURITY-IDOR] Người dùng (div=" + divisionId + ", dept=" + departmentId + ") cố sửa/duyệt đề tài ngoài phạm vi (topicId=" + topicId + ")");
-            return false;
-        }
-
-        if (title != null && !title.trim().isEmpty()) {
-            t.setTitle(title.trim());
-        }
-        if (description != null) {
-            t.setDescription(description.trim());
-        }
-        if (requirements != null) {
-            t.setRequirements(requirements.trim());
-        }
-
-        t.setStatus("APPROVED");
-        t.setRejectionReason(null);
-        topicRepository.save(t);
-        System.out.println("[DB-HEAD] Đã sửa nhanh và Phê duyệt đề tài ID=" + topicId + " ('" + t.getTitle() + "')");
-        return true;
-    }
-
-    @Transactional
-    @CacheEvict(value = "activePeriods", allEntries = true)
     public boolean deletePeriod(Long periodId, Long departmentId) {
         RegistrationPeriod p = getPeriodById(periodId);
         if (p == null) return false;
@@ -261,52 +161,24 @@ public class DepartmentHeadService {
         return true;
     }
 
-    // ==================== MAJORS & TOPICS ====================
+    // ==================== TOPICS ====================
 
-    public List<Major> getDepartmentMajors(Long departmentId) {
-        if (departmentId != null) {
-            return majorRepository.findByDepartmentId(departmentId);
-        }
-        return majorRepository.findAll();
-    }
-
-    public List<Major> getDivisionMajors(Long divisionId) {
-        if (divisionId != null) {
-            return majorRepository.findByDivisionId(divisionId);
-        }
-        return majorRepository.findAll();
-    }
-
-    public List<Topic> getDepartmentTopics(Long departmentId, String status, Long majorId, Long periodId, String keyword) {
+    public List<Topic> getDepartmentTopics(Long departmentId, String status, Long periodId, String keyword) {
         List<Topic> topics;
         if (departmentId != null) {
-            topics = topicRepository.findByMajorDepartmentId(departmentId);
+            topics = topicRepository.findByDepartmentId(departmentId);
         } else {
             topics = topicRepository.findAll();
         }
 
-        return filterTopics(topics, status, majorId, periodId, keyword);
+        return filterTopics(topics, status, periodId, keyword);
     }
 
-    public List<Topic> getDivisionTopics(Long divisionId, String status, Long majorId, Long periodId, String keyword) {
-        List<Topic> topics;
-        if (divisionId != null) {
-            topics = topicRepository.findByDivisionId(divisionId);
-        } else {
-            topics = topicRepository.findAll();
-        }
-
-        return filterTopics(topics, status, majorId, periodId, keyword);
-    }
-
-    private List<Topic> filterTopics(List<Topic> topics, String status, Long majorId, Long periodId, String keyword) {
+    private List<Topic> filterTopics(List<Topic> topics, String status, Long periodId, String keyword) {
         return topics.stream()
                 .filter(t -> {
                     if (status != null && !status.isEmpty() && !"ALL".equalsIgnoreCase(status)) {
                         if (!status.equalsIgnoreCase(t.getStatus())) return false;
-                    }
-                    if (majorId != null) {
-                        if (t.getMajor() == null || !majorId.equals(t.getMajor().getId())) return false;
                     }
                     if (periodId != null) {
                         if (t.getPeriod() == null || !periodId.equals(t.getPeriod().getId())) return false;
@@ -329,12 +201,8 @@ public class DepartmentHeadService {
                 .collect(Collectors.toList());
     }
 
-    public org.springframework.data.domain.Page<Topic> getDepartmentTopicsPaged(Long departmentId, String status, Long majorId, Long periodId, String keyword, org.springframework.data.domain.Pageable pageable) {
-        return topicRepository.findDepartmentTopicsPaged(departmentId, null, status, majorId, periodId, keyword, pageable);
-    }
-
-    public org.springframework.data.domain.Page<Topic> getDivisionTopicsPaged(Long divisionId, String status, Long majorId, Long periodId, String keyword, org.springframework.data.domain.Pageable pageable) {
-        return topicRepository.findDivisionTopicsPaged(divisionId, status, majorId, periodId, keyword, pageable);
+    public org.springframework.data.domain.Page<Topic> getDepartmentTopicsPaged(Long departmentId, String status, Long periodId, String keyword, org.springframework.data.domain.Pageable pageable) {
+        return topicRepository.findDepartmentTopicsPaged(departmentId, status, periodId, keyword, pageable);
     }
 
     public Topic getTopicById(Long topicId) {
@@ -343,21 +211,16 @@ public class DepartmentHeadService {
     }
 
     /**
-     * IDOR Check: Phê duyệt đề tài theo thẩm quyền Bộ môn / Khoa
+     * IDOR Check: Phê duyệt đề tài theo thẩm quyền Khoa
      */
     @Transactional
     public boolean approveTopic(Long topicId, Long departmentId) {
-        return approveTopic(topicId, null, departmentId);
-    }
-
-    @Transactional
-    public boolean approveTopic(Long topicId, Long divisionId, Long departmentId) {
         Optional<Topic> opt = topicRepository.findById(topicId);
         if (opt.isEmpty()) return false;
         Topic t = opt.get();
 
-        if (!isTopicInScope(t, divisionId, departmentId)) {
-            System.err.println("[SECURITY-IDOR] Người dùng (div=" + divisionId + ", dept=" + departmentId + ") cố duyệt đề tài ngoài phạm vi (topicId=" + topicId + ")");
+        if (!isTopicInScope(t, departmentId)) {
+            System.err.println("[SECURITY-IDOR] Người dùng (dept=" + departmentId + ") cố duyệt đề tài ngoài phạm vi (topicId=" + topicId + ")");
             return false;
         }
 
@@ -368,22 +231,33 @@ public class DepartmentHeadService {
         return true;
     }
 
+    @Transactional
+    public boolean quickEditAndApproveTopic(Long topicId, String title, String description, String requirements, Integer maxStudents, Long departmentId) {
+        Optional<Topic> opt = topicRepository.findById(topicId);
+        if (opt.isEmpty()) return false;
+        Topic t = opt.get();
+        if (!isTopicInScope(t, departmentId)) return false;
+        if (title != null && !title.trim().isEmpty()) t.setTitle(title.trim());
+        if (description != null) t.setDescription(description);
+        if (requirements != null) t.setRequirements(requirements);
+        if (maxStudents != null) t.setMaxStudents(maxStudents);
+        t.setStatus("APPROVED");
+        t.setRejectionReason(null);
+        topicRepository.save(t);
+        return true;
+    }
+
     /**
-     * IDOR Check: Từ chối đề tài theo thẩm quyền Bộ môn / Khoa
+     * IDOR Check: Từ chối đề tài theo thẩm quyền Khoa
      */
     @Transactional
     public boolean rejectTopic(Long topicId, String rejectionReason, Long departmentId) {
-        return rejectTopic(topicId, rejectionReason, null, departmentId);
-    }
-
-    @Transactional
-    public boolean rejectTopic(Long topicId, String rejectionReason, Long divisionId, Long departmentId) {
         Optional<Topic> opt = topicRepository.findById(topicId);
         if (opt.isEmpty()) return false;
         Topic t = opt.get();
 
-        if (!isTopicInScope(t, divisionId, departmentId)) {
-            System.err.println("[SECURITY-IDOR] Người dùng (div=" + divisionId + ", dept=" + departmentId + ") cố từ chối đề tài ngoài phạm vi (topicId=" + topicId + ")");
+        if (!isTopicInScope(t, departmentId)) {
+            System.err.println("[SECURITY-IDOR] Người dùng (dept=" + departmentId + ") cố từ chối đề tài ngoài phạm vi (topicId=" + topicId + ")");
             return false;
         }
 
@@ -395,31 +269,13 @@ public class DepartmentHeadService {
     }
 
     /**
-     * IDOR Helper kiểm tra đề tài có thuộc Division / Department hay không
+     * IDOR Helper kiểm tra đề tài có thuộc Department hay không
      */
-    public boolean isTopicInScope(Topic topic, Long divisionId, Long departmentId) {
+    public boolean isTopicInScope(Topic topic, Long departmentId) {
         if (topic == null) return false;
-        if (divisionId == null && departmentId == null) return true;
-
-        if (divisionId != null) {
-            if (topic.getDivision() != null && divisionId.equals(topic.getDivision().getId())) {
-                return true;
-            }
-            if (topic.getMajor() != null && topic.getMajor().getDivision() != null && divisionId.equals(topic.getMajor().getDivision().getId())) {
-                return true;
-            }
-            if (topic.getSupervisor() != null && topic.getSupervisor().getDivision() != null && divisionId.equals(topic.getSupervisor().getDivision().getId())) {
-                return true;
-            }
-            return false;
-        }
-
-        if (departmentId != null) {
-            Department dept = topic.getDepartment();
-            return dept != null && departmentId.equals(dept.getId());
-        }
-
-        return true;
+        if (departmentId == null) return true;
+        Department dept = topic.getDepartment();
+        return dept != null && departmentId.equals(dept.getId());
     }
 
     // ==================== LECTURERS & STUDENTS ====================
@@ -431,23 +287,9 @@ public class DepartmentHeadService {
         return lecturerRepository.findAll();
     }
 
-    public List<Lecturer> getLecturersInDivision(Long divisionId) {
-        if (divisionId != null) {
-            return lecturerRepository.findByDivisionId(divisionId);
-        }
-        return lecturerRepository.findAll();
-    }
-
     public List<Student> getStudentsInDepartment(Long departmentId) {
         if (departmentId != null) {
-            return studentRepository.findByMajorDepartmentId(departmentId);
-        }
-        return studentRepository.findAll();
-    }
-
-    public List<Student> getStudentsInDivision(Long divisionId) {
-        if (divisionId != null) {
-            return studentRepository.findByDivisionOrMajorDivisionId(divisionId);
+            return studentRepository.findByDepartmentId(departmentId);
         }
         return studentRepository.findAll();
     }
@@ -479,67 +321,45 @@ public class DepartmentHeadService {
     }
 
     public Map<String, Object> getDepartmentStats(Long departmentId) {
-        List<Topic> topics = getDepartmentTopics(departmentId, "ALL", null, null, null);
-        List<Lecturer> lecturers = getLecturersInDepartment(departmentId);
-        List<Student> students = getStudentsInDepartment(departmentId);
-        List<Major> majors = getDepartmentMajors(departmentId);
-        List<RegistrationPeriod> periods = getAllPeriods(departmentId);
-        List<Council> councils = councilRepository.findByDepartmentId(departmentId);
-        List<StudentGroup> groups = studentGroupRepository.findAll();
-
-        long pendingCount = topics.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
-        long approvedCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus())).count();
-        long rejectedCount = topics.stream().filter(t -> "REJECTED".equalsIgnoreCase(t.getStatus())).count();
-        long needsReviewerCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus()) && t.getReviewer() == null).count();
-        long needsCouncilCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus()) && t.getCouncil() == null).count();
-        long readyCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus()) && t.getReviewer() != null && t.getCouncil() != null).count();
-
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("totalTopics", topics.size());
-        stats.put("pendingTopics", pendingCount);
-        stats.put("approvedTopics", approvedCount);
-        stats.put("rejectedTopics", rejectedCount);
-        stats.put("needsReviewerTopics", needsReviewerCount);
-        stats.put("needsCouncilTopics", needsCouncilCount);
-        stats.put("readyTopics", readyCount);
-        stats.put("totalLecturers", lecturers.size());
-        stats.put("totalStudents", students.size());
-        stats.put("totalPeriods", periods.size());
-        stats.put("totalCouncils", councils.size());
-        stats.put("totalGroups", groups.size());
-
-        return stats;
+        return getDepartmentStats(departmentId, null, null);
     }
 
-    public Map<String, Object> getDivisionStats(Long divisionId, Long departmentId) {
-        List<Topic> topics = getDivisionTopics(divisionId, "ALL", null, null, null);
-        List<Lecturer> lecturers = getLecturersInDivision(divisionId);
-        List<Student> students = getStudentsInDivision(divisionId);
-        List<Major> majors = getDivisionMajors(divisionId);
-        List<RegistrationPeriod> periods = getAllPeriods(departmentId);
-        List<Council> councils = councilRepository.findByDivisionId(divisionId);
-        List<StudentGroup> groups = studentGroupRepository.findAll();
+    public Map<String, Object> getDepartmentStats(Long departmentId, Integer semester, String academicYear) {
+        List<Topic> topics = getDepartmentTopics(departmentId, "ALL", null, null).stream()
+                .filter(t -> {
+                    if (semester != null) {
+                        Integer tSem = t.getSemester() != null ? t.getSemester() : (t.getPeriod() != null ? t.getPeriod().getSemester() : null);
+                        if (tSem != null && !tSem.equals(semester)) return false;
+                    }
+                    if (academicYear != null && !academicYear.isBlank()) {
+                        String tYear = t.getAcademicYear() != null ? t.getAcademicYear() : (t.getPeriod() != null ? t.getPeriod().getAcademicYear() : null);
+                        if (tYear != null && !tYear.equalsIgnoreCase(academicYear)) return false;
+                    }
+                    return true;
+                })
+                .toList();
+        List<Lecturer> lecturers = getLecturersInDepartment(departmentId);
+        List<Student> students = getStudentsInDepartment(departmentId);
+        List<RegistrationPeriod> periods = getAllPeriods(departmentId).stream()
+                .filter(p -> {
+                    if (semester != null && p.getSemester() != null && !p.getSemester().equals(semester)) return false;
+                    if (academicYear != null && !academicYear.isBlank() && p.getAcademicYear() != null && !p.getAcademicYear().equalsIgnoreCase(academicYear)) return false;
+                    return true;
+                })
+                .toList();
 
-        long pendingCount = topics.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
-        long approvedCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus())).count();
-        long rejectedCount = topics.stream().filter(t -> "REJECTED".equalsIgnoreCase(t.getStatus())).count();
-        long needsReviewerCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus()) && t.getReviewer() == null).count();
-        long needsCouncilCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus()) && t.getCouncil() == null).count();
-        long readyCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus()) && t.getReviewer() != null && t.getCouncil() != null).count();
+        long pendingTopics = topics.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
+        long approvedTopics = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus())).count();
+        long rejectedTopics = topics.stream().filter(t -> "REJECTED".equalsIgnoreCase(t.getStatus())).count();
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalTopics", topics.size());
-        stats.put("pendingTopics", pendingCount);
-        stats.put("approvedTopics", approvedCount);
-        stats.put("rejectedTopics", rejectedCount);
-        stats.put("needsReviewerTopics", needsReviewerCount);
-        stats.put("needsCouncilTopics", needsCouncilCount);
-        stats.put("readyTopics", readyCount);
+        stats.put("pendingTopics", pendingTopics);
+        stats.put("approvedTopics", approvedTopics);
+        stats.put("rejectedTopics", rejectedTopics);
         stats.put("totalLecturers", lecturers.size());
         stats.put("totalStudents", students.size());
         stats.put("totalPeriods", periods.size());
-        stats.put("totalCouncils", councils.size());
-        stats.put("totalGroups", groups.size());
 
         return stats;
     }

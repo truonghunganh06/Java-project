@@ -1,13 +1,11 @@
 package topicmanagement.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import topicmanagement.entity.CouncilMember;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface CouncilMemberRepository extends JpaRepository<CouncilMember, Long> {
     List<CouncilMember> findByCouncilId(Long councilId);
     List<CouncilMember> findByCouncilIdIn(List<Long> councilIds);

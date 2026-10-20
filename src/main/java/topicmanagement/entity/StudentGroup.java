@@ -6,7 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "student_groups")
+@Table(name = "student_groups", indexes = {
+    @Index(name = "idx_student_groups_period_id", columnList = "period_id"),
+    @Index(name = "idx_student_groups_leader_id", columnList = "leader_id"),
+    @Index(name = "idx_student_groups_topic_id", columnList = "topic_id"),
+    @Index(name = "idx_student_groups_status", columnList = "status")
+})
 public class StudentGroup {
 
     @Id
@@ -128,6 +133,13 @@ public class StudentGroup {
     public boolean isLeader(Student student) {
         if (student == null || leader == null) return false;
         return leader.getId().equals(student.getId());
+    }
+
+    public boolean hasMember(Student student) {
+        if (student == null || student.getId() == null) return false;
+        if (isLeader(student)) return true;
+        if (members == null) return false;
+        return members.stream().anyMatch(m -> m.getStudent() != null && student.getId().equals(m.getStudent().getId()));
     }
 
     public int getMemberCount() {

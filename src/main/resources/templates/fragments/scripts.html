@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub Scripts</title>
+</head>
 <body>
     <div th:fragment="scripts">
         <!-- Global Announcement Detail Modal (Available across all pages) -->
@@ -21,7 +25,7 @@
                                     class="modal-title font-bold text-slate-900 text-sm mb-0">Tiêu đề thông báo</h6>
                             </div>
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
                     </div>
                     <div class="modal-body p-4 space-y-3">
                         <div
@@ -57,11 +61,13 @@
                 </div>
             </div>
 
+        </div>
+
         <!-- Global System & Account Settings Modal (Available across all pages) -->
         <div class="modal fade" id="systemSettingsModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content rounded-3xl border-0 shadow-2xl overflow-hidden">
-                    <div class="modal-header border-b border-slate-100 bg-gradient-to-r from-slate-50 to-blue-50/50 p-4">
+                    <div class="modal-header border-b border-slate-100 p-4" style="background: linear-gradient(to right, #f8fafc, rgba(239,246,255,0.5));">
                         <div class="d-flex align-items-center gap-2.5">
                             <div class="w-10 h-10 rounded-2xl bg-blue-600 text-white d-flex align-items-center justify-content-center shadow-md shadow-blue-500/20 flex-shrink-0">
                                 <i class="fa-solid fa-gear text-base"></i>
@@ -71,7 +77,7 @@
                                 <p class="text-2xs text-slate-500 mb-0">Quản lý tùy chọn cá nhân, bảo mật tài khoản và giao diện hiển thị.</p>
                             </div>
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
                     </div>
                     <div class="modal-body p-4 space-y-4">
                         <!-- Navigation Tabs within Settings -->
@@ -96,14 +102,14 @@
                         <div class="tab-content pt-1" id="settingsTabContent">
                             <!-- Tab 1: Profile Info -->
                             <div class="tab-pane fade show active space-y-3" id="tab-profile" role="tabpanel">
-                                <div class="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100 flex items-center gap-3">
-                                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-lg flex items-center justify-center shadow-md">
+                                <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 d-flex align-items-center gap-3">
+                                    <div class="w-12 h-12 rounded-2xl text-white font-black text-lg d-flex align-items-center justify-content-center shadow-md" style="background: linear-gradient(135deg, #2563eb, #4f46e5);">
                                         <span th:text="${user != null && user.fullName != null ? #strings.substring(user.fullName, 0, 1).toUpperCase() : 'U'}">U</span>
                                     </div>
                                     <div class="min-w-0 flex-grow">
                                         <div class="d-flex align-items-center gap-2">
                                             <h6 class="font-bold text-slate-900 text-sm mb-0" th:text="${user != null ? user.fullName : 'Người dùng TopicHub'}">Người dùng</h6>
-                                            <span class="badge bg-blue-100 text-blue-800 text-[10px] font-bold rounded-md px-2 py-0.5" th:text="${user != null && user.role != null ? user.role.name : 'Thành viên'}">Trưởng Bộ Môn</span>
+                                            <span class="badge bg-blue-100 text-blue-800 text-[10px] font-bold rounded-md px-2 py-0.5" th:text="${user != null && user.role != null ? user.role.name : 'Thành viên'}">Trưởng Khoa</span>
                                         </div>
                                         <p class="text-xs text-slate-500 mb-0 mt-0.5" th:text="${user != null ? user.email : 'user@hcmus.edu.vn'}">email@hcmus.edu.vn</p>
                                     </div>
@@ -111,12 +117,12 @@
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
-                                        <label class="form-label text-xs font-semibold text-slate-700 mb-1">Tên đăng nhập (Username)</label>
-                                        <input type="text" class="form-control form-control-sm text-xs rounded-xl bg-slate-50 border-slate-200" th:value="${user != null ? user.username : 'user'}" readonly>
+                                        <label class="form-label text-xs font-semibold text-slate-700 mb-1" for="field-fragments-scripts-0">Tên đăng nhập (Username)</label>
+                                        <input type="text" class="form-control form-control-sm text-xs rounded-xl bg-slate-50 border-slate-200" th:value="${user != null ? user.username : 'user'}" readonly title="Tên đăng nhập (Username)" aria-label="Tên đăng nhập (Username)" id="field-fragments-scripts-0">
                                     </div>
                                     <div>
-                                        <label class="form-label text-xs font-semibold text-slate-700 mb-1">Địa chỉ Email</label>
-                                        <input type="email" class="form-control form-control-sm text-xs rounded-xl bg-slate-50 border-slate-200" th:value="${user != null ? user.email : 'email@edu.vn'}" readonly>
+                                        <label class="form-label text-xs font-semibold text-slate-700 mb-1" for="field-fragments-scripts-1">Địa chỉ Email</label>
+                                        <input type="email" class="form-control form-control-sm text-xs rounded-xl bg-slate-50 border-slate-200" th:value="${user != null ? user.email : 'email@edu.vn'}" readonly title="Địa chỉ Email" aria-label="Địa chỉ Email" id="field-fragments-scripts-1">
                                     </div>
                                 </div>
                             </div>
@@ -125,24 +131,24 @@
                             <div class="tab-pane fade space-y-3" id="tab-security" role="tabpanel">
                                 <form autocomplete="off" onsubmit="return false;" class="space-y-3">
                                     <!-- Hidden autofill traps to prevent browser from filling page search inputs -->
-                                    <input type="text" style="display:none;" name="fake_user" tabindex="-1" autocomplete="off">
-                                    <input type="password" style="display:none;" name="fake_pass" tabindex="-1" autocomplete="new-password">
+                                    <input type="text" style="display:none;" name="fake_user" tabindex="-1" autocomplete="off" title="fake_user" aria-label="fake_user">
+                                    <input type="password" style="display:none;" name="fake_pass" tabindex="-1" autocomplete="new-password" title="fake_pass" aria-label="fake_pass">
 
                                     <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-xs text-blue-900">
                                         <i class="fa-solid fa-info-circle me-1 text-blue-600"></i> Mật khẩu an toàn phải có tối thiểu 6 ký tự.
                                     </div>
                                     <div class="space-y-2.5">
                                         <div>
-                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1">Mật khẩu hiện tại *</label>
-                                            <input type="password" class="form-control form-control-sm text-xs rounded-xl" placeholder="••••••••" id="currentPassInput" autocomplete="new-password">
+                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1" for="currentPassInput">Mật khẩu hiện tại *</label>
+                                            <input type="password" class="form-control form-control-sm text-xs rounded-xl" placeholder="••••••••" id="currentPassInput" autocomplete="new-password" title="Mật khẩu hiện tại" aria-label="Mật khẩu hiện tại">
                                         </div>
                                         <div>
-                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới *</label>
-                                            <input type="password" class="form-control form-control-sm text-xs rounded-xl" placeholder="••••••••" id="newPassInput" autocomplete="new-password">
+                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1" for="newPassInput">Mật khẩu mới *</label>
+                                            <input type="password" class="form-control form-control-sm text-xs rounded-xl" placeholder="••••••••" id="newPassInput" autocomplete="new-password" title="Mật khẩu mới" aria-label="Mật khẩu mới">
                                         </div>
                                         <div>
-                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1">Xác nhận mật khẩu mới *</label>
-                                            <input type="password" class="form-control form-control-sm text-xs rounded-xl" placeholder="••••••••" id="confirmPassInput" autocomplete="new-password">
+                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1" for="confirmPassInput">Xác nhận mật khẩu mới *</label>
+                                            <input type="password" class="form-control form-control-sm text-xs rounded-xl" placeholder="••••••••" id="confirmPassInput" autocomplete="new-password" title="Xác nhận mật khẩu mới" aria-label="Xác nhận mật khẩu mới">
                                         </div>
                                     </div>
                                     <button type="button" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 text-xs font-semibold" onclick="alert('Đã cập nhật mật khẩu mới thành công!')">
@@ -160,7 +166,7 @@
                                             <span class="text-slate-500 text-2xs">Gửi email tức thời khi có thông báo hoặc đề tài cần duyệt.</span>
                                         </div>
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" checked>
+                                            <input class="form-check-input" type="checkbox" checked placeholder="Nhập thông tin" title="Nhập thông tin" aria-label="Nhập thông tin">
                                         </div>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center pt-3">
@@ -169,7 +175,7 @@
                                             <span class="text-slate-500 text-2xs">Phát chuông nhỏ khi có tin nhắn từ Trợ lý AI hoặc thông báo đợt.</span>
                                         </div>
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" checked>
+                                            <input class="form-check-input" type="checkbox" checked placeholder="Nhập thông tin" title="Nhập thông tin" aria-label="Nhập thông tin">
                                         </div>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center pt-3">
@@ -209,7 +215,7 @@
                                 <h5 id="drawerTopicTitle" class="modal-title font-bold text-slate-900 text-sm md:text-base mb-0 line-clamp-1">Tiêu đề đề tài</h5>
                             </div>
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
                     </div>
                     <div class="modal-body p-4 space-y-3">
                         <!-- Rejection Reason Alert if any -->
@@ -221,8 +227,8 @@
                         <!-- Period & Major & Quota Badges Grid -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                             <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/70">
-                                <span class="text-xs text-slate-400 d-block mb-0.5"><i class="fa-solid fa-building-columns me-1"></i> Chuyên ngành / Khoa</span>
-                                <strong class="text-xs text-slate-800" id="drawerTopicMajor">CNTT</strong>
+                                <span class="text-xs text-slate-400 d-block mb-0.5"><i class="fa-solid fa-building-columns me-1"></i> Khoa quản lý</span>
+                                <strong class="text-xs text-slate-800" id="drawerTopicMajor">Khoa CNTT</strong>
                             </div>
                             <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/70">
                                 <span class="text-xs text-slate-400 d-block mb-0.5"><i class="fa-regular fa-calendar-check me-1"></i> Đợt đăng ký</span>
@@ -347,141 +353,128 @@
                 return str;
             }
 
-            function closeSelectMenus(except) {
-                document.querySelectorAll('.custom-select-wrap.is-open').forEach(function (wrap) {
-                    if (wrap !== except) {
-                        wrap.classList.remove('is-open');
-                        const trigger = wrap.querySelector('.custom-select-trigger');
-                        if (trigger) trigger.setAttribute('aria-expanded', 'false');
-                    }
-                });
-            }
-
-            function createCustomSelect(select) {
-                if (select.dataset.customSelect === 'true' || select.disabled) return;
-
-                const hasPeriodInUrl = new URLSearchParams(window.location.search).has('periodId');
-                if (select.name === 'periodId' && !hasPeriodInUrl && select.querySelector('option[value=""]')) {
-                    select.value = '';
-                }
-
-                const wrap = document.createElement('div');
-                wrap.className = 'custom-select-wrap';
-                wrap.style.width = select.style.width || '100%';
-                select.parentNode.insertBefore(wrap, select);
-                wrap.appendChild(select);
-                select.classList.add('custom-select-source');
-                select.dataset.customSelect = 'true';
-
-                const trigger = document.createElement('button');
-                trigger.type = 'button';
-                trigger.className = 'custom-select-trigger';
-                trigger.setAttribute('aria-haspopup', 'listbox');
-                trigger.setAttribute('aria-expanded', 'false');
-                wrap.appendChild(trigger);
-
-                const menu = document.createElement('ul');
-                menu.className = 'custom-select-menu';
-                menu.setAttribute('role', 'listbox');
-                wrap.appendChild(menu);
-
-                function sync() {
-                    const selected = select.options[select.selectedIndex];
-                    const label = selected ? selected.textContent.trim() : '';
-                    trigger.textContent = label;
-                    trigger.title = label;
-                    menu.querySelectorAll('.custom-select-option').forEach(function (item) {
-                        item.classList.toggle('is-selected', item.dataset.value === select.value);
-                    });
-                }
-
-                Array.from(select.options).forEach(function (option) {
-                    const item = document.createElement('li');
-                    item.className = 'custom-select-option' + (!option.value ? ' is-placeholder' : '');
-                    item.dataset.value = option.value;
-                    item.textContent = option.textContent.trim();
-                    item.setAttribute('role', 'option');
-                    item.addEventListener('click', function () {
-                        select.value = option.value;
-                        select.dispatchEvent(new Event('change', { bubbles: true }));
-                        sync();
-                        wrap.classList.remove('is-open');
-                        trigger.setAttribute('aria-expanded', 'false');
-                    });
-                    menu.appendChild(item);
-                });
-
-                trigger.addEventListener('click', function () {
-                    const shouldOpen = !wrap.classList.contains('is-open');
-                    closeSelectMenus(wrap);
-                    wrap.classList.toggle('is-open', shouldOpen);
-                    trigger.setAttribute('aria-expanded', String(shouldOpen));
-                });
-
-                select.addEventListener('change', sync);
-                sync();
-            }
-
-            document.addEventListener('DOMContentLoaded', function () {
-                document.querySelectorAll('select.form-select').forEach(createCustomSelect);
-            });
-
-            document.addEventListener('click', function (event) {
-                if (!event.target.closest('.custom-select-wrap')) closeSelectMenus();
-            });
-
-            document.addEventListener('keydown', function (event) {
-                if (event.key === 'Escape') closeSelectMenus();
-            });
-
-            // Sidebar Mobile Toggle
-            function toggleSidebar() {
+            let sidebarReturnFocus = null;
+            function toggleSidebar(forceOpen, restoreFocus = true) {
                 const sidebar = document.getElementById('saasSidebar');
-                const overlay = document.getElementById('sidebarOverlay');
-                if (sidebar) sidebar.classList.toggle('show');
-                if (overlay) overlay.classList.toggle('show');
+                if (!sidebar) return;
+                const mobile = window.matchMedia('(max-width: 991.98px)').matches;
+                const wasOpen = sidebar.classList.contains('show');
+                const open = mobile && (typeof forceOpen === 'boolean' ? forceOpen : !wasOpen);
+                if (open && !wasOpen) sidebarReturnFocus = document.activeElement;
+                sidebar.classList.toggle('show', open);
+                sidebar.inert = mobile && !open;
+                sidebar.setAttribute('aria-hidden', String(mobile && !open));
+                document.getElementById('sidebarOverlay')?.classList.toggle('show', open);
+                document.body.classList.toggle('sidebar-open', open);
+                document.getElementById('sidebarMobileToggle')?.setAttribute('aria-expanded', String(open));
+                if (open) document.getElementById('sidebarCloseBtn')?.focus();
+                else if (wasOpen && restoreFocus && sidebarReturnFocus?.isConnected) sidebarReturnFocus.focus();
             }
 
-            // Handle click on Sidebar Brand / Logo
-            function handleSidebarBrandClick(event) {
-                if (document.body.classList.contains('sidebar-collapsed')) {
-                    if (event) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    toggleDesktopSidebar();
-                }
-            }
-
-            // Desktop / Laptop Sidebar Toggle with smooth motion
-            function toggleDesktopSidebar() {
-                const isCollapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+            function syncSidebarCollapse(isCollapsed) {
+                document.documentElement.classList.toggle('sidebar-collapsed', isCollapsed);
                 document.body.classList.toggle('sidebar-collapsed', isCollapsed);
-                try {
-                    localStorage.setItem('topichub_sidebar_collapsed', isCollapsed ? 'true' : 'false');
-                } catch (e) { }
-
-                const chevron = document.getElementById('sidebarCollapseChevronIcon');
-                if (chevron) {
-                    chevron.className = isCollapsed ? 'fa-solid fa-chevron-right text-slate-400' : 'fa-solid fa-chevron-left text-slate-400';
+                const button = document.getElementById('sidebarDesktopCollapseBtn');
+                const label = isCollapsed ? 'Mở rộng menu' : 'Thu gọn menu';
+                if (button) {
+                    button.setAttribute('aria-expanded', String(!isCollapsed));
+                    button.setAttribute('aria-label', label);
+                    button.title = label;
                 }
+                const chevron = document.getElementById('sidebarCollapseChevronIcon');
+                if (chevron) chevron.className = isCollapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left';
             }
 
-            // Sync Desktop Sidebar collapse state & chevron icon on page load
+            function toggleDesktopSidebar() {
+                const collapsed = !document.documentElement.classList.contains('sidebar-collapsed');
+                syncSidebarCollapse(collapsed);
+                try { localStorage.setItem('topichub_sidebar_collapsed', String(collapsed)); } catch (e) { }
+            }
+
             document.addEventListener('DOMContentLoaded', function () {
-                try {
-                    if (window.innerWidth >= 992) {
-                        const savedState = localStorage.getItem('topichub_sidebar_collapsed');
-                        const isCollapsed = (savedState === 'true');
-                        document.documentElement.classList.toggle('sidebar-collapsed', isCollapsed);
-                        document.body.classList.toggle('sidebar-collapsed', isCollapsed);
-                        const chevron = document.getElementById('sidebarCollapseChevronIcon');
-                        if (chevron) {
-                            chevron.className = isCollapsed ? 'fa-solid fa-chevron-right text-slate-400' : 'fa-solid fa-chevron-left text-slate-400';
+                try { syncSidebarCollapse(localStorage.getItem('topichub_sidebar_collapsed') === 'true'); } catch (e) { }
+                toggleSidebar(false, false);
+                window.matchMedia('(max-width: 991.98px)').addEventListener('change', () => toggleSidebar(false, false));
+                const sidebar = document.getElementById('saasSidebar');
+                sidebar?.addEventListener('click', function (event) {
+                    if (event.target.closest('.workspace-footer button')) toggleSidebar(false, false);
+                });
+                document.getElementById('systemSettingsModal')?.addEventListener('hidden.bs.modal', function () {
+                    if (sidebar?.inert) document.getElementById('sidebarMobileToggle')?.focus();
+                });
+                sidebar?.addEventListener('keydown', function (event) {
+                    if (!sidebar.classList.contains('show')) return;
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        toggleSidebar(false);
+                    } else if (event.key === 'Tab') {
+                        const controls = [...sidebar.querySelectorAll('a, button')].filter(el => el.getClientRects().length);
+                        const first = controls[0], last = controls[controls.length - 1];
+                        if (event.shiftKey && document.activeElement === first) {
+                            event.preventDefault(); last?.focus();
+                        } else if (!event.shiftKey && document.activeElement === last) {
+                            event.preventDefault(); first?.focus();
                         }
                     }
-                } catch (e) { }
+                });
             });
+
+            // Universal Spring Security CSRF Helpers
+            window.getCsrfToken = function() {
+                const meta = document.querySelector('meta[name="_csrf"]');
+                if (meta && meta.content) return meta.content;
+                const input = document.querySelector('input[name="_csrf"]');
+                if (input && input.value) return input.value;
+                return '';
+            };
+
+            window.getCsrfParam = function() {
+                const meta = document.querySelector('meta[name="_csrf_parameter"]');
+                if (meta && meta.content) return meta.content;
+                return '_csrf';
+            };
+
+            // Safe Modal Switcher: cleanly hides fromModal, waits for hidden.bs.modal, then shows toModal
+            window.switchModal = function(fromModalId, toModalId, setupCallback) {
+                const fromEl = document.getElementById(fromModalId);
+                const toEl = document.getElementById(toModalId);
+                if (!toEl) {
+                    console.warn('Target modal not found:', toModalId);
+                    return;
+                }
+
+                if (setupCallback && typeof setupCallback === 'function') {
+                    try { setupCallback(); } catch(e) { console.error('switchModal callback error:', e); }
+                }
+
+                if (fromEl && fromEl.classList.contains('show')) {
+                    const fromInstance = bootstrap.Modal.getInstance(fromEl) || bootstrap.Modal.getOrCreateInstance(fromEl);
+                    fromEl.addEventListener('hidden.bs.modal', function onHidden() {
+                        fromEl.removeEventListener('hidden.bs.modal', onHidden);
+                        const toInstance = bootstrap.Modal.getOrCreateInstance(toEl);
+                        toInstance.show();
+                    }, { once: true });
+                    fromInstance.hide();
+                } else {
+                    const toInstance = bootstrap.Modal.getOrCreateInstance(toEl);
+                    toInstance.show();
+                }
+            };
+
+            // Global Auto-CSRF Form Interceptor (ensures all POST forms have CSRF token attached)
+            document.addEventListener('submit', function(e) {
+                if (e.target && e.target.tagName === 'FORM' && (e.target.method || '').toLowerCase() === 'post') {
+                    const csrfToken = window.getCsrfToken();
+                    const csrfParam = window.getCsrfParam();
+                    if (csrfToken && !e.target.querySelector('input[name="' + csrfParam + '"]') && !e.target.querySelector('input[name="_csrf"]')) {
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = csrfParam;
+                        hiddenInput.value = csrfToken;
+                        e.target.appendChild(hiddenInput);
+                    }
+                }
+            }, true);
 
             // Clean UTF-8 Topic Drawer Opener (supports ID number, DOM element, or Object)
             function openTopicDrawer(source) {
@@ -641,45 +634,47 @@
                     const safeDesc = (description || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
                     const safeReq = (requirements || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
-                    if (data.role === 'DEPARTMENT_HEAD' || data.role === 'DIVISION_HEAD') {
+                    const csrfToken = window.getCsrfToken();
+                    const csrfParam = window.getCsrfParam();
+
+                    if (data.role === 'DEPARTMENT_HEAD') {
                         let deptButtons = '';
                         if (data.status === 'PENDING') {
                             deptButtons = `
                                 <form action="/department-head/topics/${data.id}/approve" method="post" class="d-inline" onsubmit="return confirm('Xác nhận PHÊ DUYỆT đề tài này?');">
+                                    <input type="hidden" name="${csrfParam}" value="${csrfToken}">
                                     <button type="submit" class="btn btn-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm">
                                         <i class="fa-solid fa-check me-1"></i> Phê duyệt
                                     </button>
                                 </form>
                                 <button type="button" class="btn btn-sm bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-xl px-3.5 py-1.5 text-xs font-semibold"
-                                        onclick="closeTopicDrawer(); if(window.prepareQuickEditModal) { document.getElementById('quickEditApproveForm').action='/department-head/topics/${data.id}/quick-edit-approve'; document.getElementById('quickEditTitle').value='${safeTitle}'; document.getElementById('quickEditDescription').value='${safeDesc}'; document.getElementById('quickEditRequirements').value='${safeReq}'; new bootstrap.Modal(document.getElementById('quickEditApproveModal')).show(); }">
+                                        onclick="window.switchModal('topicDetailModal', 'quickEditApproveModal', function() { if(window.prepareQuickEditModal) prepareQuickEditModal(${data.id}, null, '${safeTitle}', '${safeDesc}', '${safeReq}'); });">
                                     <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Sửa &amp; Duyệt
                                 </button>
                                 <button type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3.5 py-1.5 text-xs font-semibold"
-                                        onclick="closeTopicDrawer(); if(window.prepareRejectModal) { prepareRejectModal(${data.id}, '${safeTitle}'); new bootstrap.Modal(document.getElementById('rejectModal')).show(); }">
+                                        onclick="window.switchModal('topicDetailModal', 'rejectModal', function() { if(window.prepareRejectModal) prepareRejectModal(${data.id}, '${safeTitle}'); });">
                                     <i class="fa-solid fa-xmark me-1"></i> Từ chối
                                 </button>
                             `;
                         } else if (data.status === 'APPROVED') {
-                            const revModal = document.getElementById('assignReviewerModal-' + data.id);
-                            const couModal = document.getElementById('assignCouncilModal-' + data.id);
                             deptButtons = `
                                 <button type="button" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm"
-                                        onclick="closeTopicDrawer(); var m = document.getElementById('assignReviewerModal-${data.id}'); if(m) new bootstrap.Modal(m).show(); else window.location.href='/department-head/topics';">
+                                        onclick="window.switchModal('topicDetailModal', 'assignReviewerModal-${data.id}');">
                                     <i class="fa-solid fa-user-shield me-1"></i> ${reviewer && !reviewer.includes('Chưa') ? 'Đổi GVPB' : 'Phân GVPB'}
                                 </button>
                                 <button type="button" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm"
-                                        onclick="closeTopicDrawer(); var m = document.getElementById('assignCouncilModal-${data.id}'); if(m) new bootstrap.Modal(m).show(); else window.location.href='/department-head/councils';">
+                                        onclick="window.switchModal('topicDetailModal', 'assignCouncilModal-${data.id}');">
                                     <i class="fa-solid fa-users-rectangle me-1"></i> ${council && !council.includes('Chưa') ? 'Đổi Hội đồng' : 'Phân Hội đồng'}
                                 </button>
                                 <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                                        onclick="closeTopicDrawer(); if(document.getElementById('quickEditApproveModal')) { document.getElementById('quickEditApproveForm').action='/department-head/topics/${data.id}/quick-edit-approve'; document.getElementById('quickEditTitle').value='${safeTitle}'; document.getElementById('quickEditDescription').value='${safeDesc}'; document.getElementById('quickEditRequirements').value='${safeReq}'; new bootstrap.Modal(document.getElementById('quickEditApproveModal')).show(); }">
+                                        onclick="window.switchModal('topicDetailModal', 'quickEditApproveModal', function() { if(window.prepareQuickEditModal) prepareQuickEditModal(${data.id}, null, '${safeTitle}', '${safeDesc}', '${safeReq}'); });">
                                     <i class="fa-solid fa-pen me-1"></i> Sửa đề tài
                                 </button>
                             `;
                         } else if (data.status === 'REJECTED') {
                             deptButtons = `
                                 <button type="button" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm"
-                                        onclick="closeTopicDrawer(); if(document.getElementById('quickEditApproveModal')) { document.getElementById('quickEditApproveForm').action='/department-head/topics/${data.id}/quick-edit-approve'; document.getElementById('quickEditTitle').value='${safeTitle}'; document.getElementById('quickEditDescription').value='${safeDesc}'; document.getElementById('quickEditRequirements').value='${safeReq}'; new bootstrap.Modal(document.getElementById('quickEditApproveModal')).show(); }">
+                                        onclick="window.switchModal('topicDetailModal', 'quickEditApproveModal', function() { if(window.prepareQuickEditModal) prepareQuickEditModal(${data.id}, null, '${safeTitle}', '${safeDesc}', '${safeReq}'); });">
                                     <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Hiệu chỉnh &amp; Duyệt lại
                                 </button>
                             `;
@@ -694,6 +689,7 @@
                         if (data.status === 'PENDING' || data.status === 'REJECTED') {
                             lecButtons += `
                                 <form action="/lecturer/topics/${data.id}/delete" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đề xuất đề tài này?');">
+                                    <input type="hidden" name="${csrfParam}" value="${csrfToken}">
                                     <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-3.5 py-1.5 text-xs font-semibold d-inline-flex align-items-center gap-1.5">
                                         <i class="fa-solid fa-trash-can"></i> Xóa đề tài
                                     </button>
@@ -704,6 +700,7 @@
                     } else if (data.role === 'STUDENT' && data.status === 'APPROVED' && !data.hasGroupTopic) {
                         actionContainer.innerHTML = `
                             <form action="/student/topics/${data.id}/register" method="post" class="d-inline" onsubmit="return confirm('Xác nhận đăng ký đề tài này cho nhóm của bạn?');">
+                                <input type="hidden" name="${csrfParam}" value="${csrfToken}">
                                 <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm">
                                     <i class="fa-solid fa-bookmark me-1"></i> Đăng ký ngay
                                 </button>
@@ -783,7 +780,7 @@
             }
 
             function updateNotificationBadges() {
-                const items = document.querySelectorAll('[data-announcement-id]');
+                const items = document.querySelectorAll('.notification-item-track');
                 const readList = getReadAnnouncements();
                 const uniqueAnnouncements = new Set();
                 const unreadAnnouncements = new Set();
@@ -793,18 +790,14 @@
                     if (id) {
                         uniqueAnnouncements.add(String(id));
                         if (readList.includes(String(id))) {
-                            if (el.classList.contains('notification-item-track')) {
-                                el.classList.add('opacity-60');
-                                const dot = el.querySelector('.unread-dot');
-                                if (dot) dot.classList.add('d-none');
-                            }
+                            el.classList.add('opacity-60');
+                            const dot = el.querySelector('.unread-dot');
+                            if (dot) dot.classList.add('d-none');
                         } else {
                             unreadAnnouncements.add(String(id));
-                            if (el.classList.contains('notification-item-track')) {
-                                el.classList.remove('opacity-60');
-                                const dot = el.querySelector('.unread-dot');
-                                if (dot) dot.classList.remove('d-none');
-                            }
+                            el.classList.remove('opacity-60');
+                            const dot = el.querySelector('.unread-dot');
+                            if (dot) dot.classList.remove('d-none');
                         }
                     }
                 });
@@ -812,6 +805,16 @@
                 const unreadCount = unreadAnnouncements.size;
                 const badge = document.getElementById('topbarNotificationCount');
                 const headerCount = document.getElementById('topbarNotificationHeaderCount');
+                const emptyPlaceholder = document.getElementById('topbarNoNotificationsPlaceholder');
+
+                if (items.length === 0) {
+                    if (badge) badge.classList.add('d-none');
+                    if (headerCount) headerCount.classList.add('d-none');
+                    if (emptyPlaceholder) emptyPlaceholder.classList.remove('d-none');
+                    return;
+                } else {
+                    if (emptyPlaceholder) emptyPlaceholder.classList.add('d-none');
+                }
 
                 if (badge) {
                     if (unreadCount > 0) {
@@ -830,6 +833,7 @@
                     } else if (uniqueAnnouncements.size > 0) {
                         headerCount.textContent = 'Đã đọc hết';
                         headerCount.className = 'badge bg-slate-100 text-slate-500 font-medium rounded-pill px-2 py-0.5 text-xs';
+                        headerCount.classList.remove('d-none');
                     }
                 }
             }
@@ -963,8 +967,11 @@
                 }
 
                 if (isDeptHead && annId && secondaryWrap && secondaryWrap.innerHTML.trim() === '') {
+                    const csrfToken = window.getCsrfToken();
+                    const csrfParam = window.getCsrfParam();
                     secondaryWrap.innerHTML = `
                         <form action="/department-head/announcements/${annId}/delete" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa thông báo này?');">
+                            <input type="hidden" name="${csrfParam}" value="${csrfToken}">
                             <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-3 py-2 text-xs font-semibold d-inline-flex align-items-center gap-1.5 transition">
                                 <i class="fa-regular fa-trash-can text-xs"></i> Xóa thông báo này
                             </button>

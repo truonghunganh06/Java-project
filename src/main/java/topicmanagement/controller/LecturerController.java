@@ -49,7 +49,6 @@ public class LecturerController {
         String roleCode = user.getRole().getCode();
         if (!"LECTURER".equalsIgnoreCase(roleCode)
                 && !"DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)
-                && !"DIVISION_HEAD".equalsIgnoreCase(roleCode)
                 && !"ADMIN".equalsIgnoreCase(roleCode)) {
             return null;
         }
@@ -72,7 +71,8 @@ public class LecturerController {
 
         long approvedCount = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus())).count();
         long pendingCount = topics.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
-        List<Announcement> announcements = announcementService.getAllAnnouncements();
+        Long deptId = (lecturer != null && lecturer.getDepartment() != null) ? lecturer.getDepartment().getId() : null;
+        List<Announcement> announcements = announcementService.getAnnouncementsForDepartment(deptId);
 
         List<StudentGroup> pendingGroups = groups.stream()
                 .filter(g -> "DRAFT".equalsIgnoreCase(g.getStatus()) || "REGISTERED".equalsIgnoreCase(g.getStatus()) || "PENDING".equalsIgnoreCase(g.getStatus()))
@@ -124,9 +124,10 @@ public class LecturerController {
         List<Topic> topics = lecturerService.getTopicsByLecturer(lecturer);
         List<Topic> reviewerTopics = lecturerService.getReviewerTopics(lecturer);
         List<Council> councils = lecturerService.getCouncilsForLecturer(lecturer);
-        List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
+        Long deptId = (lecturer != null && lecturer.getDepartment() != null) ? lecturer.getDepartment().getId() : null;
+        List<RegistrationPeriod> periods = lecturerService.getPeriodsForLecturer(lecturer);
         List<Submission> submissions = lecturerService.getSubmissionsByLecturer(lecturer);
-        List<Announcement> announcements = announcementService.getAllAnnouncements();
+        List<Announcement> announcements = announcementService.getAnnouncementsForDepartment(deptId);
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
@@ -149,13 +150,11 @@ public class LecturerController {
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         List<Topic> topics = lecturerService.getTopicsByLecturer(lecturer);
-        List<Major> majors = lecturerService.getMajorsForLecturer(lecturer);
-        List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
+        List<RegistrationPeriod> periods = lecturerService.getPeriodsForLecturer(lecturer);
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("topics", topics);
-        model.addAttribute("majors", majors);
         model.addAttribute("periods", periods);
 
         return "lecturer/topics";
@@ -166,7 +165,6 @@ public class LecturerController {
             @RequestParam(value = "periodId", required = false) Long periodId,
             @RequestParam(value = "periodName", required = false) String periodName,
             @RequestParam(value = "noticeId", required = false) Long noticeId,
-            @RequestParam(value = "majorId", required = false) Long majorId,
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "requirements", required = false) String requirements,
@@ -179,7 +177,6 @@ public class LecturerController {
         List<RegistrationPeriod> openPeriods = new java.util.ArrayList<>(lecturerService.getOpenProposalPeriods(lecturer));
         List<LecturerService.ProposalProgressDto> proposalProgressList = lecturerService.getProposalProgressList(lecturer);
         List<Lecturer> coSupervisors = lecturerService.getOtherLecturers(lecturer.getId());
-        List<Major> majors = lecturerService.getMajorsForLecturer(lecturer);
 
         // 1. Determine selected Period
         Long selectedPeriodId = periodId;
@@ -247,23 +244,7 @@ public class LecturerController {
             model.addAttribute("selectedPeriodId", selectedPeriodId);
         }
 
-        // 2. Determine selected Major / Division (Bộ môn của Giảng viên / Trưởng khoa)
-        Long selectedMajorId = majorId;
-        if (selectedMajorId == null && lecturer.getDivision() != null && majors != null) {
-            majors.stream()
-                    .filter(m -> m.getDivision() != null && m.getDivision().getId().equals(lecturer.getDivision().getId()))
-                    .findFirst()
-                    .ifPresent(m -> model.addAttribute("selectedMajorId", m.getId()));
-        }
-        if (!model.containsAttribute("selectedMajorId")) {
-            if (selectedMajorId != null) {
-                model.addAttribute("selectedMajorId", selectedMajorId);
-            } else if (majors != null && !majors.isEmpty()) {
-                model.addAttribute("selectedMajorId", majors.get(0).getId());
-            }
-        }
-
-        // 3. Pre-fill Topic template / title / description / requirements if requested from quick proposal
+        // 2. Pre-fill Topic template / title / description / requirements if requested from quick proposal
         Topic topic = new Topic();
         if (title != null && !title.trim().isEmpty()) {
             topic.setTitle(title.trim());
@@ -295,7 +276,6 @@ public class LecturerController {
         model.addAttribute("openPeriods", openPeriods);
         model.addAttribute("proposalProgressList", proposalProgressList);
         model.addAttribute("coSupervisors", coSupervisors);
-        model.addAttribute("majors", majors);
 
         return "lecturer/create-topic";
     }
@@ -303,7 +283,6 @@ public class LecturerController {
     @PostMapping("/topics/create")
     public String handleCreateTopic(
             @ModelAttribute Topic topic,
-            @RequestParam("majorId") Long majorId,
             @RequestParam(value = "periodId", required = false) Long periodId,
             @RequestParam(value = "coSupervisorId", required = false) Long coSupervisorId,
             HttpSession session,
@@ -314,8 +293,8 @@ public class LecturerController {
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         try {
-            Topic created = lecturerService.createTopic(lecturer, periodId, majorId, coSupervisorId, topic);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi đề xuất đề tài '" + created.getTitle() + "' thành công! Vui lòng chờ Trưởng khoa/Bộ môn xét duyệt.");
+            Topic created = lecturerService.createTopic(lecturer, periodId, coSupervisorId, topic);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi đề xuất đề tài '" + created.getTitle() + "' thành công! Vui lòng chờ Trưởng khoa xét duyệt.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi đề xuất đề tài: " + e.getMessage());
         }
@@ -336,14 +315,12 @@ public class LecturerController {
 
         List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
         List<Lecturer> coSupervisors = lecturerService.getOtherLecturers(lecturer.getId());
-        List<Major> majors = lecturerService.getMajorsForLecturer(lecturer);
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("topic", topic);
         model.addAttribute("periods", periods);
         model.addAttribute("coSupervisors", coSupervisors);
-        model.addAttribute("majors", majors);
 
         return "lecturer/edit-topic";
     }
@@ -352,7 +329,6 @@ public class LecturerController {
     public String handleEditTopic(
             @PathVariable("id") Long id,
             @ModelAttribute Topic topic,
-            @RequestParam("majorId") Long majorId,
             @RequestParam(value = "periodId", required = false) Long periodId,
             @RequestParam(value = "coSupervisorId", required = false) Long coSupervisorId,
             HttpSession session,
@@ -363,7 +339,7 @@ public class LecturerController {
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         try {
-            Topic updated = lecturerService.updateTopic(lecturer, id, periodId, majorId, coSupervisorId, topic);
+            Topic updated = lecturerService.updateTopic(lecturer, id, periodId, coSupervisorId, topic);
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật đề tài '" + updated.getTitle() + "' thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi cập nhật đề tài: " + e.getMessage());
@@ -416,11 +392,15 @@ public class LecturerController {
 
         // BUG-07 FIX: Truyền lecturer để kiểm tra ownership
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
-        boolean success = lecturerService.approveGroupTopic(id, "APPROVED", lecturer);
-        if (success) {
-            redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt nhóm sinh viên hướng dẫn thành công!");
-        } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể phê duyệt nhóm này (không tìm thấy hoặc không phải đề tài bạn hướng dẫn)!");
+        try {
+            boolean success = lecturerService.approveGroupTopic(id, "APPROVED", lecturer);
+            if (success) {
+                redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt nhóm sinh viên hướng dẫn thành công!");
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể phê duyệt nhóm này (không tìm thấy hoặc không phải đề tài bạn hướng dẫn)!");
+            }
+        } catch (IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/lecturer/registrations";
     }
@@ -620,6 +600,28 @@ public class LecturerController {
         Submission submission = submissionRepository.findById(submissionId).orElse(null);
         if (submission == null || submission.getFilePath() == null) {
             return org.springframework.http.ResponseEntity.notFound().build();
+        }
+
+        // BẢO MẬT PHÂN QUYỀN (IDOR): Chỉ GVHD, GVPB, Thành viên Hội đồng, Trưởng khoa hoặc Admin mới được tải
+        boolean isAdminOrHead = user.getRole() != null && ("ADMIN".equalsIgnoreCase(user.getRole().getCode())
+                || "DEPARTMENT_HEAD".equalsIgnoreCase(user.getRole().getCode()));
+        if (!isAdminOrHead) {
+            Lecturer lecturer = lecturerService.getLecturerByUser(user);
+            if (lecturer == null) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+            Topic topic = submission.getTopic();
+            if (topic == null) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+            boolean isSupervisor = topic.isSupervisorOrCoSupervisor(lecturer);
+            boolean isReviewer = topic.getReviewer() != null && topic.getReviewer().getId().equals(lecturer.getId());
+            boolean isCouncilMember = topic.getCouncil() != null && councilService.getCouncilMembers(topic.getCouncil().getId())
+                    .stream().anyMatch(m -> m.getLecturer() != null && m.getLecturer().getId().equals(lecturer.getId()));
+
+            if (!isSupervisor && !isReviewer && !isCouncilMember) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
         }
 
         try {

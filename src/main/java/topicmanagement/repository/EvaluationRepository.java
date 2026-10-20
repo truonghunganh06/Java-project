@@ -1,19 +1,19 @@
 package topicmanagement.repository;
 
+import org.springframework.lang.NonNull;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import topicmanagement.entity.Evaluation;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
 
     @EntityGraph(attributePaths = {"topic", "lecturer", "lecturer.user", "group"})
     @Override
-    Optional<Evaluation> findById(Long id);
+    @NonNull
+    Optional<Evaluation> findById(@NonNull Long id);
 
     @EntityGraph(attributePaths = {"topic", "lecturer", "lecturer.user", "group"})
     List<Evaluation> findByTopicId(Long topicId);

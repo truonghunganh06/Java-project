@@ -1,7 +1,5 @@
 package topicmanagement.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,17 +8,14 @@ import topicmanagement.repository.*;
 
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class AdminService {
 
-    private static final Logger log = LoggerFactory.getLogger(AdminService.class);
-
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final DepartmentRepository departmentRepository;
-    private final DivisionRepository divisionRepository;
-    private final MajorRepository majorRepository;
     private final StudentRepository studentRepository;
     private final LecturerRepository lecturerRepository;
     private final PasswordEncoder passwordEncoder;
@@ -29,21 +24,16 @@ public class AdminService {
             UserRepository userRepository,
             RoleRepository roleRepository,
             DepartmentRepository departmentRepository,
-            DivisionRepository divisionRepository,
-            MajorRepository majorRepository,
             StudentRepository studentRepository,
             LecturerRepository lecturerRepository,
             PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.departmentRepository = departmentRepository;
-        this.divisionRepository = divisionRepository;
-        this.majorRepository = majorRepository;
         this.studentRepository = studentRepository;
         this.lecturerRepository = lecturerRepository;
         this.passwordEncoder = passwordEncoder;
     }
-
 
     // ==================== USER MANAGEMENT ====================
 
@@ -65,88 +55,136 @@ public class AdminService {
                 .orElse(null);
     }
 
+    public List<AppUser> getUsersByRole(String roleCode) {
+        if (roleCode == null || roleCode.trim().isEmpty() || "ALL".equalsIgnoreCase(roleCode)) {
+            return getAllUsers();
+        }
+        return userRepository.findByRoleCode(roleCode.trim().toUpperCase());
+    }
+
+    public List<AppUser> searchUsers(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return getAllUsers();
+        }
+        return userRepository.searchUsers(keyword.trim());
+    }
+
+    public List<AppUser> filterUsers(String roleCode, String keyword) {
+        List<AppUser> list = getUsersByRole(roleCode);
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String kw = keyword.trim().toLowerCase();
+            return list.stream()
+                    .filter(u -> (u.getUsername() != null && u.getUsername().toLowerCase().contains(kw)) ||
+                            (u.getFullName() != null && u.getFullName().toLowerCase().contains(kw)) ||
+                            (u.getEmail() != null && u.getEmail().toLowerCase().contains(kw)) ||
+                            (u.getPhone() != null && u.getPhone().toLowerCase().contains(kw)))
+                    .collect(Collectors.toList());
+        }
+        return list;
+    }
+
     @Transactional
     public String createUser(AppUser user, Long roleId) {
+        String pass = user != null ? user.getPasswordHash() : null;
+        return createUser(user, roleId, null, pass);
+    }
+
+    @Transactional
+    public String createUser(AppUser user, Long roleId, Long departmentId) {
+        String pass = user != null ? user.getPasswordHash() : null;
+        return createUser(user, roleId, departmentId, pass);
+    }
+
+    @Transactional
+    public String createUser(AppUser user, Long roleId, String rawPassword) {
+        return createUser(user, roleId, null, rawPassword);
+    }
+
+    @Transactional
+    public String createUser(AppUser user, Long roleId, Long departmentId, String rawPassword) {
         if (user == null || user.getUsername() == null || user.getUsername().trim().isEmpty()) {
             return "Tên đăng nhập không được để trống!";
         }
-        String cleanUsername = user.getUsername().trim();
+        if (rawPassword == null || rawPassword.trim().isEmpty()) {
+            return "Mật khẩu không được để trống!";
+        }
+        if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
+            return "Email không được để trống!";
+        }
+
+        String cleanUsername = user.getUsername().trim().toLowerCase();
+        String cleanEmail = user.getEmail().trim().toLowerCase();
 
         if (userRepository.findByUsernameIgnoreCase(cleanUsername).isPresent()) {
-            return "Tên đăng nhập '" + cleanUsername + "' đã tồn tại trên hệ thống. Vui lòng chọn tên khác!";
+            return "Tên đăng nhập '" + cleanUsername + "' đã tồn tại trên hệ thống!";
+        }
+        if (userRepository.findByEmailIgnoreCase(cleanEmail).isPresent()) {
+            return "Email '" + cleanEmail + "' đã được sử dụng bởi tài khoản khác!";
         }
 
-        if (user.getEmail() != null && !user.getEmail().trim().isEmpty()) {
-            String cleanEmail = user.getEmail().trim().toLowerCase();
-            if (userRepository.findByEmailIgnoreCase(cleanEmail).isPresent()) {
-                return "Email '" + cleanEmail + "' đã được sử dụng bởi tài khoản khác!";
-            }
-            user.setEmail(cleanEmail);
-        } else {
-            user.setEmail(cleanUsername.toLowerCase() + "@topicmanagement.edu.vn");
+        Role role = null;
+        if (roleId != null) {
+            role = roleRepository.findById(roleId).orElse(null);
         }
-
-        Role role = getRoleById(roleId);
         if (role == null) {
-            return "Vui lòng chọn vai trò hợp lệ cho người dùng!";
+            role = roleRepository.findByCode("STUDENT").orElse(null);
+        }
+
+        // RÀNG BUỘC: nếu role là DEPARTMENT_HEAD và departmentId != null, kiểm tra khoa đó đã có trưởng khoa chưa
+        if (role != null && "DEPARTMENT_HEAD".equalsIgnoreCase(role.getCode()) && departmentId != null) {
+            List<Lecturer> deptLecturers = lecturerRepository.findByDepartmentId(departmentId);
+            for (Lecturer l : deptLecturers) {
+                if (l.getUser() != null && l.getUser().getRole() != null
+                        && "DEPARTMENT_HEAD".equalsIgnoreCase(l.getUser().getRole().getCode())) {
+                    return "Khoa này đã có trưởng khoa là " + l.getUser().getUsername();
+                }
+            }
         }
 
         user.setUsername(cleanUsername);
+        user.setEmail(cleanEmail);
+        user.setFullName(user.getFullName() != null ? user.getFullName().trim() : cleanUsername);
+        user.setPhone(user.getPhone() != null && !user.getPhone().trim().isEmpty() ? user.getPhone().trim() : null);
+        user.setPasswordHash(passwordEncoder.encode(rawPassword.trim()));
         user.setRole(role);
-        user.setIsActive(true);
+        if (user.getIsActive() == null) {
+            user.setIsActive(true);
+        }
         user.setCreatedAt(OffsetDateTime.now());
         user.setUpdatedAt(OffsetDateTime.now());
 
-        String rawPassword = user.getPasswordHash();
-        if (rawPassword == null || rawPassword.trim().isEmpty()) {
-            rawPassword = "123456";
-        }
-        user.setPasswordHash(passwordEncoder.encode(rawPassword.trim()));
-
         AppUser saved = userRepository.save(user);
 
-        // Khởi tạo hồ sơ thực thể con (Student / Lecturer) để người dùng đăng nhập sử dụng ngay
-        if ("STUDENT".equalsIgnoreCase(role.getCode())) {
-            if (studentRepository.findByUserId(saved.getId()).isEmpty()) {
-                Student student = new Student();
-                student.setUser(saved);
-                student.setStudentCode(saved.getUsername());
-                student.setClassName("CNTT-K16");
-                student.setAcademicYear("2026-2027");
-                student.setGpa(3.50);
-                List<Major> majors = majorRepository.findAll();
-                if (!majors.isEmpty()) {
-                    student.setMajor(majors.get(0));
-                    if (majors.get(0).getDivision() != null) {
-                        student.setDivision(majors.get(0).getDivision());
+        // Khởi tạo hồ sơ chuyên biệt theo Role
+        if (role != null) {
+            Department department = (departmentId != null) ? departmentRepository.findById(departmentId).orElse(null) : null;
+
+            if ("STUDENT".equalsIgnoreCase(role.getCode())) {
+                if (studentRepository.findByUserId(saved.getId()).isEmpty()) {
+                    Student student = new Student();
+                    student.setUser(saved);
+                    student.setStudentCode(saved.getUsername());
+                    if (department != null) {
+                        student.setDepartment(department);
                     }
+                    studentRepository.save(student);
                 }
-                studentRepository.save(student);
-            }
-        } else if ("LECTURER".equalsIgnoreCase(role.getCode()) || "DEPARTMENT_HEAD".equalsIgnoreCase(role.getCode()) || "DIVISION_HEAD".equalsIgnoreCase(role.getCode())) {
-            if (lecturerRepository.findByUserId(saved.getId()).isEmpty()) {
-                Lecturer lecturer = new Lecturer();
-                lecturer.setUser(saved);
-                lecturer.setLecturerCode(saved.getUsername());
-                lecturer.setAcademicTitle("TS");
-                lecturer.setDegree("Tiến sĩ");
-                lecturer.setMaxTopicsQuota(5);
-                List<Division> divs = divisionRepository.findAll();
-                if (!divs.isEmpty()) {
-                    lecturer.setDivision(divs.get(0));
-                    lecturer.setDepartment(divs.get(0).getDepartment());
-                } else {
-                    List<Department> depts = departmentRepository.findAll();
-                    if (!depts.isEmpty()) {
-                        lecturer.setDepartment(depts.get(0));
+            } else if ("LECTURER".equalsIgnoreCase(role.getCode()) || "DEPARTMENT_HEAD".equalsIgnoreCase(role.getCode())) {
+                if (lecturerRepository.findByUserId(saved.getId()).isEmpty()) {
+                    Lecturer lecturer = new Lecturer();
+                    lecturer.setUser(saved);
+                    lecturer.setLecturerCode(saved.getUsername());
+                    lecturer.setMaxTopicsQuota(5);
+                    if (department != null) {
+                        lecturer.setDepartment(department);
                     }
+                    lecturerRepository.save(lecturer);
                 }
-                lecturerRepository.save(lecturer);
             }
         }
 
-        System.out.println("[DB-ADMIN] createUser: ĐÃ TẠO TÀI KHOẢN MỚI VÀO DB! (ID=" + saved.getId() + ", Username='" + saved.getUsername() + "', Role=" + role.getCode() + ")");
-        return null; // success
+        System.out.println("[DB-ADMIN] createUser: ĐÃ LƯU TÀI KHOẢN MỚI VÀO DB! (ID=" + saved.getId() + ", User=" + saved.getUsername() + ", Role=" + (role != null ? role.getCode() : "null") + ")");
+        return null;
     }
 
     @Transactional
@@ -154,85 +192,136 @@ public class AdminService {
         if (id == null) return "Mã định danh người dùng không hợp lệ!";
         Optional<AppUser> opt = userRepository.findById(id);
         if (opt.isEmpty()) {
-            System.out.println("[DB-ADMIN] updateUser: Không tìm thấy User ID=" + id);
             return "Không tìm thấy người dùng với ID: " + id;
         }
 
-        if (fullName == null || fullName.trim().isEmpty()) {
-            return "Họ và tên không được để trống!";
-        }
-        if (email == null || email.trim().isEmpty()) {
-            return "Email không được để trống!";
-        }
-
-        String cleanEmail = email.trim().toLowerCase();
-        Optional<AppUser> existingEmailUser = userRepository.findByEmailIgnoreCase(cleanEmail);
-        if (existingEmailUser.isPresent() && !existingEmailUser.get().getId().equals(id)) {
-            return "Email '" + cleanEmail + "' đã được sử dụng bởi tài khoản khác (" + existingEmailUser.get().getUsername() + ")!";
-        }
-
         AppUser user = opt.get();
-        user.setFullName(fullName.trim());
-        user.setEmail(cleanEmail);
+
+        if (email != null && !email.trim().isEmpty()) {
+            String cleanEmail = email.trim().toLowerCase();
+            Optional<AppUser> existingEmailUser = userRepository.findByEmailIgnoreCase(cleanEmail);
+            if (existingEmailUser.isPresent() && !existingEmailUser.get().getId().equals(id)) {
+                return "Email '" + cleanEmail + "' đã được sử dụng bởi người dùng khác (" + existingEmailUser.get().getUsername() + ")!";
+            }
+            user.setEmail(cleanEmail);
+        }
+
+        if (fullName != null && !fullName.trim().isEmpty()) {
+            user.setFullName(fullName.trim());
+        }
         user.setPhone(phone != null && !phone.trim().isEmpty() ? phone.trim() : null);
 
+        if (isActive != null) {
+            user.setIsActive(isActive);
+        }
+
+        Role oldRole = user.getRole();
         Role newRole = null;
         if (roleId != null) {
-            newRole = getRoleById(roleId);
+            newRole = roleRepository.findById(roleId).orElse(null);
             if (newRole != null) {
                 user.setRole(newRole);
             }
         }
-        if (isActive != null) {
-            user.setIsActive(isActive);
-        }
         user.setUpdatedAt(OffsetDateTime.now());
+
         AppUser saved = userRepository.save(user);
 
-        // Khởi tạo/đồng bộ hồ sơ thực thể con (Student / Lecturer) nếu người dùng được đổi sang vai trò mới
-        if (newRole != null) {
+        // Đồng bộ hồ sơ khi thay đổi vai trò
+        if (newRole != null && (oldRole == null || !oldRole.getId().equals(newRole.getId()))) {
             if ("STUDENT".equalsIgnoreCase(newRole.getCode())) {
                 if (studentRepository.findByUserId(saved.getId()).isEmpty()) {
                     Student student = new Student();
                     student.setUser(saved);
                     student.setStudentCode(saved.getUsername());
-                    student.setClassName("CNTT-K16");
-                    student.setAcademicYear("2026-2027");
-                    student.setGpa(3.50);
-                    List<Major> majors = majorRepository.findAll();
-                    if (!majors.isEmpty()) {
-                        student.setMajor(majors.get(0));
-                        if (majors.get(0).getDivision() != null) {
-                            student.setDivision(majors.get(0).getDivision());
-                        }
-                    }
                     studentRepository.save(student);
                 }
-            } else if ("LECTURER".equalsIgnoreCase(newRole.getCode()) || "DEPARTMENT_HEAD".equalsIgnoreCase(newRole.getCode()) || "DIVISION_HEAD".equalsIgnoreCase(newRole.getCode()) || "DEAN".equalsIgnoreCase(newRole.getCode())) {
+            } else if ("LECTURER".equalsIgnoreCase(newRole.getCode()) || "DEPARTMENT_HEAD".equalsIgnoreCase(newRole.getCode())) {
                 if (lecturerRepository.findByUserId(saved.getId()).isEmpty()) {
                     Lecturer lecturer = new Lecturer();
                     lecturer.setUser(saved);
                     lecturer.setLecturerCode(saved.getUsername());
-                    lecturer.setAcademicTitle("TS");
-                    lecturer.setDegree("Tiến sĩ");
                     lecturer.setMaxTopicsQuota(5);
-                    List<Division> divs = divisionRepository.findAll();
-                    if (!divs.isEmpty()) {
-                        lecturer.setDivision(divs.get(0));
-                        lecturer.setDepartment(divs.get(0).getDepartment());
-                    } else {
-                        List<Department> depts = departmentRepository.findAll();
-                        if (!depts.isEmpty()) {
-                            lecturer.setDepartment(depts.get(0));
-                        }
-                    }
                     lecturerRepository.save(lecturer);
                 }
             }
         }
 
         System.out.println("[DB-ADMIN] updateUser(" + id + "): Đã cập nhật thông tin user '" + user.getUsername() + "' vào DB thành công!");
-        return null; // Thành công
+        return null;
+    }
+
+    @Transactional
+    public String updateStudentProfile(Long userId, String studentCode, String className, String academicYear, Double gpa, Long departmentId) {
+        if (userId == null) return "User ID không hợp lệ!";
+        Optional<Student> opt = studentRepository.findByUserId(userId);
+        Student student = opt.orElseGet(() -> {
+            AppUser u = userRepository.findById(userId).orElse(null);
+            if (u == null) return null;
+            Student s = new Student();
+            s.setUser(u);
+            return s;
+        });
+        if (student == null) return "Không tìm thấy người dùng!";
+
+        if (studentCode != null && !studentCode.trim().isEmpty()) {
+            student.setStudentCode(studentCode.trim());
+        }
+        student.setClassName(className != null && !className.trim().isEmpty() ? className.trim() : null);
+        student.setAcademicYear(academicYear != null && !academicYear.trim().isEmpty() ? academicYear.trim() : null);
+        if (gpa != null) {
+            if (gpa < 0.0 || gpa > 4.0) return "GPA phải nằm trong thang điểm từ 0.0 đến 4.0!";
+            student.setGpa(gpa);
+        } else {
+            student.setGpa(null);
+        }
+        if (departmentId != null) {
+            Department d = departmentRepository.findById(departmentId).orElse(null);
+            student.setDepartment(d);
+        }
+        studentRepository.save(student);
+        return null;
+    }
+
+    @Transactional
+    public String updateLecturerProfile(Long userId, String lecturerCode, String academicTitle, String degree, Integer maxTopicsQuota, Long departmentId) {
+        if (userId == null) return "User ID không hợp lệ!";
+        Optional<Lecturer> opt = lecturerRepository.findByUserId(userId);
+        Lecturer lecturer = opt.orElseGet(() -> {
+            AppUser u = userRepository.findById(userId).orElse(null);
+            if (u == null) return null;
+            Lecturer l = new Lecturer();
+            l.setUser(u);
+            return l;
+        });
+        if (lecturer == null) return "Không tìm thấy người dùng!";
+
+        if (lecturerCode != null && !lecturerCode.trim().isEmpty()) {
+            lecturer.setLecturerCode(lecturerCode.trim());
+        }
+        lecturer.setAcademicTitle(academicTitle != null && !academicTitle.trim().isEmpty() ? academicTitle.trim() : null);
+        lecturer.setDegree(degree != null && !degree.trim().isEmpty() ? degree.trim() : null);
+        if (maxTopicsQuota != null && maxTopicsQuota > 0) {
+            lecturer.setMaxTopicsQuota(maxTopicsQuota);
+        }
+        if (departmentId != null) {
+            Department d = departmentRepository.findById(departmentId).orElse(null);
+            lecturer.setDepartment(d);
+        }
+        lecturerRepository.save(lecturer);
+        return null;
+    }
+
+    public java.util.Map<Long, Student> getStudentMap() {
+        return studentRepository.findAll().stream()
+                .filter(s -> s.getUser() != null && s.getUser().getId() != null)
+                .collect(Collectors.toMap(s -> s.getUser().getId(), s -> s, (a, b) -> a));
+    }
+
+    public java.util.Map<Long, Lecturer> getLecturerMap() {
+        return lecturerRepository.findAll().stream()
+                .filter(l -> l.getUser() != null && l.getUser().getId() != null)
+                .collect(Collectors.toMap(l -> l.getUser().getId(), l -> l, (a, b) -> a));
     }
 
     @Transactional
@@ -256,7 +345,6 @@ public class AdminService {
         Optional<AppUser> opt = userRepository.findById(id);
         if (opt.isPresent()) {
             AppUser user = opt.get();
-            // BUG-12 FIX: Hash mật khẩu mới bằng BCrypt
             user.setPasswordHash(passwordEncoder.encode(newPassword));
             user.setUpdatedAt(OffsetDateTime.now());
             userRepository.save(user);
@@ -338,11 +426,16 @@ public class AdminService {
         Department d = opt.get();
         d.setName(name.trim());
         d.setCode(cleanCode);
-        d.setDescription(description != null ? description.trim() : null);
+        d.setDescription(description);
         if (isActive != null) d.setIsActive(isActive);
         departmentRepository.save(d);
         System.out.println("[DB-ADMIN] updateDepartment(" + id + "): Đã cập nhật khoa '" + cleanCode + "' vào DB");
         return null;
+    }
+
+    @Transactional
+    public String updateDepartment(Long id, String name, String code, Boolean isActive) {
+        return updateDepartment(id, name, code, null, isActive);
     }
 
     @Transactional
@@ -359,102 +452,6 @@ public class AdminService {
         return false;
     }
 
-    // ==================== MAJOR MANAGEMENT ====================
-
-    public List<Major> getAllMajors() {
-        List<Major> list = majorRepository.findAll();
-        System.out.println("[DB-ADMIN] getAllMajors: Lấy " + list.size() + " chuyên ngành từ DB");
-        return list;
-    }
-
-    public Major getMajorById(Long id) {
-        if (id == null) return null;
-        return majorRepository.findById(id).orElse(null);
-    }
-
-    @Transactional
-    public String createMajor(Major major, Long departmentId) {
-        if (major == null || major.getCode() == null || major.getCode().trim().isEmpty()) {
-            return "Mã chuyên ngành không được để trống!";
-        }
-        if (major.getName() == null || major.getName().trim().isEmpty()) {
-            return "Tên chuyên ngành không được để trống!";
-        }
-        if (departmentId == null) {
-            return "Vui lòng chọn Khoa trực thuộc!";
-        }
-        Department dept = getDepartmentById(departmentId);
-        if (dept == null) {
-            return "Khoa trực thuộc không tồn tại!";
-        }
-
-        String cleanCode = major.getCode().trim().toUpperCase();
-        if (majorRepository.findByCodeIgnoreCase(cleanCode).isPresent()) {
-            return "Mã chuyên ngành '" + cleanCode + "' đã tồn tại trên hệ thống!";
-        }
-
-        major.setCode(cleanCode);
-        major.setName(major.getName().trim());
-        major.setDepartment(dept);
-        if (major.getIsActive() == null) {
-            major.setIsActive(true);
-        }
-        Major saved = majorRepository.save(major);
-        System.out.println("[DB-ADMIN] createMajor: ĐÃ TẠO CHUYÊN NGÀNH MỚI VÀO DB! (Mã: " + saved.getCode() + ", Tên: " + saved.getName() + ")");
-        return null;
-    }
-
-    @Transactional
-    public String updateMajor(Long id, String name, String code, Long departmentId, Boolean isActive) {
-        if (id == null) return "Mã định danh chuyên ngành không hợp lệ!";
-        Optional<Major> opt = majorRepository.findById(id);
-        if (opt.isEmpty()) {
-            return "Không tìm thấy Chuyên ngành với ID: " + id;
-        }
-        if (code == null || code.trim().isEmpty()) {
-            return "Mã chuyên ngành không được để trống!";
-        }
-        if (name == null || name.trim().isEmpty()) {
-            return "Tên chuyên ngành không được để trống!";
-        }
-        if (departmentId == null) {
-            return "Vui lòng chọn Khoa trực thuộc!";
-        }
-        Department dept = getDepartmentById(departmentId);
-        if (dept == null) {
-            return "Khoa trực thuộc không tồn tại!";
-        }
-
-        String cleanCode = code.trim().toUpperCase();
-        Optional<Major> existingCodeMajor = majorRepository.findByCodeIgnoreCase(cleanCode);
-        if (existingCodeMajor.isPresent() && !existingCodeMajor.get().getId().equals(id)) {
-            return "Mã chuyên ngành '" + cleanCode + "' đã được sử dụng bởi chuyên ngành khác (" + existingCodeMajor.get().getName() + ")!";
-        }
-
-        Major m = opt.get();
-        m.setName(name.trim());
-        m.setCode(cleanCode);
-        m.setDepartment(dept);
-        if (isActive != null) m.setIsActive(isActive);
-        majorRepository.save(m);
-        System.out.println("[DB-ADMIN] updateMajor(" + id + "): Đã cập nhật chuyên ngành '" + cleanCode + "' vào DB");
-        return null;
-    }
-
-    @Transactional
-    public boolean toggleMajorActive(Long id) {
-        if (id == null) return false;
-        Optional<Major> opt = majorRepository.findById(id);
-        if (opt.isPresent()) {
-            Major m = opt.get();
-            m.setIsActive(!Boolean.TRUE.equals(m.getIsActive()));
-            majorRepository.save(m);
-            System.out.println("[DB-ADMIN] toggleMajorActive(" + id + "): Trạng thái mới isActive=" + m.getIsActive());
-            return true;
-        }
-        return false;
-    }
-
     // ==================== SYSTEM STATS ====================
 
     public Map<String, Object> getSystemStats() {
@@ -466,19 +463,17 @@ public class AdminService {
         long studentCount = userRepository.countByRoleCode("STUDENT");
         
         List<Department> depts = getAllDepartments();
-        List<Major> majors = getAllMajors();
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalUsers", totalUsers);
         stats.put("activeUsers", activeUsers);
         stats.put("totalDepartments", depts.size());
-        stats.put("totalMajors", majors.size());
         stats.put("adminCount", adminCount);
         stats.put("deptHeadCount", deptHeadCount);
         stats.put("lecturerCount", lecturerCount);
         stats.put("studentCount", studentCount);
 
-        System.out.println("[DB-ADMIN] getSystemStats: Thống kê DB -> Tổng user: " + totalUsers + ", Active: " + activeUsers + ", Khoa: " + depts.size() + ", Ngành: " + majors.size());
+        System.out.println("[DB-ADMIN] getSystemStats: Thống kê DB -> Tổng user: " + totalUsers + ", Active: " + activeUsers + ", Khoa: " + depts.size());
         return stats;
     }
 }

@@ -35,7 +35,7 @@ public class DashboardController {
             if ("ADMIN".equalsIgnoreCase(roleCode)) {
                 return "redirect:/admin/dashboard";
             }
-            if ("DEPARTMENT_HEAD".equalsIgnoreCase(roleCode) || "DIVISION_HEAD".equalsIgnoreCase(roleCode)) {
+            if ("DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)) {
                 return "redirect:/department-head/dashboard";
             }
             if ("LECTURER".equalsIgnoreCase(roleCode)) {
@@ -49,6 +49,22 @@ public class DashboardController {
         return "redirect:/login";
     }
 
+    @GetMapping("/switch-semester")
+    public String switchSemester(
+            @org.springframework.web.bind.annotation.RequestParam("semester") Integer semester,
+            @org.springframework.web.bind.annotation.RequestParam(value = "academicYear", required = false) String academicYear,
+            jakarta.servlet.http.HttpServletRequest request,
+            HttpSession session) {
+        if (session != null) {
+            session.setAttribute("selectedSemester", semester);
+            if (academicYear != null && !academicYear.isBlank()) {
+                session.setAttribute("selectedAcademicYear", academicYear);
+            }
+        }
+        String referer = request.getHeader("Referer");
+        return "redirect:" + (referer != null && !referer.isBlank() ? referer : "/dashboard");
+    }
+
     @GetMapping("/schedule")
     public String redirectSchedule(HttpSession session) {
         AppUser currentUser = (AppUser) session.getAttribute("currentUser");
@@ -58,7 +74,7 @@ public class DashboardController {
 
         if (currentUser.getRole() != null) {
             String roleCode = currentUser.getRole().getCode();
-            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode) || "DIVISION_HEAD".equalsIgnoreCase(roleCode)) {
+            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)) {
                 return "redirect:/department-head/schedule";
             }
             if ("LECTURER".equalsIgnoreCase(roleCode)) {
@@ -78,7 +94,7 @@ public class DashboardController {
         if (currentUser == null) return "redirect:/login";
         if (currentUser.getRole() != null) {
             String roleCode = currentUser.getRole().getCode();
-            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode) || "DIVISION_HEAD".equalsIgnoreCase(roleCode)) {
+            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)) {
                 return "redirect:/department-head/councils";
             }
             if ("LECTURER".equalsIgnoreCase(roleCode)) {
@@ -94,7 +110,7 @@ public class DashboardController {
         if (currentUser == null) return "redirect:/login";
         if (currentUser.getRole() != null) {
             String roleCode = currentUser.getRole().getCode();
-            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode) || "DIVISION_HEAD".equalsIgnoreCase(roleCode)) {
+            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)) {
                 return "redirect:/department-head/topics";
             }
             if ("LECTURER".equalsIgnoreCase(roleCode)) {
@@ -113,7 +129,7 @@ public class DashboardController {
         if (currentUser == null) return "redirect:/login";
         if (currentUser.getRole() != null) {
             String roleCode = currentUser.getRole().getCode();
-            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode) || "DIVISION_HEAD".equalsIgnoreCase(roleCode)) {
+            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)) {
                 return "redirect:/department-head/results";
             }
             if ("LECTURER".equalsIgnoreCase(roleCode)) {
@@ -132,7 +148,7 @@ public class DashboardController {
         if (currentUser == null) return "redirect:/login";
         if (currentUser.getRole() != null) {
             String roleCode = currentUser.getRole().getCode();
-            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode) || "DIVISION_HEAD".equalsIgnoreCase(roleCode)) {
+            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)) {
                 return "redirect:/department-head/announcements";
             }
         }

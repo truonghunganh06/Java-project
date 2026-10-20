@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head th:replace="~{fragments/head :: head('Danh mục Đề tài')}"></head>
-<body>
+<head th:replace="~{fragments/head :: head('Danh mục Đề tài')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
+<body class="workspace-page">
 
     <!-- Left Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar('topics', ${user})}"></aside>
@@ -17,11 +21,11 @@
             <!-- Flash Messages -->
             <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200" role="alert">
                 <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
             </div>
             <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200" role="alert">
                 <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span th:text="${errorMessage}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
             </div>
 
             <!-- Page Header -->
@@ -39,7 +43,7 @@
             </div>
 
             <!-- Clean Universal 1-Row Toolbar -->
-            <div class="saas-card p-3 mb-4">
+            <div class="saas-card p-3 mb-4 workspace-filterbar">
                 <div class="d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-3">
                     <!-- Segmented Control: Tình trạng -->
                     <div class="segmented-control">
@@ -56,17 +60,10 @@
 
                     <!-- Dropdowns & Search -->
                     <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 justify-content-xl-end">
-                        <!-- Filter: Major -->
-                        <div th:if="${majors != null && !majors.isEmpty()}" style="min-width: 160px;">
-                            <select id="filterMajorSelect" class="form-select form-select-sm text-xs rounded-xl border-slate-200" onchange="applyStudentCombinedFilters()">
-                                <option value="ALL">Tất cả chuyên ngành</option>
-                                <option th:each="m : ${majors}" th:value="${m.name}" th:text="${m.name}">KTPM</option>
-                            </select>
-                        </div>
 
                         <!-- Filter: Period -->
                         <div th:if="${periods != null && !periods.isEmpty()}" style="min-width: 160px;">
-                            <select id="filterPeriodSelect" class="form-select form-select-sm text-xs rounded-xl border-slate-200" onchange="applyStudentCombinedFilters()">
+                            <select id="filterPeriodSelect" class="form-select form-select-sm text-xs rounded-xl border-slate-200" onchange="applyStudentCombinedFilters()" title="filterPeriodSelect" aria-label="filterPeriodSelect">
                                 <option value="ALL">Tất cả các đợt</option>
                                 <option th:each="p : ${periods}" th:value="${p.name}" th:text="${p.name}">Đợt 1</option>
                             </select>
@@ -74,7 +71,7 @@
 
                         <!-- Search -->
                         <div class="relative" style="min-width: 200px; flex-grow: 1; max-width: 280px;">
-                            <input type="text" id="studentKeywordInput" class="form-control form-control-sm rounded-xl pl-8 text-xs bg-slate-50 focus:bg-white" placeholder="Tìm theo tên đề tài, mã, GVHD..." onkeyup="applyStudentCombinedFilters()">
+                            <input type="text" id="studentKeywordInput" class="form-control form-control-sm rounded-xl pl-8 text-xs bg-slate-50 focus:bg-white" placeholder="Tìm theo tên đề tài, mã, GVHD..." onkeyup="applyStudentCombinedFilters()" title="Tìm theo tên đề tài, mã, GVHD..." aria-label="Tìm theo tên đề tài, mã, GVHD...">
                             <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
                         </div>
 
@@ -97,7 +94,7 @@
                              th:data-topic-code="${t.code}"
                              th:data-topic-title="${t.title}"
                              th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
-                             th:data-topic-major="${t.major != null ? t.major.name : 'CNTT'}"
+                             th:data-topic-major="${t.department != null ? t.department.name : 'Khoa CNTT'}"
                              th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}"
                              th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
                              th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
@@ -108,7 +105,7 @@
                              th:data-topic-description="${t.description}"
                              th:data-topic-requirements="${t.requirements}"
                              th:data-topic-role="STUDENT"
-                             th:data-topic-department="${t.major != null and t.major.department != null ? t.major.department.name : ''}"
+                             th:data-topic-department="${t.department != null ? t.department.name : 'Khoa CNTT'}"
                              th:data-topic-has-group-topic="${group != null and group.topic != null}">
                             <!-- Card: mờ đi nếu đề tài đã được nhóm khác đăng ký -->
                             <div class="saas-card p-3.5 h-100 d-flex flex-column justify-content-between transition"
@@ -122,9 +119,9 @@
                                             <span th:if="${isTaken}" class="badge bg-rose-100 text-rose-700 border border-rose-200 text-xs px-2 py-0.5 rounded-pill fw-semibold">
                                                 <i class="fa-solid fa-lock me-1 text-xs"></i>Đã có nhóm đăng ký
                                             </span>
-                                            <!-- Badge: Chuyên ngành + Khoa -->
+                                            <!-- Badge: Khoa -->
                                             <span class="d-flex flex-column align-items-end gap-0" style="line-height:1.2">
-                                                <span class="badge-pill-neutral font-medium text-xs" th:text="${t.major != null ? t.major.name : 'CNTT'}">Chuyên ngành</span>
+                                                <span class="badge-pill-neutral font-medium text-xs" th:text="${t.department != null ? t.department.name : 'Khoa CNTT'}">Khoa CNTT</span>
                                             </span>
                                         </div>
                                     </div>
@@ -209,16 +206,12 @@
             const pSel = document.getElementById('filterPeriodSelect');
             const selectedPeriod = pSel ? pSel.value : 'ALL';
 
-            const mSel = document.getElementById('filterMajorSelect');
-            const selectedMajor = mSel ? mSel.value : 'ALL';
-
             const rows = document.querySelectorAll('.topic-item-row');
             let visibleCount = 0;
 
             rows.forEach(row => {
                 const isTaken = row.getAttribute('data-topic-is-taken') === 'true';
                 const rowPeriod = row.getAttribute('data-topic-period') || '';
-                const rowMajor = row.getAttribute('data-topic-major') || '';
                 const text = row.textContent.toLowerCase();
 
                 let matchAvail = true;
@@ -226,10 +219,9 @@
                 else if (avail === 'TAKEN') matchAvail = isTaken;
 
                 const matchPeriod = (selectedPeriod === 'ALL' || rowPeriod === selectedPeriod);
-                const matchMajor = (selectedMajor === 'ALL' || rowMajor.includes(selectedMajor) || selectedMajor.includes(rowMajor));
                 const matchKeyword = !keyword || text.includes(keyword);
 
-                if (matchAvail && matchPeriod && matchMajor && matchKeyword) {
+                if (matchAvail && matchPeriod && matchKeyword) {
                     row.style.display = '';
                     visibleCount++;
                 } else {

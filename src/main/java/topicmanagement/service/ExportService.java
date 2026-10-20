@@ -156,7 +156,7 @@ public class ExportService {
 
             // Row 3: Column Headers
             String[] headers = {
-                "STT", "Mã ĐT", "Tên Đề Tài", "Chuyên Ngành", "Đợt Đăng Ký",
+                "STT", "Mã ĐT", "Tên Đề Tài", "Khoa Quản Lý", "Đợt Đăng Ký",
                 "GV Hướng Dẫn", "GV Phản Biện", "Hội Đồng", "Tên Nhóm",
                 "MSSV Nhóm Trưởng", "Họ Tên Nhóm Trưởng", "Điểm GVHD",
                 "Điểm GVPB", "Điểm HĐ", "Điểm Tổng Kết", "Trạng Thái"
@@ -187,7 +187,7 @@ public class ExportService {
                 createCell(row, 0, String.valueOf(stt++), centerStyle);
                 createCell(row, 1, t.getCode() != null ? t.getCode() : "", centerStyle);
                 createCell(row, 2, t.getTitle() != null ? t.getTitle() : "", dataStyle);
-                createCell(row, 3, t.getMajor() != null ? t.getMajor().getName() : "", dataStyle);
+                createCell(row, 3, t.getDepartment() != null ? t.getDepartment().getName() : "", dataStyle);
                 createCell(row, 4, t.getPeriod() != null ? t.getPeriod().getName() : "", dataStyle);
                 createCell(row, 5, supName, dataStyle);
                 createCell(row, 6, revName, dataStyle);

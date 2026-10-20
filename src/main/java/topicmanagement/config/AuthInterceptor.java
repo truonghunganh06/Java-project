@@ -3,6 +3,7 @@ package topicmanagement.config;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,7 +28,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         String uri = request.getRequestURI();
         String contextPath = request.getContextPath();
         String path = uri.substring(contextPath.length());
@@ -83,14 +84,14 @@ public class AuthInterceptor implements HandlerInterceptor {
             return handleForbidden(request, response, path);
         }
 
-        if (path.startsWith("/department-head") || path.startsWith("/division-head")) {
-            if (!"DEPARTMENT_HEAD".equals(roleCode) && !"DIVISION_HEAD".equals(roleCode)) {
+        if (path.startsWith("/department-head")) {
+            if (!"DEPARTMENT_HEAD".equals(roleCode)) {
                 return handleForbidden(request, response, path);
             }
         }
 
         if (path.startsWith("/lecturer")) {
-            if (!"LECTURER".equals(roleCode) && !"DEPARTMENT_HEAD".equals(roleCode) && !"DIVISION_HEAD".equals(roleCode)) {
+            if (!"LECTURER".equals(roleCode) && !"DEPARTMENT_HEAD".equals(roleCode)) {
                 return handleForbidden(request, response, path);
             }
         }

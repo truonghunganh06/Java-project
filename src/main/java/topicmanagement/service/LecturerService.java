@@ -14,60 +14,34 @@ public class LecturerService {
 
     private final LecturerRepository lecturerRepository;
     private final TopicRepository topicRepository;
-    private final TopicRegistrationRepository registrationRepository;
     private final SubmissionRepository submissionRepository;
-    private final MajorRepository majorRepository;
     private final DepartmentRepository departmentRepository;
     private final RegistrationPeriodRepository periodRepository;
     private final StudentGroupRepository studentGroupRepository;
     private final CouncilRepository councilRepository;
-    private final EvaluationRepository evaluationRepository;
 
     public LecturerService(
             LecturerRepository lecturerRepository,
             TopicRepository topicRepository,
-            TopicRegistrationRepository registrationRepository,
             SubmissionRepository submissionRepository,
-            MajorRepository majorRepository,
             DepartmentRepository departmentRepository,
             RegistrationPeriodRepository periodRepository,
             StudentGroupRepository studentGroupRepository,
-            CouncilRepository councilRepository,
-            EvaluationRepository evaluationRepository) {
+            CouncilRepository councilRepository) {
         this.lecturerRepository = lecturerRepository;
         this.topicRepository = topicRepository;
-        this.registrationRepository = registrationRepository;
         this.submissionRepository = submissionRepository;
-        this.majorRepository = majorRepository;
         this.departmentRepository = departmentRepository;
         this.periodRepository = periodRepository;
         this.studentGroupRepository = studentGroupRepository;
         this.councilRepository = councilRepository;
-        this.evaluationRepository = evaluationRepository;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Lecturer getLecturerByUser(AppUser user) {
         if (user == null || user.getId() == null)
             return null;
-        Optional<Lecturer> opt = lecturerRepository.findByUserId(user.getId());
-        if (opt.isPresent()) {
-            return opt.get();
-        }
-
-        Lecturer newLecturer = new Lecturer();
-        newLecturer.setUser(user);
-        newLecturer.setLecturerCode("GV" + String.format("%03d", user.getId()));
-        newLecturer.setAcademicTitle("TS");
-        newLecturer.setDegree("Tiến sĩ");
-        newLecturer.setMaxTopicsQuota(5);
-
-        List<Department> depts = departmentRepository.findAll();
-        if (!depts.isEmpty()) {
-            newLecturer.setDepartment(depts.get(0));
-        }
-
-        return lecturerRepository.save(newLecturer);
+        return lecturerRepository.findByUserId(user.getId()).orElse(null);
     }
 
     public List<Lecturer> getAllLecturers() {
@@ -115,17 +89,10 @@ public class LecturerService {
     }
 
     @Transactional
-    public Topic createTopic(Lecturer supervisor, Long periodId, Long majorId, Long coSupervisorId, Topic topic) {
-        Major major = majorRepository.findById(majorId).orElse(null);
-        topic.setMajor(major);
+    public Topic createTopic(Lecturer supervisor, Long periodId, Long coSupervisorId, Topic topic) {
         topic.setSupervisor(supervisor);
-
-        if (topic.getDivision() == null) {
-            if (supervisor != null && supervisor.getDivision() != null) {
-                topic.setDivision(supervisor.getDivision());
-            } else if (major != null && major.getDivision() != null) {
-                topic.setDivision(major.getDivision());
-            }
+        if (supervisor != null && supervisor.getDepartment() != null) {
+            topic.setDepartment(supervisor.getDepartment());
         }
 
         // BUG-01 FIX: Kiểm tra đợt đăng ký có đang mở cho giảng viên đề xuất không
@@ -136,9 +103,12 @@ public class LecturerService {
                         + "' hiện không trong giai đoạn nhận đề xuất đề tài từ giảng viên!");
             }
             topic.setPeriod(period);
+            if (topic.getDepartment() == null && period != null && period.getDepartment() != null) {
+                topic.setDepartment(period.getDepartment());
+            }
         }
 
-        if (coSupervisorId != null && !coSupervisorId.equals(supervisor.getId())) {
+        if (coSupervisorId != null && (supervisor == null || !coSupervisorId.equals(supervisor.getId()))) {
             topic.setCoSupervisor(lecturerRepository.findById(coSupervisorId).orElse(null));
         }
 
@@ -155,8 +125,9 @@ public class LecturerService {
         return saved;
     }
 
+
     @Transactional
-    public Topic updateTopic(Lecturer currentLecturer, Long topicId, Long periodId, Long majorId, Long coSupervisorId, Topic topicData) {
+    public Topic updateTopic(Lecturer currentLecturer, Long topicId, Long periodId, Long coSupervisorId, Topic topicData) {
         if (topicId == null || currentLecturer == null) {
             throw new IllegalArgumentException("Thông tin không hợp lệ.");
         }
@@ -186,10 +157,6 @@ public class LecturerService {
             if (topicData.getCode() != null && !topicData.getCode().trim().isEmpty()) {
                 topic.setCode(topicData.getCode().trim());
             }
-            if (majorId != null) {
-                Major major = majorRepository.findById(majorId).orElse(null);
-                topic.setMajor(major);
-            }
             if (periodId != null) {
                 RegistrationPeriod period = periodRepository.findById(periodId).orElse(null);
                 topic.setPeriod(period);
@@ -217,22 +184,17 @@ public class LecturerService {
         return saved;
     }
 
+
     @Transactional
     public boolean deleteTopic(Long topicId, Lecturer currentLecturer) {
-        if (topicId == null || currentLecturer == null) return false;
-        Topic topic = topicRepository.findById(topicId).orElse(null);
-        if (topic == null) return false;
-
-        if (!topic.isSupervisorOrCoSupervisor(currentLecturer)) {
-            System.err.println("[SECURITY] GV ID=" + currentLecturer.getId() + " cố xóa đề tài không phải của mình!");
+        if (topicId == null || currentLecturer == null)
             return false;
+        Topic topic = topicRepository.findById(topicId).orElse(null);
+        if (topic == null)
+            return false;
+        if (!topic.isSupervisorOrCoSupervisor(currentLecturer)) {
+            throw new IllegalStateException("Bạn không có quyền xóa đề tài này (không phải GVHD)!");
         }
-
-        List<StudentGroup> groups = studentGroupRepository.findByTopicId(topicId);
-        if (!groups.isEmpty()) {
-            throw new IllegalStateException("Không thể xóa đề tài đã có nhóm sinh viên đăng ký!");
-        }
-
         topicRepository.delete(topic);
         System.out.println("[DB-LECTURER] Đã xóa đề tài ID=" + topicId);
         return true;
@@ -249,10 +211,6 @@ public class LecturerService {
         return groups;
     }
 
-    /**
-     * BUG-07 FIX: Kiểm tra nhóm SV thuộc đề tài của GV hiện tại trước khi duyệt/từ
-     * chối
-     */
     @Transactional
     public boolean approveGroupTopic(Long groupId, String status, Lecturer currentLecturer) {
         StudentGroup group = studentGroupRepository.findById(groupId).orElse(null);
@@ -265,6 +223,15 @@ public class LecturerService {
                     + " cố duyệt nhóm của đề tài không phải mình hướng dẫn!");
             return false;
         }
+
+        if ("APPROVED".equalsIgnoreCase(status)) {
+            int memberCount = (group.getMembers() != null) ? group.getMembers().size() : 0;
+            if (memberCount < 3 || memberCount > 5) {
+                System.err.println("[VALIDATION] Không thể duyệt nhóm ID=" + groupId + " vì số thành viên (" + memberCount + ") không thuộc [3, 5]!");
+                throw new IllegalStateException("Không thể duyệt nhóm: Nhóm hiện có " + memberCount + " sinh viên. Quy định bắt buộc nhóm phải có từ 3 đến 5 sinh viên!");
+            }
+        }
+
         group.setStatus(status);
         studentGroupRepository.save(group);
         System.out.println("[DB-LECTURER] Cập nhật trạng thái nhóm ID=" + groupId + " -> " + status);
@@ -277,13 +244,14 @@ public class LecturerService {
         return submissionRepository.findBySupervisorOrCoSupervisorId(lecturer.getId());
     }
 
-    /**
-     * BUG-08 FIX: Kiểm tra bài nộp thuộc đề tài của GV hiện tại trước khi chấm điểm
-     */
     @Transactional
     public boolean gradeSubmission(Long submissionId, Double grade, String feedback, Lecturer currentLecturer) {
         if (submissionId == null)
             return false;
+        if (grade == null || !Double.isFinite(grade) || grade < 0.0 || grade > 10.0) {
+            System.err.println("[DB-LECTURER] Điểm bài nộp không hợp lệ: " + grade + " (Điểm phải từ 0.0 đến 10.0)!");
+            return false;
+        }
         Optional<Submission> opt = submissionRepository.findById(submissionId);
         if (opt.isPresent()) {
             Submission sub = opt.get();
@@ -303,6 +271,11 @@ public class LecturerService {
         return false;
     }
 
+    public List<Submission> getSubmissionsByTopic(Long topicId) {
+        if (topicId == null) return Collections.emptyList();
+        return submissionRepository.findByTopicId(topicId);
+    }
+
     public List<RegistrationPeriod> getOpenProposalPeriods(Lecturer lecturer) {
         List<RegistrationPeriod> list;
         if (lecturer != null && lecturer.getDepartment() != null) {
@@ -319,27 +292,20 @@ public class LecturerService {
         return getOpenProposalPeriods(null);
     }
 
-    public List<Major> getMajorsForLecturer(Lecturer lecturer) {
-        if (lecturer != null && lecturer.getDepartment() != null) {
-            List<Major> deptMajors = majorRepository.findByDepartmentId(lecturer.getDepartment().getId());
-            if (!deptMajors.isEmpty()) {
-                return deptMajors.stream().filter(m -> Boolean.TRUE.equals(m.getIsActive())).toList();
-            }
-        }
-        return majorRepository.findByIsActiveTrue();
-    }
-
-    public List<Major> getAllMajors() {
-        return majorRepository.findByIsActiveTrue();
-    }
-
     public List<RegistrationPeriod> getAllPeriods() {
         return periodRepository.findAll();
     }
 
+    public List<RegistrationPeriod> getPeriodsForLecturer(Lecturer lecturer) {
+        if (lecturer != null && lecturer.getDepartment() != null) {
+            return periodRepository.findByDepartmentId(lecturer.getDepartment().getId());
+        }
+        return periodRepository.findByIsActiveTrueOrderByIdDesc();
+    }
+
     public static class ProposalProgressDto {
         private RegistrationPeriod period;
-        private long proposedCount; // PENDING + APPROVED
+        private long proposedCount;
         private long approvedCount;
         private long pendingCount;
         private long rejectedCount;
@@ -398,7 +364,7 @@ public class LecturerService {
             long rejected = periodTopics.stream().filter(t -> "REJECTED".equalsIgnoreCase(t.getStatus())).count();
             long validProposed = approved + pending;
 
-            int minReq = p.getMinTopicsPerLecturer();
+            int minReq = p.getMinTopicsPerLecturer() != null ? p.getMinTopicsPerLecturer() : 3;
             int maxQ = (lecturer != null && lecturer.getMaxTopicsQuota() != null) ? lecturer.getMaxTopicsQuota() : 5;
 
             dto.setApprovedCount(approved);
