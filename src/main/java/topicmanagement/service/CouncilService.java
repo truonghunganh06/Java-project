@@ -1,8 +1,11 @@
 package topicmanagement.service;
 
-import jakarta.annotation.PostConstruct;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 import topicmanagement.entity.*;
 import topicmanagement.repository.*;
 
@@ -22,6 +25,7 @@ public class CouncilService {
     private final DepartmentRepository departmentRepository;
     private final StudentGroupRepository groupRepository;
     private final EmailService emailService;
+    private final TransactionTemplate publicationTransaction;
 
     public CouncilService(
             CouncilRepository councilRepository,
@@ -32,7 +36,8 @@ public class CouncilService {
             RegistrationPeriodRepository periodRepository,
             DepartmentRepository departmentRepository,
             StudentGroupRepository groupRepository,
-            EmailService emailService) {
+            EmailService emailService,
+            PlatformTransactionManager transactionManager) {
         this.councilRepository = councilRepository;
         this.councilMemberRepository = councilMemberRepository;
         this.evaluationRepository = evaluationRepository;
@@ -42,6 +47,8 @@ public class CouncilService {
         this.departmentRepository = departmentRepository;
         this.groupRepository = groupRepository;
         this.emailService = emailService;
+        this.publicationTransaction = new TransactionTemplate(transactionManager);
+        this.publicationTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
     public List<Council> getAllCouncils() {
@@ -74,7 +81,9 @@ public class CouncilService {
      * BUG-G FIX: Bắt buộc phải có đúng 1 CHỦ TỊCH và 1 THƯ KÝ.
      */
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEPARTMENT_HEAD', 'DIVISION_HEAD')")
     public Council createCouncil(
+            AppUser actor,
             Long departmentId,
             Long periodId,
             String councilCode,
@@ -83,7 +92,6 @@ public class CouncilService {
             OffsetDateTime defenseDate,
             List<Long> lecturerIds,
             List<String> roles) {
-
         if (councilName == null || councilName.trim().isEmpty()) {
             throw new IllegalArgumentException("Tên hội đồng không được để trống!");
         }
@@ -132,6 +140,8 @@ public class CouncilService {
 
         Department dept = departmentId != null ? departmentRepository.findById(departmentId).orElse(null) : null;
         RegistrationPeriod period = periodId != null ? periodRepository.findById(periodId).orElse(null) : null;
+        validateCouncilScope(actor, dept, period);
+        List<Lecturer> validatedLecturers = validateCouncilLecturers(dept, lecturerIds, roles, List.of());
 
         Council council = new Council();
         council.setName(trimmedName);
@@ -149,7 +159,7 @@ public class CouncilService {
                 Long lecturerId = lecturerIds.get(i);
                 String role = (i < roles.size()) ? roles.get(i) : "MEMBER";
 
-                Lecturer lecturer = lecturerRepository.findById(lecturerId).orElse(null);
+                Lecturer lecturer = validatedLecturers.get(i);
                 if (lecturer != null) {
                     CouncilMember member = new CouncilMember();
                     member.setCouncil(savedCouncil);
@@ -168,7 +178,9 @@ public class CouncilService {
      * Tạo Hội đồng mới và đồng thời phân công danh sách đề tài/nhóm vào hội đồng (Luồng Wizard 2 bước)
      */
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEPARTMENT_HEAD', 'DIVISION_HEAD')")
     public Council createCouncil(
+            AppUser actor,
             Long departmentId,
             Long periodId,
             String councilCode,
@@ -179,13 +191,9 @@ public class CouncilService {
             List<String> roles,
             List<Long> topicIds) {
 
-        Council savedCouncil = createCouncil(departmentId, periodId, councilCode, councilName, location, defenseDate, lecturerIds, roles);
+        Council savedCouncil = createCouncil(actor, departmentId, periodId, councilCode, councilName, location, defenseDate, lecturerIds, roles);
         if (topicIds != null && !topicIds.isEmpty()) {
-            for (Long topicId : topicIds) {
-                if (topicId != null) {
-                    assignTopicToCouncil(topicId, savedCouncil.getId());
-                }
-            }
+            assignTopicsToCouncil(actor, savedCouncil.getId(), topicIds);
         }
         return savedCouncil;
     }
@@ -194,15 +202,17 @@ public class CouncilService {
      * Phân công hàng loạt đề tài vào Hội đồng có sẵn (Batch assign)
      */
     @Transactional
-    public int assignTopicsToCouncil(Long councilId, List<Long> topicIds) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEPARTMENT_HEAD', 'DIVISION_HEAD')")
+    public int assignTopicsToCouncil(AppUser actor, Long councilId, List<Long> topicIds) {
         if (councilId == null || topicIds == null || topicIds.isEmpty()) {
             return 0;
         }
         int count = 0;
-        for (Long topicId : topicIds) {
-            if (topicId != null && assignTopicToCouncil(topicId, councilId)) {
-                count++;
+        for (Long topicId : new LinkedHashSet<>(topicIds)) {
+            if (topicId == null || !assignTopicToCouncil(actor, topicId, councilId)) {
+                throw new IllegalArgumentException("Không thể phân công: kiểm tra khoa, đợt, thành viên hội đồng và xung đột GVHD. Toàn bộ lựa chọn đã được hủy.");
             }
+            count++;
         }
         return count;
     }
@@ -213,7 +223,9 @@ public class CouncilService {
      * BUG-G FIX: Bắt buộc phải có đúng 1 CHỦ TỊCH và 1 THƯ KÝ.
      */
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEPARTMENT_HEAD', 'DIVISION_HEAD')")
     public Council updateCouncil(
+            AppUser actor,
             Long councilId,
             Long periodId,
             String councilCode,
@@ -226,7 +238,7 @@ public class CouncilService {
         if (councilId == null) {
             throw new IllegalArgumentException("ID hội đồng không hợp lệ!");
         }
-        Council council = councilRepository.findById(councilId)
+        Council council = councilRepository.findForUpdate(councilId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hội đồng với ID=" + councilId));
 
         if (councilName == null || councilName.trim().isEmpty()) {
@@ -278,6 +290,18 @@ public class CouncilService {
         }
 
         RegistrationPeriod period = periodId != null ? periodRepository.findById(periodId).orElse(null) : null;
+        validateCouncilScope(actor, council.getDepartment(), period);
+        List<Topic> assignedTopics = topicRepository.findByCouncilId(councilId);
+        if (assignedTopics.stream().anyMatch(t -> t.getPeriod() == null
+                || !Objects.equals(t.getPeriod().getId(), period.getId()))) {
+            throw new IllegalArgumentException("Không được đổi đợt của hội đồng đang có đề tài thuộc đợt khác!");
+        }
+        List<CouncilMember> currentMembers = councilMemberRepository.findByCouncilId(councilId);
+        if (lecturerIds == null && roles == null) {
+            lecturerIds = currentMembers.stream().map(m -> m.getLecturer().getId()).toList();
+            roles = currentMembers.stream().map(CouncilMember::getCouncilRole).toList();
+        }
+        List<Lecturer> validatedLecturers = validateCouncilLecturers(council.getDepartment(), lecturerIds, roles, assignedTopics);
         council.setPeriod(period);
         council.setName(trimmedName);
         if (trimmedCode != null) {
@@ -295,7 +319,7 @@ public class CouncilService {
             for (int i = 0; i < lecturerIds.size(); i++) {
                 Long lecturerId = lecturerIds.get(i);
                 String role = (i < roles.size()) ? roles.get(i) : "MEMBER";
-                Lecturer lecturer = lecturerRepository.findById(lecturerId).orElse(null);
+                Lecturer lecturer = validatedLecturers.get(i);
                 if (lecturer != null) {
                     CouncilMember member = new CouncilMember();
                     member.setCouncil(savedCouncil);
@@ -311,14 +335,29 @@ public class CouncilService {
     }
 
     @Transactional
-    public boolean assignTopicToCouncil(Long topicId, Long councilId) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEPARTMENT_HEAD', 'DIVISION_HEAD')")
+    public boolean assignTopicToCouncil(AppUser actor, Long topicId, Long councilId) {
         Topic topic = topicRepository.findById(topicId).orElse(null);
-        Council council = councilId != null ? councilRepository.findById(councilId).orElse(null) : null;
+        Council council = councilId != null ? councilRepository.findForUpdate(councilId).orElse(null) : null;
 
-        if (topic == null) return false;
+        if (topic == null || !canManageScope(actor, topic.getDepartment())) return false;
+        if (councilId != null && council == null) return false;
 
         if (council != null) {
+            if (!canManageScope(actor, council.getDepartment())
+                    || topic.getDepartment() == null || council.getDepartment() == null
+                    || !Objects.equals(topic.getDepartment().getId(), council.getDepartment().getId())
+                    || topic.getPeriod() == null || council.getPeriod() == null
+                    || !Objects.equals(topic.getPeriod().getId(), council.getPeriod().getId())) return false;
             List<CouncilMember> members = councilMemberRepository.findByCouncilId(council.getId());
+            try {
+                validateCouncilScope(actor, council.getDepartment(), council.getPeriod());
+                validateCouncilLecturers(council.getDepartment(),
+                        members.stream().map(m -> m.getLecturer() != null ? m.getLecturer().getId() : null).toList(),
+                        members.stream().map(CouncilMember::getCouncilRole).toList(), List.of(topic));
+            } catch (IllegalArgumentException ex) {
+                return false;
+            }
             for (CouncilMember cm : members) {
                 if (cm.getLecturer() != null) {
                     if (topic.getSupervisor() != null && cm.getLecturer().getId().equals(topic.getSupervisor().getId())) {
@@ -339,13 +378,17 @@ public class CouncilService {
     }
 
     @Transactional
-    public boolean assignReviewer(Long topicId, Long reviewerId) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEPARTMENT_HEAD', 'DIVISION_HEAD')")
+    public boolean assignReviewer(AppUser actor, Long topicId, Long reviewerId) {
         Topic topic = topicRepository.findById(topicId).orElse(null);
         Lecturer reviewer = reviewerId != null ? lecturerRepository.findById(reviewerId).orElse(null) : null;
 
-        if (topic == null) return false;
+        if (topic == null || !canManageScope(actor, topic.getDepartment())) return false;
+        if (reviewerId != null && reviewer == null) return false;
 
         if (reviewer != null) {
+            if (topic.getDepartment() == null || reviewer.getDepartment() == null
+                    || !Objects.equals(topic.getDepartment().getId(), reviewer.getDepartment().getId())) return false;
             if (topic.getSupervisor() != null && reviewer.getId().equals(topic.getSupervisor().getId())) {
                 System.err.println("[DB-COUNCIL] Xung đột lợi ích! Giảng viên phản biện không được trùng với Giảng viên hướng dẫn chính!");
                 return false;
@@ -359,6 +402,48 @@ public class CouncilService {
         topic.setReviewer(reviewer);
         topicRepository.save(topic);
         return true;
+    }
+
+    private boolean canManageScope(AppUser actor, Department department) {
+        if (actor == null || actor.getId() == null || !Boolean.TRUE.equals(actor.getIsActive()) || actor.getRole() == null) return false;
+        String role = actor.getRole().getCode();
+        if ("ADMIN".equalsIgnoreCase(role)) return true;
+        if (!"DEPARTMENT_HEAD".equalsIgnoreCase(role)) return false;
+        Lecturer manager = lecturerRepository.findByUserId(actor.getId()).orElse(null);
+        if (manager == null || manager.getDepartment() == null || department == null
+                || !Objects.equals(manager.getDepartment().getId(), department.getId())) return false;
+        return true;
+    }
+
+    private void validateCouncilScope(AppUser actor, Department department, RegistrationPeriod period) {
+        if (!canManageScope(actor, department) || department == null || period == null
+                || (period.getDepartment() != null && !Objects.equals(period.getDepartment().getId(), department.getId()))) {
+            throw new IllegalArgumentException("Hội đồng phải thuộc đúng khoa/bộ môn quản lý và một đợt hợp lệ cùng khoa!");
+        }
+    }
+
+    private List<Lecturer> validateCouncilLecturers(Department department, List<Long> ids, List<String> roles, List<Topic> topics) {
+        if (ids == null || ids.size() < 3 || ids.size() > 5 || ids.stream().anyMatch(Objects::isNull)
+                || new HashSet<>(ids).size() != ids.size() || roles == null || roles.size() != ids.size()
+                || roles.stream().anyMatch(r -> r == null || !List.of("PRESIDENT", "SECRETARY", "MEMBER").contains(r))
+                || roles.stream().filter("PRESIDENT"::equals).count() != 1
+                || roles.stream().filter("SECRETARY"::equals).count() != 1) {
+            throw new IllegalArgumentException("Hội đồng cần 3–5 giảng viên khác nhau, đúng một Chủ tịch và một Thư ký!");
+        }
+        Map<Long, Lecturer> lecturers = lecturerRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(Lecturer::getId, l -> l));
+        List<Lecturer> ordered = new ArrayList<>();
+        for (Long id : ids) {
+            Lecturer lecturer = lecturers.get(id);
+            if (lecturer == null || lecturer.getUser() == null || !Boolean.TRUE.equals(lecturer.getUser().getIsActive())
+                    || lecturer.getDepartment() == null || department == null
+                    || !Objects.equals(lecturer.getDepartment().getId(), department.getId())
+                    || topics.stream().anyMatch(t -> t.isSupervisorOrCoSupervisor(lecturer))) {
+                throw new IllegalArgumentException("Thành viên phải là giảng viên đang hoạt động, cùng khoa và không hướng dẫn đề tài được phân công!");
+            }
+            ordered.add(lecturer);
+        }
+        return ordered;
     }
 
     public List<Topic> getTopicsInCouncil(Long councilId) {
@@ -442,6 +527,8 @@ public class CouncilService {
         }
 
         String evalTypeUpper = evaluationType.trim().toUpperCase();
+        if ("REVIEWER".equals(evalTypeUpper) && topic.getPeriod() != null
+                && topic.getPeriod().isReviewerDeadlinePassed()) return false;
 
         // 1. Phân quyền và kiểm tra xung đột lợi ích nghiêm ngặt theo quy chế
         boolean isSupervisor = topic.isSupervisorOrCoSupervisor(lecturer);
@@ -683,44 +770,40 @@ public class CouncilService {
     /**
      * Công bố kết quả điểm số cho sinh viên và tự động gửi email thông báo theo Rubric.
      */
-    @Transactional
-    public boolean publishTopicResults(Long topicId, Boolean isFinalized) {
-        Topic topic = topicRepository.findById(topicId).orElse(null);
-        if (topic == null) return false;
+    public record PublicationResult(int published, int sent, int failed) {}
+    private record PublicationTarget(Topic topic, List<StudentGroup> groups) {}
 
-        List<StudentGroup> groups = groupRepository.findByTopicId(topicId);
-        if (groups.isEmpty()) {
-            System.err.println("[DB-EVAL] Không thể công bố điểm cho đề tài chưa có nhóm sinh viên!");
-            return false;
-        }
+    public PublicationResult publishTopicResults(Long topicId, Boolean isFinalized) {
+        PublicationTarget target = publicationTransaction.execute(status -> {
+            Topic topic = topicRepository.findForPublication(topicId).orElse(null);
+            if (topic == null || Boolean.TRUE.equals(topic.getIsFinalized()) == Boolean.TRUE.equals(isFinalized)) return null;
+            List<StudentGroup> groups = groupRepository.findByTopicId(topicId);
+            if (groups.isEmpty() || (Boolean.TRUE.equals(isFinalized) && !isTopicFullyGraded(topic))) return null;
+            topic.setIsFinalized(Boolean.TRUE.equals(isFinalized));
+            topicRepository.saveAndFlush(topic);
+            return new PublicationTarget(topic, groups);
+        });
+        if (target == null) return new PublicationResult(0, 0, 0);
 
+        // Chỉ gửi sau khi commit; khóa đề tài ngăn hai lần công bố đồng thời gửi trùng.
+        int sent = 0;
+        int failed = 0;
         if (Boolean.TRUE.equals(isFinalized)) {
-            if (!isTopicFullyGraded(topic)) {
-                System.err.println("[DB-EVAL] Không thể công bố: Đề tài ID=" + topicId + " chưa hoàn tất đầy đủ các phiếu chấm theo quy chế đợt!");
-                return false;
+            for (StudentGroup g : target.groups()) {
+                EmailService.DeliveryResult delivery = emailService.sendTopicResultEmailsToGroup(target.topic(), g);
+                sent += delivery.sent();
+                failed += delivery.failed();
             }
         }
 
-        topic.setIsFinalized(Boolean.TRUE.equals(isFinalized));
-        topicRepository.save(topic);
-        System.out.println("[DB-EVAL] Cập nhật công bố kết quả đề tài ID=" + topicId + " -> isFinalized=" + topic.getIsFinalized());
-
-        // Gửi email thông báo kết quả cho từng sinh viên trong nhóm theo Rubric
-        if (Boolean.TRUE.equals(isFinalized)) {
-            for (StudentGroup g : groups) {
-                emailService.sendTopicResultEmailsToGroup(topic, g);
-            }
-        }
-
-        return true;
+        return new PublicationResult(1, sent, failed);
     }
 
-    @Transactional
-    public int publishAllResults(Long departmentId, Long periodId, Boolean isFinalized) {
+    public PublicationResult publishAllResults(Long departmentId, Long periodId, Boolean isFinalized) {
         List<Topic> topics = (departmentId != null) 
                 ? topicRepository.findByDepartmentId(departmentId) 
                 : topicRepository.findAll();
-        if (topics.isEmpty()) return 0;
+        if (topics.isEmpty()) return new PublicationResult(0, 0, 0);
 
         List<Long> topicIds = topics.stream().map(Topic::getId).filter(Objects::nonNull).toList();
         List<StudentGroup> allGroups = groupRepository.findByTopicIdIn(topicIds);
@@ -730,27 +813,20 @@ public class CouncilService {
                 .collect(Collectors.toSet());
 
         int count = 0;
+        int sent = 0;
+        int failed = 0;
         for (Topic t : topics) {
             if (periodId == null || (t.getPeriod() != null && t.getPeriod().getId().equals(periodId))) {
                 if ("APPROVED".equalsIgnoreCase(t.getStatus()) && topicsWithGroups.contains(t.getId())) {
-                    if (Boolean.TRUE.equals(isFinalized) && !isTopicFullyGraded(t)) {
-                        continue; // Bỏ qua đề tài chưa chấm đủ phiếu
-                    }
-                    t.setIsFinalized(Boolean.TRUE.equals(isFinalized));
-                    topicRepository.save(t);
-                    count++;
-
-                    if (Boolean.TRUE.equals(isFinalized)) {
-                        List<StudentGroup> grps = groupRepository.findByTopicId(t.getId());
-                        for (StudentGroup g : grps) {
-                            emailService.sendTopicResultEmailsToGroup(t, g);
-                        }
-                    }
+                    PublicationResult result = publishTopicResults(t.getId(), isFinalized);
+                    count += result.published();
+                    sent += result.sent();
+                    failed += result.failed();
                 }
             }
         }
         System.out.println("[DB-EVAL] Đã cập nhật công bố toàn đợt cho " + count + " đề tài hợp lệ (isFinalized=" + isFinalized + ")");
-        return count;
+        return new PublicationResult(count, sent, failed);
     }
 
     public Map<Long, List<Evaluation>> getEvaluationsMapForTopics(List<Topic> topics) {

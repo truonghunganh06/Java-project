@@ -24,6 +24,7 @@ public class StudentService {
     private final RegistrationPeriodRepository periodRepository;
     private final EvaluationRepository evaluationRepository;
     private final FileStorageService fileStorageService;
+    private final LecturerRepository lecturerRepository;
 
     public StudentService(
             StudentRepository studentRepository,
@@ -33,7 +34,8 @@ public class StudentService {
             SubmissionRepository submissionRepository,
             RegistrationPeriodRepository periodRepository,
             EvaluationRepository evaluationRepository,
-            FileStorageService fileStorageService) {
+            FileStorageService fileStorageService,
+            LecturerRepository lecturerRepository) {
         this.studentRepository = studentRepository;
         this.topicRepository = topicRepository;
         this.groupRepository = groupRepository;
@@ -42,6 +44,7 @@ public class StudentService {
         this.periodRepository = periodRepository;
         this.evaluationRepository = evaluationRepository;
         this.fileStorageService = fileStorageService;
+        this.lecturerRepository = lecturerRepository;
     }
 
     /**
@@ -614,8 +617,9 @@ public class StudentService {
             return true;
         }
         if ("DEPARTMENT_HEAD".equalsIgnoreCase(role)) {
-            if (topic.getDepartment() == null || user.getDepartment() == null) return true;
-            return Objects.equals(topic.getDepartment().getId(), user.getDepartment().getId());
+            Lecturer manager = lecturerRepository.findByUserId(user.getId()).orElse(null);
+            return manager != null && manager.getDepartment() != null && topic.getDepartment() != null
+                    && Objects.equals(topic.getDepartment().getId(), manager.getDepartment().getId());
         }
         if ("LECTURER".equalsIgnoreCase(role)) {
             if (topic.getSupervisor() != null && topic.getSupervisor().getUser() != null

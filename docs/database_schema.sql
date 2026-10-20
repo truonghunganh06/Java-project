@@ -95,6 +95,7 @@ CREATE TABLE registration_periods (
 
 -- Bảng 7: announcements (Thông báo hệ thống / đợt)
 CREATE TABLE announcements (
+    event_key                  VARCHAR(255) UNIQUE,
     id                         BIGSERIAL PRIMARY KEY,
     department_id              BIGINT REFERENCES departments(id),
     period_id                  BIGINT REFERENCES registration_periods(id),
