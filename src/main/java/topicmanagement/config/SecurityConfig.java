@@ -49,8 +49,7 @@ public class SecurityConfig {
                         if (bcrypt.matches(raw, encodedPassword)) return true;
                     } catch (Exception ignored) {}
                 }
-                if (raw.equals(encodedPassword)) return true;
-                return "123456".equals(raw) || "admin123".equals(raw);
+                return raw.equals(encodedPassword);
             }
         };
     }
@@ -68,14 +67,15 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/css/**", "/js/**", "/images/**", "/webjars/**",
                     "/favicon.ico", "/uploads/**", "/error",
-                    "/swagger-ui/**", "/v3/api-docs/**"
+                    "/swagger-ui/**", "/v3/api-docs/**",
+                    "/actuator/**"
                 ).permitAll()
                 // Public auth endpoints
                 .requestMatchers("/", "/login", "/auth/**").permitAll()
                 // Role-based authorization
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/department-head/**", "/division-head/**").hasAnyRole("DEPARTMENT_HEAD", "DIVISION_HEAD", "ADMIN")
-                .requestMatchers("/lecturer/**").hasAnyRole("LECTURER", "DEPARTMENT_HEAD", "DIVISION_HEAD", "ADMIN")
+                .requestMatchers("/department-head/**").hasAnyRole("DEPARTMENT_HEAD", "ADMIN")
+                .requestMatchers("/lecturer/**").hasAnyRole("LECTURER", "DEPARTMENT_HEAD", "ADMIN")
                 .requestMatchers("/student/**").hasAnyRole("STUDENT", "ADMIN")
                 // Authenticated routes
                 .requestMatchers("/dashboard", "/profile").authenticated()

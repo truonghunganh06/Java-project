@@ -52,14 +52,12 @@ public class AdminController {
         Map<String, Object> stats = adminService.getSystemStats();
         List<AppUser> users = adminService.getAllUsers();
         List<Department> departments = adminService.getAllDepartments();
-        List<Major> majors = adminService.getAllMajors();
         List<Role> roles = adminService.getAllRoles();
 
         model.addAttribute("user", user);
         model.addAttribute("stats", stats);
         model.addAttribute("recentUsers", users.stream().limit(5).collect(Collectors.toList()));
         model.addAttribute("departments", departments);
-        model.addAttribute("majors", majors);
         model.addAttribute("roles", roles);
 
         return "admin/dashboard";
@@ -112,6 +110,9 @@ public class AdminController {
         model.addAttribute("keyword", keyword);
         model.addAttribute("totalCount", allUsers.size());
         model.addAttribute("newUser", new AppUser());
+        model.addAttribute("studentMap", adminService.getStudentMap());
+        model.addAttribute("lecturerMap", adminService.getLecturerMap());
+        model.addAttribute("departments", adminService.getAllDepartments());
 
         return "admin/users";
     }
@@ -165,6 +166,15 @@ public class AdminController {
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam("roleId") Long roleId,
             @RequestParam(value = "isActive", required = false) Boolean isActive,
+            @RequestParam(value = "studentCode", required = false) String studentCode,
+            @RequestParam(value = "className", required = false) String className,
+            @RequestParam(value = "academicYear", required = false) String academicYear,
+            @RequestParam(value = "gpa", required = false) Double gpa,
+            @RequestParam(value = "lecturerCode", required = false) String lecturerCode,
+            @RequestParam(value = "academicTitle", required = false) String academicTitle,
+            @RequestParam(value = "degree", required = false) String degree,
+            @RequestParam(value = "maxTopicsQuota", required = false) Integer maxTopicsQuota,
+            @RequestParam(value = "departmentId", required = false) Long departmentId,
             @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
@@ -175,7 +185,13 @@ public class AdminController {
         boolean activeStatus = Boolean.TRUE.equals(isActive);
         String err = adminService.updateUser(id, fullName, email, phone, roleId, activeStatus);
         if (err == null) {
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin tài khoản thành công!");
+            Role r = adminService.getRoleById(roleId);
+            if (r != null && "STUDENT".equalsIgnoreCase(r.getCode())) {
+                adminService.updateStudentProfile(id, studentCode, className, academicYear, gpa, departmentId);
+            } else if (r != null && ("LECTURER".equalsIgnoreCase(r.getCode()) || "DEPARTMENT_HEAD".equalsIgnoreCase(r.getCode()))) {
+                adminService.updateLecturerProfile(id, lecturerCode, academicTitle, degree, maxTopicsQuota, departmentId);
+            }
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin tài khoản và hồ sơ thành công!");
         } else {
             redirectAttributes.addFlashAttribute("errorMessage", err);
         }
@@ -184,6 +200,62 @@ public class AdminController {
             return "redirect:" + redirectUrl;
         }
 
+        return "redirect:/admin/users";
+    }
+
+    @PostMapping("/users/{id}/student-profile")
+    public String updateStudentProfile(
+            @PathVariable("id") Long id,
+            @RequestParam("studentCode") String studentCode,
+            @RequestParam(value = "className", required = false) String className,
+            @RequestParam(value = "academicYear", required = false) String academicYear,
+            @RequestParam(value = "gpa", required = false) Double gpa,
+            @RequestParam(value = "departmentId", required = false) Long departmentId,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser admin = getAuthenticatedAdmin(session);
+        if (admin == null) return "redirect:/login";
+
+        String err = adminService.updateStudentProfile(id, studentCode, className, academicYear, gpa, departmentId);
+        if (err == null) {
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật hồ sơ học vụ sinh viên thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", err);
+        }
+
+        if (redirectUrl != null && !redirectUrl.trim().isEmpty() && redirectUrl.startsWith("/admin")) {
+            return "redirect:" + redirectUrl;
+        }
+        return "redirect:/admin/users";
+    }
+
+    @PostMapping("/users/{id}/lecturer-profile")
+    public String updateLecturerProfile(
+            @PathVariable("id") Long id,
+            @RequestParam("lecturerCode") String lecturerCode,
+            @RequestParam(value = "academicTitle", required = false) String academicTitle,
+            @RequestParam(value = "degree", required = false) String degree,
+            @RequestParam(value = "maxTopicsQuota", required = false) Integer maxTopicsQuota,
+            @RequestParam(value = "departmentId", required = false) Long departmentId,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser admin = getAuthenticatedAdmin(session);
+        if (admin == null) return "redirect:/login";
+
+        String err = adminService.updateLecturerProfile(id, lecturerCode, academicTitle, degree, maxTopicsQuota, departmentId);
+        if (err == null) {
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật hồ sơ chuyên môn giảng viên thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", err);
+        }
+
+        if (redirectUrl != null && !redirectUrl.trim().isEmpty() && redirectUrl.startsWith("/admin")) {
+            return "redirect:" + redirectUrl;
+        }
         return "redirect:/admin/users";
     }
 
@@ -244,7 +316,7 @@ public class AdminController {
         return "redirect:/admin/users";
     }
 
-    // ==================== DEPARTMENTS & MAJORS ====================
+    // ==================== DEPARTMENTS ====================
 
     @GetMapping("/departments")
     public String listDepartments(HttpSession session, Model model) {
@@ -254,13 +326,10 @@ public class AdminController {
         }
 
         List<Department> departments = adminService.getAllDepartments();
-        List<Major> majors = adminService.getAllMajors();
 
         model.addAttribute("user", user);
         model.addAttribute("departments", departments);
-        model.addAttribute("majors", majors);
         model.addAttribute("newDepartment", new Department());
-        model.addAttribute("newMajor", new Major());
 
         return "admin/departments";
     }
@@ -276,7 +345,7 @@ public class AdminController {
 
         String error = adminService.createDepartment(department);
         if (error == null) {
-            redirectAttributes.addFlashAttribute("successMessage", "Thêm mới Khoa/Bộ môn '" + department.getName() + "' thành công!");
+            redirectAttributes.addFlashAttribute("successMessage", "Thêm mới Khoa '" + department.getName() + "' thành công!");
         } else {
             redirectAttributes.addFlashAttribute("errorMessage", error);
         }
@@ -322,69 +391,6 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái Khoa thành công!");
         } else {
             redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy Khoa!");
-        }
-
-        return "redirect:/admin/departments";
-    }
-
-    @PostMapping("/majors/create")
-    public String createMajor(
-            @ModelAttribute Major major,
-            @RequestParam("departmentId") Long departmentId,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
-
-        AppUser admin = getAuthenticatedAdmin(session);
-        if (admin == null) return "redirect:/login";
-
-        String error = adminService.createMajor(major, departmentId);
-        if (error == null) {
-            redirectAttributes.addFlashAttribute("successMessage", "Thêm mới Chuyên ngành '" + major.getName() + "' thành công!");
-        } else {
-            redirectAttributes.addFlashAttribute("errorMessage", error);
-        }
-
-        return "redirect:/admin/departments";
-    }
-
-    @PostMapping("/majors/{id}/edit")
-    public String editMajor(
-            @PathVariable("id") Long id,
-            @RequestParam("name") String name,
-            @RequestParam("code") String code,
-            @RequestParam("departmentId") Long departmentId,
-            @RequestParam(value = "isActive", required = false) Boolean isActive,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
-
-        AppUser admin = getAuthenticatedAdmin(session);
-        if (admin == null) return "redirect:/login";
-
-        boolean activeStatus = Boolean.TRUE.equals(isActive);
-        String error = adminService.updateMajor(id, name, code, departmentId, activeStatus);
-        if (error == null) {
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật Chuyên ngành thành công!");
-        } else {
-            redirectAttributes.addFlashAttribute("errorMessage", error);
-        }
-
-        return "redirect:/admin/departments";
-    }
-
-    @PostMapping("/majors/{id}/toggle-status")
-    public String toggleMajorStatus(
-            @PathVariable("id") Long id,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
-
-        AppUser admin = getAuthenticatedAdmin(session);
-        if (admin == null) return "redirect:/login";
-
-        boolean success = adminService.toggleMajorActive(id);
-        if (success) {
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái Chuyên ngành thành công!");
-        } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy Chuyên ngành!");
         }
 
         return "redirect:/admin/departments";

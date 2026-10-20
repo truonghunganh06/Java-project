@@ -219,7 +219,7 @@
                 <div class="input-group">
                     <span class="input-group-text"><i class="fa-regular fa-user text-slate-400"></i></span>
                     <input type="text" name="username" th:value="${username}" class="form-control"
-                        placeholder="Nhập username hoặc mã số" required autofocus>
+                        placeholder="Nhập username hoặc mã số" required autofocus title="username" aria-label="username">
                 </div>
             </div>
 
@@ -228,43 +228,12 @@
                 <div class="input-group">
                     <span class="input-group-text"><i class="fa-solid fa-lock text-slate-400"></i></span>
                     <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu của bạn"
-                        required>
+                        required title="password" aria-label="password">
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-login w-100 mb-2">Đăng nhập</button>
+            <button type="submit" class="btn btn-login w-100 mb-0">Đăng nhập</button>
         </form>
-
-        <!-- Danh sách tài khoản kiểm thử sẵn (Lấy từ Neon DB) -->
-        <div class="mt-3 pt-3 border-top border-slate-100" th:if="${testAccounts != null && !testAccounts.isEmpty()}">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-slate-600 small fw-bold" style="font-size: 11.5px;"><i class="fa-solid fa-user-check text-teal-600 me-1"></i>Tài khoản test (Neon DB)</span>
-                <span class="text-slate-400" style="font-size: 11px;">Mật khẩu: <code class="text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded fw-bold">123456</code></span>
-            </div>
-            <div class="d-flex flex-column gap-1.5" style="max-height: 220px; overflow-y: auto;">
-                <th:block th:each="acc : ${testAccounts}">
-                    <a th:href="@{/auth/switch-role(username=${acc.username})}"
-                       class="d-flex align-items-center justify-content-between p-2 rounded-2xl text-decoration-none bg-slate-50 hover:bg-teal-50/70 border border-slate-100 transition">
-                        <div class="d-flex align-items-center gap-2 min-w-0">
-                            <div class="w-6 h-6 rounded-full text-white d-flex align-items-center justify-content-center text-[10px] font-bold flex-shrink-0"
-                                 th:classappend="${acc.role != null && acc.role.code == 'ADMIN' ? 'bg-slate-800' : (acc.role != null && (acc.role.code == 'DEPARTMENT_HEAD' || acc.role.code == 'DIVISION_HEAD') ? 'bg-amber-600' : (acc.role != null && acc.role.code == 'LECTURER' ? 'bg-indigo-600' : 'bg-teal-600'))}">
-                                <span th:text="${acc.fullName != null && acc.fullName.length() > 0 ? acc.fullName.substring(0, 1) : 'U'}">U</span>
-                            </div>
-                            <div class="text-truncate">
-                                <div class="text-truncate text-slate-800 fw-bold" style="font-size: 11.5px;" th:text="${acc.fullName}">Họ Tên</div>
-                                <div class="text-slate-400" style="font-size: 10px;" th:text="${acc.username}">username</div>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center gap-1.5 flex-shrink-0 ms-2">
-                            <span class="badge rounded-full px-2 py-0.5 text-[9.5px] font-medium"
-                                  th:classappend="${acc.role != null && acc.role.code == 'ADMIN' ? 'bg-slate-200 text-slate-800' : (acc.role != null && (acc.role.code == 'DEPARTMENT_HEAD' || acc.role.code == 'DIVISION_HEAD') ? 'bg-amber-100 text-amber-800' : (acc.role != null && acc.role.code == 'LECTURER' ? 'bg-indigo-100 text-indigo-800' : 'bg-teal-100 text-teal-800'))}"
-                                  th:text="${acc.role != null && acc.role.code == 'ADMIN' ? 'Admin' : (acc.role != null && (acc.role.code == 'DEPARTMENT_HEAD' || acc.role.code == 'DIVISION_HEAD') ? 'Trưởng khoa' : (acc.role != null && acc.role.code == 'LECTURER' ? 'Giảng viên' : 'Sinh viên'))}">Vai trò</span>
-                            <span class="badge bg-white text-teal-700 border border-teal-200 rounded-full px-2 py-0.5 text-[10px] font-bold hover:bg-teal-600 hover:text-white transition">1-Click</span>
-                        </div>
-                    </a>
-                </th:block>
-            </div>
-        </div>
     </div>
 
 </body>

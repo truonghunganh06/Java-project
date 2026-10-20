@@ -14,12 +14,8 @@ public class Student {
     private AppUser user;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "major_id")
-    private Major major;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "division_id")
-    private Division division;
+    @JoinColumn(name = "department_id")
+    private Department department;
 
     @Column(name = "student_code", length = 50)
     private String studentCode;
@@ -48,26 +44,6 @@ public class Student {
 
     public void setUser(AppUser user) {
         this.user = user;
-    }
-
-    public Major getMajor() {
-        return major;
-    }
-
-    public void setMajor(Major major) {
-        this.major = major;
-        if (major != null && major.getDivision() != null && this.division == null) {
-            this.division = major.getDivision();
-        }
-    }
-
-    public Division getDivision() {
-        if (division != null) return division;
-        return major != null ? major.getDivision() : null;
-    }
-
-    public void setDivision(Division division) {
-        this.division = division;
     }
 
     public String getStudentCode() {
@@ -102,23 +78,17 @@ public class Student {
         this.gpa = gpa;
     }
 
-    @Transient
     public Department getDepartment() {
-        if (division != null && division.getDepartment() != null) {
-            return division.getDepartment();
-        }
-        return major != null ? major.getDepartment() : null;
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
     }
 
     @Transient
     public Long getDepartmentId() {
         Department dept = getDepartment();
         return dept != null ? dept.getId() : null;
-    }
-
-    @Transient
-    public Long getDivisionId() {
-        Division div = getDivision();
-        return div != null ? div.getId() : null;
     }
 }

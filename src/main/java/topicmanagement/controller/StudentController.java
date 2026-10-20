@@ -10,6 +10,7 @@ import topicmanagement.entity.*;
 import topicmanagement.service.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @Controller
 @RequestMapping("/student")
@@ -70,10 +71,11 @@ public class StudentController {
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
-        List<Announcement> announcements = announcementService.getAllAnnouncements();
+        Long deptId = student != null && student.getDepartment() != null ? student.getDepartment().getId() : null;
+        List<Announcement> announcements = announcementService.getAnnouncementsForDepartment(deptId);
         List<Submission> submissions = studentService.getGroupSubmissions(group);
         List<topicmanagement.dto.RegistrationDtos.InvitationResponseDto> myInvitations = groupRegistrationService.getMyPendingInvitations(user);
-        List<RegistrationPeriod> activePeriods = studentService.getAllActivePeriods();
+        List<RegistrationPeriod> activePeriods = studentService.getActivePeriodsForStudent(student);
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
@@ -95,9 +97,10 @@ public class StudentController {
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
-        List<RegistrationPeriod> activePeriods = studentService.getAllActivePeriods();
+        Long deptId = student != null && student.getDepartment() != null ? student.getDepartment().getId() : null;
+        List<RegistrationPeriod> activePeriods = studentService.getActivePeriodsForStudent(student);
         List<Submission> submissions = studentService.getGroupSubmissions(group);
-        List<Announcement> announcements = announcementService.getAllAnnouncements();
+        List<Announcement> announcements = announcementService.getAnnouncementsForDepartment(deptId);
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
@@ -122,7 +125,7 @@ public class StudentController {
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, periodId);
-        List<RegistrationPeriod> activePeriods = studentService.getAllActivePeriods();
+        List<RegistrationPeriod> activePeriods = studentService.getActivePeriodsForStudent(student);
         List<topicmanagement.dto.RegistrationDtos.InvitationResponseDto> myInvitations = groupRegistrationService.getMyPendingInvitations(user);
         List<topicmanagement.dto.RegistrationDtos.InvitationResponseDto> sentInvitations = group != null ? groupRegistrationService.getGroupInvitations(user, group.getId()) : List.of();
 
@@ -381,8 +384,17 @@ public class StudentController {
             return "redirect:/student/group";
         }
 
-        studentService.removeMember(group, studentId);
-        redirectAttributes.addFlashAttribute("successMessage", "Đã xóa thành viên khỏi nhóm.");
+        if ("APPROVED".equalsIgnoreCase(group.getStatus()) || "REGISTERED".equalsIgnoreCase(group.getStatus())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Nhóm đã ở trạng thái '" + group.getStatus() + "'. Thành viên muốn rút khỏi nhóm phải gửi 'Yêu cầu rút khỏi nhóm' để GVHD xét duyệt!");
+            return "redirect:/student/group";
+        }
+
+        boolean ok = studentService.removeMember(group, studentId);
+        if (ok) {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa thành viên khỏi nhóm.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa thành viên khỏi nhóm!");
+        }
         return "redirect:/student/group";
     }
 
@@ -391,7 +403,6 @@ public class StudentController {
     @GetMapping("/topics")
     public String listTopics(
             @RequestParam(value = "periodId", required = false) Long periodId,
-            @RequestParam(value = "majorId", required = false) Long majorId,
             @RequestParam(value = "keyword", required = false) String keyword,
             HttpSession session,
             Model model) {
@@ -400,17 +411,14 @@ public class StudentController {
         if (user == null) return "redirect:/login";
 
         Student student = studentService.getStudentByUser(user);
-        // Xác định Khoa & Bộ môn của sinh viên để lọc đề tài theo đúng phân quyền đào tạo
+        // Xác định Khoa của sinh viên để lọc đề tài theo đúng phân quyền đào tạo
         Long departmentId = student != null ? student.getDepartmentId() : null;
         Department studentDepartment = student != null ? student.getDepartment() : null;
-        Division studentDivision = student != null ? student.getDivision() : null;
 
         StudentGroup group = studentService.getMyActiveGroup(student, periodId);
-        // Lọc đề tài theo Khoa của sinh viên (departmentId) + periodId + majorId + keyword
-        List<Topic> topics = studentService.getAvailableTopics(periodId, majorId, keyword, departmentId);
-        // Chỉ lấy chuyên ngành thuộc Khoa của sinh viên cho dropdown filter
-        List<Major> majors = studentService.getMajorsByDepartment(departmentId);
-        List<RegistrationPeriod> periods = studentService.getAllActivePeriods();
+        // Lọc đề tài theo Khoa của sinh viên (departmentId) + periodId + keyword
+        List<Topic> topics = studentService.getAvailableTopics(periodId, keyword, departmentId);
+        List<RegistrationPeriod> periods = studentService.getActivePeriodsForStudent(student);
 
         // Lấy danh sách ID đề tài đã có nhóm đăng ký (để làm mờ/disable nút trên UI)
         java.util.Set<Long> takenTopicIds = studentService.getTakenTopicIds(topics);
@@ -418,14 +426,11 @@ public class StudentController {
         model.addAttribute("user", user);
         model.addAttribute("student", student);
         model.addAttribute("studentDepartment", studentDepartment);
-        model.addAttribute("studentDivision", studentDivision);
         model.addAttribute("group", group);
         model.addAttribute("topics", topics);
         model.addAttribute("takenTopicIds", takenTopicIds);
-        model.addAttribute("majors", majors);
         model.addAttribute("periods", periods);
         model.addAttribute("selectedPeriodId", periodId);
-        model.addAttribute("selectedMajorId", majorId);
         model.addAttribute("keyword", keyword);
 
         return "student/topics";
@@ -441,7 +446,9 @@ public class StudentController {
         if (user == null) return "redirect:/login";
 
         Student student = studentService.getStudentByUser(user);
-        StudentGroup group = studentService.getMyActiveGroup(student, null);
+        Topic topic = studentService.getTopicById(topicId);
+        Long topicPeriodId = (topic != null && topic.getPeriod() != null) ? topic.getPeriod().getId() : null;
+        StudentGroup group = studentService.getMyActiveGroup(student, topicPeriodId);
 
         String err = studentService.registerTopicForGroup(student, group, topicId);
         if (err != null) {
@@ -514,12 +521,12 @@ public class StudentController {
             return "redirect:/student/submissions";
         }
 
-        String err;
-        if (file != null && !file.isEmpty()) {
-            err = studentService.submitGroupReport(student, group, title, round, file);
-        } else {
-            err = studentService.submitGroupReport(student, group, title, round, "BaoCao_TienDo_Dot" + round + ".pdf", 2048576L);
+        if (file == null || file.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng đính kèm file báo cáo thực tế trước khi bấm nộp bài!");
+            return "redirect:/student/submissions";
         }
+
+        String err = studentService.submitGroupReport(student, group, title, round, file);
 
         if (err != null) {
             redirectAttributes.addFlashAttribute("errorMessage", err);
@@ -545,6 +552,19 @@ public class StudentController {
             return org.springframework.http.ResponseEntity.notFound().build();
         }
 
+        // BẢO MẬT PHÂN QUYỀN (IDOR): Sinh viên chỉ được tải báo cáo thuộc nhóm của mình
+        boolean isAdmin = user.getRole() != null && "ADMIN".equalsIgnoreCase(user.getRole().getCode());
+        if (!isAdmin) {
+            Student student = studentService.getStudentByUser(user);
+            if (student == null) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+            StudentGroup subGroup = submission.getGroup();
+            if (subGroup == null || !subGroup.hasMember(student)) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+        }
+
         try {
             org.springframework.core.io.Resource resource = fileStorageService.loadFileAsResource(submission.getFilePath());
             String contentType = submission.getContentType() != null ? submission.getContentType() : "application/octet-stream";
@@ -562,18 +582,47 @@ public class StudentController {
     // ==================== RESULTS ====================
 
     @GetMapping("/results")
-    public String showResults(HttpSession session, Model model) {
+    public String showResults(
+            @RequestParam(value = "periodId", required = false) Long periodId,
+            HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
         if (user == null) return "redirect:/login";
 
         Student student = studentService.getStudentByUser(user);
-        StudentGroup group = studentService.getMyActiveGroup(student, null);
+        if (student == null) {
+            return "redirect:/login";
+        }
+
+        List<RegistrationPeriod> participatedPeriods = studentService.getParticipatedPeriods(student);
+        Long selectedPeriodId = periodId;
+        StudentGroup group = null;
+        boolean accessDeniedPeriod = false;
+
+        if (periodId != null) {
+            final Long targetPeriodId = periodId;
+            boolean isAllowed = participatedPeriods.stream()
+                    .anyMatch(p -> Objects.equals(p.getId(), targetPeriodId));
+            if (!isAllowed) {
+                accessDeniedPeriod = true;
+            } else {
+                group = studentService.getMyActiveGroup(student, targetPeriodId);
+            }
+        } else {
+            if (!participatedPeriods.isEmpty()) {
+                selectedPeriodId = participatedPeriods.get(0).getId();
+                group = studentService.getMyActiveGroup(student, selectedPeriodId);
+            }
+        }
+
         List<Evaluation> evaluations = studentService.getGroupEvaluations(group);
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
         model.addAttribute("group", group);
         model.addAttribute("evaluations", evaluations);
+        model.addAttribute("participatedPeriods", participatedPeriods);
+        model.addAttribute("selectedPeriodId", selectedPeriodId);
+        model.addAttribute("accessDeniedPeriod", accessDeniedPeriod);
 
         return "student/results";
     }

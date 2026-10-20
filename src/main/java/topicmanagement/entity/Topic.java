@@ -4,7 +4,13 @@ import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "topics")
+@Table(name = "topics", indexes = {
+    @Index(name = "idx_topics_period_id", columnList = "period_id"),
+    @Index(name = "idx_topics_status", columnList = "status"),
+    @Index(name = "idx_topics_period_status", columnList = "period_id, status"),
+    @Index(name = "idx_topics_department_id", columnList = "department_id"),
+    @Index(name = "idx_topics_supervisor_id", columnList = "supervisor_id")
+})
 public class Topic {
 
     @Id
@@ -19,12 +25,8 @@ public class Topic {
     private RegistrationPeriod period;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "major_id")
-    private Major major;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "division_id")
-    private Division division;
+    @JoinColumn(name = "department_id")
+    private Department department;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "supervisor_id")
@@ -36,11 +38,11 @@ public class Topic {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewer_id")
-    private Lecturer reviewer; // GVPB (Giảng viên phản biện do Trưởng bộ môn phân công)
+    private Lecturer reviewer; // GVPB
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "council_id")
-    private Council council; // Hội đồng bảo vệ (nếu là KLTN / TLCN)
+    private Council council; // Hội đồng bảo vệ
 
     @Column(nullable = false, unique = true, length = 50)
     private String code;
@@ -112,37 +114,12 @@ public class Topic {
         this.period = period;
     }
 
-    public Major getMajor() {
-        return major;
-    }
-
-    public void setMajor(Major major) {
-        this.major = major;
-        if (major != null && major.getDivision() != null && this.division == null) {
-            this.division = major.getDivision();
-        }
-    }
-
-    public Division getDivision() {
-        if (division != null) return division;
-        if (major != null && major.getDivision() != null) return major.getDivision();
-        if (supervisor != null && supervisor.getDivision() != null) return supervisor.getDivision();
-        return null;
-    }
-
-    public void setDivision(Division division) {
-        this.division = division;
-    }
-
     public Lecturer getSupervisor() {
         return supervisor;
     }
 
     public void setSupervisor(Lecturer supervisor) {
         this.supervisor = supervisor;
-        if (supervisor != null && supervisor.getDivision() != null && this.division == null) {
-            this.division = supervisor.getDivision();
-        }
     }
 
     public Lecturer getCoSupervisor() {
@@ -295,17 +272,28 @@ public class Topic {
         return coSupervisor != null && lecturer.getId().equals(coSupervisor.getId());
     }
 
-    @Transient
     public Department getDepartment() {
-        if (division != null && division.getDepartment() != null) {
-            return division.getDepartment();
-        }
-        if (major != null && major.getDepartment() != null) {
-            return major.getDepartment();
+        if (department != null) {
+            return department;
         }
         if (period != null && period.getDepartment() != null) {
             return period.getDepartment();
         }
+        if (supervisor != null && supervisor.getDepartment() != null) {
+            return supervisor.getDepartment();
+        }
+        return null;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
+
+    public Student getStudent() {
+        return null;
+    }
+
+    public StudentGroup getGroup() {
         return null;
     }
 }

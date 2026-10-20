@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 import topicmanagement.entity.*;
 import topicmanagement.repository.*;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 
 @Service
@@ -37,6 +36,13 @@ public class AnnouncementService {
             return getAllAnnouncements();
         }
         return announcementRepository.findByDepartmentId(departmentId);
+    }
+
+    public List<Announcement> getAnnouncementsForDepartment(Long departmentId) {
+        if (departmentId == null) {
+            return getAllAnnouncements();
+        }
+        return announcementRepository.findByDepartmentIdOrGlobalOrderByIsPinnedDescCreatedAtDesc(departmentId);
     }
 
     public List<Announcement> getAnnouncementsByPeriod(Long periodId) {

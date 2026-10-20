@@ -15,7 +15,7 @@
     <!-- Navigation Buttons -->
     <div th:if="${pageObj.totalPages > 1}" class="d-flex align-items-center gap-1">
         <!-- First Page -->
-        <a th:href="@{${baseUrl}(page=1, size=${pageObj.size}, status=${selectedStatus}, majorId=${selectedMajorId}, periodId=${selectedPeriodId}, keyword=${keyword}, role=${selectedRole})}"
+        <a th:href="@{${baseUrl}(page=1, size=${pageObj.size}, status=${selectedStatus}, periodId=${selectedPeriodId}, keyword=${keyword}, role=${selectedRole})}"
            class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
            th:classappend="${pageObj.first} ? 'disabled opacity-50 pointer-events-none' : ''"
            title="Trang đầu">
@@ -23,7 +23,7 @@
         </a>
 
         <!-- Previous Page -->
-        <a th:href="@{${baseUrl}(page=${pageObj.number}, size=${pageObj.size}, status=${selectedStatus}, majorId=${selectedMajorId}, periodId=${selectedPeriodId}, keyword=${keyword}, role=${selectedRole})}"
+        <a th:href="@{${baseUrl}(page=${pageObj.number}, size=${pageObj.size}, status=${selectedStatus}, periodId=${selectedPeriodId}, keyword=${keyword}, role=${selectedRole})}"
            class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
            th:classappend="${!pageObj.hasPrevious()} ? 'disabled opacity-50 pointer-events-none' : ''">
             <i class="fa-solid fa-chevron-left me-1 text-xs"></i> Trước
@@ -35,7 +35,7 @@
                 pageObj.number - 2 < 0 ? 0 : pageObj.number - 2,
                 pageObj.number + 2 >= pageObj.totalPages ? pageObj.totalPages - 1 : pageObj.number + 2
             )}">
-                <a th:href="@{${baseUrl}(page=${i + 1}, size=${pageObj.size}, status=${selectedStatus}, majorId=${selectedMajorId}, periodId=${selectedPeriodId}, keyword=${keyword}, role=${selectedRole})}"
+                <a th:href="@{${baseUrl}(page=${i + 1}, size=${pageObj.size}, status=${selectedStatus}, periodId=${selectedPeriodId}, keyword=${keyword}, role=${selectedRole})}"
                    class="btn btn-sm rounded-xl px-3 py-1 text-xs font-bold"
                    th:classappend="${i == pageObj.number} ? 'btn-primary bg-blue-600 text-white shadow-sm' : 'btn-light border border-slate-200 text-slate-700 hover:bg-slate-50'"
                    th:text="${i + 1}">1</a>
@@ -43,14 +43,14 @@
         </span>
 
         <!-- Next Page -->
-        <a th:href="@{${baseUrl}(page=${pageObj.number + 2}, size=${pageObj.size}, status=${selectedStatus}, majorId=${selectedMajorId}, periodId=${selectedPeriodId}, keyword=${keyword}, role=${selectedRole})}"
+        <a th:href="@{${baseUrl}(page=${pageObj.number + 2}, size=${pageObj.size}, status=${selectedStatus}, periodId=${selectedPeriodId}, keyword=${keyword}, role=${selectedRole})}"
            class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
            th:classappend="${!pageObj.hasNext()} ? 'disabled opacity-50 pointer-events-none' : ''">
             Sau <i class="fa-solid fa-chevron-right ms-1 text-xs"></i>
         </a>
 
         <!-- Last Page -->
-        <a th:href="@{${baseUrl}(page=${pageObj.totalPages}, size=${pageObj.size}, status=${selectedStatus}, majorId=${selectedMajorId}, periodId=${selectedPeriodId}, keyword=${keyword}, role=${selectedRole})}"
+        <a th:href="@{${baseUrl}(page=${pageObj.totalPages}, size=${pageObj.size}, status=${selectedStatus}, periodId=${selectedPeriodId}, keyword=${keyword}, role=${selectedRole})}"
            class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
            th:classappend="${pageObj.last} ? 'disabled opacity-50 pointer-events-none' : ''"
            title="Trang cuối">

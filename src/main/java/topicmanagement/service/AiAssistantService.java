@@ -16,12 +16,9 @@ public class AiAssistantService {
     private final StudentRepository studentRepository;
     private final LecturerRepository lecturerRepository;
     private final RegistrationPeriodRepository periodRepository;
-    private final EvaluationRepository evaluationRepository;
     private final SubmissionRepository submissionRepository;
-    private final AnnouncementRepository announcementRepository;
     private final CouncilRepository councilRepository;
-    private final DivisionRepository divisionRepository;
-    private final MajorRepository majorRepository;
+    private final DepartmentRepository departmentRepository;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -33,23 +30,17 @@ public class AiAssistantService {
             StudentRepository studentRepository,
             LecturerRepository lecturerRepository,
             RegistrationPeriodRepository periodRepository,
-            EvaluationRepository evaluationRepository,
             SubmissionRepository submissionRepository,
-            AnnouncementRepository announcementRepository,
             CouncilRepository councilRepository,
-            DivisionRepository divisionRepository,
-            MajorRepository majorRepository) {
+            DepartmentRepository departmentRepository) {
         this.topicRepository = topicRepository;
         this.groupRepository = groupRepository;
         this.studentRepository = studentRepository;
         this.lecturerRepository = lecturerRepository;
         this.periodRepository = periodRepository;
-        this.evaluationRepository = evaluationRepository;
         this.submissionRepository = submissionRepository;
-        this.announcementRepository = announcementRepository;
         this.councilRepository = councilRepository;
-        this.divisionRepository = divisionRepository;
-        this.majorRepository = majorRepository;
+        this.departmentRepository = departmentRepository;
     }
 
     /**
@@ -103,10 +94,9 @@ public class AiAssistantService {
             return handleProgressAndSubmissionQuery(user, roleCode, q);
         }
 
-        // 7. Tra cứu Bộ môn & Chuyên ngành đào tạo
-        if (q.contains("bộ môn") || q.contains("chuyên ngành") || q.contains("ktpm") || q.contains("httt")
-                || q.contains("khmt") || q.contains("an toàn thông tin") || q.contains("mạng")) {
-            return handleDivisionAndMajorQuery(q);
+        // 7. Tra cứu Khoa quản lý đào tạo
+        if (q.contains("khoa") || q.contains("đơn vị") || q.contains("bộ môn") || q.contains("chuyên ngành")) {
+            return handleDepartmentQuery(q);
         }
 
         // 8. Tra cứu Đề tài còn trống & Đăng ký đề tài
@@ -143,14 +133,14 @@ public class AiAssistantService {
             return handleGreetingQuery(user);
         }
 
-        // Fallback: Tìm kiếm thông minh theo từ khóa trong Đề tài & Giảng viên & Bộ môn
+        // Fallback: Tìm kiếm thông minh theo từ khóa trong Đề tài & Giảng viên & Khoa
         return handleSmartSearchFallback(query, user);
     }
 
     private boolean isQueryingSpecificLecturer(String q) {
         return (q.contains("thầy") || q.contains("cô") || q.contains("giảng viên") || q.contains("ts.") || q.contains("ths.") || q.contains("gv"))
                 && (q.contains("hướng dẫn") || q.contains("phản biện") || q.contains("email") || q.contains("số điện thoại")
-                || q.contains("đề tài của") || q.contains("ở đâu") || q.contains("bộ môn nào") || q.matches(".*(thầy|cô|gv)\\s+[a-zA-Z0-9_\\p{L}]+.*"));
+                || q.contains("đề tài của") || q.contains("ở đâu") || q.contains("khoa nào") || q.matches(".*(thầy|cô|gv)\\s+[a-zA-Z0-9_\\p{L}]+.*"));
     }
 
     /**
@@ -178,7 +168,7 @@ public class AiAssistantService {
         if (matched == null) return null;
 
         String fullName = matched.getUser().getFullName();
-        String divName = matched.getDivision() != null ? matched.getDivision().getName() : "Chưa phân bộ môn";
+        String divName = matched.getDepartment() != null ? matched.getDepartment().getName() : "Khoa CNTT";
         String email = matched.getUser().getEmail() != null ? matched.getUser().getEmail() : "Chưa cập nhật";
         String phone = matched.getUser().getPhone() != null ? matched.getUser().getPhone() : "Chưa cập nhật";
 
@@ -244,7 +234,7 @@ public class AiAssistantService {
             long sup = supervisorCounts.getOrDefault(l.getId(), 0L);
             long rev = reviewerCounts.getOrDefault(l.getId(), 0L);
             String name = l.getUser().getFullName();
-            String div = l.getDivision() != null ? l.getDivision().getName() : "Bộ môn";
+            String div = l.getDepartment() != null ? l.getDepartment().getName() : "Khoa CNTT";
 
             sb.append("* **").append(name).append("** (").append(div).append("):\n");
             sb.append("  ➔ Đang phản biện: **").append(rev).append(" đề tài** | Đang hướng dẫn: **").append(sup).append(" đề tài**");
@@ -338,30 +328,21 @@ public class AiAssistantService {
     }
 
     /**
-     * Tra cứu Bộ môn & Chuyên ngành đào tạo.
+     * Tra cứu Khoa quản lý đào tạo.
      */
-    private AiResponse handleDivisionAndMajorQuery(String q) {
-        List<Division> divisions = divisionRepository.findAll();
-        List<Major> majors = majorRepository.findAll();
+    private AiResponse handleDepartmentQuery(String q) {
+        List<Department> departments = departmentRepository.findAll();
 
         StringBuilder sb = new StringBuilder();
-        sb.append("🏛️ **DANH SÁCH BỘ MÔN & CHUYÊN NGÀNH ĐÀO TẠO:**\n\n");
+        sb.append("🏛️ **DANH SÁCH KHOA QUẢN LÝ ĐÀO TẠO:**\n\n");
 
-        sb.append("🏢 **Các Bộ môn chuyên môn:**\n");
-        for (Division d : divisions) {
-            sb.append("* **").append(d.getName()).append("** (`").append(d.getCode()).append("`)");
-            if (d.getHeadLecturer() != null && d.getHeadLecturer().getUser() != null) {
-                sb.append(" - *Trưởng bộ môn*: ").append(d.getHeadLecturer().getUser().getFullName());
+        for (Department d : departments) {
+            sb.append("* **").append(d.getName()).append("** (`").append(d.getCode()).append("`)\n");
+            if (d.getDescription() != null && !d.getDescription().isBlank()) {
+                sb.append("  * ").append(d.getDescription()).append("\n");
             }
-            sb.append("\n");
         }
 
-        sb.append("\n🎓 **Các Chuyên ngành:**\n");
-        for (Major m : majors) {
-            sb.append("- **").append(m.getName()).append("** (`").append(m.getCode()).append("`)\n");
-        }
-
-        sb.append("\n👉 Bạn có thể hỏi: *\"Bộ môn Kỹ thuật phần mềm có những giảng viên nào?\"* để xem chi tiết!");
         return new AiResponse(sb.toString(), List.of("Giảng viên nào đang rảnh để phân GVPB", "Đề tài còn trống", "Tìm đề tài"));
     }
 
@@ -486,14 +467,14 @@ public class AiAssistantService {
 
             return new AiResponse(sb.toString(), List.of("Đề tài tôi hướng dẫn", "Hội đồng của tôi", "Quy chế tính điểm"));
         } else {
-            // DEPARTMENT_HEAD / DIVISION_HEAD / ADMIN
+            // DEPARTMENT_HEAD / ADMIN
             List<StudentGroup> allGroups = groupRepository.findAll();
             long assignedGroups = allGroups.stream().filter(g -> g.getTopic() != null).count();
             List<Topic> allTopics = topicRepository.findAll();
             long pendingTopics = allTopics.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
 
             StringBuilder sb = new StringBuilder();
-            sb.append("📊 **TIẾN ĐỘ QUẢN LÝ NHÓM & ĐỀ TÀI (DÀNH CHO BỘ MÔN / KHOA):**\n\n");
+            sb.append("📊 **TIẾN ĐỘ QUẢN LÝ NHÓM & ĐỀ TÀI (DÀNH CHO KHOA):**\n\n");
             sb.append("* Tổng số nhóm sinh viên: **").append(allGroups.size()).append(" nhóm** (trong đó **").append(assignedGroups).append(" nhóm** đã có đề tài).\n");
             sb.append("* Đề tài chờ duyệt: **").append(pendingTopics).append(" đề tài**.\n\n");
             sb.append("👉 Thầy/Cô có thể xem danh sách sinh viên tại **[Quản lý Nhóm Sinh viên](/department-head/students)** hoặc duyệt đề tài tại **[Quản lý Đề tài](/department-head/topics)**.");
@@ -527,7 +508,7 @@ public class AiAssistantService {
             for (Topic t : availableTopics.stream().limit(4).toList()) {
                 sb.append("- [`").append(t.getCode()).append("`] **").append(t.getTitle()).append("**\n");
                 sb.append("  * *GVHD*: ").append(t.getSupervisor() != null && t.getSupervisor().getUser() != null ? t.getSupervisor().getUser().getFullName() : "Chưa rõ");
-                sb.append(" | *Chuyên ngành*: ").append(t.getMajor() != null ? t.getMajor().getName() : "CNTT").append("\n");
+                sb.append(" | *Khoa*: ").append(t.getDepartment() != null ? t.getDepartment().getName() : "Khoa CNTT").append("\n");
             }
             sb.append("\n👉 Truy cập [Danh sách Đề tài](/student/topics) để đăng ký ngay!");
         } else {

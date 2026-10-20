@@ -128,8 +128,8 @@ public class Evaluation {
                 .map(Evaluation::getScore)
                 .toList();
         if (scores.size() < 2) return 0.0;
-        double max = scores.stream().max(Double::compare).orElse(0.0);
-        double min = scores.stream().min(Double::compare).orElse(0.0);
+        double max = scores.stream().mapToDouble(Double::doubleValue).max().orElse(0.0);
+        double min = scores.stream().mapToDouble(Double::doubleValue).min().orElse(0.0);
         return java.math.BigDecimal.valueOf(max - min).setScale(2, java.math.RoundingMode.HALF_UP).doubleValue();
     }
 }

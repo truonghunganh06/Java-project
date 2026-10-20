@@ -182,6 +182,11 @@ public class GroupRegistrationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bạn đã là thành viên của một nhóm khác trong đợt này rồi!");
         }
 
+        // GLOBAL VALIDATION: Kiểm tra tính đồng bộ Khoa cho sinh viên chấp nhận lời mời
+        if (period != null) {
+            studentService.validateStudentDepartmentInPeriod(student, period);
+        }
+
         // Kiểm tra sĩ số nhóm hiện tại (3 - 5 SV theo Rubric)
         List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
         int maxAllowed = getMaxAllowedMembers(group);
@@ -386,7 +391,7 @@ public class GroupRegistrationService {
         StudentGroup group = getGroupById(groupId);
 
         // Phải là thành viên trong nhóm
-        GroupMember member = groupMemberRepository.findByGroupIdAndStudentId(group.getId(), student.getId())
+        groupMemberRepository.findByGroupIdAndStudentId(group.getId(), student.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bạn không phải thành viên nhóm này!"));
 
         // Nếu là Leader, phải dùng luồng Dissolve Request (EC-03) hoặc transfer leadership trước
