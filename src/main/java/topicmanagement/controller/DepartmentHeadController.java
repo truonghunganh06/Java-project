@@ -105,6 +105,14 @@ public class DepartmentHeadController {
             if (a.getAuthor() != null && user.getId().equals(a.getAuthor().getId())) {
                 continue;
             }
+
+            // Lọc bỏ thông báo nhắc hạn nộp đề xuất đề tài (chỉ dành cho Giảng viên hướng dẫn nộp đề xuất)
+            String titleLower = a.getTitle() != null ? a.getTitle().toLowerCase() : "";
+            if (titleLower.contains("hạn đề xuất") || titleLower.contains("đến hạn đề xuất") 
+                    || titleLower.contains("nộp đề xuất") || titleLower.contains("đã đến hạn")) {
+                continue;
+            }
+
             String authorName = a.getAuthor() != null ? a.getAuthor().getFullName() : "Ban Giám Hiệu";
             String dateStr = a.getCreatedAt() != null 
                     ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format(a.getCreatedAt()) 

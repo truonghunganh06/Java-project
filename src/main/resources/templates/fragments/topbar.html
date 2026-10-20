@@ -49,7 +49,7 @@
                         <span>HK<strong class="text-slate-900" th:text="${currentSemester != null ? currentSemester : 1}">1</strong> · <span class="text-slate-600" th:text="${currentAcademicYear != null ? currentAcademicYear : '2026-2027'}">2026-2027</span></span>
                         <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 ms-0.5"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-200 rounded-2xl p-2 text-xs mt-1" aria-labelledby="semesterSwitcherDropdown" style="min-width: 220px; z-index: 1060;">
+                    <ul class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-200 rounded-2xl p-2 text-xs mt-1" aria-labelledby="semesterSwitcherDropdown" style="min-width: 250px; z-index: 1060;">
                         <!-- Section: Học kỳ -->
                         <li class="px-2.5 py-1 text-2xs font-bold text-slate-400 uppercase tracking-wider d-flex align-items-center justify-content-between">
                             <span>Học kỳ</span>
@@ -127,7 +127,7 @@
                     </button>
                     
                     <!-- Floating Results Dropdown Popup -->
-                    <div id="topbarSearchResultsPopup" class="d-none position-absolute start-0 mt-2 w-100 bg-white rounded-2xl border border-slate-200 shadow-wellnest-lg p-2 text-xs text-start" style="top: 100%; z-index: 1060; min-width: 320px; max-height: 380px; overflow-y: auto;">
+                    <div id="topbarSearchResultsPopup" class="d-none position-absolute start-0 mt-2 w-100 bg-white rounded-2xl border border-slate-200 shadow-wellnest-lg p-2 text-xs text-start" style="top: 100%; z-index: 1060; min-width: 360px; max-width: min(420px, calc(100vw - 32px)); max-height: 380px; overflow-y: auto;">
                         <div id="topbarSearchResultsContent"></div>
                     </div>
                 </div>
@@ -143,23 +143,23 @@
                                   id="topbarNotificationCount"
                                   style="top: -4px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px; box-shadow: 0 0 0 2px #ffffff, 0 1px 3px rgba(15,23,42,0.06);"></span>
                         </button>
-                        <div class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-100 rounded-3xl p-0 mt-2" style="width: 340px; z-index: 1050;">
-                        <div class="p-3.5 border-b border-slate-100 bg-slate-50/70 rounded-t-3xl d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="fw-bold text-slate-900 text-sm">Thông báo</span>
-                                <span class="badge bg-blue-100 text-blue-800 font-bold rounded-full px-2 py-0.5 text-xs d-none" 
+                        <div class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-100 rounded-2xl p-0 mt-2" style="width: 390px; max-width: min(390px, calc(100vw - 24px)); z-index: 1050;">
+                        <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/80 rounded-t-2xl d-flex align-items-center justify-content-between gap-2">
+                            <div class="d-flex align-items-center gap-2 min-w-0 flex-grow-1">
+                                <span class="fw-bold text-slate-900 text-sm text-nowrap flex-shrink-0">Thông báo</span>
+                                <span class="badge bg-blue-100 text-blue-800 font-bold rounded-pill px-2 py-0.5 text-xs text-nowrap d-none" 
                                       id="topbarNotificationHeaderCount"></span>
                             </div>
-                            <button type="button" class="btn btn-link p-0 text-xs text-blue-600 text-decoration-none hover:underline font-semibold" 
+                            <button type="button" class="btn btn-link p-0 text-xs text-blue-600 text-decoration-none hover:underline font-semibold flex-shrink-0 text-nowrap" 
                                      onclick="markAllAnnouncementsAsRead()">
                                 Đã đọc tất cả
                             </button>
                         </div>
-                        <div class="p-2 divide-y divide-slate-100" style="max-height: 320px; overflow-y: auto;">
+                        <div class="p-2 divide-y divide-slate-100" style="max-height: 360px; overflow-y: auto;">
                             <!-- Option A: topbarNotifications provided (e.g. for Department Head with pending approvals & incoming notices) -->
                             <th:block th:if="${topbarNotifications != null && !topbarNotifications.isEmpty()}">
-                                <div class="p-2.5 rounded-2xl hover:bg-slate-50 transition cursor-pointer d-flex gap-2.5 align-items-start position-relative notification-item-track"
-                                     th:each="n, nStat : ${topbarNotifications}" th:if="${nStat.index < 6}"
+                                <div class="p-2.5 rounded-xl hover:bg-slate-50 transition cursor-pointer d-flex gap-2.5 align-items-start position-relative notification-item-track"
+                                     th:each="n, nStat : ${topbarNotifications}" th:if="${nStat.index < 8}"
                                      th:data-target-url="${n.targetUrl}"
                                      onclick="if(this.dataset.targetUrl){ window.location.href=this.dataset.targetUrl; } else { showAnnouncementDetail(this); }"
                                      th:data-announcement-id="${n.id}"
@@ -172,19 +172,22 @@
                                          th:classappend="${n.iconBgClass != null ? n.iconBgClass : 'bg-blue-50 text-blue-600'}">
                                         <i th:class="${n.iconClass != null ? n.iconClass : 'fa-solid fa-bullhorn text-xs'}"></i>
                                     </div>
-                                    <div class="text-xs overflow-hidden flex-grow-1">
-                                        <p class="mb-0.5 fw-semibold text-slate-800 text-truncate" th:text="${n.title}">Tiêu đề thông báo</p>
-                                        <span class="text-slate-400" th:text="${n.createdAtFormatted}">Hôm nay</span>
+                                    <div class="text-xs min-w-0 flex-grow-1 pe-1">
+                                        <p class="mb-1 fw-semibold text-slate-800" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; word-break: break-word;" th:text="${n.title}" th:title="${n.title}">Tiêu đề thông báo</p>
+                                        <div class="d-flex align-items-center gap-2 text-slate-400 text-[11px]">
+                                            <span th:text="${n.createdAtFormatted}">Hôm nay</span>
+                                            <span th:if="${n.category != null}" class="badge bg-slate-100 text-slate-600 rounded px-1.5 py-0.5 text-[10px]" th:text="${n.category}">Tin tức</span>
+                                        </div>
                                     </div>
-                                    <span class="unread-dot w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1.5" title="Chưa đọc"></span>
+                                    <span class="unread-dot w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-2 ms-1" title="Chưa đọc"></span>
                                 </div>
                             </th:block>
 
-                            <!-- Option B: announcements fallback (LOẠI BỎ TRIỆT ĐỂ THÔNG BÁO DO CHÍNH NGƯỜI ĐĂNG TẠO RA) -->
+                            <!-- Option B: announcements fallback (LOẠI BỎ TRIỆT ĐỂ THÔNG BÁO DO CHÍNH NGƯỜI ĐĂNG TẠO RA VÀ THÔNG BÁO LỆCH VAI TRÒ) -->
                             <th:block th:if="${topbarNotifications == null && announcements != null && !announcements.isEmpty()}">
                                 <th:block th:each="a, aStat : ${announcements}">
-                                    <div th:if="${a.author == null || user == null || a.author.id != user.id}"
-                                         class="p-2.5 rounded-2xl hover:bg-slate-50 transition cursor-pointer d-flex gap-2.5 align-items-start position-relative notification-item-track"
+                                    <div th:if="${(a.author == null || user == null || a.author.id != user.id) && (user == null || user.role == null || user.role.code != 'DEPARTMENT_HEAD' || (!#strings.containsIgnoreCase(a.title, 'hạn đề xuất') && !#strings.containsIgnoreCase(a.title, 'nộp đề xuất') && !#strings.containsIgnoreCase(a.title, 'đến hạn đề xuất') && !#strings.containsIgnoreCase(a.title, 'đã đến hạn')))}"
+                                         class="p-2.5 rounded-xl hover:bg-slate-50 transition cursor-pointer d-flex gap-2.5 align-items-start position-relative notification-item-track"
                                          onclick="showAnnouncementDetail(this)"
                                          th:data-announcement-id="${a.id}"
                                          th:data-title="${a.title}"
@@ -197,11 +200,14 @@
                                         <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0 mt-0.5">
                                             <i class="fa-solid fa-bullhorn text-xs"></i>
                                         </div>
-                                        <div class="text-xs overflow-hidden flex-grow-1">
-                                            <p class="mb-0.5 fw-semibold text-slate-800 text-truncate" th:text="${a.title}">Tiêu đề thông báo</p>
-                                            <span class="text-slate-400" th:text="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy') : 'Hôm nay'}">Hôm nay</span>
+                                        <div class="text-xs min-w-0 flex-grow-1 pe-1">
+                                            <p class="mb-1 fw-semibold text-slate-800" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; word-break: break-word;" th:text="${a.title}" th:title="${a.title}">Tiêu đề thông báo</p>
+                                            <div class="d-flex align-items-center gap-2 text-slate-400 text-[11px]">
+                                                <span th:text="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy') : 'Hôm nay'}">Hôm nay</span>
+                                                <span th:if="${a.category != null}" class="badge bg-slate-100 text-slate-600 rounded px-1.5 py-0.5 text-[10px]" th:text="${a.category}">THÔNG BÁO</span>
+                                            </div>
                                         </div>
-                                        <span class="unread-dot w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1.5" title="Chưa đọc"></span>
+                                        <span class="unread-dot w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-2 ms-1" title="Chưa đọc"></span>
                                     </div>
                                 </th:block>
                             </th:block>
@@ -223,52 +229,6 @@
                         title="Chuyển đổi Sáng / Tối">
                     <i class="fa-regular fa-moon" id="themeToggleIcon"></i>
                 </button>
-
-                <!-- User Profile Avatar Pill -->
-                <div class="dropdown">
-                    <button class="topbar-user-avatar-btn" 
-                            type="button" 
-                            data-bs-toggle="dropdown" 
-                            aria-expanded="false" 
-                            title="Tài khoản cá nhân">
-                        <div class="w-8 h-8 rounded-full text-white d-flex align-items-center justify-content-center fw-bold shadow-xs" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; background-color: #10b981 !important; color: #ffffff !important; font-size: 0.85rem; border-radius: 50%;">
-                            <span th:text="${user != null && user.fullName != null && user.fullName.length() > 0 ? user.fullName.substring(0, 1) : 'U'}">U</span>
-                        </div>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-100 rounded-3xl p-2 mt-2" style="min-width: 300px; max-height: 480px; overflow-y: auto; z-index: 1060;">
-                        <!-- User Info Header -->
-                        <li class="px-3 py-2.5 bg-slate-50/80 rounded-2xl mb-2 border border-slate-100/80">
-                            <div class="d-flex align-items-center gap-2.5">
-                                <div class="w-9 h-9 rounded-full bg-emerald-500 text-white d-flex align-items-center justify-content-center fw-bold text-sm shadow-xs flex-shrink-0">
-                                    <span th:text="${user != null && user.fullName != null && user.fullName.length() > 0 ? user.fullName.substring(0, 1) : 'U'}">U</span>
-                                </div>
-                                <div class="overflow-hidden">
-                                    <p class="mb-0 fw-bold text-slate-900 text-xs text-truncate" th:text="${user != null ? user.fullName : 'Họ Tên'}">Họ Tên</p>
-                                    <span class="badge bg-slate-200/80 text-slate-700 font-semibold rounded-full px-2 py-0.5 text-[10px]" th:text="${user != null && user.role != null ? user.role.name : 'Vai trò'}">Trưởng khoa</span>
-                                </div>
-                            </div>
-                        </li>
-
-                        <!-- Dashboard Link -->
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2.5 py-2 px-3 rounded-2xl text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-900 transition" th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
-                                <i class="fa-solid fa-chart-pie text-slate-400"></i>
-                                <span>Bảng điều khiển</span>
-                            </a>
-                        </li>
-
-                        <!-- Logout (Spring Security compliant with CSRF) -->
-                        <li><hr class="dropdown-divider my-1.5 border-slate-100"></li>
-                        <li>
-                            <form th:action="@{/logout}" method="post" class="d-inline w-100 m-0 p-0">
-                                <button type="submit" class="dropdown-item d-flex align-items-center gap-2.5 py-2 px-3 rounded-2xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition border-0 bg-transparent w-100 text-start">
-                                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                                    <span>Đăng xuất</span>
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
             </div>
         </header>
 
