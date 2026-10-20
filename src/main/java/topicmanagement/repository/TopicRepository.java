@@ -14,121 +14,77 @@ import java.util.Optional;
 
 public interface TopicRepository extends JpaRepository<Topic, Long> {
 
-    @EntityGraph(attributePaths = {"division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     @Override
     @NonNull
     Optional<Topic> findById(@NonNull Long id);
 
-    @EntityGraph(attributePaths = {"division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     @Override
     @NonNull
     List<Topic> findAll();
 
-    @EntityGraph(attributePaths = {"division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     @Override
     @NonNull
     Page<Topic> findAll(@NonNull Pageable pageable);
 
-    @EntityGraph(attributePaths = {"division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     List<Topic> findBySupervisorId(Long supervisorId);
 
-    @EntityGraph(attributePaths = {"division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     List<Topic> findByReviewerId(Long reviewerId);
 
-    @EntityGraph(attributePaths = {"division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     List<Topic> findByCouncilId(Long councilId);
 
-    @EntityGraph(attributePaths = {"division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     List<Topic> findByPeriodId(Long periodId);
 
-    @EntityGraph(attributePaths = {"division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     List<Topic> findByStatus(String status);
 
-    @EntityGraph(attributePaths = {"division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     Page<Topic> findByStatus(String status, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
-    List<Topic> findByMajorId(Long majorId);
-
-    @EntityGraph(attributePaths = {"division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
-    @Query("SELECT t FROM Topic t WHERE t.division.id = :divisionId")
-    List<Topic> findByDivisionId(@Param("divisionId") Long divisionId);
-
-    @EntityGraph(attributePaths = {"division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
-    @Query("SELECT t FROM Topic t WHERE t.division.id = :divisionId AND t.status = :status")
-    List<Topic> findByDivisionIdAndStatus(@Param("divisionId") Long divisionId, @Param("status") String status);
-
-    @EntityGraph(attributePaths = {"division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
-    @Query("SELECT t FROM Topic t WHERE t.division.id = :divisionId AND t.period.id = :periodId")
-    List<Topic> findByDivisionIdAndPeriodId(@Param("divisionId") Long divisionId, @Param("periodId") Long periodId);
-
-    @EntityGraph(attributePaths = {"department", "division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     List<Topic> findByDepartmentId(Long departmentId);
 
-    @EntityGraph(attributePaths = {"department", "division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    Page<Topic> findByDepartmentId(Long departmentId, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     List<Topic> findByDepartmentIdAndStatus(Long departmentId, String status);
 
-    @EntityGraph(attributePaths = {"department", "division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    Page<Topic> findByDepartmentIdAndStatus(Long departmentId, String status, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     List<Topic> findByDepartmentIdAndPeriodId(Long departmentId, Long periodId);
 
-    @EntityGraph(attributePaths = {"department", "division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
-    List<Topic> findByMajorDepartmentId(Long departmentId);
-
-    @EntityGraph(attributePaths = {"department", "division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
-    Page<Topic> findByMajorDepartmentId(Long departmentId, Pageable pageable);
-
-    @EntityGraph(attributePaths = {"department", "division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
-    List<Topic> findByMajorDepartmentIdAndStatus(Long departmentId, String status);
-
-    @EntityGraph(attributePaths = {"department", "division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     @Query("SELECT t FROM Topic t WHERE t.supervisor.id = :lecturerId OR (t.coSupervisor IS NOT NULL AND t.coSupervisor.id = :lecturerId)")
     List<Topic> findBySupervisorOrCoSupervisorId(@Param("lecturerId") Long lecturerId);
 
-    @EntityGraph(attributePaths = {"department", "division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     @Query("SELECT t FROM Topic t WHERE t.period.id = :periodId AND t.status = 'APPROVED'")
     List<Topic> findApprovedByPeriodId(@Param("periodId") Long periodId);
 
-    @EntityGraph(attributePaths = {"department", "division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
-    @Query("SELECT t FROM Topic t WHERE (:departmentId IS NULL OR (t.department IS NOT NULL AND t.department.id = :departmentId) OR (t.division IS NOT NULL AND t.division.department.id = :departmentId) OR (t.major IS NOT NULL AND t.major.department.id = :departmentId)) " +
-           "AND (:divisionId IS NULL OR (t.division IS NOT NULL AND t.division.id = :divisionId)) " +
+    @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
+    @Query("SELECT t FROM Topic t WHERE (:departmentId IS NULL OR (t.department IS NOT NULL AND t.department.id = :departmentId) OR (t.period IS NOT NULL AND t.period.department IS NOT NULL AND t.period.department.id = :departmentId) OR (t.supervisor IS NOT NULL AND t.supervisor.department IS NOT NULL AND t.supervisor.department.id = :departmentId)) " +
            "AND (:status IS NULL OR :status = '' OR :status = 'ALL' OR t.status = :status) " +
-           "AND (:majorId IS NULL OR (t.major IS NOT NULL AND t.major.id = :majorId)) " +
            "AND (:periodId IS NULL OR (t.period IS NOT NULL AND t.period.id = :periodId)) " +
            "AND (:keyword IS NULL OR :keyword = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(t.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR (t.supervisor.user.fullName IS NOT NULL AND LOWER(t.supervisor.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')))) " +
            "ORDER BY CASE WHEN t.status = 'PENDING' THEN 0 ELSE 1 END, t.createdAt DESC")
     Page<Topic> findDepartmentTopicsPaged(
             @Param("departmentId") Long departmentId,
-            @Param("divisionId") Long divisionId,
             @Param("status") String status,
-            @Param("majorId") Long majorId,
-            @Param("periodId") Long periodId,
-            @Param("keyword") String keyword,
-            Pageable pageable);
-
-    @EntityGraph(attributePaths = {"division", "division.department", "major", "major.department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
-    @Query("SELECT t FROM Topic t WHERE (:divisionId IS NULL OR (t.division IS NOT NULL AND t.division.id = :divisionId)) " +
-           "AND (:status IS NULL OR :status = '' OR :status = 'ALL' OR t.status = :status) " +
-           "AND (:majorId IS NULL OR t.major.id = :majorId) " +
-           "AND (:periodId IS NULL OR t.period.id = :periodId) " +
-           "AND (:keyword IS NULL OR :keyword = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(t.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR (t.supervisor.user.fullName IS NOT NULL AND LOWER(t.supervisor.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))))")
-    Page<Topic> findDivisionTopicsPaged(
-            @Param("divisionId") Long divisionId,
-            @Param("status") String status,
-            @Param("majorId") Long majorId,
             @Param("periodId") Long periodId,
             @Param("keyword") String keyword,
             Pageable pageable);
 
     boolean existsByCode(String code);
-    long countByMajorDepartmentIdAndStatus(Long departmentId, String status);
-    long countByMajorDepartmentId(Long departmentId);
-    
-    @Query("SELECT COUNT(t) FROM Topic t WHERE t.division.id = :divisionId")
-    long countByDivisionId(@Param("divisionId") Long divisionId);
-    
-    @Query("SELECT COUNT(t) FROM Topic t WHERE t.division.id = :divisionId AND t.status = :status")
-    long countByDivisionIdAndStatus(@Param("divisionId") Long divisionId, @Param("status") String status);
-    
+
     long countByDepartmentId(Long departmentId);
     long countByDepartmentIdAndStatus(Long departmentId, String status);
 

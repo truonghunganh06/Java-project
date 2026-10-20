@@ -13,7 +13,7 @@
     <!-- Main Wrapper -->
     <div class="saas-main-wrapper">
         <!-- Topbar -->
-        <header th:replace="~{fragments/topbar :: topbar('Quản lý Nhóm Sinh viên', ${user != null && user.role != null ? user.role.name : 'Trưởng Bộ Môn'}, '/department-head/dashboard', ${user})}"></header>
+        <header th:replace="~{fragments/topbar :: topbar('Quản lý Nhóm Sinh viên', ${user != null && user.role != null ? user.role.name : 'Trưởng Khoa'}, '/department-head/dashboard', ${user})}"></header>
 
         <!-- Main Content View -->
         <main class="saas-content">
@@ -205,7 +205,7 @@
                                                         </div>
                                                     </div>
                                                     <div class="text-end text-xs text-slate-500">
-                                                        <span class="d-block font-medium text-slate-700" th:text="${m.student != null && m.student.major != null ? m.student.major.name : 'CNTT'}"></span>
+                                                        <span class="d-block font-medium text-slate-700" th:text="${m.student != null && m.student.department != null ? m.student.department.name : 'Khoa CNTT'}"></span>
                                                         <span th:if="${m.student != null && m.student.gpa != null}" class="text-slate-400 font-mono" th:text="'GPA: ' + ${m.student.gpa}"></span>
                                                     </div>
                                                 </div>
@@ -221,7 +221,7 @@
                                                 <div>
                                                     <div class="d-flex align-items-center gap-1.5 mb-1">
                                                         <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-bold" th:text="${g.topic.code}">DT-01</span>
-                                                        <span class="badge-pill-neutral font-medium text-xs" th:text="${g.topic.major != null ? g.topic.major.name : 'CNTT'}">CNTT</span>
+                                                        <span class="badge-pill-neutral font-medium text-xs" th:text="${g.topic.department != null ? g.topic.department.name : 'Khoa CNTT'}">Khoa CNTT</span>
                                                     </div>
                                                     <h6 class="font-bold text-slate-900 text-sm mb-1 leading-snug" th:text="${g.topic.title}">Tên đề tài nghiên cứu</h6>
                                                 </div>
@@ -390,7 +390,7 @@
                     <div class="modal-body text-xs">
                         <input type="hidden" name="periodId" th:value="${selectedPeriodId}">
                         <div class="alert alert-info rounded-xl text-xs py-2 px-3 mb-3 border border-blue-200 bg-blue-50 text-blue-900">
-                            <i class="fa-solid fa-circle-info me-1 text-blue-600"></i> Tính năng hỗ trợ Trưởng bộ môn gộp 2 nhóm thiếu người thành 1 nhóm chuẩn. Toàn bộ thành viên nhóm nguồn sẽ được chuyển sang nhóm đích, đề tài nhóm nguồn (nếu có) được giải phóng về <strong>APPROVED</strong>.
+                            <i class="fa-solid fa-circle-info me-1 text-blue-600"></i> Tính năng hỗ trợ Trưởng khoa gộp 2 nhóm thiếu người thành 1 nhóm chuẩn. Toàn bộ thành viên nhóm nguồn sẽ được chuyển sang nhóm đích, đề tài nhóm nguồn (nếu có) được giải phóng về <strong>APPROVED</strong>.
                         </div>
                         <div class="mb-3">
                             <label class="form-label font-semibold text-slate-700" for="field-department-head-students-5">Chọn Nhóm Nguồn (Sẽ bị giải tán sau khi chuyển SV) *</label>

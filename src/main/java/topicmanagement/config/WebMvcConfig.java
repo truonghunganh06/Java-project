@@ -25,7 +25,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/student/**",
                         "/lecturer/**",
                         "/department-head/**",
-                        "/division-head/**",
                         "/admin/**",
                         "/api/v2/**"
                 )

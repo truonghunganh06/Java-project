@@ -74,8 +74,8 @@ public class SecurityConfig {
                 .requestMatchers("/", "/login", "/auth/**").permitAll()
                 // Role-based authorization
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/department-head/**", "/division-head/**").hasAnyRole("DEPARTMENT_HEAD", "DIVISION_HEAD", "ADMIN")
-                .requestMatchers("/lecturer/**").hasAnyRole("LECTURER", "DEPARTMENT_HEAD", "DIVISION_HEAD", "ADMIN")
+                .requestMatchers("/department-head/**").hasAnyRole("DEPARTMENT_HEAD", "ADMIN")
+                .requestMatchers("/lecturer/**").hasAnyRole("LECTURER", "DEPARTMENT_HEAD", "ADMIN")
                 .requestMatchers("/student/**").hasAnyRole("STUDENT", "ADMIN")
                 // Authenticated routes
                 .requestMatchers("/dashboard", "/profile").authenticated()

@@ -60,7 +60,7 @@
                         <thead>
                             <tr>
                                 <th style="width: 35%;" scope="col">Mã & Tên đề tài</th>
-                                <th style="width: 20%;" scope="col">Đợt & Bộ môn</th>
+                                <th style="width: 20%;" scope="col">Đợt & Khoa</th>
                                 <th style="width: 20%;" scope="col">GV Hướng dẫn</th>
                                 <th style="width: 13%;" scope="col">Hạn nộp điểm</th>
                                 <th style="width: 12%;" class="text-end" scope="col">Chấm điểm phản biện</th>
@@ -83,7 +83,7 @@
                                 </td>
                                 <td>
                                     <div class="font-medium text-slate-900 text-xs" th:text="${t.period != null ? t.period.name : 'N/A'}"></div>
-                                    <span class="text-slate-400 text-xs d-block" th:text="${t.major != null ? t.major.name : 'CNTT'}"></span>
+                                    <span class="text-slate-400 text-xs d-block" th:text="${t.department != null ? t.department.name : 'Khoa CNTT'}"></span>
                                 </td>
                                 <td>
                                     <div class="font-medium text-slate-900 text-xs" th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'N/A'}"></div>

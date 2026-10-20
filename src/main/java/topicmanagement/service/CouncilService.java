@@ -20,7 +20,6 @@ public class CouncilService {
     private final LecturerRepository lecturerRepository;
     private final RegistrationPeriodRepository periodRepository;
     private final DepartmentRepository departmentRepository;
-    private final DivisionRepository divisionRepository;
     private final StudentGroupRepository groupRepository;
     private final EmailService emailService;
 
@@ -32,7 +31,6 @@ public class CouncilService {
             LecturerRepository lecturerRepository,
             RegistrationPeriodRepository periodRepository,
             DepartmentRepository departmentRepository,
-            DivisionRepository divisionRepository,
             StudentGroupRepository groupRepository,
             EmailService emailService) {
         this.councilRepository = councilRepository;
@@ -42,12 +40,9 @@ public class CouncilService {
         this.lecturerRepository = lecturerRepository;
         this.periodRepository = periodRepository;
         this.departmentRepository = departmentRepository;
-        this.divisionRepository = divisionRepository;
         this.groupRepository = groupRepository;
         this.emailService = emailService;
     }
-
-
 
     public List<Council> getAllCouncils() {
         return councilRepository.findAll();
@@ -56,11 +51,6 @@ public class CouncilService {
     public List<Council> getCouncilsByDepartment(Long departmentId) {
         if (departmentId == null) return councilRepository.findAll();
         return councilRepository.findByDepartmentId(departmentId);
-    }
-
-    public List<Council> getCouncilsByDivision(Long divisionId) {
-        if (divisionId == null) return councilRepository.findAll();
-        return councilRepository.findByDivisionId(divisionId);
     }
 
     public List<Council> getCouncilsByPeriod(Long periodId) {
@@ -86,20 +76,6 @@ public class CouncilService {
     @Transactional
     public Council createCouncil(
             Long departmentId,
-            Long periodId,
-            String councilCode,
-            String councilName,
-            String location,
-            OffsetDateTime defenseDate,
-            List<Long> lecturerIds,
-            List<String> roles) {
-        return createCouncil(departmentId, null, periodId, councilCode, councilName, location, defenseDate, lecturerIds, roles);
-    }
-
-    @Transactional
-    public Council createCouncil(
-            Long departmentId,
-            Long divisionId,
             Long periodId,
             String councilCode,
             String councilName,
@@ -154,15 +130,13 @@ public class CouncilService {
             }
         }
 
-        Division div = divisionId != null ? divisionRepository.findById(divisionId).orElse(null) : null;
-        Department dept = departmentId != null ? departmentRepository.findById(departmentId).orElse(null) : (div != null ? div.getDepartment() : null);
+        Department dept = departmentId != null ? departmentRepository.findById(departmentId).orElse(null) : null;
         RegistrationPeriod period = periodId != null ? periodRepository.findById(periodId).orElse(null) : null;
 
         Council council = new Council();
         council.setName(trimmedName);
         council.setCode(trimmedCode != null ? trimmedCode : ("HD-" + System.currentTimeMillis() % 10000));
         council.setDepartment(dept);
-        council.setDivision(div);
         council.setPeriod(period);
         council.setLocation(location != null ? location.trim() : null);
         council.setDefenseDate(defenseDate != null ? defenseDate : OffsetDateTime.now().plusDays(15));
@@ -188,6 +162,49 @@ public class CouncilService {
 
         System.out.println("[DB-COUNCIL] Tạo mới Hội đồng: " + trimmedName + " (Mã: " + trimmedCode + ")");
         return savedCouncil;
+    }
+
+    /**
+     * Tạo Hội đồng mới và đồng thời phân công danh sách đề tài/nhóm vào hội đồng (Luồng Wizard 2 bước)
+     */
+    @Transactional
+    public Council createCouncil(
+            Long departmentId,
+            Long periodId,
+            String councilCode,
+            String councilName,
+            String location,
+            OffsetDateTime defenseDate,
+            List<Long> lecturerIds,
+            List<String> roles,
+            List<Long> topicIds) {
+
+        Council savedCouncil = createCouncil(departmentId, periodId, councilCode, councilName, location, defenseDate, lecturerIds, roles);
+        if (topicIds != null && !topicIds.isEmpty()) {
+            for (Long topicId : topicIds) {
+                if (topicId != null) {
+                    assignTopicToCouncil(topicId, savedCouncil.getId());
+                }
+            }
+        }
+        return savedCouncil;
+    }
+
+    /**
+     * Phân công hàng loạt đề tài vào Hội đồng có sẵn (Batch assign)
+     */
+    @Transactional
+    public int assignTopicsToCouncil(Long councilId, List<Long> topicIds) {
+        if (councilId == null || topicIds == null || topicIds.isEmpty()) {
+            return 0;
+        }
+        int count = 0;
+        for (Long topicId : topicIds) {
+            if (topicId != null && assignTopicToCouncil(topicId, councilId)) {
+                count++;
+            }
+        }
+        return count;
     }
 
     /**
@@ -688,7 +705,7 @@ public class CouncilService {
     @Transactional
     public int publishAllResults(Long departmentId, Long periodId, Boolean isFinalized) {
         List<Topic> topics = (departmentId != null) 
-                ? topicRepository.findByMajorDepartmentId(departmentId) 
+                ? topicRepository.findByDepartmentId(departmentId) 
                 : topicRepository.findAll();
         if (topics.isEmpty()) return 0;
 

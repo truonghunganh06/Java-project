@@ -12,7 +12,7 @@
         <!-- Main Wrapper -->
         <div class="saas-main-wrapper">
             <!-- Topbar -->
-            <header th:replace="~{fragments/topbar :: topbar('Bảng điều khiển', ${user != null &amp;&amp; user.role != null ? user.role.name : 'Trưởng Bộ Môn'}, '/department-head/dashboard', ${user})}">
+            <header th:replace="~{fragments/topbar :: topbar('Bảng điều khiển', ${user != null &amp;&amp; user.role != null ? user.role.name : 'Trưởng Khoa'}, '/department-head/dashboard', ${user})}">
         </header>
             <!-- Main Content View -->
             <main class="saas-content" id="dashboard-main" tabindex="-1">
@@ -34,11 +34,10 @@
                             <span th:text="${user != null &amp;&amp; user.role != null ? user.role.name : 'Quản lý đào tạo'}"></span>
                         </div>
                         <h1>
-                            <span th:text="${user != null &amp;&amp; user.role != null &amp;&amp; user.role.code == 'DIVISION_HEAD' ? 'Điều hành bộ môn' : 'Điều hành khoa'}">Điều hành đào tạo</span>
+                            <span>Điều hành khoa</span>
                         </h1>
                         <p>
-                            <span th:if="${user != null &amp;&amp; user.role != null &amp;&amp; user.role.code == 'DIVISION_HEAD' &amp;&amp; division != null}" th:text="${division.name}"></span>
-                            <span th:unless="${user != null &amp;&amp; user.role != null &amp;&amp; user.role.code == 'DIVISION_HEAD' &amp;&amp; division != null}" th:text="${department != null ? department.name : 'Theo dõi đề tài và tiến độ đào tạo'}"></span>
+                            <span th:text="${department != null ? department.name : 'Theo dõi đề tài và tiến độ đào tạo'}"></span>
                             <span th:if="${currentSemester != null &amp;&amp; currentAcademicYear != null}" th:text="${' · Học kỳ ' + currentSemester + ' / ' + currentAcademicYear}"></span>
                         </p>
                     </div>
@@ -104,7 +103,7 @@
                                     <tbody>
                                         <tr th:each="t, iter : ${pendingTopics}" th:if="${iter.index &lt; 5}">
                                             <td>
-                                                <button class="db-cell-title db-title-button" th:text="${t.title}" type="button" onclick="openTopicDrawer(this)" th:aria-label="${'Xem chi tiết đề tài ' + t.code}" th:data-topic-id="${t.id}" th:data-topic-code="${t.code != null ? t.code : 'DT-NEW'}" th:data-topic-title="${t.title}" th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}" th:data-topic-major="${t.major != null ? t.major.name : 'Chưa cập nhật'}" th:data-topic-supervisor="${t.supervisor != null &amp;&amp; t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}" th:data-topic-co-supervisor="${t.coSupervisor != null &amp;&amp; t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}" th:data-topic-reviewer="${t.reviewer != null &amp;&amp; t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}" th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}" th:data-topic-max-students="${t.maxStudents}" th:data-topic-status="${t.status}" th:data-topic-description="${t.description}" th:data-topic-requirements="${t.requirements}" th:data-topic-role="DEPARTMENT_HEAD"></button>
+                                                <button class="db-cell-title db-title-button" th:text="${t.title}" type="button" onclick="openTopicDrawer(this)" th:aria-label="${'Xem chi tiết đề tài ' + t.code}" th:data-topic-id="${t.id}" th:data-topic-code="${t.code != null ? t.code : 'DT-NEW'}" th:data-topic-title="${t.title}" th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}" th:data-topic-major="${t.department != null ? t.department.name : 'Khoa CNTT'}" th:data-topic-supervisor="${t.supervisor != null &amp;&amp; t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}" th:data-topic-co-supervisor="${t.coSupervisor != null &amp;&amp; t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}" th:data-topic-reviewer="${t.reviewer != null &amp;&amp; t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}" th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}" th:data-topic-max-students="${t.maxStudents}" th:data-topic-status="${t.status}" th:data-topic-description="${t.description}" th:data-topic-requirements="${t.requirements}" th:data-topic-role="DEPARTMENT_HEAD"></button>
                                                 <span class="db-cell-meta" th:text="${t.code + (t.period != null ? ' · ' + t.period.name : '')}"></span>
                                             </td>
                                             <td th:text="${t.supervisor != null &amp;&amp; t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}"></td>

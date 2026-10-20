@@ -57,11 +57,11 @@
                         <strong class="db-metric-value" th:text="${stats != null &amp;&amp; stats['totalDepartments'] != null ? stats['totalDepartments'] : '—'}">—</strong>
                         <span class="db-metric-note">Cơ cấu tổ chức</span>
                     </a>
-                    <a class="db-metric" th:href="@{/admin/departments}">
-                        <span class="db-metric-label">Chuyên ngành<i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                    <a class="db-metric" th:href="@{/admin/users?role=LECTURER}">
+                        <span class="db-metric-label">Giảng viên<i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
                         </span>
-                        <strong class="db-metric-value" th:text="${stats != null &amp;&amp; stats['totalMajors'] != null ? stats['totalMajors'] : '—'}">—</strong>
-                        <span class="db-metric-note">Danh mục đào tạo</span>
+                        <strong class="db-metric-value" th:text="${stats != null &amp;&amp; stats['lecturerCount'] != null ? stats['lecturerCount'] : '—'}">—</strong>
+                        <span class="db-metric-note">Cán bộ hướng dẫn &amp; phản biện</span>
                     </a>
                 </div>
                 <div class="db-layout">
@@ -124,10 +124,10 @@
                                 </div>
                             </div>
                             <div class="db-panel-body">
-                                <p class="db-note">Quản lý khoa, bộ môn và chuyên ngành. Các danh mục được sử dụng thống nhất trong hồ sơ người dùng và đợt đăng ký.</p>
+                                <p class="db-note">Quản lý danh sách Khoa đào tạo. Danh mục Khoa được sử dụng thống nhất trong hồ sơ người dùng và đợt đăng ký.</p>
                                 <div class="db-actions mt-3">
                                     <a th:href="@{/admin/departments}" class="db-button">
-                                        <span>Quản lý cơ cấu</span>
+                                        <span>Quản lý Khoa đào tạo</span>
                                         <i class="fa-solid fa-building-columns" aria-hidden="true"></i>
                                     </a>
                                 </div>
@@ -152,7 +152,7 @@
                                 <li>
                                     <a class="db-quick-link" th:href="@{/admin/departments}">
                                         <span>
-                                            <i class="fa-solid fa-building-columns" aria-hidden="true"></i>Khoa, bộ môn &amp; chuyên ngành</span>
+                                            <i class="fa-solid fa-building-columns" aria-hidden="true"></i>Khoa đào tạo</span>
                                         <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
                                     </a>
                                 </li>
@@ -168,7 +168,7 @@
                                 <dl class="db-definition">
                                     <dt>Quản trị viên</dt>
                                     <dd th:text="${stats != null ? stats['adminCount'] : '—'}">—</dd>
-                                    <dt>Trưởng khoa / bộ môn</dt>
+                                    <dt>Trưởng khoa</dt>
                                     <dd th:text="${stats != null ? stats['deptHeadCount'] : '—'}">—</dd>
                                     <dt>Giảng viên</dt>
                                     <dd th:text="${stats != null ? stats['lecturerCount'] : '—'}">—</dd>

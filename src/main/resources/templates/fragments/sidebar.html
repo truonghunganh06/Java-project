@@ -4,7 +4,7 @@
         <th:block th:fragment="sidebar(activePage, user)">
         <aside class="saas-sidebar workspace-sidebar" id="saasSidebar" aria-label="Điều hướng chính">
             <div class="workspace-header">
-                <a class="workspace-brand" th:href="@{${user != null &amp;&amp; user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}" aria-label="TopicHub — trang tổng quan">
+                <a class="workspace-brand" th:href="@{${user != null &amp;&amp; user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}" aria-label="TopicHub — trang tổng quan">
                     <span class="workspace-wordmark">TopicHub</span>
                     <span class="workspace-monogram" aria-hidden="true">TH</span>
                 </a>
@@ -30,7 +30,7 @@
                         <span>Khoa đào tạo</span>
                     </a>
                 </div>
-                <div th:if="${user != null &amp;&amp; user.role != null &amp;&amp; (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD')}">
+                <div th:if="${user != null &amp;&amp; user.role != null &amp;&amp; user.role.code == 'DEPARTMENT_HEAD'}">
                     <a th:href="@{/department-head/dashboard}" class="workspace-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Tổng quan" aria-label="Tổng quan" th:attr="aria-current=${activePage == 'dashboard' ? 'page' : null}">
                         <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
                         <span>Tổng quan</span>

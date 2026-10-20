@@ -18,13 +18,13 @@
 
                 <!-- Breadcrumb Pathway -->
                 <nav class="d-flex align-items-center gap-2 text-xs py-1 text-slate-500" aria-label="breadcrumb">
-                    <a th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}"
+                    <a th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}"
                        class="d-flex align-items-center gap-1.5 text-slate-500 hover:text-blue-600 font-medium text-decoration-none transition">
                         <i class="fa-solid fa-house-chimney text-slate-400 text-xs"></i>
                         <span class="d-none d-sm-inline">TopicHub</span>
                     </a>
                     <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
-                    <th:block th:if="${breadcrumbParent != null && breadcrumbParent != pageTitle && breadcrumbParent != 'Trưởng Khoa' && breadcrumbParent != 'Trưởng Bộ Môn' && breadcrumbParent != 'Giảng Viên' && breadcrumbParent != 'Sinh Viên' && breadcrumbParent != 'Quản Trị Viên' && breadcrumbParent != 'Trưởng bộ môn'}">
+                    <th:block th:if="${breadcrumbParent != null && breadcrumbParent != pageTitle && breadcrumbParent != 'Trưởng Khoa' && breadcrumbParent != 'Giảng Viên' && breadcrumbParent != 'Sinh Viên' && breadcrumbParent != 'Quản Trị Viên'}">
                         <a th:href="@{${breadcrumbParentUrl != null ? breadcrumbParentUrl : '#'}}" 
                            class="text-slate-500 hover:text-blue-600 font-medium text-decoration-none transition text-truncate"
                            style="max-width: 140px;"
@@ -219,14 +219,14 @@
                                 </div>
                                 <div class="overflow-hidden">
                                     <p class="mb-0 fw-bold text-slate-900 text-xs text-truncate" th:text="${user != null ? user.fullName : 'Họ Tên'}">Họ Tên</p>
-                                    <span class="badge bg-slate-200/80 text-slate-700 font-semibold rounded-full px-2 py-0.5 text-[10px]" th:text="${user != null && user.role != null ? user.role.name : 'Vai trò'}">Trưởng bộ môn</span>
+                                    <span class="badge bg-slate-200/80 text-slate-700 font-semibold rounded-full px-2 py-0.5 text-[10px]" th:text="${user != null && user.role != null ? user.role.name : 'Vai trò'}">Trưởng khoa</span>
                                 </div>
                             </div>
                         </li>
 
                         <!-- Dashboard Link -->
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2.5 py-2 px-3 rounded-2xl text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-900 transition" th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' || user.role.code == 'DIVISION_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
+                            <a class="dropdown-item d-flex align-items-center gap-2.5 py-2 px-3 rounded-2xl text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-900 transition" th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}">
                                 <i class="fa-solid fa-chart-pie text-slate-400"></i>
                                 <span>Bảng điều khiển</span>
                             </a>

@@ -10,9 +10,7 @@ import java.util.Optional;
 public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
     Optional<Lecturer> findByUserId(Long userId);
     Optional<Lecturer> findByLecturerCode(String lecturerCode);
-    @Query("SELECT l FROM Lecturer l WHERE (l.department IS NOT NULL AND l.department.id = :departmentId) OR (l.division IS NOT NULL AND l.division.department.id = :departmentId)")
-    List<Lecturer> findByDepartmentId(@Param("departmentId") Long departmentId);
     
-    @Query("SELECT l FROM Lecturer l WHERE l.division.id = :divisionId")
-    List<Lecturer> findByDivisionId(@Param("divisionId") Long divisionId);
+    @Query("SELECT l FROM Lecturer l WHERE l.department IS NOT NULL AND l.department.id = :departmentId")
+    List<Lecturer> findByDepartmentId(@Param("departmentId") Long departmentId);
 }

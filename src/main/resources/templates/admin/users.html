@@ -185,27 +185,27 @@
                                                 <input type="number" step="0.01" min="0" max="4" name="gpa" th:value="${stu != null ? stu.gpa : ''}" class="form-control text-xs rounded-lg" placeholder="0.00 - 4.00" aria-label="Điểm GPA tích lũy" title="Điểm GPA tích lũy">
                                             </div>
                                             <div class="col-md-8">
-                                                <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Chuyên ngành đào tạo</label>
-                                                <select name="majorId" class="form-select text-xs rounded-lg" aria-label="Chuyên ngành đào tạo" title="Chuyên ngành đào tạo">
-                                                    <option value="">-- Chọn chuyên ngành --</option>
-                                                    <option th:each="m : ${majors}" th:value="${m.id}" th:text="${m.name + ' (' + m.code + ')'}" th:selected="${stu != null and stu.major != null and stu.major.id == m.id}"></option>
+                                                <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Khoa trực thuộc</label>
+                                                <select name="departmentId" class="form-select text-xs rounded-lg" aria-label="Khoa trực thuộc" title="Khoa trực thuộc">
+                                                    <option value="">-- Chọn Khoa --</option>
+                                                    <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name + ' (' + d.code + ')'}" th:selected="${stu != null and stu.department != null and stu.department.id == d.id}"></option>
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Lecturer Profile Section -->
-                                    <div th:if="${u.role != null and (u.role.code == 'LECTURER' or u.role.code == 'DEPARTMENT_HEAD' or u.role.code == 'DIVISION_HEAD')}" class="p-3 bg-slate-50 border border-slate-100 rounded-xl mt-3">
+                                    <div th:if="${u.role != null and (u.role.code == 'LECTURER' or u.role.code == 'DEPARTMENT_HEAD')}" class="p-3 bg-slate-50 border border-slate-100 rounded-xl mt-3">
                                         <div class="d-flex align-items-center gap-2 mb-2">
                                             <i class="fa-solid fa-chalkboard-user text-blue-600 text-xs"></i>
                                             <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Hồ sơ Chuyên môn Giảng viên</span>
                                         </div>
                                         <div class="row g-2">
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Mã Giảng viên</label>
                                                 <input type="text" name="lecturerCode" th:value="${lec != null ? lec.lecturerCode : u.username}" class="form-control text-xs rounded-lg" required aria-label="Mã Giảng viên" title="Mã Giảng viên">
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Học hàm</label>
                                                 <select name="academicTitle" class="form-select text-xs rounded-lg" aria-label="Học hàm" title="Học hàm">
                                                     <option value="" th:selected="${lec == null or lec.academicTitle == null}">Không</option>
@@ -213,7 +213,7 @@
                                                     <option value="PGS" th:selected="${lec != null and lec.academicTitle == 'PGS'}">Phó Giáo sư (PGS)</option>
                                                 </select>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Học vị</label>
                                                 <select name="degree" class="form-select text-xs rounded-lg" aria-label="Học vị" title="Học vị">
                                                     <option value="ThS" th:selected="${lec != null and lec.degree == 'ThS'}">Thạc sĩ (ThS)</option>
@@ -222,22 +222,15 @@
                                                     <option value="TS.GVC" th:selected="${lec != null and lec.degree == 'TS.GVC'}">Tiến sĩ - GVC</option>
                                                 </select>
                                             </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Chỉ tiêu HD tối đa (nhóm/đợt)</label>
+                                            <div class="col-md-3">
+                                                <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Chỉ tiêu HD tối đa</label>
                                                 <input type="number" name="maxTopicsQuota" th:value="${lec != null ? lec.maxTopicsQuota : 5}" min="1" max="15" class="form-control text-xs rounded-lg" aria-label="Chỉ tiêu HD tối đa (nhóm/đợt)" title="Chỉ tiêu HD tối đa (nhóm/đợt)">
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-12">
                                                 <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Khoa quản lý</label>
                                                 <select name="departmentId" class="form-select text-xs rounded-lg" aria-label="Khoa quản lý" title="Khoa quản lý">
                                                     <option value="">-- Chọn Khoa --</option>
                                                     <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name + ' (' + d.code + ')'}" th:selected="${lec != null and lec.department != null and lec.department.id == d.id}"></option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Bộ môn trực thuộc</label>
-                                                <select name="divisionId" class="form-select text-xs rounded-lg" aria-label="Bộ môn trực thuộc" title="Bộ môn trực thuộc">
-                                                    <option value="">-- Chọn Bộ môn --</option>
-                                                    <option th:each="division : ${divisions}" th:value="${division.id}" th:text="${division.name + ' (' + division.code + ')'}" th:selected="${lec != null and lec.division != null and lec.division.id == division.id}"></option>
                                                 </select>
                                             </div>
                                         </div>

@@ -49,7 +49,6 @@
                                 <label class="form-label text-xs font-semibold text-slate-700" for="field-lecturer-create-topic-2">Khoa / Đơn vị quản lý</label>
                                 <input type="text" class="form-control text-xs rounded-xl bg-slate-50 text-slate-700 font-medium" 
                                        th:value="${department != null ? department.name : (lecturer != null && lecturer.department != null ? lecturer.department.name : 'Khoa Công nghệ Thông tin')}" readonly title="Khoa / Đơn vị quản lý" aria-label="Khoa / Đơn vị quản lý" id="field-lecturer-create-topic-2">
-                                <input type="hidden" name="majorId" th:value="${majors != null && !majors.isEmpty() ? majors[0].id : ''}">
                             </div>
 
                             <div class="col-md-6">

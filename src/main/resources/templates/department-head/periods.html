@@ -16,7 +16,7 @@
     <div class="saas-main-wrapper">
         <!-- Topbar -->
         <header
-            th:replace="~{fragments/topbar :: topbar('Quản lý Đợt Đăng ký', ${user != null && user.role != null ? user.role.name : 'Trưởng Bộ Môn'}, '/department-head/dashboard', ${user})}">
+            th:replace="~{fragments/topbar :: topbar('Quản lý Đợt Đăng ký', ${user != null && user.role != null ? user.role.name : 'Trưởng Khoa'}, '/department-head/dashboard', ${user})}">
         </header>
 
         <!-- Main Content View -->

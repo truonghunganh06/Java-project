@@ -125,17 +125,17 @@
                                     <thead>
                                         <tr>
                                             <th scope="col">Đề tài</th>
-                                            <th scope="col">Chuyên ngành</th>
+                                            <th scope="col">Khoa</th>
                                             <th scope="col">Trạng thái</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr th:each="t, iter : ${topics}" th:if="${iter.index &lt; 5}">
                                             <td>
-                                                <button class="db-cell-title db-title-button" th:text="${t.title}" type="button" onclick="openTopicDrawer(this)" th:aria-label="${'Xem chi tiết đề tài ' + t.code}" th:data-topic-id="${t.id}" th:data-topic-code="${t.code}" th:data-topic-title="${t.title}" th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}" th:data-topic-major="${t.major != null ? t.major.name : 'Chưa cập nhật'}" th:data-topic-supervisor="${t.supervisor != null &amp;&amp; t.supervisor.user != null ? t.supervisor.user.fullName : 'Tôi'}" th:data-topic-co-supervisor="${t.coSupervisor != null &amp;&amp; t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}" th:data-topic-reviewer="${t.reviewer != null &amp;&amp; t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}" th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}" th:data-topic-max-students="${t.maxStudents}" th:data-topic-status="${t.status}" th:data-topic-rejection-reason="${t.rejectionReason}" th:data-topic-description="${t.description}" th:data-topic-requirements="${t.requirements}" th:data-topic-role="LECTURER"></button>
+                                                <button class="db-cell-title db-title-button" th:text="${t.title}" type="button" onclick="openTopicDrawer(this)" th:aria-label="${'Xem chi tiết đề tài ' + t.code}" th:data-topic-id="${t.id}" th:data-topic-code="${t.code}" th:data-topic-title="${t.title}" th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}" th:data-topic-major="${t.department != null ? t.department.name : 'Khoa CNTT'}" th:data-topic-supervisor="${t.supervisor != null &amp;&amp; t.supervisor.user != null ? t.supervisor.user.fullName : 'Tôi'}" th:data-topic-co-supervisor="${t.coSupervisor != null &amp;&amp; t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}" th:data-topic-reviewer="${t.reviewer != null &amp;&amp; t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}" th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}" th:data-topic-max-students="${t.maxStudents}" th:data-topic-status="${t.status}" th:data-topic-rejection-reason="${t.rejectionReason}" th:data-topic-description="${t.description}" th:data-topic-requirements="${t.requirements}" th:data-topic-role="LECTURER"></button>
                                                 <span class="db-cell-meta" th:text="${t.code + (t.period != null ? ' · ' + t.period.name : '')}"></span>
                                             </td>
-                                            <td th:text="${t.major != null ? t.major.name : 'Chưa cập nhật'}"></td>
+                                            <td th:text="${t.department != null ? t.department.name : 'Khoa CNTT'}"></td>
                                             <td>
                                                 <span class="db-tag" th:classappend="${t.status == 'PENDING' ? 'db-tag-warning' : ''}" th:text="${t.status == 'APPROVED' ? 'Đã duyệt' : (t.status == 'REJECTED' ? 'Cần chỉnh sửa' : (t.status == 'PENDING' ? 'Chờ duyệt' : 'Bản nháp'))}"></span>
                                             </td>

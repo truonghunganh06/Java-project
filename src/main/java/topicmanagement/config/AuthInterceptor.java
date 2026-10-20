@@ -84,14 +84,14 @@ public class AuthInterceptor implements HandlerInterceptor {
             return handleForbidden(request, response, path);
         }
 
-        if (path.startsWith("/department-head") || path.startsWith("/division-head")) {
-            if (!"DEPARTMENT_HEAD".equals(roleCode) && !"DIVISION_HEAD".equals(roleCode)) {
+        if (path.startsWith("/department-head")) {
+            if (!"DEPARTMENT_HEAD".equals(roleCode)) {
                 return handleForbidden(request, response, path);
             }
         }
 
         if (path.startsWith("/lecturer")) {
-            if (!"LECTURER".equals(roleCode) && !"DEPARTMENT_HEAD".equals(roleCode) && !"DIVISION_HEAD".equals(roleCode)) {
+            if (!"LECTURER".equals(roleCode) && !"DEPARTMENT_HEAD".equals(roleCode)) {
                 return handleForbidden(request, response, path);
             }
         }

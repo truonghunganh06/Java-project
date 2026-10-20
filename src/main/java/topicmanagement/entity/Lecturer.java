@@ -17,10 +17,6 @@ public class Lecturer {
     @JoinColumn(name = "department_id")
     private Department department;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "division_id")
-    private Division division;
-
     @Column(name = "lecturer_code", length = 50)
     private String lecturerCode;
 
@@ -52,23 +48,11 @@ public class Lecturer {
     }
 
     public Department getDepartment() {
-        if (department != null) return department;
-        return division != null ? division.getDepartment() : null;
+        return department;
     }
 
     public void setDepartment(Department department) {
         this.department = department;
-    }
-
-    public Division getDivision() {
-        return division;
-    }
-
-    public void setDivision(Division division) {
-        this.division = division;
-        if (division != null && division.getDepartment() != null && this.department == null) {
-            this.department = division.getDepartment();
-        }
     }
 
     public String getLecturerCode() {

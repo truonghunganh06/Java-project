@@ -23,10 +23,6 @@ public class Council {
     @JoinColumn(name = "department_id")
     private Department department;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "division_id")
-    private Division division;
-
     @Column(unique = true, length = 50)
     private String code;
 
@@ -67,23 +63,11 @@ public class Council {
     }
 
     public Department getDepartment() {
-        if (department != null) return department;
-        return division != null ? division.getDepartment() : null;
+        return department;
     }
 
     public void setDepartment(Department department) {
         this.department = department;
-    }
-
-    public Division getDivision() {
-        return division;
-    }
-
-    public void setDivision(Division division) {
-        this.division = division;
-        if (division != null && division.getDepartment() != null && this.department == null) {
-            this.department = division.getDepartment();
-        }
     }
 
     public String getCode() {
@@ -140,9 +124,5 @@ public class Council {
 
     public void setMembers(List<CouncilMember> members) {
         this.members = members;
-    }
-
-    public Major getMajor() {
-        return null;
     }
 }

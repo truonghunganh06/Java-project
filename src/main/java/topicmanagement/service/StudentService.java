@@ -21,7 +21,6 @@ public class StudentService {
     private final StudentGroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final SubmissionRepository submissionRepository;
-    private final MajorRepository majorRepository;
     private final RegistrationPeriodRepository periodRepository;
     private final EvaluationRepository evaluationRepository;
     private final FileStorageService fileStorageService;
@@ -32,7 +31,6 @@ public class StudentService {
             StudentGroupRepository groupRepository,
             GroupMemberRepository groupMemberRepository,
             SubmissionRepository submissionRepository,
-            MajorRepository majorRepository,
             RegistrationPeriodRepository periodRepository,
             EvaluationRepository evaluationRepository,
             FileStorageService fileStorageService) {
@@ -41,7 +39,6 @@ public class StudentService {
         this.groupRepository = groupRepository;
         this.groupMemberRepository = groupMemberRepository;
         this.submissionRepository = submissionRepository;
-        this.majorRepository = majorRepository;
         this.periodRepository = periodRepository;
         this.evaluationRepository = evaluationRepository;
         this.fileStorageService = fileStorageService;
@@ -75,14 +72,8 @@ public class StudentService {
             return; // Đợt dùng chung toàn trường không gán khoa
         }
 
-        // Lấy Khoa của sinh viên thông qua Chuyên ngành (Major)
+        // Lấy Khoa của sinh viên trực tiếp từ hồ sơ sinh viên
         Department studentDept = student.getDepartment();
-        if (studentDept == null && student.getMajor() != null && student.getMajor().getId() != null) {
-            Major m = majorRepository.findById(student.getMajor().getId()).orElse(null);
-            if (m != null) {
-                studentDept = m.getDepartment();
-            }
-        }
 
         if (studentDept == null || !Objects.equals(studentDept.getId(), periodDept.getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sinh viên không thuộc khoa quản lý đợt đăng ký này!");
@@ -296,10 +287,11 @@ public class StudentService {
 
     /**
      * Lấy danh sách đề tài APPROVED, ưu tiên lọc theo Khoa của sinh viên (departmentId).
-     * Nếu departmentId != null: chỉ trả về đề tài thuộc Khoa đó (major.department.id == departmentId hoặc period.department.id == departmentId).
-     * Kết hợp thêm bộ lọc periodId, majorId, keyword.
+     * Nếu departmentId != null: chỉ trả về đề tài thuộc Khoa đó.
+     * Kết hợp thêm bộ lọc periodId, keyword.
      */
-    public List<Topic> getAvailableTopics(Long periodId, Long majorId, String keyword, Long departmentId) {
+
+    public List<Topic> getAvailableTopics(Long periodId, String keyword, Long departmentId) {
         List<Topic> list = (periodId != null)
                 ? topicRepository.findApprovedByPeriodId(periodId)
                 : topicRepository.findByStatus("APPROVED");
@@ -308,13 +300,9 @@ public class StudentService {
                 .filter(t -> departmentId == null
                         || (t.getDepartment() != null
                             && departmentId.equals(t.getDepartment().getId()))
-                        || (t.getMajor() != null
-                            && t.getMajor().getDepartment() != null
-                            && departmentId.equals(t.getMajor().getDepartment().getId()))
                         || (t.getPeriod() != null
                             && t.getPeriod().getDepartment() != null
                             && departmentId.equals(t.getPeriod().getDepartment().getId())))
-                .filter(t -> majorId == null || (t.getMajor() != null && majorId.equals(t.getMajor().getId())))
                 // BUG-02 FIX: Chỉ hiển thị đề tài trong đợt đang mở đăng ký cho sinh viên
                 .filter(t -> t.getPeriod() == null || t.getPeriod().isStudentRegistrationOpen())
                 .filter(t -> keyword == null || keyword.trim().isEmpty() ||
@@ -571,21 +559,6 @@ public class StudentService {
         return getAllActivePeriods();
     }
 
-    @Cacheable("allMajors")
-    public List<Major> getAllMajors() {
-        return majorRepository.findAll();
-    }
-
-    /**
-     * Lấy danh sách Chuyên ngành theo Khoa (dùng để populate dropdown filter
-     * chỉ hiện chuyên ngành thuộc Khoa của sinh viên đang đăng nhập).
-     */
-    @Cacheable(value = "departmentMajors", key = "#departmentId != null ? #departmentId : 0L")
-    public List<Major> getMajorsByDepartment(Long departmentId) {
-        if (departmentId == null) return majorRepository.findAll();
-        return majorRepository.findByDepartmentId(departmentId);
-    }
-
     @Transactional(readOnly = true)
     public Map<String, Object> getTopicDetailMap(Long id) {
         Topic t = topicRepository.findById(id).orElse(null);
@@ -602,7 +575,7 @@ public class StudentService {
         data.put("code", t.getCode() != null ? t.getCode() : "DT-" + t.getId());
         data.put("title", t.getTitle());
         data.put("period", t.getPeriod() != null ? t.getPeriod().getName() : "Chung");
-        data.put("major", t.getMajor() != null ? t.getMajor().getName() : "CNTT");
+        data.put("departmentName", t.getDepartment() != null ? t.getDepartment().getName() : "Khoa");
         data.put("supervisor", t.getSupervisor() != null && t.getSupervisor().getUser() != null 
                 ? t.getSupervisor().getUser().getFullName() 
                 : "Chưa phân công");
@@ -621,9 +594,6 @@ public class StudentService {
         data.put("groupName", group != null ? group.getGroupName() : null);
         data.put("leaderName", group != null && group.getLeader() != null && group.getLeader().getUser() != null ? group.getLeader().getUser().getFullName() : null);
         data.put("leaderCode", group != null && group.getLeader() != null ? group.getLeader().getStudentCode() : null);
-        data.put("divisionId", t.getDivision() != null ? t.getDivision().getId() : null);
-        data.put("divisionName", t.getDivision() != null ? t.getDivision().getName() : (t.getMajor() != null && t.getMajor().getDivision() != null ? t.getMajor().getDivision().getName() : "Bộ môn Kỹ thuật Phần mềm"));
-        data.put("departmentName", t.getDepartment() != null ? t.getDepartment().getName() : null);
         data.put("finalScore", hasGroup ? t.getFinalScore() : null);
         data.put("isFinalized", hasGroup ? t.getIsFinalized() : false);
         data.put("rejectionReason", t.getRejectionReason());

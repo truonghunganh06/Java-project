@@ -35,7 +35,7 @@ public class DashboardController {
             if ("ADMIN".equalsIgnoreCase(roleCode)) {
                 return "redirect:/admin/dashboard";
             }
-            if ("DEPARTMENT_HEAD".equalsIgnoreCase(roleCode) || "DIVISION_HEAD".equalsIgnoreCase(roleCode)) {
+            if ("DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)) {
                 return "redirect:/department-head/dashboard";
             }
             if ("LECTURER".equalsIgnoreCase(roleCode)) {
@@ -74,7 +74,7 @@ public class DashboardController {
 
         if (currentUser.getRole() != null) {
             String roleCode = currentUser.getRole().getCode();
-            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode) || "DIVISION_HEAD".equalsIgnoreCase(roleCode)) {
+            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)) {
                 return "redirect:/department-head/schedule";
             }
             if ("LECTURER".equalsIgnoreCase(roleCode)) {
@@ -94,7 +94,7 @@ public class DashboardController {
         if (currentUser == null) return "redirect:/login";
         if (currentUser.getRole() != null) {
             String roleCode = currentUser.getRole().getCode();
-            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode) || "DIVISION_HEAD".equalsIgnoreCase(roleCode)) {
+            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)) {
                 return "redirect:/department-head/councils";
             }
             if ("LECTURER".equalsIgnoreCase(roleCode)) {
@@ -110,7 +110,7 @@ public class DashboardController {
         if (currentUser == null) return "redirect:/login";
         if (currentUser.getRole() != null) {
             String roleCode = currentUser.getRole().getCode();
-            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode) || "DIVISION_HEAD".equalsIgnoreCase(roleCode)) {
+            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)) {
                 return "redirect:/department-head/topics";
             }
             if ("LECTURER".equalsIgnoreCase(roleCode)) {
@@ -129,7 +129,7 @@ public class DashboardController {
         if (currentUser == null) return "redirect:/login";
         if (currentUser.getRole() != null) {
             String roleCode = currentUser.getRole().getCode();
-            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode) || "DIVISION_HEAD".equalsIgnoreCase(roleCode)) {
+            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)) {
                 return "redirect:/department-head/results";
             }
             if ("LECTURER".equalsIgnoreCase(roleCode)) {
@@ -148,7 +148,7 @@ public class DashboardController {
         if (currentUser == null) return "redirect:/login";
         if (currentUser.getRole() != null) {
             String roleCode = currentUser.getRole().getCode();
-            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode) || "DIVISION_HEAD".equalsIgnoreCase(roleCode)) {
+            if ("ADMIN".equalsIgnoreCase(roleCode) || "DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)) {
                 return "redirect:/department-head/announcements";
             }
         }

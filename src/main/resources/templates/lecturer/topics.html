@@ -71,13 +71,6 @@
                             </select>
                         </div>
 
-                        <!-- Filter: Major -->
-                        <div th:if="${majors != null && !majors.isEmpty()}" style="min-width: 160px;">
-                            <select id="filterMajorSelect" class="form-select form-select-sm text-xs rounded-xl border-slate-200" onchange="applyLecturerCombinedFilters()" title="filterMajorSelect" aria-label="filterMajorSelect">
-                                <option value="ALL">Tất cả chuyên ngành</option>
-                                <option th:each="m : ${majors}" th:value="${m.name}" th:text="${m.name}">KTPM</option>
-                            </select>
-                        </div>
 
                         <!-- Search -->
                         <div class="relative" style="min-width: 200px; flex-grow: 1; max-width: 280px;">
@@ -98,7 +91,7 @@
                             <tr>
                                 <th style="width: 14%;" scope="col">Mã đề tài</th>
                                 <th style="width: 46%;" scope="col">Tên đề tài & Mô tả</th>
-                                <th style="width: 20%;" scope="col">Chuyên ngành / Đợt</th>
+                                <th style="width: 20%;" scope="col">Khoa / Đợt</th>
                                 <th style="width: 10%;" scope="col">Chỉ tiêu</th>
                                 <th style="width: 10%;" class="text-end" scope="col">Trạng thái</th>
                             </tr>
@@ -118,7 +111,7 @@
                                 th:data-topic-code="${t.code}"
                                 th:data-topic-title="${t.title}"
                                 th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
-                                th:data-topic-major="${t.major != null ? t.major.name : 'CNTT'}"
+                                th:data-topic-major="${t.department != null ? t.department.name : 'Khoa CNTT'}"
                                 th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Tôi'}"
                                 th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
                                 th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
@@ -143,7 +136,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="font-medium text-slate-800 text-xs truncate-cell" th:text="${t.major != null ? t.major.name : 'CNTT'}">Kỹ thuật phần mềm</div>
+                                    <div class="font-medium text-slate-800 text-xs truncate-cell" th:text="${t.department != null ? t.department.name : 'Khoa CNTT'}">Khoa CNTT</div>
                                     <span class="text-xs text-slate-400 d-block truncate-cell" th:text="${t.period != null ? t.period.name : 'Chung'}">KLTN</span>
                                 </td>
                                 <td>
@@ -192,24 +185,19 @@
             const pSel = document.getElementById('filterPeriodSelect');
             const selectedPeriod = pSel ? pSel.value : 'ALL';
 
-            const mSel = document.getElementById('filterMajorSelect');
-            const selectedMajor = mSel ? mSel.value : 'ALL';
-
             const rows = document.querySelectorAll('.topic-item-row');
             let visibleCount = 0;
 
             rows.forEach(row => {
                 const rowStatus = (row.getAttribute('data-status') || '').toUpperCase();
                 const rowPeriod = row.getAttribute('data-topic-period') || '';
-                const rowMajor = row.getAttribute('data-topic-major') || '';
                 const text = row.textContent.toLowerCase();
 
                 const matchStatus = (status === 'ALL' || rowStatus === status);
                 const matchPeriod = (selectedPeriod === 'ALL' || rowPeriod === selectedPeriod);
-                const matchMajor = (selectedMajor === 'ALL' || rowMajor.includes(selectedMajor) || selectedMajor.includes(rowMajor));
                 const matchKeyword = !keyword || text.includes(keyword);
 
-                if (matchStatus && matchPeriod && matchMajor && matchKeyword) {
+                if (matchStatus && matchPeriod && matchKeyword) {
                     row.style.display = '';
                     visibleCount++;
                 } else {

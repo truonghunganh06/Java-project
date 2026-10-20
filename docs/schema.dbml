@@ -1,15 +1,16 @@
 // =============================================================================
 // TOPICHUB DATABASE SCHEMA - DBDATABASE MARKUP LANGUAGE (DBML)
 // Công cụ trực quan hóa: https://dbdiagram.io/
-// 20 Bảng chuẩn hóa Neon PostgreSQL (Đồng bộ 1:1 Spring Boot JPA)
+// 18 Bảng chuẩn hóa Neon PostgreSQL (Đã loại bỏ bộ môn & chuyên ngành)
 // =============================================================================
 
 Project TopicHub {
   database_type: 'PostgreSQL'
   Note: '''
     # Hệ Thống Quản Lý Đề Tài Tốt Nghiệp (TopicHub)
-    Cơ sở dữ liệu vật lý chuẩn hóa trên Neon PostgreSQL gồm 20 bảng cốt lõi.
-    Tuân thủ đầy đủ 5 tiêu chuẩn nghiệp vụ Rubric đồ án.
+    Cơ sở dữ liệu vật lý chuẩn hóa trên Neon PostgreSQL gồm 18 bảng cốt lõi.
+    Cấu trúc tinh gọn: Quản trị theo Khoa (Department), loại bỏ Bộ môn và Chuyên ngành.
+    Tuân thủ đầy đủ các tiêu chuẩn nghiệp vụ Rubric đồ án.
   '''
 }
 
@@ -47,30 +48,7 @@ Table departments [headercolor: #3b82f6] {
   description text
   is_active boolean [default: true]
 
-  Note: 'Danh mục Khoa đào tạo'
-}
-
-Table divisions [headercolor: #3b82f6] {
-  id bigint [pk, increment]
-  department_id bigint [note: 'Thuộc khoa nào']
-  code varchar(50) [not null, note: 'Mã bộ môn (KTPM, HTTT, KHMT, ...)']
-  name varchar(150) [not null]
-  description text
-  head_lecturer_id bigint [note: 'Trưởng bộ môn']
-  is_active boolean [default: true]
-
-  Note: 'Danh mục Bộ môn trực thuộc khoa'
-}
-
-Table majors [headercolor: #3b82f6] {
-  id bigint [pk, increment]
-  department_id bigint [note: 'Thuộc khoa']
-  division_id bigint [note: 'Thuộc bộ môn']
-  code varchar(50) [not null, note: 'Mã ngành (SE, IS, CS, ...)']
-  name varchar(100) [not null]
-  is_active boolean [default: true]
-
-  Note: 'Danh mục Chuyên ngành đào tạo'
+  Note: 'Danh mục Khoa đào tạo quản lý trực tiếp'
 }
 
 // =============================================================================
@@ -81,7 +59,6 @@ Table lecturers [headercolor: #6366f1] {
   id bigint [pk, increment]
   user_id bigint [unique, not null, note: 'Tài khoản user tương ứng']
   department_id bigint [note: 'Khoa trực thuộc']
-  division_id bigint [note: 'Bộ môn sinh hoạt']
   lecturer_code varchar(50) [unique, note: 'Mã giảng viên (GV001...)']
   academic_title varchar(50) [note: 'Học hàm (PGS, GS, ...)']
   degree varchar(50) [note: 'Học vị (ThS, TS, ...)']
@@ -93,9 +70,7 @@ Table lecturers [headercolor: #6366f1] {
 Table students [headercolor: #6366f1] {
   id bigint [pk, increment]
   user_id bigint [unique, not null, note: 'Tài khoản user tương ứng']
-  department_id bigint
-  division_id bigint
-  major_id bigint [note: 'Chuyên ngành học']
+  department_id bigint [note: 'Khoa sinh viên theo học']
   student_code varchar(50) [unique, note: 'Mã số sinh viên (SV001...)']
   class_name varchar(50) [note: 'Lớp sinh hoạt']
   academic_year varchar(50) [note: 'Niên khóa']
@@ -152,9 +127,7 @@ Table topics [headercolor: #ea580c] {
   title varchar(255) [not null, note: 'Tên đề tài']
   description text
   requirements text
-  department_id bigint
-  division_id bigint
-  major_id bigint
+  department_id bigint [note: 'Khoa quản lý đề tài']
   period_id bigint [note: 'Đợt đăng ký']
   supervisor_id bigint [note: 'Giảng viên hướng dẫn chính']
   co_supervisor_id bigint [note: 'Giảng viên đồng hướng dẫn (nếu có)']
@@ -282,8 +255,7 @@ Table councils [headercolor: #dc2626] {
   id bigint [pk, increment]
   code varchar(50)
   name varchar(200) [not null, note: 'Hội đồng bảo vệ KLTN số 1, 2...']
-  department_id bigint
-  division_id bigint
+  department_id bigint [note: 'Khoa tổ chức hội đồng']
   period_id bigint
   chairman_id bigint [note: 'Chủ tịch hội đồng']
   secretary_id bigint [note: 'Thư ký hội đồng']
@@ -326,19 +298,13 @@ Table evaluations [headercolor: #dc2626] {
 
 // Hệ thống & phân quyền
 Ref: users.role_id > roles.id
-Ref: divisions.department_id > departments.id
-Ref: majors.department_id > departments.id
-Ref: majors.division_id > divisions.id
 
 // Hồ sơ giảng viên & sinh viên
 Ref: lecturers.user_id - users.id
 Ref: lecturers.department_id > departments.id
-Ref: lecturers.division_id > divisions.id
 
 Ref: students.user_id - users.id
 Ref: students.department_id > departments.id
-Ref: students.division_id > divisions.id
-Ref: students.major_id > majors.id
 
 // Đợt & thông báo
 Ref: registration_periods.department_id > departments.id
@@ -348,8 +314,6 @@ Ref: announcements.author_id > users.id
 
 // Đề tài (Core relationships)
 Ref: topics.department_id > departments.id
-Ref: topics.division_id > divisions.id
-Ref: topics.major_id > majors.id
 Ref: topics.period_id > registration_periods.id
 Ref: topics.supervisor_id > lecturers.id
 Ref: topics.co_supervisor_id > lecturers.id
@@ -387,7 +351,6 @@ Ref: submissions.group_id > student_groups.id
 Ref: submissions.submitted_by_student_id > students.id
 
 Ref: councils.department_id > departments.id
-Ref: councils.division_id > divisions.id
 Ref: councils.period_id > registration_periods.id
 Ref: councils.chairman_id > lecturers.id
 Ref: councils.secretary_id > lecturers.id
@@ -407,8 +370,6 @@ TableGroup Organization_And_Security {
   roles
   users
   departments
-  divisions
-  majors
 }
 
 TableGroup Profiles_And_Periods {

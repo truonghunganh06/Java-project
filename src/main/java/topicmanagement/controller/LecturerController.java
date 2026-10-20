@@ -49,7 +49,6 @@ public class LecturerController {
         String roleCode = user.getRole().getCode();
         if (!"LECTURER".equalsIgnoreCase(roleCode)
                 && !"DEPARTMENT_HEAD".equalsIgnoreCase(roleCode)
-                && !"DIVISION_HEAD".equalsIgnoreCase(roleCode)
                 && !"ADMIN".equalsIgnoreCase(roleCode)) {
             return null;
         }
@@ -151,13 +150,11 @@ public class LecturerController {
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         List<Topic> topics = lecturerService.getTopicsByLecturer(lecturer);
-        List<Major> majors = lecturerService.getMajorsForLecturer(lecturer);
         List<RegistrationPeriod> periods = lecturerService.getPeriodsForLecturer(lecturer);
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("topics", topics);
-        model.addAttribute("majors", majors);
         model.addAttribute("periods", periods);
 
         return "lecturer/topics";
@@ -168,7 +165,6 @@ public class LecturerController {
             @RequestParam(value = "periodId", required = false) Long periodId,
             @RequestParam(value = "periodName", required = false) String periodName,
             @RequestParam(value = "noticeId", required = false) Long noticeId,
-            @RequestParam(value = "majorId", required = false) Long majorId,
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "requirements", required = false) String requirements,
@@ -181,7 +177,6 @@ public class LecturerController {
         List<RegistrationPeriod> openPeriods = new java.util.ArrayList<>(lecturerService.getOpenProposalPeriods(lecturer));
         List<LecturerService.ProposalProgressDto> proposalProgressList = lecturerService.getProposalProgressList(lecturer);
         List<Lecturer> coSupervisors = lecturerService.getOtherLecturers(lecturer.getId());
-        List<Major> majors = lecturerService.getMajorsForLecturer(lecturer);
 
         // 1. Determine selected Period
         Long selectedPeriodId = periodId;
@@ -249,23 +244,7 @@ public class LecturerController {
             model.addAttribute("selectedPeriodId", selectedPeriodId);
         }
 
-        // 2. Determine selected Major / Division (Bộ môn của Giảng viên / Trưởng khoa)
-        Long selectedMajorId = majorId;
-        if (selectedMajorId == null && lecturer.getDivision() != null && majors != null) {
-            majors.stream()
-                    .filter(m -> m.getDivision() != null && m.getDivision().getId().equals(lecturer.getDivision().getId()))
-                    .findFirst()
-                    .ifPresent(m -> model.addAttribute("selectedMajorId", m.getId()));
-        }
-        if (!model.containsAttribute("selectedMajorId")) {
-            if (selectedMajorId != null) {
-                model.addAttribute("selectedMajorId", selectedMajorId);
-            } else if (majors != null && !majors.isEmpty()) {
-                model.addAttribute("selectedMajorId", majors.get(0).getId());
-            }
-        }
-
-        // 3. Pre-fill Topic template / title / description / requirements if requested from quick proposal
+        // 2. Pre-fill Topic template / title / description / requirements if requested from quick proposal
         Topic topic = new Topic();
         if (title != null && !title.trim().isEmpty()) {
             topic.setTitle(title.trim());
@@ -297,7 +276,6 @@ public class LecturerController {
         model.addAttribute("openPeriods", openPeriods);
         model.addAttribute("proposalProgressList", proposalProgressList);
         model.addAttribute("coSupervisors", coSupervisors);
-        model.addAttribute("majors", majors);
 
         return "lecturer/create-topic";
     }
@@ -305,7 +283,6 @@ public class LecturerController {
     @PostMapping("/topics/create")
     public String handleCreateTopic(
             @ModelAttribute Topic topic,
-            @RequestParam("majorId") Long majorId,
             @RequestParam(value = "periodId", required = false) Long periodId,
             @RequestParam(value = "coSupervisorId", required = false) Long coSupervisorId,
             HttpSession session,
@@ -316,8 +293,8 @@ public class LecturerController {
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         try {
-            Topic created = lecturerService.createTopic(lecturer, periodId, majorId, coSupervisorId, topic);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi đề xuất đề tài '" + created.getTitle() + "' thành công! Vui lòng chờ Trưởng khoa/Bộ môn xét duyệt.");
+            Topic created = lecturerService.createTopic(lecturer, periodId, coSupervisorId, topic);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi đề xuất đề tài '" + created.getTitle() + "' thành công! Vui lòng chờ Trưởng khoa xét duyệt.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi đề xuất đề tài: " + e.getMessage());
         }
@@ -338,14 +315,12 @@ public class LecturerController {
 
         List<RegistrationPeriod> periods = lecturerService.getAllPeriods();
         List<Lecturer> coSupervisors = lecturerService.getOtherLecturers(lecturer.getId());
-        List<Major> majors = lecturerService.getMajorsForLecturer(lecturer);
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("topic", topic);
         model.addAttribute("periods", periods);
         model.addAttribute("coSupervisors", coSupervisors);
-        model.addAttribute("majors", majors);
 
         return "lecturer/edit-topic";
     }
@@ -354,7 +329,6 @@ public class LecturerController {
     public String handleEditTopic(
             @PathVariable("id") Long id,
             @ModelAttribute Topic topic,
-            @RequestParam("majorId") Long majorId,
             @RequestParam(value = "periodId", required = false) Long periodId,
             @RequestParam(value = "coSupervisorId", required = false) Long coSupervisorId,
             HttpSession session,
@@ -365,7 +339,7 @@ public class LecturerController {
 
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         try {
-            Topic updated = lecturerService.updateTopic(lecturer, id, periodId, majorId, coSupervisorId, topic);
+            Topic updated = lecturerService.updateTopic(lecturer, id, periodId, coSupervisorId, topic);
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật đề tài '" + updated.getTitle() + "' thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi cập nhật đề tài: " + e.getMessage());
