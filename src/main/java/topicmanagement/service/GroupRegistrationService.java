@@ -621,6 +621,11 @@ public class GroupRegistrationService {
         groupInvitationRepository.deleteByGroupId(group.getId());
         groupMemberRepository.findByGroupId(group.getId()).forEach(groupMemberRepository::delete);
 
+        // Clear collection trên entity group đang quản lý để tránh lỗi ObjectDeletedException khi merge
+        if (group.getMembers() != null) {
+            group.getMembers().clear();
+        }
+
         group.setTopic(null);
         group.setStatus("DISSOLVED");
         groupRepository.save(group);

@@ -39,11 +39,10 @@
                 <div class="divide-y divide-amber-200/60 rounded-xl overflow-hidden border border-amber-200 bg-white">
                     <div th:each="inv : ${myInvitations}" class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center p-3 gap-2">
                         <div>
-                            <div class="font-bold text-slate-900 text-xs" th:text="${inv.group != null ? inv.group.groupName : 'Nhóm đề tài'}">Nhóm Nghiên cứu AI</div>
+                            <div class="font-bold text-slate-900 text-xs" th:text="${inv.groupName != null ? inv.groupName : 'Nhóm đề tài'}">Nhóm Nghiên cứu AI</div>
                             <span class="text-slate-500 text-xs">
-                                Người mời: <strong th:text="${inv.invitedByStudent != null && inv.invitedByStudent.user != null ? inv.invitedByStudent.user.fullName : 'Trưởng nhóm'}"></strong>
-                                (<span th:text="${inv.invitedByStudent != null ? inv.invitedByStudent.studentCode : ''}"></span>)
-                                | Đợt: <span th:text="${inv.group != null && inv.group.period != null ? inv.group.period.name : 'Chung'}"></span>
+                                Người mời: <strong th:text="${inv.invitedByName != null ? inv.invitedByName : 'Trưởng nhóm'}"></strong>
+                                (<span th:text="${inv.invitedByCode != null ? inv.invitedByCode : ''}"></span>)
                             </span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
@@ -130,8 +129,8 @@
                                 <div class="divide-y divide-slate-200 rounded-lg overflow-hidden border border-slate-200 bg-white">
                                     <div th:each="si : ${sentInvitations}" class="d-flex justify-content-between align-items-center p-2.5 text-xs">
                                         <div>
-                                            <span class="font-semibold text-slate-900" th:text="${si.student != null && si.student.user != null ? si.student.user.fullName : 'Sinh viên'}"></span>
-                                            (<span class="text-slate-500" th:text="${si.student != null ? si.student.studentCode : ''}"></span>)
+                                            <span class="font-semibold text-slate-900" th:text="${si.inviteeName != null ? si.inviteeName : 'Sinh viên'}"></span>
+                                            (<span class="text-slate-500" th:text="${si.inviteeCode != null ? si.inviteeCode : ''}"></span>)
                                             - <span class="badge bg-amber-50 text-amber-700 border border-amber-200 text-[10px]">Đang chờ</span>
                                         </div>
                                         <form th:action="@{'/student/group/invitations/' + ${si.id} + '/cancel'}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn thu hồi lời mời này?');">

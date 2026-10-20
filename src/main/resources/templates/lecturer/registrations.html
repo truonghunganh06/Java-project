@@ -39,6 +39,68 @@
                 </div>
             </div>
 
+            <!-- Section: Yêu cầu giải tán nhóm chờ duyệt (EC-03) -->
+            <div th:if="${pendingDissolveRequests != null && !pendingDissolveRequests.isEmpty()}" class="saas-card p-4 mb-4 border-l-4 border-rose-500 bg-rose-50/30">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base"></i>
+                        <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-0">
+                            Yêu cầu giải tán nhóm chờ duyệt (<span th:text="${pendingDissolveRequests.size()}">0</span>)
+                        </h2>
+                    </div>
+                    <span class="badge bg-rose-100 text-rose-700 border border-rose-200 text-2xs px-2 py-0.5 rounded-md font-semibold">EC-03</span>
+                </div>
+                <p class="text-xs text-slate-600 mb-3">
+                    Nhóm sinh viên đã gửi yêu cầu giải tán nhóm và hủy đề tài hướng dẫn. Vui lòng xem xét lý do và tiến hành phê duyệt hoặc từ chối.
+                </p>
+
+                <div class="divide-y divide-rose-200/60 rounded-xl overflow-hidden border border-rose-200 bg-white">
+                    <div th:each="req : ${pendingDissolveRequests}" class="p-3.5 space-y-3">
+                        <div class="space-y-1.5">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold" th:text="${req.groupCode}">GRP-001</span>
+                                <span class="font-bold text-slate-900 text-xs" th:text="${req.groupName}">Tên nhóm</span>
+                                <span class="badge-pill-pending text-2xs py-0.5 px-2">Chờ GVHD duyệt</span>
+                            </div>
+                            <div class="text-xs text-slate-600">
+                                <i class="fa-solid fa-book-bookmark text-slate-400 me-1.5"></i>Đề tài: 
+                                <strong class="text-slate-900" th:text="${req.topicTitle}">Tên đề tài</strong>
+                                <span class="text-slate-400 font-mono ms-1" th:text="'(' + ${req.topicCode} + ')'">(DT01)</span>
+                            </div>
+                            <div class="text-xs text-slate-600">
+                                <i class="fa-solid fa-user-pen text-slate-400 me-1.5"></i>Người yêu cầu: 
+                                <strong class="text-slate-800" th:text="${req.requestedByName}">Nguyễn Văn A</strong>
+                                <span class="text-slate-500 font-mono ms-1" th:text="'(' + ${req.requestedByCode} + ')'">(2021001)</span>
+                            </div>
+                            <div class="text-xs bg-rose-50/70 border border-rose-100 rounded-lg p-2.5 mt-2">
+                                <div class="text-rose-800 font-semibold mb-1"><i class="fa-solid fa-circle-info me-1"></i>Lý do giải tán nhóm:</div>
+                                <div class="text-slate-700" th:text="${req.reason != null && !req.reason.isBlank() ? req.reason : 'Không có lý do cụ thể'}">Lý do giải tán</div>
+                            </div>
+                        </div>
+
+                        <!-- Thao tác duyệt / từ chối -->
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 pt-2 border-t border-slate-100">
+                            <!-- Form Phê duyệt -->
+                            <form th:action="@{/lecturer/dissolve-requests/{id}/approve(id=${req.id})}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn PHÊ DUYỆT giải tán nhóm này? Nhóm sẽ bị giải tán và đề tài sẽ mở lại cho các nhóm khác.');">
+                                <input type="hidden" name="redirectUrl" value="/lecturer/registrations" />
+                                <button type="submit" class="btn btn-sm btn-danger rounded-xl px-3 py-1.5 text-xs font-semibold d-inline-flex align-items-center gap-1.5">
+                                    <i class="fa-solid fa-check"></i> Duyệt giải tán
+                                </button>
+                            </form>
+
+                            <!-- Form Từ chối kèm lý do -->
+                            <form th:action="@{/lecturer/dissolve-requests/{id}/reject(id=${req.id})}" method="post" class="d-flex align-items-center gap-2 flex-grow-1 max-w-md justify-content-md-end" onsubmit="return confirm('Bạn có chắc chắn muốn TỪ CHỐI yêu cầu giải tán nhóm này?');">
+                                <input type="hidden" name="redirectUrl" value="/lecturer/registrations" />
+                                <input type="text" name="rejectionReason" class="form-control form-control-sm rounded-xl text-xs" placeholder="Lý do từ chối (tùy chọn)..." title="Lý do từ chối" aria-label="Lý do từ chối" />
+                                <button type="submit" class="btn btn-sm btn-outline-secondary rounded-xl px-3 py-1.5 text-xs font-medium text-nowrap d-inline-flex align-items-center gap-1.5">
+                                    <i class="fa-solid fa-xmark"></i> Từ chối
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Universal 1-Row Toolbar -->
             <div class="saas-card p-3 mb-4 workspace-filterbar">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">

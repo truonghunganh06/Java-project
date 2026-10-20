@@ -381,6 +381,7 @@ public class LecturerController {
         model.addAttribute("lecturer", lecturer);
         model.addAttribute("groups", groups);
         model.addAttribute("periods", periods);
+        model.addAttribute("pendingDissolveRequests", groupRegistrationService.getPendingDissolveRequestsForLecturer(user));
 
         return "lecturer/registrations";
     }
@@ -682,6 +683,7 @@ public class LecturerController {
     @PostMapping("/dissolve-requests/{id}/approve")
     public String approveDissolveRequest(
             @PathVariable("id") Long requestId,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
@@ -695,6 +697,9 @@ public class LecturerController {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
 
+        if (redirectUrl != null && !redirectUrl.isBlank() && redirectUrl.startsWith("/lecturer")) {
+            return "redirect:" + redirectUrl;
+        }
         return "redirect:/lecturer/dashboard";
     }
 
@@ -702,6 +707,7 @@ public class LecturerController {
     public String rejectDissolveRequest(
             @PathVariable("id") Long requestId,
             @RequestParam(value = "rejectionReason", required = false) String rejectionReason,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
@@ -715,6 +721,9 @@ public class LecturerController {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
 
+        if (redirectUrl != null && !redirectUrl.isBlank() && redirectUrl.startsWith("/lecturer")) {
+            return "redirect:" + redirectUrl;
+        }
         return "redirect:/lecturer/dashboard";
     }
 }
