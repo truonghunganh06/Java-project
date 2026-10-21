@@ -90,6 +90,57 @@
             color: #f8fafc !important;
         }
 
+        /* ===== ADMIN USER MODALS (EDIT & RESET PASSWORD) ===== */
+        .admin-user-modal {
+            --bs-modal-zindex: 1060;
+            z-index: 1060 !important;
+        }
+
+        .admin-user-modal .modal-dialog {
+            max-height: calc(100vh - 3.5rem);
+        }
+
+        @media (max-width: 575.98px) {
+            .admin-user-modal .modal-dialog {
+                max-height: calc(100vh - 1rem);
+            }
+        }
+
+        .admin-user-modal.modal .modal-dialog-centered.modal-dialog-scrollable .modal-content,
+        .admin-user-modal .modal-content {
+            max-height: calc(100vh - 3.5rem) !important;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        @media (max-width: 575.98px) {
+            .admin-user-modal.modal .modal-dialog-centered.modal-dialog-scrollable .modal-content,
+            .admin-user-modal .modal-content {
+                max-height: calc(100vh - 1rem) !important;
+            }
+        }
+
+        .admin-user-modal .modal-content > form {
+            display: flex;
+            flex-direction: column;
+            max-height: 100%;
+            min-height: 0;
+            flex: 1 1 auto;
+            overflow: hidden;
+        }
+
+        .admin-user-modal .modal-header,
+        .admin-user-modal .modal-footer {
+            flex-shrink: 0;
+        }
+
+        .admin-user-modal .modal-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
         /* ===== TOPBAR & FLOATING ISLANDS STYLING (IMAGE 3 STYLE) ===== */
         .saas-header-group {
             position: sticky;

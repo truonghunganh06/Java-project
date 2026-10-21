@@ -131,154 +131,6 @@
                 </div>
             </div>
 
-            <!-- Modals for Users (outside table to prevent backdrop stacking bugs) -->
-            <th:block th:each="u : ${users}" th:with="stu=${studentMap != null ? studentMap.get(u.id) : null}, lec=${lecturerMap != null ? lecturerMap.get(u.id) : null}">
-                <!-- Modal Edit User -->
-                <div class="modal fade text-start" th:id="'editUserModal-' + ${u.id}" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered modal-lg">
-                        <div class="modal-content rounded-2xl border-0 shadow-xl">
-                            <form th:action="@{/admin/users/{id}/edit(id=${u.id})}" method="post">
-                                <div class="modal-header border-b border-slate-100 p-4">
-                                    <h6 class="modal-title font-bold text-slate-900 text-sm">Chỉnh sửa Tài khoản & Hồ sơ: <span class="font-mono text-blue-600" th:text="${u.username}"></span></h6>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
-                                </div>
-                                <div class="modal-body p-4 space-y-3">
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label text-xs font-semibold text-slate-700">Họ và tên</label>
-                                            <input type="text" name="fullName" th:value="${u.fullName}" class="form-control text-xs rounded-xl" required title="Họ và tên" aria-label="Họ và tên">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label text-xs font-semibold text-slate-700">Email</label>
-                                            <input type="email" name="email" th:value="${u.email}" class="form-control text-xs rounded-xl" required title="Email" aria-label="Email">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label text-xs font-semibold text-slate-700">Số điện thoại</label>
-                                            <input type="text" name="phone" th:value="${u.phone}" class="form-control text-xs rounded-xl" title="Số điện thoại" aria-label="Số điện thoại">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label text-xs font-semibold text-slate-700">Vai trò hệ thống</label>
-                                            <select name="roleId" class="form-select text-xs rounded-xl" required title="Vai trò hệ thống" aria-label="Vai trò hệ thống">
-                                                <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}" th:selected="${u.role != null and u.role.id == r.id}"></option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <!-- Student Profile Section -->
-                                    <div th:if="${u.role != null and u.role.code == 'STUDENT'}" class="p-3 bg-slate-50 border border-slate-100 rounded-xl mt-3">
-                                        <div class="d-flex align-items-center gap-2 mb-2">
-                                            <i class="fa-solid fa-graduation-cap text-blue-600 text-xs"></i>
-                                            <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Hồ sơ Học vụ Sinh viên</span>
-                                        </div>
-                                        <div class="row g-2">
-                                            <div class="col-md-4">
-                                                <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Mã số sinh viên (MSSV)</label>
-                                                <input type="text" name="studentCode" th:value="${stu != null ? stu.studentCode : u.username}" class="form-control text-xs rounded-lg" required aria-label="Mã số sinh viên (MSSV)" title="Mã số sinh viên (MSSV)">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Lớp sinh hoạt</label>
-                                                <input type="text" name="className" th:value="${stu != null ? stu.className : ''}" class="form-control text-xs rounded-lg" placeholder="VD: 21DTH01" aria-label="Lớp sinh hoạt" title="Lớp sinh hoạt">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Niên khóa</label>
-                                                <input type="text" name="academicYear" th:value="${stu != null ? stu.academicYear : ''}" class="form-control text-xs rounded-lg" placeholder="VD: 2021-2025" aria-label="Niên khóa" title="Niên khóa">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Điểm GPA tích lũy</label>
-                                                <input type="number" step="0.01" min="0" max="4" name="gpa" th:value="${stu != null ? stu.gpa : ''}" class="form-control text-xs rounded-lg" placeholder="0.00 - 4.00" aria-label="Điểm GPA tích lũy" title="Điểm GPA tích lũy">
-                                            </div>
-                                            <div class="col-md-8">
-                                                <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Khoa trực thuộc</label>
-                                                <select name="departmentId" class="form-select text-xs rounded-lg" aria-label="Khoa trực thuộc" title="Khoa trực thuộc">
-                                                    <option value="">-- Chọn Khoa --</option>
-                                                    <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name + ' (' + d.code + ')'}" th:selected="${stu != null and stu.department != null and stu.department.id == d.id}"></option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Lecturer Profile Section -->
-                                    <div th:if="${u.role != null and (u.role.code == 'LECTURER' or u.role.code == 'DEPARTMENT_HEAD')}" class="p-3 bg-slate-50 border border-slate-100 rounded-xl mt-3">
-                                        <div class="d-flex align-items-center gap-2 mb-2">
-                                            <i class="fa-solid fa-chalkboard-user text-blue-600 text-xs"></i>
-                                            <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Hồ sơ Chuyên môn Giảng viên</span>
-                                        </div>
-                                        <div class="row g-2">
-                                            <div class="col-md-3">
-                                                <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Mã Giảng viên</label>
-                                                <input type="text" name="lecturerCode" th:value="${lec != null ? lec.lecturerCode : u.username}" class="form-control text-xs rounded-lg" required aria-label="Mã Giảng viên" title="Mã Giảng viên">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Học hàm</label>
-                                                <select name="academicTitle" class="form-select text-xs rounded-lg" aria-label="Học hàm" title="Học hàm">
-                                                    <option value="" th:selected="${lec == null or lec.academicTitle == null}">Không</option>
-                                                    <option value="GS" th:selected="${lec != null and lec.academicTitle == 'GS'}">Giáo sư (GS)</option>
-                                                    <option value="PGS" th:selected="${lec != null and lec.academicTitle == 'PGS'}">Phó Giáo sư (PGS)</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Học vị</label>
-                                                <select name="degree" class="form-select text-xs rounded-lg" aria-label="Học vị" title="Học vị">
-                                                    <option value="ThS" th:selected="${lec != null and lec.degree == 'ThS'}">Thạc sĩ (ThS)</option>
-                                                    <option value="TS" th:selected="${lec != null and lec.degree == 'TS'}">Tiến sĩ (TS)</option>
-                                                    <option value="ThS.GVC" th:selected="${lec != null and lec.degree == 'ThS.GVC'}">Thạc sĩ - GVC</option>
-                                                    <option value="TS.GVC" th:selected="${lec != null and lec.degree == 'TS.GVC'}">Tiến sĩ - GVC</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Chỉ tiêu HD tối đa</label>
-                                                <input type="number" name="maxTopicsQuota" th:value="${lec != null ? lec.maxTopicsQuota : 5}" min="1" max="15" class="form-control text-xs rounded-lg" aria-label="Chỉ tiêu HD tối đa (nhóm/đợt)" title="Chỉ tiêu HD tối đa (nhóm/đợt)">
-                                            </div>
-                                            <div class="col-md-12">
-                                                <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Khoa quản lý</label>
-                                                <select name="departmentId" class="form-select text-xs rounded-lg" aria-label="Khoa quản lý" title="Khoa quản lý">
-                                                    <option value="">-- Chọn Khoa --</option>
-                                                    <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name + ' (' + d.code + ')'}" th:selected="${lec != null and lec.department != null and lec.department.id == d.id}"></option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-check form-switch pt-1">
-                                        <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${u.isActive}" th:id="'activeCheck-' + ${u.id}" placeholder="isActive" title="Kích hoạt tài khoản" aria-label="Kích hoạt tài khoản">
-                                        <label class="form-check-label text-xs font-semibold text-slate-700" th:for="'activeCheck-' + ${u.id}">Kích hoạt tài khoản</label>
-                                    </div>
-                                </div>
-                                <div class="modal-footer border-t border-slate-100 p-3">
-                                    <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
-                                    <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu thay đổi</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Modal Reset Password -->
-                <div class="modal fade text-start" th:id="'resetPwdModal-' + ${u.id}" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered modal-sm">
-                        <div class="modal-content rounded-2xl border-0 shadow-xl">
-                            <form th:action="@{/admin/users/{id}/reset-password(id=${u.id})}" method="post">
-                                <div class="modal-header border-b border-slate-100 p-4">
-                                    <h6 class="modal-title font-bold text-slate-900 text-sm">Đặt lại Mật khẩu</h6>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
-                                </div>
-                                <div class="modal-body p-4 space-y-2">
-                                    <p class="text-xs text-slate-500 mb-2">Đặt lại mật khẩu cho tài khoản <strong class="text-slate-900" th:text="${u.username}"></strong>:</p>
-                                    <div>
-                                        <label class="form-label text-xs font-semibold text-slate-700">Mật khẩu mới</label>
-                                        <input type="text" name="newPassword" value="123456" class="form-control text-xs rounded-xl" required title="Mật khẩu mới" aria-label="Mật khẩu mới">
-                                    </div>
-                                </div>
-                                <div class="modal-footer border-t border-slate-100 p-3">
-                                    <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
-                                    <button type="submit" class="btn btn-sm bg-rose-600 text-white rounded-xl px-3 text-xs font-medium">Xác nhận</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </th:block>
-
         </main>
     </div>
 
@@ -401,6 +253,154 @@
             </div>
         </div>
     </div>
+
+    <!-- Modals for Users (Edit User & Reset Password) -->
+    <th:block th:each="u : ${users}" th:with="stu=${studentMap != null ? studentMap.get(u.id) : null}, lec=${lecturerMap != null ? lecturerMap.get(u.id) : null}">
+        <!-- Modal Edit User -->
+        <div class="modal fade text-start admin-user-modal" th:id="'editUserModal-' + ${u.id}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content rounded-2xl border-0 shadow-xl">
+                    <form th:action="@{/admin/users/{id}/edit(id=${u.id})}" method="post">
+                        <div class="modal-header border-b border-slate-100 p-4">
+                            <h6 class="modal-title font-bold text-slate-900 text-sm">Chỉnh sửa Tài khoản & Hồ sơ: <span class="font-mono text-blue-600" th:text="${u.username}"></span></h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
+                        </div>
+                        <div class="modal-body p-4 space-y-3">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-xs font-semibold text-slate-700">Họ và tên</label>
+                                    <input type="text" name="fullName" th:value="${u.fullName}" class="form-control text-xs rounded-xl" required title="Họ và tên" aria-label="Họ và tên">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-xs font-semibold text-slate-700">Email</label>
+                                    <input type="email" name="email" th:value="${u.email}" class="form-control text-xs rounded-xl" required title="Email" aria-label="Email">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-xs font-semibold text-slate-700">Số điện thoại</label>
+                                    <input type="text" name="phone" th:value="${u.phone}" class="form-control text-xs rounded-xl" title="Số điện thoại" aria-label="Số điện thoại">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-xs font-semibold text-slate-700">Vai trò hệ thống</label>
+                                    <select name="roleId" class="form-select text-xs rounded-xl" required title="Vai trò hệ thống" aria-label="Vai trò hệ thống">
+                                        <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}" th:selected="${u.role != null and u.role.id == r.id}"></option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Student Profile Section -->
+                            <div th:if="${u.role != null and u.role.code == 'STUDENT'}" class="p-3 bg-slate-50 border border-slate-100 rounded-xl mt-3">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="fa-solid fa-graduation-cap text-blue-600 text-xs"></i>
+                                    <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Hồ sơ Học vụ Sinh viên</span>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Mã số sinh viên (MSSV)</label>
+                                        <input type="text" name="studentCode" th:value="${stu != null ? stu.studentCode : u.username}" class="form-control text-xs rounded-lg" required aria-label="Mã số sinh viên (MSSV)" title="Mã số sinh viên (MSSV)">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Lớp sinh hoạt</label>
+                                        <input type="text" name="className" th:value="${stu != null ? stu.className : ''}" class="form-control text-xs rounded-lg" placeholder="VD: 21DTH01" aria-label="Lớp sinh hoạt" title="Lớp sinh hoạt">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Niên khóa</label>
+                                        <input type="text" name="academicYear" th:value="${stu != null ? stu.academicYear : ''}" class="form-control text-xs rounded-lg" placeholder="VD: 2021-2025" aria-label="Niên khóa" title="Niên khóa">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Điểm GPA tích lũy</label>
+                                        <input type="number" step="0.01" min="0" max="4" name="gpa" th:value="${stu != null ? stu.gpa : ''}" class="form-control text-xs rounded-lg" placeholder="0.00 - 4.00" aria-label="Điểm GPA tích lũy" title="Điểm GPA tích lũy">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Khoa trực thuộc</label>
+                                        <select name="departmentId" class="form-select text-xs rounded-lg" aria-label="Khoa trực thuộc" title="Khoa trực thuộc">
+                                            <option value="">-- Chọn Khoa --</option>
+                                            <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name + ' (' + d.code + ')'}" th:selected="${stu != null and stu.department != null and stu.department.id == d.id}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lecturer Profile Section -->
+                            <div th:if="${u.role != null and (u.role.code == 'LECTURER' or u.role.code == 'DEPARTMENT_HEAD')}" class="p-3 bg-slate-50 border border-slate-100 rounded-xl mt-3">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="fa-solid fa-chalkboard-user text-blue-600 text-xs"></i>
+                                    <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Hồ sơ Chuyên môn Giảng viên</span>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md-3">
+                                        <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Mã Giảng viên</label>
+                                        <input type="text" name="lecturerCode" th:value="${lec != null ? lec.lecturerCode : u.username}" class="form-control text-xs rounded-lg" required aria-label="Mã Giảng viên" title="Mã Giảng viên">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Học hàm</label>
+                                        <select name="academicTitle" class="form-select text-xs rounded-lg" aria-label="Học hàm" title="Học hàm">
+                                            <option value="" th:selected="${lec == null or lec.academicTitle == null}">Không</option>
+                                            <option value="GS" th:selected="${lec != null and lec.academicTitle == 'GS'}">Giáo sư (GS)</option>
+                                            <option value="PGS" th:selected="${lec != null and lec.academicTitle == 'PGS'}">Phó Giáo sư (PGS)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Học vị</label>
+                                        <select name="degree" class="form-select text-xs rounded-lg" aria-label="Học vị" title="Học vị">
+                                            <option value="ThS" th:selected="${lec != null and lec.degree == 'ThS'}">Thạc sĩ (ThS)</option>
+                                            <option value="TS" th:selected="${lec != null and lec.degree == 'TS'}">Tiến sĩ (TS)</option>
+                                            <option value="ThS.GVC" th:selected="${lec != null and lec.degree == 'ThS.GVC'}">Thạc sĩ - GVC</option>
+                                            <option value="TS.GVC" th:selected="${lec != null and lec.degree == 'TS.GVC'}">Tiến sĩ - GVC</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Chỉ tiêu HD tối đa</label>
+                                        <input type="number" name="maxTopicsQuota" th:value="${lec != null ? lec.maxTopicsQuota : 5}" min="1" max="15" class="form-control text-xs rounded-lg" aria-label="Chỉ tiêu HD tối đa (nhóm/đợt)" title="Chỉ tiêu HD tối đa (nhóm/đợt)">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label text-2xs font-semibold text-slate-600 mb-1">Khoa quản lý</label>
+                                        <select name="departmentId" class="form-select text-xs rounded-lg" aria-label="Khoa quản lý" title="Khoa quản lý">
+                                            <option value="">-- Chọn Khoa --</option>
+                                            <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name + ' (' + d.code + ')'}" th:selected="${lec != null and lec.department != null and lec.department.id == d.id}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch pt-1">
+                                <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${u.isActive}" th:id="'activeCheck-' + ${u.id}" placeholder="isActive" title="Kích hoạt tài khoản" aria-label="Kích hoạt tài khoản">
+                                <label class="form-check-label text-xs font-semibold text-slate-700" th:for="'activeCheck-' + ${u.id}">Kích hoạt tài khoản</label>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-t border-slate-100 p-3">
+                            <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu thay đổi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Reset Password -->
+        <div class="modal fade text-start admin-user-modal" th:id="'resetPwdModal-' + ${u.id}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-sm">
+                <div class="modal-content rounded-2xl border-0 shadow-xl">
+                    <form th:action="@{/admin/users/{id}/reset-password(id=${u.id})}" method="post">
+                        <div class="modal-header border-b border-slate-100 p-4">
+                            <h6 class="modal-title font-bold text-slate-900 text-sm">Đặt lại Mật khẩu</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
+                        </div>
+                        <div class="modal-body p-4 space-y-2">
+                            <p class="text-xs text-slate-500 mb-2">Đặt lại mật khẩu cho tài khoản <strong class="text-slate-900" th:text="${u.username}"></strong>:</p>
+                            <div>
+                                <label class="form-label text-xs font-semibold text-slate-700">Mật khẩu mới</label>
+                                <input type="text" name="newPassword" value="123456" class="form-control text-xs rounded-xl" required title="Mật khẩu mới" aria-label="Mật khẩu mới">
+                            </div>
+                        </div>
+                        <div class="modal-footer border-t border-slate-100 p-3">
+                            <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-sm bg-rose-600 text-white rounded-xl px-3 text-xs font-medium">Xác nhận</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </th:block>
 
     <!-- Scripts Fragment -->
     <div th:replace="~{fragments/scripts :: scripts}"></div>
