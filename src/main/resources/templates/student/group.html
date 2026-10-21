@@ -174,8 +174,8 @@
                                                 <i class="fa-solid fa-envelope-open-text me-1"></i> Xin rút khỏi nhóm (EC-02)
                                             </button>
                                             <button th:if="${group.isLeader(student) && group.members.size() > 1}" type="button" class="btn btn-sm btn-outline-secondary rounded-xl px-3 text-xs font-medium" data-bs-toggle="modal" data-bs-target="#modalTransferLeadership">
-    <i class="fa-solid fa-arrow-right-arrow-left me-1"></i> Chuyển quyền Trưởng nhóm
-</button>
+                                                <i class="fa-solid fa-arrow-right-arrow-left me-1"></i> Chuyển quyền Trưởng nhóm
+                                            </button>
 
                                             <!-- Leader: Dissolve Request to Supervisor (EC-03) -->
                                             <button th:if="${group.isLeader(student)}" type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3 text-xs font-medium" data-bs-toggle="modal" data-bs-target="#modalDissolveRequest">
@@ -229,6 +229,65 @@
                     </div>
                 </div>
 
+            </div>
+
+            <!-- Case 2: Student has NOT joined or created any group -->
+            <div th:unless="${group != null}">
+                <div class="row g-4 justify-content-center mb-4">
+                    <div class="col-md-6">
+                        <div class="saas-card p-4 p-md-5 text-center h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 d-inline-flex align-items-center justify-content-center mb-3">
+                                    <i class="fa-solid fa-plus text-lg"></i>
+                                </div>
+                                <h2 class="text-base font-bold text-slate-900 mb-1">Tạo Nhóm Mới</h2>
+                                <p class="text-xs text-slate-500 mb-4">Bạn sẽ trở thành <strong>Nhóm trưởng (Leader)</strong>, có thể thêm trực tiếp các thành viên (nhập MSSV) hoặc gửi Mã nhóm cho bạn bè để cùng tham gia làm đề tài.</p>
+                            </div>
+                            
+                            <form th:action="@{/student/group/create}" method="post">
+                                <div class="mb-3 text-start">
+                                    <label class="form-label text-xs font-semibold text-slate-700" for="field-student-group-9">Đợt đăng ký *</label>
+                                    <select name="periodId" class="form-select text-xs rounded-xl" required title="Đợt đăng ký" aria-label="Đợt đăng ký" id="field-student-group-9">
+                                        <option th:each="p : ${activePeriods}" th:value="${p.id}" th:text="${p.name + ' (' + p.getPeriodTypeName() + ')'}"></option>
+                                    </select>
+                                </div>
+                                <div class="mb-3 text-start">
+                                    <label class="form-label text-xs font-semibold text-slate-700" for="field-student-group-10">Tên nhóm của bạn *</label>
+                                    <input type="text" name="groupName" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Nhóm Nghiên cứu AI K16" required title="Tên nhóm của bạn" aria-label="Tên nhóm của bạn" id="field-student-group-10">
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 py-2 w-100 text-xs font-semibold shadow-sm"><i class="fa-solid fa-crown me-1 text-amber-400"></i> Tạo nhóm ngay</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="saas-card p-4 p-md-5 text-center h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-700 d-inline-flex align-items-center justify-content-center mb-3">
+                                    <i class="fa-solid fa-right-to-bracket text-lg"></i>
+                                </div>
+                                <h2 class="text-base font-bold text-slate-900 mb-1">Gia Nhập Bằng Mã Nhóm</h2>
+                                <p class="text-xs text-slate-500 mb-4">Nếu bạn của bạn đã tạo nhóm trước, hãy nhập <strong>Mã nhóm (Group Code)</strong> do bạn cung cấp để tham gia.</p>
+                            </div>
+                            
+                            <form th:action="@{/student/group/join}" method="post">
+                                <div class="mb-3 text-start">
+                                    <label class="form-label text-xs font-semibold text-slate-700" for="field-student-group-11">Nhập mã nhóm (6 ký tự) *</label>
+                                    <input type="text" name="groupCode" class="form-control text-xs rounded-xl text-center font-mono font-bold uppercase tracking-wider" placeholder="Ví dụ: GRP-A1B2C3" required title="Nhập mã nhóm (6 ký tự)" aria-label="Nhập mã nhóm (6 ký tự)" id="field-student-group-11">
+                                </div>
+                                <div style="height: 52px;"></div>
+                                <button type="submit" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-4 py-2 w-100 text-xs font-semibold text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-user-group me-1"></i> Tham gia nhóm</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modals for Student Group -->
+    <th:block th:if="${group != null}">
                 <!-- MODAL 1: Transfer Leadership -->
                 <div th:if="${group.isLeader(student)}" class="modal fade" id="modalTransferLeadership" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
@@ -312,63 +371,7 @@
                         </div>
                     </div>
                 </div>
-
-            </div>
-
-            <!-- Case 2: Student has NOT joined or created any group -->
-            <div th:unless="${group != null}">
-                <div class="row g-4 justify-content-center mb-4">
-                    <div class="col-md-6">
-                        <div class="saas-card p-4 p-md-5 text-center h-100 d-flex flex-column justify-content-between">
-                            <div>
-                                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 d-inline-flex align-items-center justify-content-center mb-3">
-                                    <i class="fa-solid fa-plus text-lg"></i>
-                                </div>
-                                <h2 class="text-base font-bold text-slate-900 mb-1">Tạo Nhóm Mới</h2>
-                                <p class="text-xs text-slate-500 mb-4">Bạn sẽ trở thành <strong>Nhóm trưởng (Leader)</strong>, có thể thêm trực tiếp các thành viên (nhập MSSV) hoặc gửi Mã nhóm cho bạn bè để cùng tham gia làm đề tài.</p>
-                            </div>
-                            
-                            <form th:action="@{/student/group/create}" method="post">
-                                <div class="mb-3 text-start">
-                                    <label class="form-label text-xs font-semibold text-slate-700" for="field-student-group-9">Đợt đăng ký *</label>
-                                    <select name="periodId" class="form-select text-xs rounded-xl" required title="Đợt đăng ký" aria-label="Đợt đăng ký" id="field-student-group-9">
-                                        <option th:each="p : ${activePeriods}" th:value="${p.id}" th:text="${p.name + ' (' + p.getPeriodTypeName() + ')'}"></option>
-                                    </select>
-                                </div>
-                                <div class="mb-3 text-start">
-                                    <label class="form-label text-xs font-semibold text-slate-700" for="field-student-group-10">Tên nhóm của bạn *</label>
-                                    <input type="text" name="groupName" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Nhóm Nghiên cứu AI K16" required title="Tên nhóm của bạn" aria-label="Tên nhóm của bạn" id="field-student-group-10">
-                                </div>
-                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 py-2 w-100 text-xs font-semibold shadow-sm"><i class="fa-solid fa-crown me-1 text-amber-400"></i> Tạo nhóm ngay</button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="saas-card p-4 p-md-5 text-center h-100 d-flex flex-column justify-content-between">
-                            <div>
-                                <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-700 d-inline-flex align-items-center justify-content-center mb-3">
-                                    <i class="fa-solid fa-right-to-bracket text-lg"></i>
-                                </div>
-                                <h2 class="text-base font-bold text-slate-900 mb-1">Gia Nhập Bằng Mã Nhóm</h2>
-                                <p class="text-xs text-slate-500 mb-4">Nếu bạn của bạn đã tạo nhóm trước, hãy nhập <strong>Mã nhóm (Group Code)</strong> do bạn cung cấp để tham gia.</p>
-                            </div>
-                            
-                            <form th:action="@{/student/group/join}" method="post">
-                                <div class="mb-3 text-start">
-                                    <label class="form-label text-xs font-semibold text-slate-700" for="field-student-group-11">Nhập mã nhóm (6 ký tự) *</label>
-                                    <input type="text" name="groupCode" class="form-control text-xs rounded-xl text-center font-mono font-bold uppercase tracking-wider" placeholder="Ví dụ: GRP-A1B2C3" required title="Nhập mã nhóm (6 ký tự)" aria-label="Nhập mã nhóm (6 ký tự)" id="field-student-group-11">
-                                </div>
-                                <div style="height: 52px;"></div>
-                                <button type="submit" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-4 py-2 w-100 text-xs font-semibold text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-user-group me-1"></i> Tham gia nhóm</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </main>
-    </div>
+    </th:block>
 
     <!-- Scripts Fragment -->
     <div th:replace="~{fragments/scripts :: scripts}"></div>
