@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import jakarta.persistence.EntityManager;
 import topicmanagement.entity.*;
 import topicmanagement.repository.*;
 
@@ -24,6 +25,9 @@ public class StudentService {
     private final RegistrationPeriodRepository periodRepository;
     private final EvaluationRepository evaluationRepository;
     private final FileStorageService fileStorageService;
+    private final LecturerRepository lecturerRepository;
+    private final CouncilService councilService;
+    private final EntityManager entityManager;
 
     public StudentService(
             StudentRepository studentRepository,
@@ -33,7 +37,10 @@ public class StudentService {
             SubmissionRepository submissionRepository,
             RegistrationPeriodRepository periodRepository,
             EvaluationRepository evaluationRepository,
-            FileStorageService fileStorageService) {
+            FileStorageService fileStorageService,
+            LecturerRepository lecturerRepository,
+            CouncilService councilService,
+            EntityManager entityManager) {
         this.studentRepository = studentRepository;
         this.topicRepository = topicRepository;
         this.groupRepository = groupRepository;
@@ -42,6 +49,23 @@ public class StudentService {
         this.periodRepository = periodRepository;
         this.evaluationRepository = evaluationRepository;
         this.fileStorageService = fileStorageService;
+        this.lecturerRepository = lecturerRepository;
+        this.councilService = councilService;
+        this.entityManager = entityManager;
+    }
+
+    Student lockStudentForMembership(Student student) {
+        Student locked = studentRepository.findForMembership(student.getId())
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy sinh viên!"));
+        entityManager.refresh(locked);
+        return locked;
+    }
+
+    StudentGroup lockGroupForMembership(Long groupId) {
+        StudentGroup locked = groupRepository.findForMembership(groupId)
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy nhóm!"));
+        entityManager.refresh(locked);
+        return locked;
     }
 
     /**
@@ -126,6 +150,7 @@ public class StudentService {
 
     @Transactional
     public StudentGroup createGroup(Student leader, Long periodId, String groupName) {
+        leader = lockStudentForMembership(leader);
         RegistrationPeriod period = periodId != null ? periodRepository.findById(periodId).orElse(null) : null;
         if (period == null) {
             List<RegistrationPeriod> activePeriods = periodRepository.findByIsActiveTrueOrderByIdDesc();
@@ -181,6 +206,10 @@ public class StudentService {
     @Transactional
     public String inviteMemberByCode(StudentGroup group, String studentCode) {
         if (group == null) return "Không tìm thấy nhóm.";
+        Student invitee = getStudentByCode(studentCode);
+        if (invitee == null) return "Không tìm thấy sinh viên có mã: " + studentCode;
+        invitee = lockStudentForMembership(invitee);
+        group = lockGroupForMembership(group.getId());
         List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
         
         // BUG-03 FIX: Kiểm tra giới hạn thành viên theo topic.maxStudents nếu nhóm đã có đề tài (3 - 5 SV theo Rubric)
@@ -189,10 +218,6 @@ public class StudentService {
             return "Nhóm đã đạt số lượng tối đa " + maxAllowed + " thành viên" + (group.getTopic() != null ? " theo quy định đề tài!" : "!");
         }
 
-        Student invitee = getStudentByCode(studentCode);
-        if (invitee == null) {
-            return "Không tìm thấy sinh viên có mã: " + studentCode;
-        }
 
         // GLOBAL VALIDATION: Bắt buộc sinh viên được mời phải cùng Khoa với Đợt đăng ký
         RegistrationPeriod period = group.getPeriod();
@@ -225,13 +250,14 @@ public class StudentService {
     public String joinGroupByCode(Student student, String groupCode) {
         if (student == null) return "Vui lòng đăng nhập.";
         if (groupCode == null || groupCode.trim().isEmpty()) return "Vui lòng nhập mã nhóm.";
+        student = lockStudentForMembership(student);
 
         Optional<StudentGroup> opt = groupRepository.findByGroupCode(groupCode.trim().toUpperCase());
         if (opt.isEmpty()) {
             return "Mã nhóm không tồn tại!";
         }
 
-        StudentGroup group = opt.get();
+        StudentGroup group = lockGroupForMembership(opt.get().getId());
         RegistrationPeriod period = group.getPeriod();
 
         // GLOBAL VALIDATION: Bắt buộc sinh viên gia nhập phải cùng Khoa với Đợt đăng ký
@@ -358,6 +384,19 @@ public class StudentService {
         if (group == null) {
             return "Bạn chưa có nhóm sinh viên trong đợt này! Vui lòng tạo nhóm hoặc gia nhập một nhóm trong đợt trước khi đăng ký đề tài.";
         }
+        student = lockStudentForMembership(student);
+        group = lockGroupForMembership(group.getId());
+        topic = topicRepository.findForPublication(topicId).orElseThrow();
+        entityManager.refresh(topic);
+        topicPeriodId = topic.getPeriod() != null ? topic.getPeriod().getId() : null;
+        List<Long> supervisorIds = new ArrayList<>();
+        if (topic.getSupervisor() != null) supervisorIds.add(topic.getSupervisor().getId());
+        if (topic.getCoSupervisor() != null) supervisorIds.add(topic.getCoSupervisor().getId());
+        for (Long id : supervisorIds.stream().distinct().sorted().toList()) {
+            Lecturer lecturer = lecturerRepository.findForQuota(id).orElseThrow();
+            entityManager.refresh(lecturer);
+        }
+        if (!"APPROVED".equalsIgnoreCase(topic.getStatus())) return "Đề tài chưa được duyệt!";
 
         // Ràng buộc khớp đợt đăng ký giữa nhóm và đề tài
         if (group.getPeriod() != null && topic.getPeriod() != null
@@ -566,7 +605,7 @@ public class StudentService {
             }
         }
 
-        return evaluationRepository.findByTopicId(freshTopic.getId());
+        return councilService.getEvaluationsForTopic(freshTopic.getId());
     }
 
     public List<Evaluation> getGroupEvaluations(StudentGroup group, Student viewer) {
@@ -614,8 +653,9 @@ public class StudentService {
             return true;
         }
         if ("DEPARTMENT_HEAD".equalsIgnoreCase(role)) {
-            if (topic.getDepartment() == null || user.getDepartment() == null) return true;
-            return Objects.equals(topic.getDepartment().getId(), user.getDepartment().getId());
+            Lecturer manager = lecturerRepository.findByUserId(user.getId()).orElse(null);
+            return manager != null && manager.getDepartment() != null && topic.getDepartment() != null
+                    && Objects.equals(topic.getDepartment().getId(), manager.getDepartment().getId());
         }
         if ("LECTURER".equalsIgnoreCase(role)) {
             if (topic.getSupervisor() != null && topic.getSupervisor().getUser() != null

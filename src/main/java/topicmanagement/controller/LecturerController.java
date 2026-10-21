@@ -495,7 +495,7 @@ public class LecturerController {
         if (ok) {
             redirectAttributes.addFlashAttribute("successMessage", "Đã nộp điểm và nhận xét phản biện thành công!");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể chấm phản biện cho đề tài này (xung đột lợi ích hoặc đề tài đã khóa)!");
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể chấm phản biện: kiểm tra phân công, thời hạn, trạng thái khóa và điểm hợp lệ!");
         }
 
         return "redirect:/lecturer/reviews";

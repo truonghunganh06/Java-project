@@ -2,7 +2,7 @@ package topicmanagement.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -31,15 +31,17 @@ public class EmailService {
     @Value("${spring.mail.username:}")
     private String senderEmail;
 
-    public EmailService(@Autowired(required = false) JavaMailSender mailSender) {
+    public EmailService(@Nullable JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
     /**
      * Gửi email thông báo kết quả điểm số cho tất cả sinh viên trong nhóm thực hiện đề tài.
      */
-    public void sendTopicResultEmailsToGroup(Topic topic, StudentGroup group) {
-        if (topic == null || group == null) return;
+    public record DeliveryResult(int sent, int failed) {}
+
+    public DeliveryResult sendTopicResultEmailsToGroup(Topic topic, StudentGroup group) {
+        if (topic == null || group == null) return new DeliveryResult(0, 1);
 
         List<Student> students = new ArrayList<>();
         if (group.getLeader() != null) {
@@ -53,19 +55,21 @@ public class EmailService {
             }
         }
 
+        int sent = 0;
         for (Student s : students) {
-            sendResultEmailToStudent(topic, group, s);
+            if (sendResultEmailToStudent(topic, group, s)) sent++;
         }
+        return new DeliveryResult(sent, students.isEmpty() ? 1 : students.size() - sent);
     }
 
-    private void sendResultEmailToStudent(Topic topic, StudentGroup group, Student student) {
-        if (student == null || student.getUser() == null) return;
+    private boolean sendResultEmailToStudent(Topic topic, StudentGroup group, Student student) {
+        if (student == null || student.getUser() == null) return false;
         AppUser user = student.getUser();
         String toEmail = user.getEmail();
         if (toEmail == null || toEmail.isBlank()) {
             log.warn("[EMAIL-RESULT] Sinh viên {} ({}) chưa có email để nhận thông báo kết quả.",
                     user.getFullName(), student.getStudentCode());
-            return;
+            return false;
         }
 
         String subject = "[TopicHub] Công bố kết quả đánh giá đề tài: " + topic.getTitle();
@@ -127,9 +131,8 @@ public class EmailService {
         );
 
         if (mailSender == null || senderEmail == null || senderEmail.isBlank()) {
-            log.info("[EMAIL-SIMULATION] Cấu hình SMTP chưa kích hoạt. Giả lập gửi thành công kết quả đề tài '{}' tới {} ({})",
-                    topic.getTitle(), toEmail, user.getFullName());
-            return;
+            log.warn("[EMAIL-NOT-CONFIGURED] Chưa cấu hình SMTP; email kết quả chưa được gửi.");
+            return false;
         }
 
         try {
@@ -142,8 +145,10 @@ public class EmailService {
             mailSender.send(message);
             log.info("[EMAIL-SUCCESS] Đã gửi thông báo kết quả đề tài '{}' tới sinh viên {} <{}>",
                     topic.getTitle(), user.getFullName(), toEmail);
+            return true;
         } catch (Exception e) {
             log.error("[EMAIL-ERROR] Gửi email kết quả tới {} thất bại: {}", toEmail, e.getMessage());
+            return false;
         }
     }
 }

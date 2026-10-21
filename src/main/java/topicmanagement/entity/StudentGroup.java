@@ -36,7 +36,7 @@ public class StudentGroup {
     private Student leader;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "topic_id")
+    @JoinColumn(name = "topic_id", unique = true)
     private Topic topic;
 
     @Column(nullable = false, length = 50)

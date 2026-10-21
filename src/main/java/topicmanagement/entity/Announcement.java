@@ -11,6 +11,9 @@ public class Announcement {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "event_key", unique = true, length = 255)
+    private String eventKey;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private Department department;
@@ -46,6 +49,9 @@ public class Announcement {
     public Long getId() {
         return id;
     }
+
+    public String getEventKey() { return eventKey; }
+    public void setEventKey(String eventKey) { this.eventKey = eventKey; }
 
     public void setId(Long id) {
         this.id = id;
