@@ -81,7 +81,9 @@
                             <tr th:if="${users == null or users.isEmpty()}">
                                 <td colspan="5" class="text-center py-5 text-muted text-xs">Không tìm thấy tài khoản người dùng phù hợp.</td>
                             </tr>
-                            <tr th:each="u : ${users}" class="filterable-row cursor-pointer hover:bg-slate-50/80 transition"
+                            <tr th:each="u : ${users}"
+                                th:with="stu=${studentMap != null ? studentMap.get(u.id) : null}, lec=${lecturerMap != null ? lecturerMap.get(u.id) : null}"
+                                class="filterable-row cursor-pointer hover:bg-slate-50/80 transition"
                                 th:data-role="${u.role != null ? u.role.code : ''}"
                                 th:data-status="${u.isActive ? 'ACTIVE' : 'LOCKED'}"
                                 th:data-user-id="${u.id}"
@@ -90,6 +92,7 @@
                                 th:data-user-email="${u.email}"
                                 th:data-user-phone="${u.phone != null ? u.phone : ''}"
                                 th:data-user-role="${u.role != null ? u.role.name : ''}"
+                                th:data-user-department="${lec != null and lec.department != null ? lec.department.name : (stu != null and stu.department != null ? stu.department.name : '')}"
                                 th:data-user-active="${u.isActive}"
                                 onclick="openUserActionModal(this)"
                                 title="Nhấp để xem chi tiết và thao tác" tabindex="0" onkeydown="if (event.target === this &amp;&amp; (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
@@ -307,9 +310,16 @@
                         </div>
                         <div>
                             <label class="form-label text-xs font-semibold text-slate-700" for="field-admin-users-24">Vai trò <span class="text-rose-600">*</span></label>
-                            <select name="roleId" class="form-select text-xs rounded-xl" required title="Vai trò" aria-label="Vai trò" id="field-admin-users-24">
-                                <option value="">-- Chọn vai trò --</option>
-                                <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}"></option>
+                            <select name="roleId" class="form-select text-xs rounded-xl" required title="Vai trò" aria-label="Vai trò" id="field-admin-users-24" onchange="toggleDepartmentSelect(this)">
+                                <option value="" data-role-code="">-- Chọn vai trò --</option>
+                                <option th:each="r : ${roles}" th:value="${r.id}" th:data-role-code="${r.code}" th:text="${r.name + ' (' + r.code + ')'}"></option>
+                            </select>
+                        </div>
+                        <div id="departmentSelectWrapper" style="display: none;">
+                            <label class="form-label text-xs font-semibold text-slate-700" for="field-admin-users-dept">Khoa / Đơn vị</label>
+                            <select name="departmentId" id="field-admin-users-dept" class="form-select text-xs rounded-xl" title="Khoa / Đơn vị" aria-label="Khoa / Đơn vị">
+                                <option value="">-- Chọn Khoa --</option>
+                                <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name + ' (' + d.code + ')'}"></option>
                             </select>
                         </div>
                         <div>
@@ -331,20 +341,20 @@
     <div class="modal fade" id="userActionModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" style="max-width: 460px;">
             <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
-                <div class="modal-header bg-slate-900 text-white p-4 border-0 d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center gap-3 min-w-0 flex-grow-1">
-                        <div id="uActionAvatar" class="w-12 h-12 rounded-2xl bg-white/10 text-white font-bold d-inline-flex align-items-center justify-content-center text-lg border border-white/10 flex-shrink-0">
+                <div class="modal-header bg-slate-900 text-white p-4 border-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div id="uActionAvatar" class="w-12 h-12 rounded-2xl bg-white/10 text-white font-bold flex items-center justify-center text-lg border border-white/10 flex-shrink-0">
                             U
                         </div>
-                        <div class="min-w-0 flex-grow-1">
+                        <div>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <h6 class="modal-title font-bold text-white text-base mb-0 text-truncate" id="uActionFullName">Họ và tên</h6>
+                                <h6 class="modal-title font-bold text-white text-base mb-0" id="uActionFullName">Họ và tên</h6>
                                 <span id="uActionStatusBadge" class="badge-pill-approved text-2xs py-0.5 px-2">Hoạt động</span>
                             </div>
-                            <div class="text-slate-300 text-xs mt-0.5 font-mono text-truncate" id="uActionUsername">@username</div>
+                            <div class="text-slate-300 text-xs mt-0.5 font-mono" id="uActionUsername">@username</div>
                         </div>
                     </div>
-                    <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
                 </div>
                 <div class="modal-body p-4 space-y-3 bg-white">
                     <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-2 text-xs">
@@ -359,6 +369,10 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="text-slate-500"><i class="fa-solid fa-shield-halved text-slate-400 me-1.5"></i>Vai trò:</span>
                             <span class="badge-pill-neutral font-semibold text-xs" id="uActionRole">Giảng viên</span>
+                        </div>
+                        <div class="justify-content-between align-items-center d-none" id="uActionDepartmentRow" style="display: none;">
+                            <span class="text-slate-500"><i class="fa-solid fa-building text-slate-400 me-1.5"></i>Khoa quản lý:</span>
+                            <span class="font-medium text-slate-800" id="uActionDepartment"></span>
                         </div>
                     </div>
 
@@ -392,6 +406,27 @@
     <div th:replace="~{fragments/scripts :: scripts}"></div>
 
     <script>
+        function cleanupModalBackdrops() {
+            if (!document.querySelector('.modal.show')) {
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+            }
+        }
+
+        document.addEventListener('hidden.bs.modal', function () {
+            cleanupModalBackdrops();
+            setTimeout(cleanupModalBackdrops, 150);
+        });
+
+        document.addEventListener('click', function(e) {
+            const dismissBtn = e.target.closest('[data-bs-dismiss="modal"]');
+            if (dismissBtn) {
+                setTimeout(cleanupModalBackdrops, 350);
+            }
+        });
+
         function openUserActionModal(row) {
             const userId = row.getAttribute('data-user-id');
             const fullName = row.getAttribute('data-user-fullname') || 'Người dùng';
@@ -399,6 +434,7 @@
             const email = row.getAttribute('data-user-email') || 'Chưa cập nhật';
             const phone = row.getAttribute('data-user-phone') || 'Chưa cập nhật';
             const role = row.getAttribute('data-user-role') || 'N/A';
+            const department = row.getAttribute('data-user-department') || '';
             const isActive = row.getAttribute('data-user-active') === 'true';
 
             document.getElementById('uActionAvatar').textContent = fullName.trim().charAt(0).toUpperCase() || 'U';
@@ -407,6 +443,22 @@
             document.getElementById('uActionEmail').textContent = email;
             document.getElementById('uActionPhone').textContent = phone;
             document.getElementById('uActionRole').textContent = role;
+
+            const deptRow = document.getElementById('uActionDepartmentRow');
+            const deptText = document.getElementById('uActionDepartment');
+            if (deptRow && deptText) {
+                if (department && department.trim() !== '') {
+                    deptText.textContent = department.trim();
+                    deptRow.classList.remove('d-none');
+                    deptRow.classList.add('d-flex');
+                    deptRow.style.removeProperty('display');
+                } else {
+                    deptText.textContent = '';
+                    deptRow.classList.add('d-none');
+                    deptRow.classList.remove('d-flex');
+                    deptRow.style.display = 'none';
+                }
+            }
 
             const badge = document.getElementById('uActionStatusBadge');
             const toggleBtn = document.getElementById('uBtnToggleStatus');
@@ -432,29 +484,87 @@
             const actionModal = bootstrap.Modal.getOrCreateInstance(actionModalEl);
 
             document.getElementById('uBtnEdit').onclick = function() {
-                actionModal.hide();
-                setTimeout(() => {
+                let opened = false;
+                const openEditModal = function() {
+                    if (opened) return;
+                    opened = true;
+                    actionModalEl.removeEventListener('hidden.bs.modal', openEditModal);
+                    // Dọn sạch backdrop còn sót và gỡ class modal-open khỏi body khi đóng userActionModal
+                    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('overflow');
+                    document.body.style.removeProperty('padding-right');
+
                     const editModalEl = document.getElementById('editUserModal-' + userId);
                     if (editModalEl) {
-                        const editModal = new bootstrap.Modal(editModalEl);
+                        const editModal = bootstrap.Modal.getOrCreateInstance(editModalEl);
                         editModal.show();
                     }
-                }, 350);
+                };
+
+                actionModalEl.addEventListener('hidden.bs.modal', openEditModal, { once: true });
+                actionModal.hide();
+                setTimeout(openEditModal, 300);
             };
 
             document.getElementById('uBtnResetPwd').onclick = function() {
-                actionModal.hide();
-                setTimeout(() => {
+                let opened = false;
+                const openResetModal = function() {
+                    if (opened) return;
+                    opened = true;
+                    actionModalEl.removeEventListener('hidden.bs.modal', openResetModal);
+                    // Dọn sạch backdrop còn sót và gỡ class modal-open khỏi body khi đóng userActionModal
+                    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('overflow');
+                    document.body.style.removeProperty('padding-right');
+
                     const resetModalEl = document.getElementById('resetPwdModal-' + userId);
                     if (resetModalEl) {
-                        const resetModal = new bootstrap.Modal(resetModalEl);
+                        const resetModal = bootstrap.Modal.getOrCreateInstance(resetModalEl);
                         resetModal.show();
                     }
-                }, 350);
+                };
+
+                actionModalEl.addEventListener('hidden.bs.modal', openResetModal, { once: true });
+                actionModal.hide();
+                setTimeout(openResetModal, 300);
             };
 
             actionModal.show();
         }
+
+        function toggleDepartmentSelect(selectEl) {
+            const selectedOption = selectEl ? selectEl.options[selectEl.selectedIndex] : null;
+            const roleCode = selectedOption ? (selectedOption.getAttribute('data-role-code') || '').toUpperCase() : '';
+            const deptWrapper = document.getElementById('departmentSelectWrapper');
+            if (!deptWrapper) return;
+
+            const allowedRoles = ['STUDENT', 'LECTURER', 'DEPARTMENT_HEAD'];
+            if (allowedRoles.includes(roleCode)) {
+                deptWrapper.style.display = 'block';
+            } else {
+                deptWrapper.style.display = 'none';
+                const deptSelect = document.getElementById('field-admin-users-dept');
+                if (deptSelect) deptSelect.value = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const roleSelect = document.getElementById('field-admin-users-24');
+            if (roleSelect) {
+                roleSelect.addEventListener('change', function() {
+                    toggleDepartmentSelect(this);
+                });
+                toggleDepartmentSelect(roleSelect);
+            }
+            const modalEl = document.getElementById('createUserModal');
+            if (modalEl) {
+                modalEl.addEventListener('shown.bs.modal', function() {
+                    if (roleSelect) toggleDepartmentSelect(roleSelect);
+                });
+            }
+        });
     </script>
 </body>
 </html>

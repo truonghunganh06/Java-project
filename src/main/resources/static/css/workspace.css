@@ -173,7 +173,7 @@ html[data-theme="dark"] body.workspace-page :is(.btn.bg-amber-50, .btn.bg-emeral
     html .error-page .error-actions { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) {
-    html body.workspace-page *, html body.workspace-page *::before, html body.workspace-page *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    html body.workspace-page *, html body.workspace-page *::before, html body.workspace-page *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
 /* Student & Workspace Text Overflow Safeguards */

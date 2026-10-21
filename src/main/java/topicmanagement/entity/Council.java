@@ -125,4 +125,14 @@ public class Council {
     public void setMembers(List<CouncilMember> members) {
         this.members = members;
     }
+
+    public boolean hasMember(AppUser user) {
+        if (user == null || user.getId() == null || members == null) return false;
+        return members.stream().anyMatch(m -> m.getLecturer() != null && m.getLecturer().getUser() != null && user.getId().equals(m.getLecturer().getUser().getId()));
+    }
+
+    public boolean hasMember(Lecturer lecturer) {
+        if (lecturer == null || lecturer.getId() == null || members == null) return false;
+        return members.stream().anyMatch(m -> m.getLecturer() != null && lecturer.getId().equals(m.getLecturer().getId()));
+    }
 }

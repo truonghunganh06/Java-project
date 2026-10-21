@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import topicmanagement.entity.*;
 import topicmanagement.service.AdminService;
+import topicmanagement.service.EmailService;
 
 import java.util.List;
 import java.util.Map;
@@ -19,9 +20,11 @@ import java.util.stream.Collectors;
 public class AdminController {
 
     private final AdminService adminService;
+    private final EmailService emailService;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, EmailService emailService) {
         this.adminService = adminService;
+        this.emailService = emailService;
     }
 
     private AppUser getAuthenticatedAdmin(HttpSession session) {
@@ -124,6 +127,7 @@ public class AdminController {
             @ModelAttribute AppUser newUser,
             @RequestParam(value = "roleId", required = false) Long roleId,
             @RequestParam(value = "roleCode", required = false) String roleCode,
+            @RequestParam(value = "departmentId", required = false) Long departmentId,
             @RequestParam(value = "password", required = false) String password,
             @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             HttpSession session,
@@ -146,9 +150,17 @@ public class AdminController {
             }
         }
 
-        String err = adminService.createUser(newUser, roleId);
+        String rawPassword = (password != null && !password.trim().isEmpty())
+                ? password.trim()
+                : ((newUser.getPasswordHash() != null && !newUser.getPasswordHash().trim().isEmpty()) ? newUser.getPasswordHash().trim() : "123456");
+
+        String err = adminService.createUser(newUser, roleId, departmentId);
         if (err == null) {
             redirectAttributes.addFlashAttribute("successMessage", "Thêm mới tài khoản '" + newUser.getUsername() + "' thành công!");
+            try {
+                emailService.sendWelcomeEmail(newUser, rawPassword);
+            } catch (Exception ignored) {
+            }
         } else {
             redirectAttributes.addFlashAttribute("errorMessage", err);
         }
