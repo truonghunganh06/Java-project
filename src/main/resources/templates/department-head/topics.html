@@ -54,7 +54,7 @@
             <!-- KPI Cards Grid (Đồng bộ chuẩn periods.html) -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-3" role="group" aria-label="Bộ lọc nhanh theo trạng thái duyệt đề tài">
                 <!-- KPI 1: Tất cả đề tài -->
-                <div class="period-kpi-card active" onclick="filterByWorkflowStage('ALL', this)" role="button" tabindex="0">
+                <div class="period-kpi-card" th:classappend="${selectedStatus == null || selectedStatus == 'ALL' || selectedStatus == '' ? 'active' : ''}" onclick="filterByWorkflowStage('ALL', this)" role="button" tabindex="0">
                     <div class="d-flex align-items-center justify-content-between">
                         <span class="text-xs font-semibold text-slate-700">Tất cả đề tài</span>
                         <div class="kpi-icon-badge bg-slate-100 text-slate-600">
@@ -68,7 +68,7 @@
                 </div>
 
                 <!-- KPI 2: Chờ phê duyệt -->
-                <div class="period-kpi-card" onclick="filterByWorkflowStage('PENDING', this)" role="button" tabindex="0">
+                <div class="period-kpi-card" th:classappend="${selectedStatus == 'PENDING' ? 'active' : ''}" onclick="filterByWorkflowStage('PENDING', this)" role="button" tabindex="0">
                     <div class="d-flex align-items-center justify-content-between">
                         <span class="text-xs font-semibold text-amber-700">1. Chờ phê duyệt</span>
                         <div class="kpi-icon-badge bg-amber-100 text-amber-600">
@@ -82,7 +82,7 @@
                 </div>
 
                 <!-- KPI 3: Đã phê duyệt -->
-                <div class="period-kpi-card" onclick="filterByWorkflowStage('APPROVED', this)" role="button" tabindex="0">
+                <div class="period-kpi-card" th:classappend="${selectedStatus == 'APPROVED' ? 'active' : ''}" onclick="filterByWorkflowStage('APPROVED', this)" role="button" tabindex="0">
                     <div class="d-flex align-items-center justify-content-between">
                         <span class="text-xs font-semibold text-emerald-700">2. Đã phê duyệt</span>
                         <div class="kpi-icon-badge bg-emerald-100 text-emerald-600">
@@ -96,7 +96,7 @@
                 </div>
 
                 <!-- KPI 4: Bị từ chối -->
-                <div class="period-kpi-card" onclick="filterByWorkflowStage('REJECTED', this)" role="button" tabindex="0">
+                <div class="period-kpi-card" th:classappend="${selectedStatus == 'REJECTED' ? 'active' : ''}" onclick="filterByWorkflowStage('REJECTED', this)" role="button" tabindex="0">
                     <div class="d-flex align-items-center justify-content-between">
                         <span class="text-xs font-semibold text-rose-700">3. Bị từ chối</span>
                         <div class="kpi-icon-badge bg-rose-100 text-rose-600">
@@ -132,10 +132,10 @@
                         </select>
                         <select id="filterStatusSelect" class="form-select form-select-sm rounded-xl text-xs"
                             style="height: 36px; min-height: 36px; width: 155px; font-size: 12.5px; padding-left: 10px;" onchange="syncStatusFromSelect(this.value)" title="Trạng thái duyệt" aria-label="Trạng thái duyệt">
-                            <option value="ALL">-- Trạng thái duyệt --</option>
-                            <option value="PENDING">Chờ phê duyệt</option>
-                            <option value="APPROVED">Đã phê duyệt</option>
-                            <option value="REJECTED">Bị từ chối</option>
+                            <option value="ALL" th:selected="${selectedStatus == null || selectedStatus == 'ALL' || selectedStatus == ''}">-- Trạng thái duyệt --</option>
+                            <option value="PENDING" th:selected="${selectedStatus == 'PENDING'}">Chờ phê duyệt</option>
+                            <option value="APPROVED" th:selected="${selectedStatus == 'APPROVED'}">Đã phê duyệt</option>
+                            <option value="REJECTED" th:selected="${selectedStatus == 'REJECTED'}">Bị từ chối</option>
                         </select>
                         <select id="filterSupervisorSelect" class="form-select form-select-sm rounded-xl text-xs"
                             style="height: 36px; min-height: 36px; width: 175px; font-size: 12.5px; padding-left: 10px;" onchange="applyCombinedFilters()" title="Giảng viên hướng dẫn" aria-label="Giảng viên hướng dẫn"
@@ -169,10 +169,16 @@
                             </tr>
                         </thead>
                         <tbody id="topicsTableBody">
-                            <tr th:if="${topicsPage == null || #lists.isEmpty(topicsPage.content)}">
+                            <tr id="emptySearchRow" style="display: none;">
                                 <td colspan="5" class="text-center py-5 text-muted text-xs">
                                     <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
-                                    Không tìm thấy đề tài nào phù hợp với bộ lọc.
+                                    Không tìm thấy đề tài nào phù hợp với bộ lọc hiện tại.
+                                </td>
+                            </tr>
+                            <tr th:if="${topicsPage == null || #lists.isEmpty(topicsPage.content)}" id="serverEmptyRow">
+                                <td colspan="5" class="text-center py-5 text-muted text-xs">
+                                    <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
+                                    Khoa chưa có đề tài nào được khởi tạo.
                                 </td>
                             </tr>
                             <tr th:each="t : ${topicsPage.content}" class="filterable-row topic-item-row cursor-pointer transition hover:bg-blue-50/40"
@@ -746,6 +752,13 @@
                 headerCounter.textContent = 'Tổng số: ' + visibleRowCount + ' đề tài';
             }
 
+            // Hiển thị dòng thông báo nếu không có dòng nào phù hợp
+            const emptyRow = document.getElementById('emptySearchRow');
+            if (emptyRow) {
+                const totalRows = document.querySelectorAll('.topic-item-row').length;
+                emptyRow.style.display = (totalRows > 0 && visibleRowCount === 0) ? '' : 'none';
+            }
+
             updateKanbanColumnCounters();
         }
 
@@ -768,7 +781,12 @@
 
         // Initialize on DOM Ready
         document.addEventListener('DOMContentLoaded', function () {
-            // Default table view ready
+            const initialStage = '[[${selectedStatus != null && !selectedStatus.isEmpty() ? selectedStatus : "ALL"}]]';
+            if (initialStage && initialStage !== 'ALL') {
+                filterByWorkflowStage(initialStage, null);
+            } else {
+                applyCombinedFilters();
+            }
         });
     </script>
 </body>

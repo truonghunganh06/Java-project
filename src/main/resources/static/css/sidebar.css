@@ -7,7 +7,9 @@
     --nav-line: #e5e5e3;
     --nav-hover: #efefed;
     position: fixed;
-    inset: 0 auto 0 0;
+    top: 0;
+    bottom: 0;
+    left: 0 !important;
     width: var(--sidebar-width);
     height: 100dvh;
     padding: 0;
@@ -37,7 +39,7 @@ html[data-theme="dark"] .saas-sidebar.workspace-sidebar {
     color: var(--nav-text) !important;
 }
 .workspace-header { min-height: var(--topbar-height); padding: 1rem 1.125rem; display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
-.workspace-brand { display: flex; align-items: center; min-width: 0; color: var(--nav-strong); font-size: 1.125rem; font-weight: 650; letter-spacing: -.055em; text-decoration: none; }
+.workspace-brand { display: flex; align-items: center; min-width: 0; color: var(--nav-strong); font-size: 1.125rem; font-weight: 650; letter-spacing: -0.01em; text-decoration: none; padding-left: 2px; }
 .workspace-brand:hover { color: var(--nav-strong); }
 .workspace-monogram { display: none; font-size: .8125rem; letter-spacing: -.05em; }
 .workspace-toggle { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 28px; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 4px; color: var(--nav-muted); background: transparent; font-size: .6875rem; cursor: pointer; }

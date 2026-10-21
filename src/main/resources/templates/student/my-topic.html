@@ -42,18 +42,18 @@
 
             <div th:if="${group != null && group.topic != null}" class="row g-4 mb-4">
                 <div class="col-lg-8">
-                    <div class="saas-card p-4 mb-4">
+                    <div class="saas-card p-4 mb-4" style="overflow: hidden;">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold" th:text="${group.topic.code}">DT-01</span>
                             <span class="badge-pill-approved font-semibold text-xs" th:text="${group.status}">ĐÃ ĐĂNG KÝ</span>
                         </div>
-                        <h2 class="text-lg font-bold text-slate-900 mb-3" th:text="${group.topic.title}">Tên đề tài</h2>
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 text-break" style="overflow-wrap: anywhere; word-break: break-word;" th:text="${group.topic.title}">Tên đề tài</h2>
                         
                         <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Mục tiêu & Nội dung:</h3>
-                        <p class="text-xs text-slate-600 mb-4 leading-relaxed" style="white-space: pre-line;" th:text="${group.topic.description}">Mô tả đề tài...</p>
+                        <p class="text-xs text-slate-600 mb-4 leading-relaxed text-break" style="white-space: pre-line; overflow-wrap: anywhere; word-break: break-word;" th:text="${group.topic.description}">Mô tả đề tài...</p>
 
                         <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Yêu cầu chuyên môn:</h3>
-                        <p class="text-xs text-slate-600 mb-0 leading-relaxed" th:text="${group.topic.requirements != null ? group.topic.requirements : 'Theo hướng dẫn của GV'}"></p>
+                        <p class="text-xs text-slate-600 mb-0 leading-relaxed text-break" style="overflow-wrap: anywhere; word-break: break-word;" th:text="${group.topic.requirements != null ? group.topic.requirements : 'Theo hướng dẫn của GV'}"></p>
                     </div>
                 </div>
 

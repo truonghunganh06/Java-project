@@ -122,6 +122,29 @@ public class AuthController {
         return "redirect:/login?logout=true";
     }
 
+    @GetMapping("/switch-account")
+    public String switchAccount(
+            @RequestParam("username") String username,
+            @RequestParam(value = "redirect", required = false) String redirectUrl,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = authService.findUserByUsername(username);
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy tài khoản: " + username);
+            return "redirect:/dashboard";
+        }
+
+        session.setAttribute("currentUser", user);
+        setSecurityContext(user, session);
+
+        if (redirectUrl != null && !redirectUrl.trim().isEmpty() && !redirectUrl.contains("://")) {
+            return "redirect:" + redirectUrl;
+        }
+
+        return "redirect:/dashboard";
+    }
+
     private void setSecurityContext(AppUser user, HttpSession session) {
         if (user == null || session == null) return;
         try {

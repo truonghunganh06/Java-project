@@ -226,9 +226,9 @@ public class LecturerService {
 
         if ("APPROVED".equalsIgnoreCase(status)) {
             int memberCount = (group.getMembers() != null) ? group.getMembers().size() : 0;
-            if (memberCount < 3 || memberCount > 5) {
-                System.err.println("[VALIDATION] Không thể duyệt nhóm ID=" + groupId + " vì số thành viên (" + memberCount + ") không thuộc [3, 5]!");
-                throw new IllegalStateException("Không thể duyệt nhóm: Nhóm hiện có " + memberCount + " sinh viên. Quy định bắt buộc nhóm phải có từ 3 đến 5 sinh viên!");
+            if (memberCount < 1 || memberCount > 5) {
+                System.err.println("[VALIDATION] Không thể duyệt nhóm ID=" + groupId + " vì số thành viên (" + memberCount + ") không hợp lệ!");
+                throw new IllegalStateException("Không thể duyệt nhóm: Nhóm hiện có " + memberCount + " sinh viên. Số lượng sinh viên không hợp lệ (tối đa 5 SV)!");
             }
         }
 

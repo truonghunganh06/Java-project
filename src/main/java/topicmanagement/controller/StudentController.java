@@ -10,6 +10,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import topicmanagement.entity.*;
 import topicmanagement.service.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -66,6 +67,20 @@ public class StudentController {
         return user;
     }
 
+    /**
+     * Đồng bộ hóa danh sách thông báo trên toàn bộ các trang của Sinh viên (Topbar badge luôn nhất quán)
+     */
+    @ModelAttribute("announcements")
+    public List<Announcement> populateAnnouncements(HttpSession session) {
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return Collections.emptyList();
+        Student student = studentService.getStudentByUser(user);
+        Long deptId = (student != null && student.getDepartment() != null) ? student.getDepartment().getId() : null;
+        return deptId != null 
+                ? announcementService.getAnnouncementsForDepartment(deptId) 
+                : announcementService.getAllAnnouncements();
+    }
+
     @GetMapping("/dashboard")
     public String showDashboard(HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
@@ -73,8 +88,6 @@ public class StudentController {
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
-        Long deptId = student != null && student.getDepartment() != null ? student.getDepartment().getId() : null;
-        List<Announcement> announcements = announcementService.getAnnouncementsForDepartment(deptId);
         List<Submission> submissions = studentService.getGroupSubmissions(group);
         List<topicmanagement.dto.RegistrationDtos.InvitationResponseDto> myInvitations = groupRegistrationService.getMyPendingInvitations(user);
         List<RegistrationPeriod> activePeriods = studentService.getActivePeriodsForStudent(student);
@@ -83,7 +96,6 @@ public class StudentController {
         model.addAttribute("student", student);
         model.addAttribute("group", group);
         model.addAttribute("submissions", submissions);
-        model.addAttribute("announcements", announcements.stream().limit(5).toList());
         model.addAttribute("myInvitations", myInvitations);
         model.addAttribute("activePeriods", activePeriods);
 
@@ -99,17 +111,14 @@ public class StudentController {
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
-        Long deptId = student != null && student.getDepartment() != null ? student.getDepartment().getId() : null;
         List<RegistrationPeriod> activePeriods = studentService.getActivePeriodsForStudent(student);
         List<Submission> submissions = studentService.getGroupSubmissions(group);
-        List<Announcement> announcements = announcementService.getAnnouncementsForDepartment(deptId);
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
         model.addAttribute("group", group);
         model.addAttribute("activePeriods", activePeriods);
         model.addAttribute("submissions", submissions);
-        model.addAttribute("announcements", announcements.stream().limit(5).toList());
 
         return "student/schedule";
     }
@@ -407,27 +416,6 @@ public class StudentController {
             redirectAttributes.addFlashAttribute("successMessage", "Đã gửi yêu cầu hủy nhóm và đề tài lên GVHD! Vui lòng chờ GVHD phê duyệt.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
-
-        return "redirect:/student/group";
-    }
-
-    @PostMapping("/group/join")
-    public String joinGroup(
-            @RequestParam("groupCode") String groupCode,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
-
-        AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
-
-        Student student = studentService.getStudentByUser(user);
-        String err = studentService.joinGroupByCode(student, groupCode);
-
-        if (err != null) {
-            redirectAttributes.addFlashAttribute("errorMessage", err);
-        } else {
-            redirectAttributes.addFlashAttribute("successMessage", "Gia nhập nhóm thành công!");
         }
 
         return "redirect:/student/group";

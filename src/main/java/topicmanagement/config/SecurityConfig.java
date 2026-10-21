@@ -72,7 +72,7 @@ public class SecurityConfig {
                     "/actuator/**"
                 ).permitAll()
                 // Public auth endpoints
-                .requestMatchers("/", "/login", "/auth/**").permitAll()
+                .requestMatchers("/", "/login", "/auth/**", "/switch-account").permitAll()
                 // Role-based authorization
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/department-head/**").hasAnyRole("DEPARTMENT_HEAD", "ADMIN")

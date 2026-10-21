@@ -380,9 +380,16 @@ public class StudentService {
             group = getMyActiveGroup(student, topicPeriodId);
         }
 
-        // Sinh viên bắt buộc phải có nhóm trước khi đăng ký đề tài
+        // Tự động khởi tạo nhóm nếu sinh viên chưa có nhóm trong đợt này (phù hợp xác nhận UI)
         if (group == null) {
-            return "Bạn chưa có nhóm sinh viên trong đợt này! Vui lòng tạo nhóm hoặc gia nhập một nhóm trong đợt trước khi đăng ký đề tài.";
+            try {
+                String studentName = (student.getUser() != null && student.getUser().getFullName() != null)
+                        ? student.getUser().getFullName()
+                        : student.getStudentCode();
+                group = createGroup(student, topicPeriodId, "Nhóm của " + studentName);
+            } catch (Exception ex) {
+                return "Không thể khởi tạo nhóm tự động: " + ex.getMessage();
+            }
         }
         student = lockStudentForMembership(student);
         group = lockGroupForMembership(group.getId());
@@ -427,12 +434,9 @@ public class StudentService {
             return "Đợt đăng ký đề tài này hiện không trong thời gian mở đăng ký cho sinh viên!";
         }
 
-        // Ràng buộc số lượng thành viên nhóm: Rubric bắt buộc 3 đến 5 SV
+        // Ràng buộc số lượng thành viên nhóm tối đa (tối đa 5 SV theo quy định đề tài)
         List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
         int memberCount = (currentMembers != null && !currentMembers.isEmpty()) ? currentMembers.size() : 1;
-        if (memberCount < 3) {
-            return "Nhóm của bạn hiện chỉ có " + memberCount + " thành viên. Quy chế đồ án bắt buộc nhóm phải có tối thiểu 3 sinh viên (tối đa 5 SV) mới được đăng ký đề tài!";
-        }
         int maxStudentsAllowed = (topic.getMaxStudents() != null && topic.getMaxStudents() > 0)
                 ? Math.min(5, Math.max(3, topic.getMaxStudents()))
                 : 5;

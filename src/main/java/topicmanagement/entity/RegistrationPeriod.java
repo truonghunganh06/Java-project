@@ -236,14 +236,14 @@ public class RegistrationPeriod {
         OffsetDateTime now = OffsetDateTime.now();
         if (lecturerProposalStart != null && now.isBefore(lecturerProposalStart)) return false;
         if (lecturerProposalEnd != null && now.isAfter(lecturerProposalEnd)) return false;
-        return Boolean.TRUE.equals(isActive) && ("OPEN".equalsIgnoreCase(status) || "IN_PROGRESS".equalsIgnoreCase(status));
+        return Boolean.TRUE.equals(isActive) && !"CLOSED".equalsIgnoreCase(status);
     }
 
     public boolean isStudentRegistrationOpen() {
         OffsetDateTime now = OffsetDateTime.now();
         if (studentRegistrationStart != null && now.isBefore(studentRegistrationStart)) return false;
         if (studentRegistrationEnd != null && now.isAfter(studentRegistrationEnd)) return false;
-        return Boolean.TRUE.equals(isActive) && ("OPEN".equalsIgnoreCase(status) || "IN_PROGRESS".equalsIgnoreCase(status));
+        return Boolean.TRUE.equals(isActive) && !"CLOSED".equalsIgnoreCase(status);
     }
 
     public String getDisplayStatus() {

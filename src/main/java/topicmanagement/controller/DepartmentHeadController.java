@@ -574,7 +574,8 @@ public class DepartmentHeadController {
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
                 Math.max(0, page - 1), size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
 
-        org.springframework.data.domain.Page<Topic> topicsPage = departmentHeadService.getDepartmentTopicsPaged(dept != null ? dept.getId() : null, status, periodId, keyword, pageable);
+        // Nạp toàn bộ đề tài của khoa (để client-side chuyển đổi tab và lọc mượt mà, số liệu đồng bộ chính xác)
+        org.springframework.data.domain.Page<Topic> topicsPage = departmentHeadService.getDepartmentTopicsPaged(dept != null ? dept.getId() : null, null, periodId, keyword, pageable);
         List<Topic> topics = topicsPage.getContent();
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept != null ? dept.getId() : null);
         List<Lecturer> lecturers = departmentHeadService.getLecturersInDepartment(dept != null ? dept.getId() : null);
@@ -599,7 +600,7 @@ public class DepartmentHeadController {
         model.addAttribute("lecturers", lecturers);
         model.addAttribute("councils", councils);
         model.addAttribute("councilLecturerIdsMap", councilLecturerIdsMap);
-        model.addAttribute("selectedStatus", status);
+        model.addAttribute("selectedStatus", (status != null && !status.isBlank()) ? status.trim().toUpperCase() : "ALL");
         model.addAttribute("selectedPeriodId", periodId);
         model.addAttribute("keyword", keyword);
         model.addAttribute("stats", stats);
