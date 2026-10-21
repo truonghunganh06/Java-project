@@ -1,6 +1,6 @@
 -- =============================================================================
 -- TOPICHUB DATABASE SCHEMA - POSTGRESQL (NEON POOLED)
--- Chuẩn CSDL 18 Bảng Cốt Lõi (Đã loại bỏ triệt để bộ môn & chuyên ngành)
+-- Chuẩn CSDL 15 Bảng Cốt Lõi (Đã tinh gọn luồng nhóm và loại bỏ triệt để bộ môn & chuyên ngành)
 -- Quản trị tinh gọn theo Khoa (departments) - Tương thích 1:1 Spring Boot JPA
 -- =============================================================================
 
@@ -207,50 +207,11 @@ CREATE TABLE topic_registrations (
     approved_at                TIMESTAMP
 );
 
--- Bảng 14: group_invitations (Lời mời tham gia nhóm sinh viên)
-CREATE TABLE group_invitations (
-    id                         BIGSERIAL PRIMARY KEY,
-    group_id                   BIGINT REFERENCES student_groups(id) ON DELETE CASCADE,
-    student_id                 BIGINT REFERENCES students(id),
-    invited_by_student_id      BIGINT REFERENCES students(id),
-    status                     VARCHAR(50) DEFAULT 'INVITED',
-    rejection_reason           TEXT,
-    created_at                 TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    responded_at               TIMESTAMPTZ
-);
-
--- Bảng 15: group_leave_requests (Yêu cầu rời nhóm của sinh viên)
-CREATE TABLE group_leave_requests (
-    id                         BIGSERIAL PRIMARY KEY,
-    group_id                   BIGINT REFERENCES student_groups(id) ON DELETE CASCADE,
-    student_id                 BIGINT REFERENCES students(id),
-    reason                     TEXT,
-    status                     VARCHAR(50) DEFAULT 'PENDING',
-    resolved_by_lecturer_id    BIGINT REFERENCES lecturers(id),
-    rejection_reason           TEXT,
-    created_at                 TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    resolved_at                TIMESTAMPTZ
-);
-
--- Bảng 16: group_dissolve_requests (Yêu cầu giải tán nhóm của nhóm trưởng)
-CREATE TABLE group_dissolve_requests (
-    id                         BIGSERIAL PRIMARY KEY,
-    group_id                   BIGINT REFERENCES student_groups(id) ON DELETE CASCADE,
-    requested_by_student_id    BIGINT REFERENCES students(id),
-    topic_id                   BIGINT REFERENCES topics(id),
-    reason                     TEXT,
-    status                     VARCHAR(50) DEFAULT 'PENDING',
-    resolved_by_lecturer_id    BIGINT REFERENCES lecturers(id),
-    rejection_reason           TEXT,
-    created_at                 TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    resolved_at                TIMESTAMPTZ
-);
-
 -- =============================================================================
 -- 5. TIẾN ĐỘ, BÁO CÁO & ĐÁNH GIÁ (SUBMISSIONS & EVALUATIONS)
 -- =============================================================================
 
--- Bảng 17: submissions (Báo cáo tiến độ đề tài của nhóm)
+-- Bảng 14: submissions (Báo cáo tiến độ đề tài của nhóm)
 CREATE TABLE submissions (
     id                         BIGSERIAL PRIMARY KEY,
     topic_id                   BIGINT REFERENCES topics(id),
@@ -267,7 +228,7 @@ CREATE TABLE submissions (
     submitted_at               TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Bảng 18: evaluations (Chấm điểm đánh giá - Giảng viên phản biện & Hội đồng)
+-- Bảng 15: evaluations (Chấm điểm đánh giá - Giảng viên phản biện & Hội đồng)
 CREATE TABLE evaluations (
     id                         BIGSERIAL PRIMARY KEY,
     topic_id                   BIGINT NOT NULL REFERENCES topics(id),
@@ -279,6 +240,7 @@ CREATE TABLE evaluations (
     is_submitted               BOOLEAN DEFAULT false,
     evaluated_at               TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
 
 -- =============================================================================
 -- TỐI ƯU HÓA CHỈ MỤC (INDEXING FOR QUERY OPTIMIZATION)

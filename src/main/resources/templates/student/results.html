@@ -73,8 +73,8 @@
                         <div class="col-lg-8">
                             <div class="saas-card p-4 h-100">
                                 <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold mb-1.5 d-inline-block" th:text="${group.topic.code}">DT-01</span>
-                                <h2 class="text-base font-bold text-slate-900 mb-2" th:text="${group.topic.title}">Tên đề tài</h2>
-                                <p class="text-xs text-slate-500 mb-3"><i class="fa-solid fa-chalkboard-user me-1 text-slate-400"></i> GV Hướng dẫn: <strong class="text-slate-800" th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.user.fullName : 'N/A'}"></strong></p>
+                                <h2 class="text-base font-bold text-slate-900 mb-2 text-break" style="overflow-wrap: anywhere; word-break: break-word;" th:text="${group.topic.title}">Tên đề tài</h2>
+                                <p class="text-xs text-slate-500 mb-3 text-truncate"><i class="fa-solid fa-chalkboard-user me-1 text-slate-400"></i> GV Hướng dẫn: <strong class="text-slate-800" th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.user.fullName : 'N/A'}"></strong></p>
                                 
                                 <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Thành viên nhóm đạt kết quả:</h3>
                                 <div class="d-flex flex-wrap gap-2">
@@ -100,7 +100,7 @@
                                         <span class="score-pill score-high font-bold" th:text="${e.score != null ? #numbers.formatDecimal(e.score, 1, 1) + ' / 10' : '--'}">8.5 / 10</span>
                                     </div>
                                     <div class="text-xs font-semibold text-slate-900 mb-1" th:text="'Người chấm: ' + (${e.lecturer != null && e.lecturer.user != null ? e.lecturer.user.fullName : 'Giảng viên'})"></div>
-                                    <p class="text-xs text-slate-600 mb-0 leading-relaxed" style="white-space: pre-line;" th:text="${e.comments != null ? e.comments : 'Không có nhận xét thêm.'}"></p>
+                                    <p class="text-xs text-slate-600 mb-0 leading-relaxed text-break" style="white-space: pre-line; overflow-wrap: anywhere; word-break: break-word;" th:text="${e.comments != null ? e.comments : 'Không có nhận xét thêm.'}"></p>
                                 </div>
                             </div>
                         </div>

@@ -470,7 +470,10 @@
                         leaderCode: el.dataset.topicLeaderCode || el.dataset.leaderCode,
                         role: el.dataset.topicRole || el.dataset.role,
                         department: el.dataset.topicDepartment || el.dataset.department || '',
-                        hasGroupTopic: el.dataset.topicHasGroup === 'true'
+                        isTaken: el.dataset.topicIsTaken === 'true',
+                        isMyTopic: el.dataset.topicIsMyTopic === 'true',
+                        hasGroupTopic: el.dataset.topicHasGroupTopic === 'true' || el.dataset.topicHasGroup === 'true',
+                        groupTopicTitle: el.dataset.topicGroupTopicTitle || ''
                     };
 
                     // Nếu có topic ID, đồng bộ thêm từ REST API để đảm bảo thông tin luôn mới nhất
@@ -480,6 +483,10 @@
                             .then(apiData => {
                                 if (apiData) {
                                     apiData.role = data.role;
+                                    apiData.isMyTopic = data.isMyTopic;
+                                    apiData.isTaken = data.isTaken;
+                                    apiData.hasGroupTopic = data.hasGroupTopic;
+                                    apiData.groupTopicTitle = data.groupTopicTitle;
                                     renderTopicDrawer(apiData);
                                 }
                             })
@@ -668,16 +675,40 @@
                                 </form>
                             `;
                         }
-                        actionContainer.innerHTML = lecButtons;
-                    } else if (data.role === 'STUDENT' && data.status === 'APPROVED' && !data.hasGroupTopic) {
-                        actionContainer.innerHTML = `
-                            <form action="/student/topics/${data.id}/register" method="post" class="d-inline" onsubmit="return confirm('Xác nhận đăng ký đề tài này cho nhóm của bạn?');">
-                                <input type="hidden" name="${csrfParam}" value="${csrfToken}">
-                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm">
-                                    <i class="fa-solid fa-bookmark me-1"></i> Đăng ký ngay
-                                </button>
-                            </form>
-                        `;
+                    } else if (data.role === 'STUDENT') {
+                        if (data.isMyTopic) {
+                            actionContainer.innerHTML = `
+                                <a href="/student/my-topic" class="btn btn-sm btn-success rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm d-inline-flex align-items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-check"></i> Đề tài nhóm bạn đang làm →
+                                </a>
+                            `;
+                        } else if (data.isTaken) {
+                            actionContainer.innerHTML = `
+                                <span class="badge bg-rose-50 text-rose-700 border border-rose-200 text-xs px-3 py-1.5 rounded-xl font-medium d-inline-flex align-items-center gap-1.5">
+                                    <i class="fa-solid fa-lock"></i> Đề tài đã có nhóm khác đăng ký
+                                </span>
+                            `;
+                        } else if (data.hasGroupTopic) {
+                            actionContainer.innerHTML = `
+                                <div class="d-inline-flex align-items-center gap-2 flex-wrap">
+                                    <span class="badge bg-slate-100 text-slate-600 border border-slate-200 text-xs px-3 py-1.5 rounded-xl font-medium">
+                                        <i class="fa-solid fa-circle-info text-blue-500 me-1"></i> Nhóm đã có đề tài
+                                    </span>
+                                    <a href="/student/my-topic" class="btn btn-sm btn-outline-secondary rounded-xl px-2.5 py-1.5 text-xs">
+                                        Xem đề tài của nhóm
+                                    </a>
+                                </div>
+                            `;
+                        } else if (data.status === 'APPROVED') {
+                            actionContainer.innerHTML = `
+                                <form action="/student/topics/${data.id}/register" method="post" class="d-inline" onsubmit="return confirm('Xác nhận đăng ký đề tài này cho nhóm của bạn?');">
+                                    <input type="hidden" name="${csrfParam}" value="${csrfToken}">
+                                    <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm">
+                                        <i class="fa-solid fa-bookmark me-1"></i> Đăng ký ngay
+                                    </button>
+                                </form>
+                            `;
+                        }
                     }
                 }
 

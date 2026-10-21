@@ -1,6 +1,7 @@
 package topicmanagement.controller;
 
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -9,11 +10,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import topicmanagement.entity.*;
 import topicmanagement.service.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 @Controller
 @RequestMapping("/student")
+@PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
 public class StudentController {
 
     private final StudentService studentService;
@@ -64,6 +67,20 @@ public class StudentController {
         return user;
     }
 
+    /**
+     * Đồng bộ hóa danh sách thông báo trên toàn bộ các trang của Sinh viên (Topbar badge luôn nhất quán)
+     */
+    @ModelAttribute("announcements")
+    public List<Announcement> populateAnnouncements(HttpSession session) {
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return Collections.emptyList();
+        Student student = studentService.getStudentByUser(user);
+        Long deptId = (student != null && student.getDepartment() != null) ? student.getDepartment().getId() : null;
+        return deptId != null 
+                ? announcementService.getAnnouncementsForDepartment(deptId) 
+                : announcementService.getAllAnnouncements();
+    }
+
     @GetMapping("/dashboard")
     public String showDashboard(HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
@@ -71,8 +88,6 @@ public class StudentController {
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
-        Long deptId = student != null && student.getDepartment() != null ? student.getDepartment().getId() : null;
-        List<Announcement> announcements = announcementService.getAnnouncementsForDepartment(deptId);
         List<Submission> submissions = studentService.getGroupSubmissions(group);
         List<topicmanagement.dto.RegistrationDtos.InvitationResponseDto> myInvitations = groupRegistrationService.getMyPendingInvitations(user);
         List<RegistrationPeriod> activePeriods = studentService.getActivePeriodsForStudent(student);
@@ -81,7 +96,6 @@ public class StudentController {
         model.addAttribute("student", student);
         model.addAttribute("group", group);
         model.addAttribute("submissions", submissions);
-        model.addAttribute("announcements", announcements.stream().limit(5).toList());
         model.addAttribute("myInvitations", myInvitations);
         model.addAttribute("activePeriods", activePeriods);
 
@@ -97,17 +111,14 @@ public class StudentController {
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
-        Long deptId = student != null && student.getDepartment() != null ? student.getDepartment().getId() : null;
         List<RegistrationPeriod> activePeriods = studentService.getActivePeriodsForStudent(student);
         List<Submission> submissions = studentService.getGroupSubmissions(group);
-        List<Announcement> announcements = announcementService.getAnnouncementsForDepartment(deptId);
 
         model.addAttribute("user", user);
         model.addAttribute("student", student);
         model.addAttribute("group", group);
         model.addAttribute("activePeriods", activePeriods);
         model.addAttribute("submissions", submissions);
-        model.addAttribute("announcements", announcements.stream().limit(5).toList());
 
         return "student/schedule";
     }
@@ -176,13 +187,77 @@ public class StudentController {
         StudentGroup group = studentService.getMyActiveGroup(student, null);
 
         if (group == null || !group.isLeader(student)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Chỉ Nhóm trưởng mới có quyền mời thành viên!");
+            redirectAttributes.addFlashAttribute("errorMessage", "Chỉ Nhóm trưởng mới có quyền thêm thành viên vào nhóm!");
             return "redirect:/student/group";
         }
 
         try {
-            groupRegistrationService.sendInvitation(user, group.getId(), studentCode);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi lời mời tham gia nhóm tới sinh viên " + studentCode + "! Vui lòng chờ sinh viên chấp nhận.");
+            String error = studentService.inviteMemberByCode(group, studentCode);
+            if (error != null) {
+                redirectAttributes.addFlashAttribute("errorMessage", error);
+            } else {
+                redirectAttributes.addFlashAttribute("successMessage", "Đã thêm thành viên " + studentCode.trim() + " vào nhóm thành công!");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/student/group";
+    }
+
+    @PostMapping("/group/join")
+    public String joinGroupByCode(
+            @RequestParam("groupCode") String groupCode,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Student student = studentService.getStudentByUser(user);
+        if (student == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy hồ sơ sinh viên của bạn!");
+            return "redirect:/student/group";
+        }
+
+        try {
+            String error = studentService.joinGroupByCode(student, groupCode);
+            if (error != null) {
+                redirectAttributes.addFlashAttribute("errorMessage", error);
+            } else {
+                redirectAttributes.addFlashAttribute("successMessage", "Gia nhập nhóm thành công!");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/student/group";
+    }
+
+    @PostMapping("/group/remove-member")
+    public String removeMember(
+            @RequestParam("memberStudentId") Long memberStudentId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return "redirect:/login";
+
+        Student student = studentService.getStudentByUser(user);
+        StudentGroup group = studentService.getMyActiveGroup(student, null);
+
+        if (group == null || !group.isLeader(student)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Chỉ Nhóm trưởng mới có quyền xóa thành viên!");
+            return "redirect:/student/group";
+        }
+
+        try {
+            boolean success = studentService.removeMember(group, memberStudentId);
+            if (success) {
+                redirectAttributes.addFlashAttribute("successMessage", "Đã xóa thành viên khỏi nhóm thành công!");
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa thành viên này (hoặc nhóm đã đăng ký đề tài)!");
+            }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -201,7 +276,7 @@ public class StudentController {
 
         try {
             groupRegistrationService.acceptInvitation(user, invitationId);
-            redirectAttributes.addFlashAttribute("successMessage", "Bạn đã chấp nhận lời mời và gia nhập nhóm thành công!");
+            redirectAttributes.addFlashAttribute("successMessage", "Bạn đã gia nhập nhóm thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -346,57 +421,6 @@ public class StudentController {
         return "redirect:/student/group";
     }
 
-    @PostMapping("/group/join")
-    public String joinGroup(
-            @RequestParam("groupCode") String groupCode,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
-
-        AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
-
-        Student student = studentService.getStudentByUser(user);
-        String err = studentService.joinGroupByCode(student, groupCode);
-
-        if (err != null) {
-            redirectAttributes.addFlashAttribute("errorMessage", err);
-        } else {
-            redirectAttributes.addFlashAttribute("successMessage", "Gia nhập nhóm thành công!");
-        }
-
-        return "redirect:/student/group";
-    }
-
-    @PostMapping("/group/remove-member")
-    public String removeMember(
-            @RequestParam("studentId") Long studentId,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
-
-        AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
-
-        Student student = studentService.getStudentByUser(user);
-        StudentGroup group = studentService.getMyActiveGroup(student, null);
-
-        if (group == null || !group.isLeader(student)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Chỉ Nhóm trưởng mới có quyền xóa thành viên!");
-            return "redirect:/student/group";
-        }
-
-        if ("APPROVED".equalsIgnoreCase(group.getStatus()) || "REGISTERED".equalsIgnoreCase(group.getStatus())) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Nhóm đã ở trạng thái '" + group.getStatus() + "'. Thành viên muốn rút khỏi nhóm phải gửi 'Yêu cầu rút khỏi nhóm' để GVHD xét duyệt!");
-            return "redirect:/student/group";
-        }
-
-        boolean ok = studentService.removeMember(group, studentId);
-        if (ok) {
-            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa thành viên khỏi nhóm.");
-        } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa thành viên khỏi nhóm!");
-        }
-        return "redirect:/student/group";
-    }
 
     // ==================== TOPICS & REGISTRATION ====================
 

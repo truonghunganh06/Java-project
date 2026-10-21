@@ -34,6 +34,30 @@
                 <p class="text-xs text-slate-500 mb-0">Theo dõi tiến độ thực hiện đề tài. <span class="text-blue-600 font-semibold"><i class="fa-solid fa-crown text-amber-500 me-1"></i>Lưu ý quan trọng: CHỈ NHÓM TRƯỞNG MỚI ĐƯỢC PHÉP NỘP BÁO CÁO.</span></p>
             </div>
 
+            <!-- Banner Hướng dẫn Tiến độ khi đã nộp Báo cáo toàn văn (Vòng 4) -->
+            <div th:if="${submissions != null and !submissions.isEmpty() and #lists.contains(submissions.![submissionRound], 4)}"
+                 class="p-3 mb-4 rounded-xl d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3"
+                 style="background-color: #f0fdf4; border: 1px solid #bbf7d0;">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 44px; height: 44px; min-width: 44px; background-color: #16a34a; color: #ffffff; border-radius: 10px;" class="d-inline-flex align-items-center justify-content-center flex-shrink-0 shadow-sm">
+                        <i class="fa-solid fa-graduation-cap" style="font-size: 1.25rem;"></i>
+                    </div>
+                    <div style="line-height: 1.5;">
+                        <div style="font-size: 0.875rem; font-weight: 700; color: #14532d; margin-bottom: 0.25rem;">
+                            🎉 Nhóm đã nộp Báo cáo Toàn văn Khóa luận (Bản bảo vệ cuối kỳ)!
+                        </div>
+                        <div style="font-size: 0.8125rem; color: #15803d;">
+                            Đề tài đã hoàn thành giai đoạn làm việc và chuyển sang bước Đánh giá GVHD/GVPB &amp; Bảo vệ Hội đồng.
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-shrink-0">
+                    <a th:href="@{/student/dashboard}" class="btn btn-sm btn-dark" style="padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; white-space: nowrap;">
+                        <i class="fa-solid fa-chart-pie me-1"></i> Xem Thanh Tiến Độ →
+                    </a>
+                </div>
+            </div>
+
             <div class="row g-4 mb-4">
                 <!-- Left: Upload Form or Lock Warning -->
                 <div class="col-lg-5">
@@ -97,7 +121,7 @@
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-0"><i class="fa-solid fa-clock-rotate-left me-1 text-blue-600"></i> Lịch sử nộp bài của nhóm (<span th:text="${submissions.size()}"></span>)</h2>
                         </div>
-                        <div class="p-2.5 rounded-xl bg-blue-50/70 border border-blue-100 text-xs text-blue-800 mb-3">
+                        <div class="p-3 rounded-xl text-xs mb-3" style="background-color: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; line-height: 1.6;">
                             <i class="fa-solid fa-circle-info text-blue-600 me-1"></i> <strong>Lưu ý:</strong> Điểm tại đây là <strong>Điểm đánh giá tiến độ bài nộp định kỳ</strong> do GVHD nhận xét trong quá trình thực hiện đề tài. Điểm này độc lập với <strong>Điểm tổng kết cuối kỳ của đề tài</strong> (chỉ hiển thị tại mục Tra cứu kết quả sau khi Đợt đã công bố chính thức).
                         </div>
 
@@ -105,10 +129,10 @@
                             <table class="table table-saas mb-0">
                                 <thead>
                                     <tr>
-                                        <th scope="col">Vòng / Tiêu đề</th>
-                                        <th scope="col">Người nộp</th>
-                                        <th scope="col">Thời gian</th>
-                                        <th scope="col">Điểm tiến độ & Nhận xét</th>
+                                        <th scope="col" style="min-width: 170px;">Bài nộp &amp; Tệp</th>
+                                        <th scope="col" style="min-width: 110px;">Người nộp</th>
+                                        <th scope="col" style="min-width: 90px;">Thời gian</th>
+                                        <th scope="col" style="min-width: 130px;">Điểm tiến độ &amp; Góp ý</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -120,25 +144,25 @@
                                     <tr th:each="s : ${submissions}">
                                         <td>
                                             <span class="badge-pill-neutral font-semibold mb-1 d-inline-block text-xs" th:text="'Vòng ' + ${s.submissionRound}"></span>
-                                            <div class="font-semibold text-slate-900 text-xs line-clamp-1 mb-1" th:text="${s.title}">Tiêu đề bài nộp</div>
+                                            <div class="font-semibold text-slate-900 text-xs text-break mb-1" style="overflow-wrap: anywhere; word-break: break-word;" th:text="${s.title}">Tiêu đề bài nộp</div>
                                             <div>
-                                                <a th:href="@{'/student/submissions/' + ${s.id} + '/download'}" class="btn btn-sm bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg px-2 py-0.5 text-xs font-medium d-inline-flex align-items-center gap-1" title="Tải xuống tệp báo cáo">
-                                                    <i class="fa-solid fa-file-arrow-down text-blue-600 text-[11px]"></i> 
-                                                    <span th:text="${s.originalFileName != null ? s.originalFileName : 'Tải tệp đính kèm'}">Tải file</span>
+                                                <a th:href="@{'/student/submissions/' + ${s.id} + '/download'}" class="btn btn-sm bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg px-2 py-0.5 text-xs font-medium d-inline-flex align-items-center gap-1" style="max-width: 100%;" title="Tải xuống tệp báo cáo">
+                                                    <i class="fa-solid fa-file-arrow-down text-blue-600 text-[11px] flex-shrink-0"></i> 
+                                                    <span class="text-truncate d-inline-block" style="max-width: 130px;" th:text="${s.originalFileName != null ? s.originalFileName : 'Tải tệp đính kèm'}">Tải file</span>
                                                 </a>
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="font-medium text-slate-800 text-xs d-block" th:text="${s.submittedByStudent != null && s.submittedByStudent.user != null ? s.submittedByStudent.user.fullName : 'Leader'}"></span>
-                                            <span class="badge-pill-pending font-bold" style="font-size: 11px; padding: 2px 8px;">Nhóm trưởng</span>
+                                            <span class="font-medium text-slate-800 text-xs d-block text-truncate" style="max-width: 110px;" th:text="${s.submittedByStudent != null && s.submittedByStudent.user != null ? s.submittedByStudent.user.fullName : 'Leader'}"></span>
+                                            <span class="badge-pill-pending font-bold" style="font-size: 10px; padding: 1px 6px;">Nhóm trưởng</span>
                                         </td>
                                         <td>
-                                            <span class="text-slate-400 text-xs" th:text="${#temporals.format(s.submittedAt, 'dd/MM/yyyy HH:mm')}"></span>
+                                            <span class="text-slate-500 text-xs" th:text="${#temporals.format(s.submittedAt, 'dd/MM/yyyy HH:mm')}"></span>
                                         </td>
                                         <td>
                                             <div th:if="${s.grade != null}">
                                                 <span class="score-pill score-high" th:text="'Tiến độ: ' + ${s.grade} + ' / 10'"></span>
-                                                <span class="d-block text-slate-500 text-xs mt-1 line-clamp-2 italic" th:text="${s.feedback}"></span>
+                                                <span class="d-block text-slate-500 text-xs mt-1 text-break italic" style="overflow-wrap: anywhere; word-break: break-word;" th:text="${s.feedback}"></span>
                                             </div>
                                             <span th:unless="${s.grade != null}" class="badge-pill-pending text-xs">Chờ nhận xét</span>
                                         </td>

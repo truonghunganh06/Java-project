@@ -1,6 +1,10 @@
 package topicmanagement.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -14,15 +18,22 @@ public class AppUser {
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
+    @NotBlank(message = "Tên đăng nhập không được để trống")
+    @Size(max = 100, message = "Tên đăng nhập tối đa 100 ký tự")
     @Column(nullable = false, unique = true, length = 100)
     private String username;
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @NotBlank(message = "Email không được để trống")
+    @Email(message = "Email không đúng định dạng")
+    @Size(max = 150, message = "Email tối đa 150 ký tự")
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
+    @NotBlank(message = "Họ tên không được để trống")
+    @Size(max = 150, message = "Họ tên tối đa 150 ký tự")
     @Column(name = "full_name", nullable = false, length = 150)
     private String fullName;
 

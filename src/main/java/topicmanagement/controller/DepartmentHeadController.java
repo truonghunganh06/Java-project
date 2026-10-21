@@ -3,6 +3,7 @@ package topicmanagement.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import java.util.*;
 
 @Controller
 @RequestMapping("/department-head")
+@PreAuthorize("hasAnyRole('DEPARTMENT_HEAD', 'ADMIN')")
 public class DepartmentHeadController {
 
     private final DepartmentHeadService departmentHeadService;
@@ -333,6 +335,18 @@ public class DepartmentHeadController {
             return "redirect:/department-head/periods";
         }
 
+        // Ràng buộc nghiệp vụ theo Đề bài cuối kỳ:
+        // Chỉ đợt loại TLCN hoặc KLTN mới áp dụng Hạn nộp điểm GVPB (reviewerDeadline)
+        // Chỉ đợt loại KLTN mới có Ngày bảo vệ Hội đồng chính thức (defenseDate)
+        boolean isPeriodWithReviewer = "TLCN".equalsIgnoreCase(periodType) || "KLTN".equalsIgnoreCase(periodType);
+        boolean isPeriodWithDefense = "KLTN".equalsIgnoreCase(periodType);
+        if (!isPeriodWithReviewer) {
+            rDead = null; // MON_HOC và NCKH không có hạn GVPB riêng
+        }
+        if (!isPeriodWithDefense) {
+            dDate = null; // Chỉ KLTN mới có ngày báo cáo Hội đồng bảo vệ
+        }
+
         try {
             RegistrationPeriod savedPeriod = departmentHeadService.createPeriod(dept, name, periodType, academicYear, semester, pStart, pEnd, rStart, rEnd, rDead, dDate, minTopicsPerLecturer);
 
@@ -491,6 +505,14 @@ public class DepartmentHeadController {
             return "redirect:/department-head/periods";
         }
 
+        // Ràng buộc nghiệp vụ: chỉ TLCN/KLTN mới có reviewerDeadline; chỉ KLTN mới có defenseDate
+        if (!"TLCN".equalsIgnoreCase(periodType) && !"KLTN".equalsIgnoreCase(periodType)) {
+            rDead = null;
+        }
+        if (!"KLTN".equalsIgnoreCase(periodType)) {
+            dDate = null;
+        }
+
         RegistrationPeriod updated = departmentHeadService.updatePeriod(id, dept.getId(), name, periodType, academicYear, semester,
                 pStart, pEnd, rStart, rEnd, rDead, dDate, minTopicsPerLecturer, status);
 
@@ -552,7 +574,8 @@ public class DepartmentHeadController {
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
                 Math.max(0, page - 1), size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
 
-        org.springframework.data.domain.Page<Topic> topicsPage = departmentHeadService.getDepartmentTopicsPaged(dept != null ? dept.getId() : null, status, periodId, keyword, pageable);
+        // Nạp toàn bộ đề tài của khoa (để client-side chuyển đổi tab và lọc mượt mà, số liệu đồng bộ chính xác)
+        org.springframework.data.domain.Page<Topic> topicsPage = departmentHeadService.getDepartmentTopicsPaged(dept != null ? dept.getId() : null, null, periodId, keyword, pageable);
         List<Topic> topics = topicsPage.getContent();
         List<RegistrationPeriod> periods = departmentHeadService.getAllPeriods(dept != null ? dept.getId() : null);
         List<Lecturer> lecturers = departmentHeadService.getLecturersInDepartment(dept != null ? dept.getId() : null);
@@ -577,7 +600,7 @@ public class DepartmentHeadController {
         model.addAttribute("lecturers", lecturers);
         model.addAttribute("councils", councils);
         model.addAttribute("councilLecturerIdsMap", councilLecturerIdsMap);
-        model.addAttribute("selectedStatus", status);
+        model.addAttribute("selectedStatus", (status != null && !status.isBlank()) ? status.trim().toUpperCase() : "ALL");
         model.addAttribute("selectedPeriodId", periodId);
         model.addAttribute("keyword", keyword);
         model.addAttribute("stats", stats);

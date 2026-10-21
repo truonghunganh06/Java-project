@@ -44,12 +44,13 @@ public class SecurityConfig {
             public boolean matches(CharSequence rawPassword, String encodedPassword) {
                 if (rawPassword == null) return false;
                 String raw = rawPassword.toString();
+                // Rubric mục 3: Mật khẩu PHẢI được mã hóa BCrypt, tuyệt đối không cho phép plain-text
                 if (encodedPassword != null && (encodedPassword.startsWith("$2a$") || encodedPassword.startsWith("$2b$") || encodedPassword.startsWith("$2y$"))) {
                     try {
-                        if (bcrypt.matches(raw, encodedPassword)) return true;
+                        return bcrypt.matches(raw, encodedPassword);
                     } catch (Exception ignored) {}
                 }
-                return raw.equals(encodedPassword);
+                return false; // Từ chối mọi password không phải BCrypt hash
             }
         };
     }
@@ -71,7 +72,7 @@ public class SecurityConfig {
                     "/actuator/**"
                 ).permitAll()
                 // Public auth endpoints
-                .requestMatchers("/", "/login", "/auth/**").permitAll()
+                .requestMatchers("/", "/login", "/auth/**", "/switch-account").permitAll()
                 // Role-based authorization
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/department-head/**").hasAnyRole("DEPARTMENT_HEAD", "ADMIN")

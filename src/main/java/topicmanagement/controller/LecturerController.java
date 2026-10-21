@@ -1,6 +1,7 @@
 package topicmanagement.controller;
 
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -8,12 +9,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import topicmanagement.entity.*;
 import topicmanagement.service.*;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Controller
 @RequestMapping("/lecturer")
+@PreAuthorize("hasAnyRole('LECTURER', 'DEPARTMENT_HEAD', 'ADMIN')")
 public class LecturerController {
 
     private final LecturerService lecturerService;
@@ -53,6 +56,20 @@ public class LecturerController {
             return null;
         }
         return user;
+    }
+
+    /**
+     * Đồng bộ hóa danh sách thông báo trên toàn bộ các trang của Giảng viên (Topbar badge luôn nhất quán)
+     */
+    @ModelAttribute("announcements")
+    public List<Announcement> populateAnnouncements(HttpSession session) {
+        AppUser user = getAuthenticatedUser(session);
+        if (user == null) return Collections.emptyList();
+        Lecturer lecturer = lecturerService.getLecturerByUser(user);
+        Long deptId = (lecturer != null && lecturer.getDepartment() != null) ? lecturer.getDepartment().getId() : null;
+        return deptId != null 
+                ? announcementService.getAnnouncementsForDepartment(deptId) 
+                : announcementService.getAllAnnouncements();
     }
 
     @GetMapping("/dashboard")
@@ -101,7 +118,6 @@ public class LecturerController {
         model.addAttribute("rejectedTopics", rejectedTopics);
         model.addAttribute("submissions", submissions);
         model.addAttribute("totalSubmissions", submissions.size());
-        model.addAttribute("announcements", announcements.stream().limit(5).toList());
         model.addAttribute("totalTopics", topics.size());
         model.addAttribute("approvedTopics", approvedCount);
         model.addAttribute("pendingTopics", pendingCount);
@@ -127,7 +143,6 @@ public class LecturerController {
         Long deptId = (lecturer != null && lecturer.getDepartment() != null) ? lecturer.getDepartment().getId() : null;
         List<RegistrationPeriod> periods = lecturerService.getPeriodsForLecturer(lecturer);
         List<Submission> submissions = lecturerService.getSubmissionsByLecturer(lecturer);
-        List<Announcement> announcements = announcementService.getAnnouncementsForDepartment(deptId);
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
@@ -136,7 +151,6 @@ public class LecturerController {
         model.addAttribute("councils", councils);
         model.addAttribute("periods", periods);
         model.addAttribute("submissions", submissions);
-        model.addAttribute("announcements", announcements.stream().limit(5).toList());
 
         return "lecturer/schedule";
     }

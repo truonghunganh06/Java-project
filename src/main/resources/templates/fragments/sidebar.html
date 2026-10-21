@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,7 +21,8 @@
                 </button>
             </div>
             <nav class="workspace-navigation" aria-label="Chức năng">
-                <div th:if="${user != null &amp;&amp; user.role != null &amp;&amp; user.role.code == 'ADMIN'}">
+                <!-- Menu ADMIN — sec:authorize theo chuẩn Lab 4 Thymeleaf Security Dialect (Rubric mục 3) -->
+                <div sec:authorize="hasRole('ADMIN')">
                     <a th:href="@{/admin/dashboard}" class="workspace-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Tổng quan" aria-label="Tổng quan" th:attr="aria-current=${activePage == 'dashboard' ? 'page' : null}">
                         <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
                         <span>Tổng quan</span>
@@ -35,7 +36,8 @@
                         <span>Khoa đào tạo</span>
                     </a>
                 </div>
-                <div th:if="${user != null &amp;&amp; user.role != null &amp;&amp; user.role.code == 'DEPARTMENT_HEAD'}">
+                <!-- Menu TRƯỞNG KHOA — sec:authorize theo chuẩn Lab 4 Thymeleaf Security Dialect (Rubric mục 3) -->
+                <div sec:authorize="hasRole('DEPARTMENT_HEAD')">
                     <a th:href="@{/department-head/dashboard}" class="workspace-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Tổng quan" aria-label="Tổng quan" th:attr="aria-current=${activePage == 'dashboard' ? 'page' : null}">
                         <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
                         <span>Tổng quan</span>
@@ -71,7 +73,8 @@
                         <span>Thông báo</span>
                     </a>
                 </div>
-                <div th:if="${user != null &amp;&amp; user.role != null &amp;&amp; user.role.code == 'LECTURER'}">
+                <!-- Menu GIẢNG VIÊN — sec:authorize theo chuẩn Lab 4 Thymeleaf Security Dialect (Rubric mục 3) -->
+                <div sec:authorize="hasRole('LECTURER')">
                     <a th:href="@{/lecturer/dashboard}" class="workspace-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Tổng quan" aria-label="Tổng quan" th:attr="aria-current=${activePage == 'dashboard' ? 'page' : null}">
                         <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
                         <span>Tổng quan</span>
@@ -103,17 +106,13 @@
                         <span>Hội đồng</span>
                     </a>
                 </div>
-                <div th:if="${user != null &amp;&amp; user.role != null &amp;&amp; user.role.code == 'STUDENT'}">
+                <!-- Menu SINH VIÊN — Tinh gọn 5 mục cốt lõi theo đúng hành trình sinh viên -->
+                <div sec:authorize="hasRole('STUDENT')">
                     <a th:href="@{/student/dashboard}" class="workspace-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Tổng quan" aria-label="Tổng quan" th:attr="aria-current=${activePage == 'dashboard' ? 'page' : null}">
                         <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
                         <span>Tổng quan</span>
                     </a>
-                    <a th:href="@{/student/schedule}" class="workspace-link" th:classappend="${activePage == 'schedule' ? 'active' : ''}" title="Lịch công tác" aria-label="Lịch công tác" th:attr="aria-current=${activePage == 'schedule' ? 'page' : null}">
-                        <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
-                        <span>Lịch công tác</span>
-                    </a>
-                    <div class="workspace-section">Đề tài</div>
-                    <a th:href="@{/student/group}" class="workspace-link" th:classappend="${activePage == 'group' ? 'active' : ''}" title="Nhóm sinh viên" aria-label="Nhóm sinh viên" th:attr="aria-current=${activePage == 'group' ? 'page' : null}">
+                    <a th:href="@{/student/group}" class="workspace-link" th:classappend="${activePage == 'group' || activePage == 'my-topic' ? 'active' : ''}" title="Nhóm &amp; Đề tài" aria-label="Nhóm &amp; Đề tài" th:attr="aria-current=${activePage == 'group' || activePage == 'my-topic' ? 'page' : null}">
                         <i class="fa-solid fa-users" aria-hidden="true"></i>
                         <span>Nhóm sinh viên</span>
                     </a>
@@ -121,11 +120,6 @@
                         <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                         <span>Tra cứu đề tài</span>
                     </a>
-                    <a th:href="@{/student/my-topic}" class="workspace-link" th:classappend="${activePage == 'my-topic' ? 'active' : ''}" title="Đề tài của nhóm" aria-label="Đề tài của nhóm" th:attr="aria-current=${activePage == 'my-topic' ? 'page' : null}">
-                        <i class="fa-solid fa-book-open" aria-hidden="true"></i>
-                        <span>Đề tài của nhóm</span>
-                    </a>
-                    <div class="workspace-section">Theo dõi</div>
                     <a th:href="@{/student/submissions}" class="workspace-link" th:classappend="${activePage == 'submissions' ? 'active' : ''}" title="Nộp báo cáo" aria-label="Nộp báo cáo" th:attr="aria-current=${activePage == 'submissions' ? 'page' : null}">
                         <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
                         <span>Nộp báo cáo</span>

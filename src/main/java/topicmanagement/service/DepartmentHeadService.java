@@ -88,7 +88,7 @@ public class DepartmentHeadService {
         period.setMinTopicsPerLecturer(minTopicsPerLecturer != null ? minTopicsPerLecturer : 3);
         period.setMinStudents(3);
         period.setMaxStudents(5);
-        period.setStatus("ACTIVE");
+        period.setStatus("OPEN");
         period.setIsActive(true);
         period.setCreatedAt(OffsetDateTime.now());
 

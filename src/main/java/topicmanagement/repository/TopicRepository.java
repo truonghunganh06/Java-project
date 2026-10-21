@@ -73,11 +73,15 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
     List<Topic> findApprovedByPeriodId(@Param("periodId") Long periodId);
 
     @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
-    @Query("SELECT t FROM Topic t WHERE (:departmentId IS NULL OR (t.department IS NOT NULL AND t.department.id = :departmentId) OR (t.period IS NOT NULL AND t.period.department IS NOT NULL AND t.period.department.id = :departmentId) OR (t.supervisor IS NOT NULL AND t.supervisor.department IS NOT NULL AND t.supervisor.department.id = :departmentId)) " +
+    @Query(value = "SELECT t FROM Topic t WHERE (:departmentId IS NULL OR (t.department IS NOT NULL AND t.department.id = :departmentId) OR (t.period IS NOT NULL AND t.period.department IS NOT NULL AND t.period.department.id = :departmentId) OR (t.supervisor IS NOT NULL AND t.supervisor.department IS NOT NULL AND t.supervisor.department.id = :departmentId)) " +
            "AND (:status IS NULL OR :status = '' OR :status = 'ALL' OR t.status = :status) " +
            "AND (:periodId IS NULL OR (t.period IS NOT NULL AND t.period.id = :periodId)) " +
-           "AND (:keyword IS NULL OR :keyword = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(t.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR (t.supervisor.user.fullName IS NOT NULL AND LOWER(t.supervisor.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')))) " +
-           "ORDER BY CASE WHEN t.status = 'PENDING' THEN 0 ELSE 1 END, t.createdAt DESC")
+           "AND (:keyword IS NULL OR :keyword = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(t.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR (t.supervisor IS NOT NULL AND t.supervisor.user IS NOT NULL AND LOWER(t.supervisor.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')))) " +
+           "ORDER BY CASE WHEN t.status = 'PENDING' THEN 0 ELSE 1 END, t.createdAt DESC",
+           countQuery = "SELECT COUNT(t) FROM Topic t WHERE (:departmentId IS NULL OR (t.department IS NOT NULL AND t.department.id = :departmentId) OR (t.period IS NOT NULL AND t.period.department IS NOT NULL AND t.period.department.id = :departmentId) OR (t.supervisor IS NOT NULL AND t.supervisor.department IS NOT NULL AND t.supervisor.department.id = :departmentId)) " +
+           "AND (:status IS NULL OR :status = '' OR :status = 'ALL' OR t.status = :status) " +
+           "AND (:periodId IS NULL OR (t.period IS NOT NULL AND t.period.id = :periodId)) " +
+           "AND (:keyword IS NULL OR :keyword = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(t.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR (t.supervisor IS NOT NULL AND t.supervisor.user IS NOT NULL AND LOWER(t.supervisor.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))))")
     Page<Topic> findDepartmentTopicsPaged(
             @Param("departmentId") Long departmentId,
             @Param("status") String status,

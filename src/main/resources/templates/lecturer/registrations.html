@@ -134,16 +134,20 @@
                                          </div>
 
                                          <!-- Nút Chấm điểm quá trình (GVHD) khi nhóm đã được duyệt -->
-                                         <div th:if="${g.status == 'APPROVED' && g.topic != null}" class="d-flex align-items-center gap-1.5">
-                                             <span th:if="${g.topic.advisorScore != null}" class="score-pill score-high" th:text="${#numbers.formatDecimal(g.topic.advisorScore, 1, 1)} + ' đ'">8.5 đ</span>
+                                         <div th:if="${g.status == 'APPROVED' && g.topic != null}" class="d-flex flex-column align-items-end gap-1">
+                                             <div class="d-flex align-items-center gap-1.5">
+                                                 <span class="text-xs text-slate-500 font-medium">Đánh giá GVHD:</span>
+                                                 <span th:if="${g.topic.advisorScore != null}" class="score-pill score-high" th:text="${#numbers.formatDecimal(g.topic.advisorScore, 1, 1)} + ' đ'">8.5 đ</span>
+                                                 <span th:unless="${g.topic.advisorScore != null}" class="badge bg-slate-100 text-slate-400 border border-slate-200 text-xs px-2 py-0.5 rounded-md">Chưa chấm</span>
+                                             </div>
                                              <th:block th:if="${g.topic.isFinalized}">
                                                  <span class="badge-pill-approved font-semibold text-xs" title="Đã công bố kết quả điểm chính thức - Khóa sửa điểm">
                                                      <i class="fa-solid fa-lock me-1"></i>Đã công bố (Khóa điểm)
                                                  </span>
                                              </th:block>
                                              <th:block th:unless="${g.topic.isFinalized}">
-                                                 <button type="button" class="btn btn-sm btn-dark rounded-xl px-2.5 py-1 text-xs font-semibold" data-bs-toggle="modal" th:data-bs-target="'#gradeAdvisorModal-' + ${g.id}">
-                                                     <i class="fa-solid fa-pen-to-square me-1"></i> <span th:text="${g.topic.advisorScore != null ? 'Sửa điểm' : 'Chấm điểm GVHD'}">Chấm điểm GVHD</span>
+                                                 <button type="button" class="btn btn-sm btn-dark rounded-xl px-2.5 py-1 text-xs font-semibold" data-bs-toggle="modal" th:data-bs-target="'#gradeAdvisorModal-' + ${g.id}" title="Phiếu chấm điểm tổng kết quá trình của GVHD cho đề tài">
+                                                     <i class="fa-solid fa-pen-to-square me-1"></i> <span th:text="${g.topic.advisorScore != null ? 'Sửa phiếu điểm' : 'Nhập phiếu điểm GVHD'}">Nhập phiếu điểm GVHD</span>
                                                  </button>
                                              </th:block>
                                          </div>
