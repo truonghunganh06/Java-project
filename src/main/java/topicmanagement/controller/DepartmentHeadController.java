@@ -3,6 +3,7 @@ package topicmanagement.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import java.util.*;
 
 @Controller
 @RequestMapping("/department-head")
+@PreAuthorize("hasAnyRole('DEPARTMENT_HEAD', 'ADMIN')")
 public class DepartmentHeadController {
 
     private final DepartmentHeadService departmentHeadService;
@@ -333,6 +335,18 @@ public class DepartmentHeadController {
             return "redirect:/department-head/periods";
         }
 
+        // Ràng buộc nghiệp vụ theo Đề bài cuối kỳ:
+        // Chỉ đợt loại TLCN hoặc KLTN mới áp dụng Hạn nộp điểm GVPB (reviewerDeadline)
+        // Chỉ đợt loại KLTN mới có Ngày bảo vệ Hội đồng chính thức (defenseDate)
+        boolean isPeriodWithReviewer = "TLCN".equalsIgnoreCase(periodType) || "KLTN".equalsIgnoreCase(periodType);
+        boolean isPeriodWithDefense = "KLTN".equalsIgnoreCase(periodType);
+        if (!isPeriodWithReviewer) {
+            rDead = null; // MON_HOC và NCKH không có hạn GVPB riêng
+        }
+        if (!isPeriodWithDefense) {
+            dDate = null; // Chỉ KLTN mới có ngày báo cáo Hội đồng bảo vệ
+        }
+
         try {
             RegistrationPeriod savedPeriod = departmentHeadService.createPeriod(dept, name, periodType, academicYear, semester, pStart, pEnd, rStart, rEnd, rDead, dDate, minTopicsPerLecturer);
 
@@ -489,6 +503,14 @@ public class DepartmentHeadController {
             }
             redirectAttributes.addFlashAttribute("errorMessage", validationError);
             return "redirect:/department-head/periods";
+        }
+
+        // Ràng buộc nghiệp vụ: chỉ TLCN/KLTN mới có reviewerDeadline; chỉ KLTN mới có defenseDate
+        if (!"TLCN".equalsIgnoreCase(periodType) && !"KLTN".equalsIgnoreCase(periodType)) {
+            rDead = null;
+        }
+        if (!"KLTN".equalsIgnoreCase(periodType)) {
+            dDate = null;
         }
 
         RegistrationPeriod updated = departmentHeadService.updatePeriod(id, dept.getId(), name, periodType, academicYear, semester,

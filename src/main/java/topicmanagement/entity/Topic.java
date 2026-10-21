@@ -1,6 +1,8 @@
 package topicmanagement.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -44,9 +46,13 @@ public class Topic {
     @JoinColumn(name = "council_id")
     private Council council; // Hội đồng bảo vệ
 
+    @NotBlank(message = "Mã đề tài không được để trống")
+    @Size(max = 50, message = "Mã đề tài tối đa 50 ký tự")
     @Column(nullable = false, unique = true, length = 50)
     private String code;
 
+    @NotBlank(message = "Tựa đề tài không được để trống")
+    @Size(max = 255, message = "Tựa đề tài tối đa 255 ký tự")
     @Column(nullable = false, length = 255)
     private String title;
 

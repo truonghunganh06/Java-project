@@ -120,36 +120,25 @@
                                         <span th:if="${m.roleInGroup == 'MEMBER'}" class="badge-pill-neutral font-medium text-xs">
                                             Thành viên
                                         </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Lời mời đã gửi đang chờ (Sent Invitations) -->
-                            <div th:if="${group.isLeader(student) && sentInvitations != null && !sentInvitations.isEmpty()}" class="mb-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 d-block"><i class="fa-solid fa-clock-rotate-left text-blue-500 me-1"></i> Lời mời đã gửi đang chờ phản hồi (<span th:text="${sentInvitations.size()}"></span>)</span>
-                                <div class="divide-y divide-slate-200 rounded-lg overflow-hidden border border-slate-200 bg-white">
-                                    <div th:each="si : ${sentInvitations}" class="d-flex justify-content-between align-items-center p-2.5 text-xs">
-                                        <div>
-                                            <span class="font-semibold text-slate-900" th:text="${si.student != null && si.student.user != null ? si.student.user.fullName : 'Sinh viên'}"></span>
-                                            (<span class="text-slate-500" th:text="${si.student != null ? si.student.studentCode : ''}"></span>)
-                                            - <span class="badge bg-amber-50 text-amber-700 border border-amber-200 text-[10px]">Đang chờ</span>
-                                        </div>
-                                        <form th:action="@{'/student/group/invitations/' + ${si.id} + '/cancel'}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn thu hồi lời mời này?');">
-                                            <button type="submit" class="btn btn-sm btn-link text-rose-500 hover:text-rose-700 p-0 text-xs">Thu hồi</button>
+                                        <form th:if="${group.isLeader(student) && m.roleInGroup != 'LEADER' && group.status == 'DRAFT'}" th:action="@{/student/group/remove-member}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa thành viên này khỏi nhóm?');">
+                                            <input type="hidden" name="memberStudentId" th:value="${m.student.id}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger border-0 p-1 rounded-lg text-xs" title="Xóa khỏi nhóm" aria-label="Xóa khỏi nhóm">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
                                         </form>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Invite Member Form (Bắt tay 2 chiều - Only Leader and if < 3 members) -->
-                            <div th:if="${group.isLeader(student) && group.members.size() < 3}" class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 mb-4">
-                                <span class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 d-block"><i class="fa-solid fa-user-plus text-blue-600 me-1.5"></i> Mời thành viên bằng Mã Sinh Viên (Bắt tay 2 chiều)</span>
+                            <!-- Add Member Form (Direct Add by MSSV - Only Leader and if < max members) -->
+                            <div th:if="${group.isLeader(student) && group.members.size() < (group.period != null ? group.period.maxStudents : 5)}" class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 mb-4">
+                                <span class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 d-block"><i class="fa-solid fa-user-plus text-blue-600 me-1.5"></i> Thêm thành viên vào nhóm (Nhập MSSV)</span>
                                 <form th:action="@{/student/group/invite}" method="post" class="row g-2">
                                     <div class="col-sm-8">
                                         <input type="text" name="studentCode" class="form-control form-control-sm rounded-xl text-xs" placeholder="Nhập Mã sinh viên (ví dụ: student2, 2026002...)" required title="Nhập Mã sinh viên (ví dụ: student2, 2026002...)" aria-label="Nhập Mã sinh viên (ví dụ: student2, 2026002...)">
                                     </div>
                                     <div class="col-sm-4">
-                                        <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3 w-100 text-xs font-medium"><i class="fa-solid fa-paper-plane me-1"></i> Gửi lời mời</button>
+                                        <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3 w-100 text-xs font-medium"><i class="fa-solid fa-plus me-1"></i> Thêm vào nhóm</button>
                                     </div>
                                 </form>
                             </div>
@@ -333,7 +322,7 @@
                                     <i class="fa-solid fa-plus text-lg"></i>
                                 </div>
                                 <h2 class="text-base font-bold text-slate-900 mb-1">Tạo Nhóm Mới</h2>
-                                <p class="text-xs text-slate-500 mb-4">Bạn sẽ trở thành <strong>Nhóm trưởng (Leader)</strong>, có thể mời tối đa 2 bạn cùng làm đề tài qua luồng <strong>bắt tay 2 chiều</strong> và đại diện nhóm nộp bài báo cáo.</p>
+                                <p class="text-xs text-slate-500 mb-4">Bạn sẽ trở thành <strong>Nhóm trưởng (Leader)</strong>, có thể thêm trực tiếp các thành viên (nhập MSSV) hoặc gửi Mã nhóm cho bạn bè để cùng tham gia làm đề tài.</p>
                             </div>
                             
                             <form th:action="@{/student/group/create}" method="post">

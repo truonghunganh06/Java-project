@@ -1,6 +1,8 @@
 package topicmanagement.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -11,9 +13,13 @@ public class RegistrationPeriod {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Tên đợt đăng ký không được để trống")
+    @Size(max = 255, message = "Tên đợt tối đa 255 ký tự")
     @Column(nullable = false, length = 255)
     private String name;
 
+    @NotBlank(message = "Loại đợt đăng ký không được để trống")
+    @Size(max = 50)
     @Column(name = "period_type", nullable = false, length = 50)
     private String periodType; // MON_HOC, NCKH, TLCN, KLTN
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,7 +21,8 @@
                 </button>
             </div>
             <nav class="workspace-navigation" aria-label="Chức năng">
-                <div th:if="${user != null &amp;&amp; user.role != null &amp;&amp; user.role.code == 'ADMIN'}">
+                <!-- Menu ADMIN — sec:authorize theo chuẩn Lab 4 Thymeleaf Security Dialect (Rubric mục 3) -->
+                <div sec:authorize="hasRole('ADMIN')">
                     <a th:href="@{/admin/dashboard}" class="workspace-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Tổng quan" aria-label="Tổng quan" th:attr="aria-current=${activePage == 'dashboard' ? 'page' : null}">
                         <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
                         <span>Tổng quan</span>
@@ -35,7 +36,8 @@
                         <span>Khoa đào tạo</span>
                     </a>
                 </div>
-                <div th:if="${user != null &amp;&amp; user.role != null &amp;&amp; user.role.code == 'DEPARTMENT_HEAD'}">
+                <!-- Menu TRƯỞNG KHOA — sec:authorize theo chuẩn Lab 4 Thymeleaf Security Dialect (Rubric mục 3) -->
+                <div sec:authorize="hasRole('DEPARTMENT_HEAD')">
                     <a th:href="@{/department-head/dashboard}" class="workspace-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Tổng quan" aria-label="Tổng quan" th:attr="aria-current=${activePage == 'dashboard' ? 'page' : null}">
                         <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
                         <span>Tổng quan</span>
@@ -71,7 +73,8 @@
                         <span>Thông báo</span>
                     </a>
                 </div>
-                <div th:if="${user != null &amp;&amp; user.role != null &amp;&amp; user.role.code == 'LECTURER'}">
+                <!-- Menu GIẢNG VIÊN — sec:authorize theo chuẩn Lab 4 Thymeleaf Security Dialect (Rubric mục 3) -->
+                <div sec:authorize="hasRole('LECTURER')">
                     <a th:href="@{/lecturer/dashboard}" class="workspace-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Tổng quan" aria-label="Tổng quan" th:attr="aria-current=${activePage == 'dashboard' ? 'page' : null}">
                         <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
                         <span>Tổng quan</span>
@@ -103,7 +106,8 @@
                         <span>Hội đồng</span>
                     </a>
                 </div>
-                <div th:if="${user != null &amp;&amp; user.role != null &amp;&amp; user.role.code == 'STUDENT'}">
+                <!-- Menu SINH VIÊN — sec:authorize theo chuẩn Lab 4 Thymeleaf Security Dialect (Rubric mục 3) -->
+                <div sec:authorize="hasRole('STUDENT')">
                     <a th:href="@{/student/dashboard}" class="workspace-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}" title="Tổng quan" aria-label="Tổng quan" th:attr="aria-current=${activePage == 'dashboard' ? 'page' : null}">
                         <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
                         <span>Tổng quan</span>
