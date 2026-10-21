@@ -90,7 +90,7 @@
                             </tr>
                             <tr th:each="g : ${groups}" class="filterable-row cursor-pointer hover:bg-slate-50/80 transition"
                                 th:data-group-status="${g.topic == null ? 'unassigned' : (g.topic.finalScore != null ? 'scored' : (groupSubmissionsMap != null && groupSubmissionsMap.get(g.id) != null && !groupSubmissionsMap.get(g.id).isEmpty() ? 'submitted' : 'pending'))}"
-                                onclick="openGroupDetailDrawer(this)" tabindex="0" onkeydown="if (event.target === this &amp;&amp; (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
+                                onclick="openGroupDetailDrawer(this)" tabindex="0" onkeydown="if (event.target === this && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
                                 
                                 <!-- Cột 1: Nhóm (20%) -->
                                 <td class="align-middle py-3.5 px-4">

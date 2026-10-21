@@ -212,7 +212,7 @@
                                 th:data-rev-dead-iso="${p.reviewerDeadline != null ? #temporals.format(p.reviewerDeadline, 'yyyy-MM-dd') : ''}"
                                 th:data-defense-date-iso="${p.councilDefenseDate != null ? #temporals.format(p.councilDefenseDate, 'yyyy-MM-dd') : ''}"
                                 tabindex="0"
-                                onkeydown="if (event.target === this &amp;&amp; (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
+                                onkeydown="if (event.target === this && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
 
                                 <!-- Column 1: Info & Badges -->
                                 <td class="align-middle">
