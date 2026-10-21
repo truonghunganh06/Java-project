@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface StudentRepository extends JpaRepository<Student, Long> {
+    @Query(value = "SELECT * FROM students WHERE id = :id FOR UPDATE", nativeQuery = true)
+    Optional<Student> findForMembership(@Param("id") Long id);
     Optional<Student> findByUserId(Long userId);
     Optional<Student> findByStudentCode(String studentCode);
     

@@ -159,6 +159,7 @@ public class GroupRegistrationService {
     @Transactional(rollbackFor = Exception.class)
     public InvitationResponseDto acceptInvitation(AppUser user, Long invitationId) {
         Student student = getStudentFromUser(user);
+        student = studentService.lockStudentForMembership(student);
 
         GroupInvitation invitation = groupInvitationRepository.findById(invitationId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy lời mời ID=" + invitationId));
@@ -172,7 +173,7 @@ public class GroupRegistrationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Lời mời này không còn ở trạng thái chờ phản hồi (Status=" + invitation.getStatus() + ")!");
         }
 
-        StudentGroup group = invitation.getGroup();
+        StudentGroup group = studentService.lockGroupForMembership(invitation.getGroup().getId());
         RegistrationPeriod period = group.getPeriod();
         Long periodId = period != null ? period.getId() : null;
 
@@ -721,6 +722,14 @@ public class GroupRegistrationService {
 
         StudentGroup sourceGroup = getGroupById(sourceGroupId);
         StudentGroup targetGroup = getGroupById(targetGroupId);
+        Set<Long> studentIds = new TreeSet<>();
+        for (GroupMember member : groupMemberRepository.findByGroupId(sourceGroupId)) studentIds.add(member.getStudent().getId());
+        for (GroupMember member : groupMemberRepository.findByGroupId(targetGroupId)) studentIds.add(member.getStudent().getId());
+        for (Long id : studentIds) studentRepository.findForMembership(id).orElseThrow();
+        StudentGroup first = studentService.lockGroupForMembership(Math.min(sourceGroupId, targetGroupId));
+        StudentGroup second = studentService.lockGroupForMembership(Math.max(sourceGroupId, targetGroupId));
+        sourceGroup = sourceGroupId.equals(first.getId()) ? first : second;
+        targetGroup = targetGroupId.equals(first.getId()) ? first : second;
 
         // Kiểm tra quyền nếu là Giảng viên: phải là GVHD của một trong 2 nhóm
         if ("LECTURER".equalsIgnoreCase(role)) {
@@ -793,10 +802,10 @@ public class GroupRegistrationService {
         }
         groupRepository.save(targetGroup);
 
-        // 6. Xóa nhóm nguồn hoàn tất
+        // Giữ nhóm nguồn để bảo toàn lịch sử phiếu điểm.
         sourceGroup.setTopic(null);
         sourceGroup.setStatus("DISSOLVED");
-        groupRepository.delete(sourceGroup);
+        groupRepository.save(sourceGroup);
 
         System.out.println("[MERGE-GROUPS] Đã gộp thành công nhóm '" + sourceGroup.getGroupName() + "' vào nhóm '" + targetGroup.getGroupName()
                 + "'. Sĩ số nhóm đích hiện tại: " + newTargetCount + " SV.");

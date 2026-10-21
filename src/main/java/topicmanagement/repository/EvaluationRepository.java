@@ -28,8 +28,10 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
     List<Evaluation> findByGroupId(Long groupId);
 
     @EntityGraph(attributePaths = {"topic", "lecturer", "lecturer.user", "group"})
-    Optional<Evaluation> findByTopicIdAndLecturerIdAndEvaluationType(Long topicId, Long lecturerId, String evaluationType);
+    List<Evaluation> findByGroupIdIn(List<Long> groupIds);
 
     @EntityGraph(attributePaths = {"topic", "lecturer", "lecturer.user", "group"})
-    Optional<Evaluation> findByTopicIdAndLecturerId(Long topicId, Long lecturerId);
+    Optional<Evaluation> findByTopicIdAndGroupIdAndLecturerIdAndEvaluationType(
+            Long topicId, Long groupId, Long lecturerId, String evaluationType);
+
 }

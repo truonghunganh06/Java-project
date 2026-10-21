@@ -105,6 +105,14 @@ public class DepartmentHeadController {
             if (a.getAuthor() != null && user.getId().equals(a.getAuthor().getId())) {
                 continue;
             }
+
+            // Lọc bỏ thông báo nhắc hạn nộp đề xuất đề tài (chỉ dành cho Giảng viên hướng dẫn nộp đề xuất)
+            String titleLower = a.getTitle() != null ? a.getTitle().toLowerCase() : "";
+            if (titleLower.contains("hạn đề xuất") || titleLower.contains("đến hạn đề xuất") 
+                    || titleLower.contains("nộp đề xuất") || titleLower.contains("đã đến hạn")) {
+                continue;
+            }
+
             String authorName = a.getAuthor() != null ? a.getAuthor().getFullName() : "Ban Giám Hiệu";
             String dateStr = a.getCreatedAt() != null 
                     ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format(a.getCreatedAt()) 
@@ -667,7 +675,7 @@ public class DepartmentHeadController {
             return "redirect:/department-head/topics";
         }
 
-        boolean ok = councilService.assignReviewer(topicId, reviewerId);
+        boolean ok = councilService.assignReviewer(user, topicId, reviewerId);
         if (ok) {
             redirectAttributes.addFlashAttribute("successMessage", "Phân công Giảng viên phản biện thành công!");
         } else {
@@ -703,7 +711,7 @@ public class DepartmentHeadController {
             }
         }
 
-        boolean ok = councilService.assignTopicToCouncil(topicId, councilId);
+        boolean ok = councilService.assignTopicToCouncil(user, topicId, councilId);
         if (ok) {
             redirectAttributes.addFlashAttribute("successMessage", "Phân công đề tài vào Hội đồng bảo vệ thành công!");
         } else {
@@ -824,7 +832,9 @@ public class DepartmentHeadController {
         }
 
         try {
-            Council created = councilService.createCouncil(dept.getId(), periodId, code, name, location, parseDate(defenseDate), lecturerIds, roles, selectedTopicIds);
+            Council created = councilService.createCouncil(user, dept != null ? dept.getId() : null,
+                    periodId, code, name, location,
+                    parseDate(defenseDate), lecturerIds, roles, selectedTopicIds);
             int assignedCount = (selectedTopicIds != null ? selectedTopicIds.size() : 0);
             String successMsg = "Thành lập Hội đồng '" + name.trim() + "' thành công với " + lecturerIds.size() + " giảng viên";
             if (assignedCount > 0) {
@@ -859,11 +869,11 @@ public class DepartmentHeadController {
             return "redirect:/department-head/councils";
         }
 
-        int count = councilService.assignTopicsToCouncil(councilId, selectedTopicIds);
-        if (count > 0) {
+        try {
+            int count = councilService.assignTopicsToCouncil(user, councilId, selectedTopicIds);
             redirectAttributes.addFlashAttribute("successMessage", "Đã phân công thành công " + count + " đề tài/nhóm vào Hội đồng!");
-        } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể phân công đề tài do xung đột lợi ích với GVHD trong Hội đồng!");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/department-head/councils";
     }
@@ -880,7 +890,7 @@ public class DepartmentHeadController {
             return "redirect:/login";
         }
 
-        boolean ok = councilService.assignTopicToCouncil(topicId, councilId);
+        boolean ok = councilService.assignTopicToCouncil(user, topicId, councilId);
         if (ok) {
             redirectAttributes.addFlashAttribute("successMessage", "Đã phân công đề tài vào Hội đồng bảo vệ thành công!");
         } else {
@@ -901,8 +911,13 @@ public class DepartmentHeadController {
             return "redirect:/login";
         }
 
-        councilService.assignTopicToCouncil(topicId, null);
-        redirectAttributes.addFlashAttribute("successMessage", "Đã hủy phân công đề tài khỏi Hội đồng thành công!");
+        Topic topic = departmentHeadService.getTopicById(topicId);
+        if (topic == null || topic.getCouncil() == null || !Objects.equals(topic.getCouncil().getId(), councilId)
+                || !councilService.assignTopicToCouncil(user, topicId, null)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể hủy phân công: đề tài/hội đồng không thuộc phạm vi quản lý!");
+        } else {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã hủy phân công đề tài khỏi Hội đồng thành công!");
+        }
         return "redirect:/department-head/councils";
     }
 
@@ -977,11 +992,15 @@ public class DepartmentHeadController {
             return "redirect:/department-head/results";
         }
 
-        boolean ok = councilService.publishTopicResults(topicId, isFinalized);
-        if (ok) {
-            redirectAttributes.addFlashAttribute("successMessage", Boolean.TRUE.equals(isFinalized) ? "Đã công bố kết quả điểm số cho sinh viên và gửi email thông báo!" : "Đã chuyển về trạng thái dự thảo điểm.");
+        var result = councilService.publishTopicResults(topicId, isFinalized);
+        if (result.published() > 0) {
+            redirectAttributes.addFlashAttribute("successMessage", Boolean.TRUE.equals(isFinalized)
+                    ? "Đã công bố kết quả. Máy chủ email đã tiếp nhận " + result.sent() + " email."
+                    : "Đã chuyển về trạng thái dự thảo điểm.");
+            if (result.failed() > 0) redirectAttributes.addFlashAttribute("errorMessage",
+                    "Có " + result.failed() + " email chưa gửi được. Kiểm tra SMTP và địa chỉ người nhận; kết quả điểm đã được lưu.");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể công bố kết quả: Đề tài chưa hoàn tất đầy đủ các phiếu chấm bắt buộc theo quy chế đợt!");
+            redirectAttributes.addFlashAttribute("errorMessage", "Không có thay đổi: kết quả đã ở trạng thái yêu cầu hoặc đề tài chưa đủ phiếu chấm!");
         }
         return "redirect:/department-head/results";
     }
@@ -1006,11 +1025,13 @@ public class DepartmentHeadController {
         }
 
         Department dept = departmentHeadService.getDepartmentForUser(user);
-        int count = councilService.publishAllResults(dept != null ? dept.getId() : null, periodId, isFinalized);
+        var result = councilService.publishAllResults(dept != null ? dept.getId() : null, periodId, isFinalized);
         redirectAttributes.addFlashAttribute("successMessage",
                 Boolean.TRUE.equals(isFinalized)
-                ? "Đã công bố kết quả điểm chính thức cho toàn bộ " + count + " đề tài trong đợt!"
-                : "Đã chuyển " + count + " đề tài về trạng thái dự thảo điểm.");
+                ? "Đã công bố " + result.published() + " đề tài; máy chủ email đã tiếp nhận " + result.sent() + " email."
+                : "Đã chuyển " + result.published() + " đề tài về trạng thái dự thảo điểm.");
+        if (result.failed() > 0) redirectAttributes.addFlashAttribute("errorMessage",
+                "Có " + result.failed() + " email chưa gửi được. Kiểm tra SMTP và địa chỉ người nhận; kết quả điểm đã được lưu.");
         return "redirect:/department-head/results" + (periodId != null ? "?periodId=" + periodId : "");
     }
 
@@ -1194,8 +1215,11 @@ public class DepartmentHeadController {
             return "redirect:/login";
         }
 
-        announcementService.deleteAnnouncement(id);
-        redirectAttributes.addFlashAttribute("successMessage", "Đã xóa thông báo!");
+        if (announcementService.deleteAnnouncement(user, id)) {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa thông báo!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa: thông báo không tồn tại hoặc không thuộc khoa quản lý!");
+        }
         return "redirect:/department-head/announcements";
     }
 
@@ -1206,11 +1230,11 @@ public class DepartmentHeadController {
             return "redirect:/login";
         }
 
-        boolean ok = announcementService.togglePin(id);
+        boolean ok = announcementService.togglePin(user, id);
         if (ok) {
             redirectAttributes.addFlashAttribute("successMessage", "Đã thay đổi trạng thái ghim thông báo!");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy thông báo!");
+            redirectAttributes.addFlashAttribute("errorMessage", "Thông báo không tồn tại hoặc không thuộc khoa quản lý!");
         }
         return "redirect:/department-head/announcements";
     }

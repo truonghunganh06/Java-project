@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "evaluations")
+@Table(name = "evaluations", uniqueConstraints = @UniqueConstraint(
+        name = "uk_evaluation_group_lecturer_type",
+        columnNames = {"topic_id", "group_id", "lecturer_id", "evaluation_type"}))
 public class Evaluation {
 
     @Id
@@ -16,7 +18,7 @@ public class Evaluation {
     private Topic topic;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id")
+    @JoinColumn(name = "group_id", nullable = false)
     private StudentGroup group;
 
     @ManyToOne(fetch = FetchType.LAZY)

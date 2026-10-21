@@ -95,6 +95,7 @@ CREATE TABLE registration_periods (
 
 -- Bảng 7: announcements (Thông báo hệ thống / đợt)
 CREATE TABLE announcements (
+    event_key                  VARCHAR(255) UNIQUE,
     id                         BIGSERIAL PRIMARY KEY,
     department_id              BIGINT REFERENCES departments(id),
     period_id                  BIGINT REFERENCES registration_periods(id),
@@ -269,10 +270,10 @@ CREATE TABLE submissions (
 -- Bảng 18: evaluations (Chấm điểm đánh giá - Giảng viên phản biện & Hội đồng)
 CREATE TABLE evaluations (
     id                         BIGSERIAL PRIMARY KEY,
-    topic_id                   BIGINT REFERENCES topics(id),
-    group_id                   BIGINT REFERENCES student_groups(id),
-    lecturer_id                BIGINT REFERENCES lecturers(id),
-    evaluation_type            VARCHAR(50),
+    topic_id                   BIGINT NOT NULL REFERENCES topics(id),
+    group_id                   BIGINT NOT NULL REFERENCES student_groups(id),
+    lecturer_id                BIGINT NOT NULL REFERENCES lecturers(id),
+    evaluation_type            VARCHAR(50) NOT NULL,
     score                      DOUBLE PRECISION,
     comments                   TEXT,
     is_submitted               BOOLEAN DEFAULT false,
@@ -293,6 +294,9 @@ CREATE INDEX IF NOT EXISTS idx_topics_status ON topics(status);
 CREATE INDEX IF NOT EXISTS idx_councils_department_id ON councils(department_id);
 CREATE INDEX IF NOT EXISTS idx_student_groups_period_id ON student_groups(period_id);
 CREATE INDEX IF NOT EXISTS idx_student_groups_topic_id ON student_groups(topic_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_student_groups_topic ON student_groups(topic_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_evaluation_group_lecturer_type
+    ON evaluations(topic_id, group_id, lecturer_id, evaluation_type);
 CREATE INDEX IF NOT EXISTS idx_group_members_group_id ON group_members(group_id);
 CREATE INDEX IF NOT EXISTS idx_group_members_student_id ON group_members(student_id);
 CREATE INDEX IF NOT EXISTS idx_submissions_group_id ON submissions(group_id);

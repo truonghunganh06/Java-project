@@ -94,7 +94,12 @@
                 <!-- Right: Submissions History Table -->
                 <div class="col-lg-7">
                     <div class="saas-card p-4">
-                        <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3"><i class="fa-solid fa-clock-rotate-left me-1 text-blue-600"></i> Lịch sử nộp bài của nhóm (<span th:text="${submissions.size()}"></span>)</h2>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-0"><i class="fa-solid fa-clock-rotate-left me-1 text-blue-600"></i> Lịch sử nộp bài của nhóm (<span th:text="${submissions.size()}"></span>)</h2>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-blue-50/70 border border-blue-100 text-xs text-blue-800 mb-3">
+                            <i class="fa-solid fa-circle-info text-blue-600 me-1"></i> <strong>Lưu ý:</strong> Điểm tại đây là <strong>Điểm đánh giá tiến độ bài nộp định kỳ</strong> do GVHD nhận xét trong quá trình thực hiện đề tài. Điểm này độc lập với <strong>Điểm tổng kết cuối kỳ của đề tài</strong> (chỉ hiển thị tại mục Tra cứu kết quả sau khi Đợt đã công bố chính thức).
+                        </div>
 
                         <div class="table-responsive">
                             <table class="table table-saas mb-0">
@@ -103,7 +108,7 @@
                                         <th scope="col">Vòng / Tiêu đề</th>
                                         <th scope="col">Người nộp</th>
                                         <th scope="col">Thời gian</th>
-                                        <th scope="col">Điểm & Nhận xét</th>
+                                        <th scope="col">Điểm tiến độ & Nhận xét</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -132,7 +137,7 @@
                                         </td>
                                         <td>
                                             <div th:if="${s.grade != null}">
-                                                <span class="score-pill score-high" th:text="${s.grade} + ' / 10'"></span>
+                                                <span class="score-pill score-high" th:text="'Tiến độ: ' + ${s.grade} + ' / 10'"></span>
                                                 <span class="d-block text-slate-500 text-xs mt-1 line-clamp-2 italic" th:text="${s.feedback}"></span>
                                             </div>
                                             <span th:unless="${s.grade != null}" class="badge-pill-pending text-xs">Chờ nhận xét</span>

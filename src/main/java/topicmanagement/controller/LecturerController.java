@@ -432,6 +432,11 @@ public class LecturerController {
         AppUser user = getAuthenticatedUser(session);
         if (user == null) return "redirect:/login";
 
+        if (councilService.isTopicFinalized(topicId)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Đề tài đã công bố kết quả điểm số chính thức cho sinh viên! Điểm số đã bị khóa, yêu cầu Trưởng bộ môn/Khoa thu hồi công bố về trạng thái dự thảo trước khi chỉnh sửa.");
+            return "redirect:/lecturer/registrations";
+        }
+
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         boolean ok = councilService.submitEvaluation(topicId, lecturer.getId(), "SUPERVISOR", score, comments);
         if (ok) {
@@ -461,7 +466,7 @@ public class LecturerController {
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
-        model.addAttribute("reviewerTopics", reviewerTopics);
+        model.addAttribute("reviewTopics", reviewerTopics);
         model.addAttribute("existingEvaluationsMap", existingEvaluationsMap);
         model.addAttribute("periods", periods);
 
@@ -479,13 +484,18 @@ public class LecturerController {
         AppUser user = getAuthenticatedUser(session);
         if (user == null) return "redirect:/login";
 
+        if (councilService.isTopicFinalized(topicId)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Đề tài đã công bố kết quả điểm số chính thức cho sinh viên! Điểm số đã bị khóa, yêu cầu Trưởng bộ môn/Khoa thu hồi công bố về trạng thái dự thảo trước khi chỉnh sửa.");
+            return "redirect:/lecturer/reviews";
+        }
+
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         boolean ok = councilService.submitEvaluation(topicId, lecturer.getId(), "REVIEWER", score, comments);
 
         if (ok) {
             redirectAttributes.addFlashAttribute("successMessage", "Đã nộp điểm và nhận xét phản biện thành công!");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể chấm phản biện cho đề tài này (xung đột lợi ích)!");
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể chấm phản biện: kiểm tra phân công, thời hạn, trạng thái khóa và điểm hợp lệ!");
         }
 
         return "redirect:/lecturer/reviews";
@@ -534,13 +544,18 @@ public class LecturerController {
         AppUser user = getAuthenticatedUser(session);
         if (user == null) return "redirect:/login";
 
+        if (councilService.isTopicFinalized(topicId)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Đề tài đã công bố kết quả điểm số chính thức cho sinh viên! Điểm số đã bị khóa, yêu cầu Trưởng bộ môn/Khoa thu hồi công bố về trạng thái dự thảo trước khi chỉnh sửa.");
+            return "redirect:/lecturer/councils";
+        }
+
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         boolean ok = councilService.submitEvaluation(topicId, lecturer.getId(), "COUNCIL", score, comments);
 
         if (ok) {
             redirectAttributes.addFlashAttribute("successMessage", "Đã nộp phiếu chấm điểm Hội đồng thành công!");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "LỖI XUNG ĐỘT: Giảng viên không được chấm điểm đề tài mình đang hướng dẫn!");
+            redirectAttributes.addFlashAttribute("errorMessage", "LỖI: Không thể chấm điểm đề tài (xung đột lợi ích GVHD hoặc đề tài đã khóa điểm)!");
         }
 
         return "redirect:/lecturer/councils";

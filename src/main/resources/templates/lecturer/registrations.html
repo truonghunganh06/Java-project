@@ -136,10 +136,16 @@
                                          <!-- Nút Chấm điểm quá trình (GVHD) khi nhóm đã được duyệt -->
                                          <div th:if="${g.status == 'APPROVED' && g.topic != null}" class="d-flex align-items-center gap-1.5">
                                              <span th:if="${g.topic.advisorScore != null}" class="score-pill score-high" th:text="${#numbers.formatDecimal(g.topic.advisorScore, 1, 1)} + ' đ'">8.5 đ</span>
-                                             <button type="button" class="btn btn-sm btn-dark rounded-xl px-2.5 py-1 text-xs font-semibold" data-bs-toggle="modal" th:data-bs-target="'#gradeAdvisorModal-' + ${g.id}">
-                                                 <i class="fa-solid fa-pen-to-square me-1"></i> <span th:text="${g.topic.advisorScore != null ? 'Sửa điểm' : 'Chấm điểm GVHD'}">Chấm điểm GVHD</span>
-                                             </button>
-
+                                             <th:block th:if="${g.topic.isFinalized}">
+                                                 <span class="badge-pill-approved font-semibold text-xs" title="Đã công bố kết quả điểm chính thức - Khóa sửa điểm">
+                                                     <i class="fa-solid fa-lock me-1"></i>Đã công bố (Khóa điểm)
+                                                 </span>
+                                             </th:block>
+                                             <th:block th:unless="${g.topic.isFinalized}">
+                                                 <button type="button" class="btn btn-sm btn-dark rounded-xl px-2.5 py-1 text-xs font-semibold" data-bs-toggle="modal" th:data-bs-target="'#gradeAdvisorModal-' + ${g.id}">
+                                                     <i class="fa-solid fa-pen-to-square me-1"></i> <span th:text="${g.topic.advisorScore != null ? 'Sửa điểm' : 'Chấm điểm GVHD'}">Chấm điểm GVHD</span>
+                                                 </button>
+                                             </th:block>
                                          </div>
                                      </div>
                                  </td>
@@ -165,6 +171,9 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
                         </div>
                         <div class="modal-body p-4 space-y-3">
+                            <div th:if="${g.topic.isFinalized}" class="alert alert-warning text-xs p-2.5 rounded-xl border border-amber-200">
+                                <i class="fa-solid fa-lock text-amber-600 me-1"></i> <strong>Đã công bố điểm:</strong> Đề tài đã công bố kết quả cho sinh viên. Vui lòng liên hệ Trưởng bộ môn/Khoa thu hồi công bố trước khi sửa điểm.
+                            </div>
                             <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
                                 <div class="text-xs text-slate-500">Đề tài: <strong class="text-slate-900" th:text="${g.topic.title}">Tên đề tài</strong></div>
                                 <div class="text-xs text-slate-500">Nhóm SV: <strong class="text-slate-900" th:text="${g.groupName}">Tên nhóm</strong></div>
@@ -173,17 +182,17 @@
 
                             <div>
                                 <label class="form-label text-xs font-semibold text-slate-700">Điểm quá trình GVHD (Thang 10) <span class="text-rose-600">*</span></label>
-                                <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" th:value="${g.topic.advisorScore}" placeholder="vd: 8.5" required title="Điểm quá trình GVHD (Thang 10)" aria-label="Điểm quá trình GVHD (Thang 10)">
+                                <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" th:value="${g.topic.advisorScore}" th:disabled="${g.topic.isFinalized}" placeholder="vd: 8.5" required title="Điểm quá trình GVHD (Thang 10)" aria-label="Điểm quá trình GVHD (Thang 10)">
                             </div>
 
                             <div>
                                 <label class="form-label text-xs font-semibold text-slate-700">Nhận xét quá trình thực hiện & thái độ</label>
-                                <textarea name="comments" class="form-control text-xs rounded-xl" rows="3" placeholder="Nhập nhận xét về tinh thần làm việc, tiến độ hoàn thành..." title="Nhận xét quá trình thực hiện &amp; thái độ" aria-label="Nhận xét quá trình thực hiện &amp; thái độ"></textarea>
+                                <textarea name="comments" class="form-control text-xs rounded-xl" rows="3" th:disabled="${g.topic.isFinalized}" placeholder="Nhập nhận xét về tinh thần làm việc, tiến độ hoàn thành..." title="Nhận xét quá trình thực hiện &amp; thái độ" aria-label="Nhận xét quá trình thực hiện &amp; thái độ"></textarea>
                             </div>
                         </div>
                         <div class="modal-footer border-t border-slate-100 p-3">
                             <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Đóng</button>
-                            <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu phiếu chấm GVHD</button>
+                            <button type="submit" th:disabled="${g.topic.isFinalized}" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu phiếu chấm GVHD</button>
                         </div>
                     </form>
                 </div>

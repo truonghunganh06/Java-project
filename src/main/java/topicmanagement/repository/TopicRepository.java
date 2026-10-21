@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TopicRepository extends JpaRepository<Topic, Long> {
+    @Query(value = "SELECT * FROM topics WHERE id = :id FOR UPDATE", nativeQuery = true)
+    Optional<Topic> findForPublication(@Param("id") Long id);
 
     @EntityGraph(attributePaths = {"department", "supervisor", "supervisor.user", "coSupervisor", "coSupervisor.user", "reviewer", "reviewer.user", "period", "council"})
     @Override

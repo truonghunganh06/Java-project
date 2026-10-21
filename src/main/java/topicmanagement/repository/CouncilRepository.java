@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CouncilRepository extends JpaRepository<Council, Long> {
+    @Query(value = "SELECT * FROM councils WHERE id = :id FOR UPDATE", nativeQuery = true)
+    Optional<Council> findForUpdate(@Param("id") Long id);
 
     @EntityGraph(attributePaths = {"department", "period", "members", "members.lecturer", "members.lecturer.user"})
     @Override
