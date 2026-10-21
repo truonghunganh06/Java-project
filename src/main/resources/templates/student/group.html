@@ -173,6 +173,9 @@
                                             <button th:if="${!group.isLeader(student)}" type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3 text-xs font-medium" data-bs-toggle="modal" data-bs-target="#modalLeaveRequest">
                                                 <i class="fa-solid fa-envelope-open-text me-1"></i> Xin rút khỏi nhóm (EC-02)
                                             </button>
+                                            <button th:if="${group.isLeader(student) && group.members.size() > 1}" type="button" class="btn btn-sm btn-outline-secondary rounded-xl px-3 text-xs font-medium" data-bs-toggle="modal" data-bs-target="#modalTransferLeadership">
+    <i class="fa-solid fa-arrow-right-arrow-left me-1"></i> Chuyển quyền Trưởng nhóm
+</button>
 
                                             <!-- Leader: Dissolve Request to Supervisor (EC-03) -->
                                             <button th:if="${group.isLeader(student)}" type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3 text-xs font-medium" data-bs-toggle="modal" data-bs-target="#modalDissolveRequest">
