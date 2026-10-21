@@ -130,18 +130,37 @@ public class StudentService {
             return list.isEmpty() ? null : list.get(0);
         }
 
-        // Case 2: Khong co periodId — tim nhom trong dot dang hoat dong nhat
+        // Case 2: Khong co periodId — tim nhom qua 3 tang uu tien
         List<StudentGroup> allMyGroups = groupRepository.findByStudentId(student.getId());
         if (allMyGroups.isEmpty()) return null;
+        
 
-        // Uu tien: nhom trong dot dang mo dang ky (isActive + OPEN/IN_PROGRESS)
+        // Tang 1: Trong cac nhom cua sinh vien, loc nhom co topic khac null VA status khac DISSOLVED.
+        // Neu co it nhat 1 nhom nhu vay thi tra ve nhom tot nhat (uu tien dot active + OPEN/IN_PROGRESS truoc, sau do createdAt moi nhat)
+        Optional<StudentGroup> groupWithTopic = allMyGroups.stream()
+                .filter(g -> g.getTopic() != null && !"DISSOLVED".equalsIgnoreCase(g.getStatus()))
+                .max(Comparator
+                        .comparing((StudentGroup g) -> {
+                            RegistrationPeriod p = g.getPeriod();
+                            return p != null
+                                    && Boolean.TRUE.equals(p.getIsActive())
+                                    && ("OPEN".equalsIgnoreCase(p.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(p.getStatus()));
+                        })
+                        .thenComparing(StudentGroup::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())));
+
+        if (groupWithTopic.isPresent()) {
+            return groupWithTopic.get();
+        }
+
+        // Tang 2: Neu khong nhom nao co de tai, giu nguyen luat hien tai
+        // (nhom thuoc dot isActive va OPEN/IN_PROGRESS co period id lon nhat)
         return allMyGroups.stream()
                 .filter(g -> g.getPeriod() != null
                         && Boolean.TRUE.equals(g.getPeriod().getIsActive())
                         && ("OPEN".equalsIgnoreCase(g.getPeriod().getStatus())
                             || "IN_PROGRESS".equalsIgnoreCase(g.getPeriod().getStatus())))
                 .max(Comparator.comparing(g -> g.getPeriod().getId()))
-                // Fallback: nhom gan nhat (theo created time)
+                // Tang 3 (Fallback): giu nguyen nhu cu (nhom co createdAt moi nhat)
                 .orElseGet(() -> allMyGroups.stream()
                         .max(Comparator.comparing(StudentGroup::getCreatedAt,
                                 Comparator.nullsLast(Comparator.naturalOrder())))
@@ -373,15 +392,48 @@ public class StudentService {
             return "Đề tài không tồn tại hoặc chưa được duyệt!";
         }
 
-        Long topicPeriodId = (topic.getPeriod() != null) ? topic.getPeriod().getId() : null;
+        if (topic.getPeriod() == null) {
+            return "Đề tài chưa thuộc đợt đăng ký nào, không thể đăng ký!";
+        }
+
+        Long topicPeriodId = topic.getPeriod().getId();
 
         // Nếu nhóm truyền vào là null, tìm nhóm của sinh viên trong đợt của đề tài
         if (group == null) {
             group = getMyActiveGroup(student, topicPeriodId);
         }
 
-        // Tự động khởi tạo nhóm nếu sinh viên chưa có nhóm trong đợt này (phù hợp xác nhận UI)
+        // Tự động khởi tạo nhóm CHỈ khi sinh viên chưa có nhóm ở bất kỳ đợt nào
         if (group == null) {
+            // Thay đổi 1: Kiểm tra nếu sinh viên đã có nhóm khác chưa bị DISSOLVED ở đợt khác thì không tự tạo nhóm
+            List<StudentGroup> allMyGroups = groupRepository.findByStudentId(student.getId());
+            final Long topicPeriodIdFinal = topicPeriodId;
+
+            Optional<StudentGroup> otherPeriodGroup = allMyGroups.stream()
+                    .filter(g -> !"DISSOLVED".equalsIgnoreCase(g.getStatus()))
+                    .filter(g -> g.getPeriod() != null && !Objects.equals(g.getPeriod().getId(), topicPeriodIdFinal))
+                    .max(Comparator.comparing((StudentGroup g) -> {
+                                RegistrationPeriod p = g.getPeriod();
+                                return p != null && Boolean.TRUE.equals(p.getIsActive())
+                                        && ("OPEN".equalsIgnoreCase(p.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(p.getStatus()));
+                            })
+                            .thenComparing(g -> g.getTopic() != null)
+                            .thenComparing(StudentGroup::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())));
+
+            if (otherPeriodGroup.isPresent()) {
+                StudentGroup existingGroup = otherPeriodGroup.get();
+                String existingPeriodName = (existingGroup.getPeriod() != null && existingGroup.getPeriod().getName() != null)
+                        ? existingGroup.getPeriod().getName()
+                        : "khác";
+                String topicPeriodName = (topic.getPeriod() != null && topic.getPeriod().getName() != null)
+                        ? topic.getPeriod().getName()
+                        : "";
+                return "Nhóm của bạn đang thuộc đợt " + existingPeriodName
+                        + ", không thể đăng ký đề tài thuộc đợt " + topicPeriodName
+                        + ". Mỗi đợt sử dụng một nhóm riêng — vui lòng tạo nhóm trong đợt " + topicPeriodName
+                        + " trước khi đăng ký!";
+            }
+
             try {
                 String studentName = (student.getUser() != null && student.getUser().getFullName() != null)
                         ? student.getUser().getFullName()
@@ -405,11 +457,13 @@ public class StudentService {
         }
         if (!"APPROVED".equalsIgnoreCase(topic.getStatus())) return "Đề tài chưa được duyệt!";
 
-        // Ràng buộc khớp đợt đăng ký giữa nhóm và đề tài
-        if (group.getPeriod() != null && topic.getPeriod() != null
-                && !Objects.equals(group.getPeriod().getId(), topic.getPeriod().getId())) {
-            return "Nhóm sinh viên thuộc đợt '" + group.getPeriod().getName()
-                    + "', không thể đăng ký đề tài của đợt '" + topic.getPeriod().getName() + "'!";
+        // Thay đổi 2: Ràng buộc khớp đợt đăng ký giữa nhóm và đề tài (siết chặt null)
+        if (group.getPeriod() == null || !Objects.equals(group.getPeriod().getId(), topic.getPeriod().getId())) {
+            String groupPeriodName = (group.getPeriod() != null && group.getPeriod().getName() != null)
+                    ? "'" + group.getPeriod().getName() + "'"
+                    : "'chưa xác định'";
+            return "Nhóm sinh viên thuộc đợt " + groupPeriodName
+                    + ", không thể đăng ký đề tài của đợt '" + topic.getPeriod().getName() + "'!";
         }
 
         // GLOBAL VALIDATION: Chặn tuyệt đối đề tài khác Khoa
@@ -434,9 +488,12 @@ public class StudentService {
             return "Đợt đăng ký đề tài này hiện không trong thời gian mở đăng ký cho sinh viên!";
         }
 
-        // Ràng buộc số lượng thành viên nhóm tối đa (tối đa 5 SV theo quy định đề tài)
+        // Thay đổi 3: Ràng buộc số lượng thành viên nhóm tối thiểu 2 SV, tối đa theo quy định đề tài
         List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
         int memberCount = (currentMembers != null && !currentMembers.isEmpty()) ? currentMembers.size() : 1;
+        if (memberCount < 2) {
+            return "Nhóm cần tối thiểu 2 thành viên mới được đăng ký đề tài (hiện có " + memberCount + "). Vui lòng thêm thành viên vào nhóm bằng MSSV trước khi đăng ký!";
+        }
         int maxStudentsAllowed = (topic.getMaxStudents() != null && topic.getMaxStudents() > 0)
                 ? Math.min(5, Math.max(3, topic.getMaxStudents()))
                 : 5;

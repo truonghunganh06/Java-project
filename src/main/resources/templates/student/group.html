@@ -150,7 +150,7 @@
                                     
                                     <div class="d-flex flex-wrap gap-2">
                                         <!-- Case DRAFT -->
-                                        <div th:if="${group.status == 'DRAFT'}">
+                                        <div th:if="${group.status == 'DRAFT' || group.status == 'REJECTED'}">
                                             <!-- Member: Leave freely -->
                                             <form th:if="${!group.isLeader(student)}" th:action="@{/student/group/draft-leave}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn rời khỏi nhóm này?');">
                                                 <input type="hidden" name="groupId" th:value="${group.id}">
@@ -201,7 +201,7 @@
 
                                 <div class="d-grid gap-2 mt-2">
                                     <a th:href="@{/student/my-topic}" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 text-xs font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-circle-info me-1 text-blue-600"></i> Chi tiết đề tài</a>
-                                    <a th:href="@{/student/submissions}" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-medium"><i class="fa-solid fa-file-arrow-up me-1"></i> Nộp báo cáo tiến độ</a>
+                                    <a th:if="${group.status == 'APPROVED'}" th:href="@{/student/submissions}" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-medium"><i class="fa-solid fa-file-arrow-up me-1"></i> Nộp báo cáo tiến độ</a>
                                 </div>
                             </div>
                             <div th:if="${group.topic == null}" class="text-center py-3 text-slate-400 text-xs">
