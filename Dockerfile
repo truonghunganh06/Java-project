@@ -17,4 +17,4 @@ COPY --from=builder /app/target/*.jar app.jar
 ENV PORT=8080
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-Dserver.port=${PORT}", "-Dspring.thymeleaf.prefix=classpath:/templates/", "-Dspring.web.resources.static-locations=classpath:/static/", "-Xmx512m", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Dserver.port=${PORT}", "-Dspring.thymeleaf.prefix=classpath:/templates/", "-Dspring.web.resources.static-locations=classpath:/static/", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
