@@ -28,16 +28,16 @@
                 role="alert">
                 <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span
                     th:text="${successMessage}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"
-                    style="padding: 0.6rem 0.8rem;" aria-label="Đóng" title="Đóng"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.6rem 0.8rem;"
+                    aria-label="Đóng" title="Đóng"></button>
             </div>
             <div th:if="${errorMessage}"
                 class="alert alert-danger alert-dismissible fade show rounded-2xl mb-3 py-2 px-3.5 text-xs font-medium border border-rose-200"
                 role="alert">
                 <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span
                     th:text="${errorMessage}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"
-                    style="padding: 0.6rem 0.8rem;" aria-label="Đóng" title="Đóng"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.6rem 0.8rem;"
+                    aria-label="Đóng" title="Đóng"></button>
             </div>
 
             <!-- Clean Compact Page Header -->
@@ -136,14 +136,17 @@
                     <div class="relative flex-grow-1" style="min-width: 220px; max-width: 360px;">
                         <input type="text" id="periodSearchInput"
                             class="form-control form-control-sm rounded-xl pl-7 text-xs"
-                            placeholder="Tìm kiếm đợt, năm học..." onkeyup="applyAllPeriodFilters()" title="Tìm kiếm đợt, năm học..." aria-label="Tìm kiếm đợt, năm học...">
-                        <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-2xs"></i>
+                            placeholder="Tìm kiếm đợt, năm học..." onkeyup="applyAllPeriodFilters()"
+                            title="Tìm kiếm đợt, năm học..." aria-label="Tìm kiếm đợt, năm học...">
+                        <i
+                            class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-2xs"></i>
                     </div>
 
                     <!-- Right: Filters and Count Badge -->
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <select id="periodTypeSelectFilter" class="form-select form-select-sm rounded-xl text-xs"
-                            style="width: 155px;" onchange="applyAllPeriodFilters()" title="periodTypeSelectFilter" aria-label="periodTypeSelectFilter">
+                            style="width: 155px;" onchange="applyAllPeriodFilters()" title="periodTypeSelectFilter"
+                            aria-label="periodTypeSelectFilter">
                             <option value="all">-- Loại đợt --</option>
                             <option value="KLTN">Khóa luận tốt nghiệp</option>
                             <option value="TLCN">Tiểu luận chuyên ngành</option>
@@ -151,7 +154,8 @@
                             <option value="MON_HOC">Đồ án môn học</option>
                         </select>
                         <select id="periodStatusSelectFilter" class="form-select form-select-sm rounded-xl text-xs"
-                            style="width: 155px;" onchange="applyAllPeriodFilters()" title="periodStatusSelectFilter" aria-label="periodStatusSelectFilter">
+                            style="width: 155px;" onchange="applyAllPeriodFilters()" title="periodStatusSelectFilter"
+                            aria-label="periodStatusSelectFilter">
                             <option value="all">-- Trạng thái --</option>
                             <option value="PROPOSAL_OPEN">Đang mở ĐX (GV)</option>
                             <option value="REGISTRATION_OPEN">Đang mở ĐK (SV)</option>
@@ -186,15 +190,12 @@
                                     Chưa có đợt đăng ký nào. Nhấn <strong>Tạo đợt mới</strong> để bắt đầu.
                                 </td>
                             </tr>
-                            <tr th:each="p : ${periods}" class="period-row cursor-pointer hover:bg-slate-50/80 transition-colors"
-                                onclick="openPeriodActionModal(this)"
-                                th:data-period-id="${p.id}"
-                                th:data-period-name="${p.name}"
-                                th:data-period-type="${p.periodType}"
-                                th:data-academic-year="${p.academicYear}"
-                                th:data-semester="${p.semester}"
-                                th:data-status="${p.status}"
-                                th:data-display-status="${p.displayStatus}"
+                            <tr th:each="p : ${periods}"
+                                class="period-row cursor-pointer hover:bg-slate-50/80 transition-colors"
+                                onclick="openPeriodActionModal(this)" th:data-period-id="${p.id}"
+                                th:data-period-name="${p.name}" th:data-period-type="${p.periodType}"
+                                th:data-academic-year="${p.academicYear}" th:data-semester="${p.semester}"
+                                th:data-status="${p.status}" th:data-display-status="${p.displayStatus}"
                                 th:data-min-students="${p.minStudents != null ? p.minStudents : 1}"
                                 th:data-max-students="${p.maxStudents != null ? p.maxStudents : 3}"
                                 th:data-min-topics="${p.minTopicsPerLecturer != null ? p.minTopicsPerLecturer : 3}"
@@ -209,7 +210,9 @@
                                 th:data-reg-start-iso="${p.studentRegistrationStart != null ? #temporals.format(p.studentRegistrationStart, 'yyyy-MM-dd') : ''}"
                                 th:data-reg-end-iso="${p.studentRegistrationEnd != null ? #temporals.format(p.studentRegistrationEnd, 'yyyy-MM-dd') : ''}"
                                 th:data-rev-dead-iso="${p.reviewerDeadline != null ? #temporals.format(p.reviewerDeadline, 'yyyy-MM-dd') : ''}"
-                                th:data-defense-date-iso="${p.councilDefenseDate != null ? #temporals.format(p.councilDefenseDate, 'yyyy-MM-dd') : ''}" tabindex="0" onkeydown="if (event.target === this &amp;&amp; (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
+                                th:data-defense-date-iso="${p.councilDefenseDate != null ? #temporals.format(p.councilDefenseDate, 'yyyy-MM-dd') : ''}"
+                                tabindex="0"
+                                onkeydown="if (event.target === this &amp;&amp; (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
 
                                 <!-- Column 1: Info & Badges -->
                                 <td class="align-middle">
@@ -230,7 +233,8 @@
                                             học</span>
 
                                         <!-- Integrated Status Badge -->
-                                        <span th:if="${p.status == 'CLOSED'}" class="badge-pill-rejected font-semibold text-[10px] py-0.5 px-1.5">
+                                        <span th:if="${p.status == 'CLOSED'}"
+                                            class="badge-pill-rejected font-semibold text-[10px] py-0.5 px-1.5">
                                             <i class="fa-solid fa-lock text-[9px]"></i> Đã đóng
                                         </span>
                                         <th:block th:if="${p.status == 'OPEN'}">
@@ -264,7 +268,8 @@
                                             </span>
                                             <span th:if="${p.displayStatus == 'COMPLETED'}"
                                                 class="badge-pill-neutral font-semibold text-slate-500 bg-slate-100 border-slate-200 text-[10px] py-0.5 px-1.5">
-                                                <i class="fa-solid fa-circle-check text-[9px] text-slate-400"></i> Kết thúc
+                                                <i class="fa-solid fa-circle-check text-[9px] text-slate-400"></i> Kết
+                                                thúc
                                             </span>
                                         </th:block>
                                     </div>
@@ -399,14 +404,10 @@
                     </div>
                     <div th:each="p : ${periods}"
                         class="period-card bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition duration-200 p-3.5 cursor-pointer hover:border-blue-300"
-                        onclick="openPeriodActionModal(this)"
-                        th:data-period-id="${p.id}"
-                        th:data-period-name="${p.name}"
-                        th:data-period-type="${p.periodType}"
-                        th:data-academic-year="${p.academicYear}"
-                        th:data-semester="${p.semester}"
-                        th:data-status="${p.status}"
-                        th:data-display-status="${p.displayStatus}"
+                        onclick="openPeriodActionModal(this)" th:data-period-id="${p.id}"
+                        th:data-period-name="${p.name}" th:data-period-type="${p.periodType}"
+                        th:data-academic-year="${p.academicYear}" th:data-semester="${p.semester}"
+                        th:data-status="${p.status}" th:data-display-status="${p.displayStatus}"
                         th:data-min-students="${p.minStudents != null ? p.minStudents : 1}"
                         th:data-max-students="${p.maxStudents != null ? p.maxStudents : 3}"
                         th:data-min-topics="${p.minTopicsPerLecturer != null ? p.minTopicsPerLecturer : 3}"
@@ -566,7 +567,8 @@
                         </div>
 
                         <!-- Card Footer -->
-                        <div class="pt-2 border-t border-slate-100 d-flex align-items-center justify-content-between text-xs text-slate-400">
+                        <div
+                            class="pt-2 border-t border-slate-100 d-flex align-items-center justify-content-between text-xs text-slate-400">
                             <span class="d-inline-flex align-items-center gap-1">
                                 <i class="fa-regular fa-calendar-check text-slate-400"></i> Xem 4 mốc thời gian
                             </span>
@@ -587,112 +589,164 @@
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
                 <!-- Header -->
-                <div class="modal-header bg-slate-50 border-bottom border-slate-100 p-3.5 d-flex align-items-center justify-content-between">
+                <div
+                    class="modal-header bg-slate-50 border-bottom border-slate-100 p-3.5 d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center gap-3 min-w-0 flex-grow-1">
-                        <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 d-inline-flex align-items-center justify-content-center text-lg flex-shrink-0 shadow-2xs">
+                        <div
+                            class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 d-inline-flex align-items-center justify-content-center text-lg flex-shrink-0 shadow-2xs">
                             <i class="fa-solid fa-calendar-check"></i>
                         </div>
                         <div class="min-w-0 flex-grow-1">
                             <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                                <span class="badge bg-slate-200 text-slate-800 font-mono text-xs px-2 py-0.5 rounded font-semibold" id="modalPeriodCode">RP-1</span>
-                                <span class="badge-pill-neutral font-semibold text-xs" id="modalPeriodTypeBadge">Khóa luận</span>
+                                <span
+                                    class="badge bg-slate-200 text-slate-800 font-mono text-xs px-2 py-0.5 rounded font-semibold"
+                                    id="modalPeriodCode">RP-1</span>
+                                <span class="badge-pill-neutral font-semibold text-xs" id="modalPeriodTypeBadge">Khóa
+                                    luận</span>
                                 <span id="modalPeriodStatusBadge"></span>
                             </div>
-                            <h5 class="modal-title font-bold text-slate-900 text-sm md:text-base mb-0 leading-snug" style="word-break: break-word;" id="modalPeriodTitle">Tên đợt đăng ký</h5>
+                            <h5 class="modal-title font-bold text-slate-900 text-sm md:text-base mb-0 leading-snug"
+                                style="word-break: break-word;" id="modalPeriodTitle">Tên đợt đăng ký</h5>
                         </div>
                     </div>
-                    <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                    <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" aria-label="Đóng"
+                        title="Đóng"></button>
                 </div>
-                
+
                 <!-- Body -->
                 <div class="modal-body p-4 space-y-4">
                     <!-- Academic specs summary: Equal height Bootstrap cards -->
                     <div class="row g-2.5 mb-2">
                         <div class="col-6 col-md-3">
-                            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 d-flex flex-column justify-content-between h-100 shadow-2xs">
-                                <span class="text-slate-400 text-[10px] font-semibold uppercase tracking-wider d-block">Năm học</span>
-                                <strong class="font-bold text-slate-800 mt-1 break-words text-xs d-block" id="modalPeriodYear">2026-2027</strong>
+                            <div
+                                class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 d-flex flex-column justify-content-between h-100 shadow-2xs">
+                                <span
+                                    class="text-slate-400 text-[10px] font-semibold uppercase tracking-wider d-block">Năm
+                                    học</span>
+                                <strong class="font-bold text-slate-800 mt-1 break-words text-xs d-block"
+                                    id="modalPeriodYear">2026-2027</strong>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
-                            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 d-flex flex-column justify-content-between h-100 shadow-2xs">
-                                <span class="text-slate-400 text-[10px] font-semibold uppercase tracking-wider d-block">Học kỳ</span>
-                                <strong class="font-bold text-slate-800 mt-1 break-words text-xs d-block" id="modalPeriodSemester">Học kỳ 1</strong>
+                            <div
+                                class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 d-flex flex-column justify-content-between h-100 shadow-2xs">
+                                <span
+                                    class="text-slate-400 text-[10px] font-semibold uppercase tracking-wider d-block">Học
+                                    kỳ</span>
+                                <strong class="font-bold text-slate-800 mt-1 break-words text-xs d-block"
+                                    id="modalPeriodSemester">Học kỳ 1</strong>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
-                            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 d-flex flex-column justify-content-between h-100 shadow-2xs">
-                                <span class="text-slate-400 text-[10px] font-semibold uppercase tracking-wider d-block">Quy mô nhóm</span>
-                                <strong class="font-bold text-slate-800 mt-1 break-words text-xs d-block" id="modalPeriodStudents">2 - 3 SV</strong>
+                            <div
+                                class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 d-flex flex-column justify-content-between h-100 shadow-2xs">
+                                <span
+                                    class="text-slate-400 text-[10px] font-semibold uppercase tracking-wider d-block">Quy
+                                    mô nhóm</span>
+                                <strong class="font-bold text-slate-800 mt-1 break-words text-xs d-block"
+                                    id="modalPeriodStudents">2 - 3 SV</strong>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
-                            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 d-flex flex-column justify-content-between h-100 shadow-2xs">
-                                <span class="text-slate-400 text-[10px] font-semibold uppercase tracking-wider d-block">Chỉ tiêu đề tài</span>
-                                <strong class="font-bold text-slate-800 mt-1 break-words text-xs d-block" id="modalPeriodMinTopics">Tối thiểu 3 ĐT/GV</strong>
+                            <div
+                                class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 d-flex flex-column justify-content-between h-100 shadow-2xs">
+                                <span
+                                    class="text-slate-400 text-[10px] font-semibold uppercase tracking-wider d-block">Chỉ
+                                    tiêu đề tài</span>
+                                <strong class="font-bold text-slate-800 mt-1 break-words text-xs d-block"
+                                    id="modalPeriodMinTopics">Tối thiểu 3 ĐT/GV</strong>
                             </div>
                         </div>
                     </div>
 
                     <!-- 4 Milestones Timeline -->
                     <div>
-                        <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2.5 d-flex align-items-center gap-1.5">
+                        <h6
+                            class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2.5 d-flex align-items-center gap-1.5">
                             <i class="fa-solid fa-timeline text-blue-600"></i> Tiến trình 4 mốc thời gian:
                         </h6>
                         <div class="space-y-2">
                             <!-- Mốc 1 -->
-                            <div class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between gap-3 shadow-2xs">
+                            <div
+                                class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between gap-3 shadow-2xs">
                                 <div class="d-flex align-items-center gap-3 min-w-0">
-                                    <span class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 d-inline-flex align-items-center justify-content-center text-xs font-bold flex-shrink-0" id="actionCircle1">1</span>
+                                    <span
+                                        class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 d-inline-flex align-items-center justify-content-center text-xs font-bold flex-shrink-0"
+                                        id="actionCircle1">1</span>
                                     <div class="min-w-0">
-                                        <div class="font-semibold text-slate-800 text-xs leading-snug">Giảng viên đề xuất đề tài</div>
-                                        <div class="text-slate-400 text-[11px] mt-0.5 text-truncate">Khoảng thời gian giảng viên nộp đề cương</div>
+                                        <div class="font-semibold text-slate-800 text-xs leading-snug">Giảng viên đề
+                                            xuất đề tài</div>
+                                        <div class="text-slate-400 text-[11px] mt-0.5 text-truncate">Khoảng thời gian
+                                            giảng viên nộp đề cương</div>
                                     </div>
                                 </div>
                                 <div class="text-end flex-shrink-0">
-                                    <span class="badge bg-slate-50 border border-slate-200 text-slate-700 font-mono text-xs px-2.5 py-1.5 rounded-lg font-medium d-inline-flex align-items-center" id="modalPropRange">--</span>
+                                    <span
+                                        class="badge bg-slate-50 border border-slate-200 text-slate-700 font-mono text-xs px-2.5 py-1.5 rounded-lg font-medium d-inline-flex align-items-center"
+                                        id="modalPropRange">--</span>
                                 </div>
                             </div>
 
                             <!-- Mốc 2 -->
-                            <div class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between gap-3 shadow-2xs">
+                            <div
+                                class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between gap-3 shadow-2xs">
                                 <div class="d-flex align-items-center gap-3 min-w-0">
-                                    <span class="w-8 h-8 rounded-full bg-emerald-600 text-white shadow-xs d-inline-flex align-items-center justify-content-center text-xs font-bold flex-shrink-0" id="actionCircle2">2</span>
+                                    <span
+                                        class="w-8 h-8 rounded-full bg-emerald-600 text-white shadow-xs d-inline-flex align-items-center justify-content-center text-xs font-bold flex-shrink-0"
+                                        id="actionCircle2">2</span>
                                     <div class="min-w-0">
-                                        <div class="font-semibold text-slate-800 text-xs leading-snug">Sinh viên đăng ký nguyện vọng</div>
-                                        <div class="text-slate-400 text-[11px] mt-0.5 text-truncate">Các nhóm sinh viên chọn đề tài và chờ duyệt</div>
+                                        <div class="font-semibold text-slate-800 text-xs leading-snug">Sinh viên đăng ký
+                                            nguyện vọng</div>
+                                        <div class="text-slate-400 text-[11px] mt-0.5 text-truncate">Các nhóm sinh viên
+                                            chọn đề tài và chờ duyệt</div>
                                     </div>
                                 </div>
                                 <div class="text-end flex-shrink-0">
-                                    <span class="badge bg-slate-50 border border-slate-200 text-slate-700 font-mono text-xs px-2.5 py-1.5 rounded-lg font-medium d-inline-flex align-items-center" id="modalRegRange">--</span>
+                                    <span
+                                        class="badge bg-slate-50 border border-slate-200 text-slate-700 font-mono text-xs px-2.5 py-1.5 rounded-lg font-medium d-inline-flex align-items-center"
+                                        id="modalRegRange">--</span>
                                 </div>
                             </div>
 
                             <!-- Mốc 3 -->
-                            <div class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between gap-3 shadow-2xs">
+                            <div
+                                class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between gap-3 shadow-2xs">
                                 <div class="d-flex align-items-center gap-3 min-w-0">
-                                    <span class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 border border-slate-200 d-inline-flex align-items-center justify-content-center text-xs font-bold flex-shrink-0" id="actionCircle3">3</span>
+                                    <span
+                                        class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 border border-slate-200 d-inline-flex align-items-center justify-content-center text-xs font-bold flex-shrink-0"
+                                        id="actionCircle3">3</span>
                                     <div class="min-w-0">
-                                        <div class="font-semibold text-slate-800 text-xs leading-snug">Hạn chót chấm Giảng viên Phản biện</div>
-                                        <div class="text-slate-400 text-[11px] mt-0.5 text-truncate">Hạn GVPB nộp phiếu đánh giá phản biện</div>
+                                        <div class="font-semibold text-slate-800 text-xs leading-snug">Hạn chót chấm
+                                            Giảng viên Phản biện</div>
+                                        <div class="text-slate-400 text-[11px] mt-0.5 text-truncate">Hạn GVPB nộp phiếu
+                                            đánh giá phản biện</div>
                                     </div>
                                 </div>
                                 <div class="text-end flex-shrink-0">
-                                    <span class="badge bg-slate-50 border border-slate-200 text-purple-700 font-mono text-xs px-2.5 py-1.5 rounded-lg font-medium d-inline-flex align-items-center" id="modalRevDead">--</span>
+                                    <span
+                                        class="badge bg-slate-50 border border-slate-200 text-purple-700 font-mono text-xs px-2.5 py-1.5 rounded-lg font-medium d-inline-flex align-items-center"
+                                        id="modalRevDead">--</span>
                                 </div>
                             </div>
 
                             <!-- Mốc 4 -->
-                            <div class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between gap-3 shadow-2xs">
+                            <div
+                                class="p-3 bg-white rounded-xl border border-slate-200/80 d-flex align-items-center justify-content-between gap-3 shadow-2xs">
                                 <div class="d-flex align-items-center gap-3 min-w-0">
-                                    <span class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 border border-slate-200 d-inline-flex align-items-center justify-content-center text-xs font-bold flex-shrink-0" id="actionCircle4">4</span>
+                                    <span
+                                        class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 border border-slate-200 d-inline-flex align-items-center justify-content-center text-xs font-bold flex-shrink-0"
+                                        id="actionCircle4">4</span>
                                     <div class="min-w-0">
-                                        <div class="font-semibold text-slate-800 text-xs leading-snug">Ngày tổ chức Hội đồng Bảo vệ</div>
-                                        <div class="text-slate-400 text-[11px] mt-0.5 text-truncate">Sinh viên báo cáo và hội đồng chấm điểm</div>
+                                        <div class="font-semibold text-slate-800 text-xs leading-snug">Ngày tổ chức Hội
+                                            đồng Bảo vệ</div>
+                                        <div class="text-slate-400 text-[11px] mt-0.5 text-truncate">Sinh viên báo cáo
+                                            và hội đồng chấm điểm</div>
                                     </div>
                                 </div>
                                 <div class="text-end flex-shrink-0">
-                                    <span class="badge bg-slate-50 border border-slate-200 text-indigo-700 font-mono text-xs px-2.5 py-1.5 rounded-lg font-medium d-inline-flex align-items-center" id="modalDefenseDate">--</span>
+                                    <span
+                                        class="badge bg-slate-50 border border-slate-200 text-indigo-700 font-mono text-xs px-2.5 py-1.5 rounded-lg font-medium d-inline-flex align-items-center"
+                                        id="modalDefenseDate">--</span>
                                 </div>
                             </div>
                         </div>
@@ -700,29 +754,40 @@
                 </div>
 
                 <!-- Footer: All Integrated Action Buttons -->
-                <div class="modal-footer bg-slate-50 border-top border-slate-100 p-3.5 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div
+                    class="modal-footer bg-slate-50 border-top border-slate-100 p-3.5 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <!-- Delete Button on the left -->
-                    <form id="modalDeleteForm" th:action="@{/department-head/periods/0/delete}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đợt đăng ký này? Thao tác này không thể hoàn tác!');" class="m-0 d-inline-flex">
-                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-3.5 py-2 text-xs font-semibold d-inline-flex align-items-center gap-1.5">
+                    <form id="modalDeleteForm" th:action="@{/department-head/periods/0/delete}" method="post"
+                        onsubmit="return confirm('Bạn có chắc chắn muốn xóa đợt đăng ký này? Thao tác này không thể hoàn tác!');"
+                        class="m-0 d-inline-flex">
+                        <button type="submit"
+                            class="btn btn-sm btn-outline-danger rounded-xl px-3.5 py-2 text-xs font-semibold d-inline-flex align-items-center gap-1.5">
                             <i class="fa-regular fa-trash-can"></i> <span>Xóa đợt này</span>
                         </button>
                     </form>
 
                     <!-- Status Toggle & Edit on the right -->
                     <div class="d-inline-flex align-items-center gap-2 m-0">
-                        <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-700 font-medium hover:bg-slate-100 d-inline-flex align-items-center" data-bs-dismiss="modal">
+                        <button type="button"
+                            class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-700 font-medium hover:bg-slate-100 d-inline-flex align-items-center"
+                            data-bs-dismiss="modal">
                             Đóng
                         </button>
 
-                        <form id="modalStatusForm" th:action="@{/department-head/periods/0/status}" method="post" class="m-0 d-inline-flex">
+                        <form id="modalStatusForm" th:action="@{/department-head/periods/0/status}" method="post"
+                            class="m-0 d-inline-flex">
                             <input type="hidden" name="status" id="modalStatusInput">
-                            <button type="submit" class="btn btn-sm rounded-xl px-3.5 py-2 text-xs font-semibold shadow-2xs d-inline-flex align-items-center gap-1.5" id="modalStatusBtn">
+                            <button type="submit"
+                                class="btn btn-sm rounded-xl px-3.5 py-2 text-xs font-semibold shadow-2xs d-inline-flex align-items-center gap-1.5"
+                                id="modalStatusBtn">
                                 <i id="modalStatusIcon" class="fa-solid fa-lock"></i>
                                 <span id="modalStatusText">Khóa đợt (Tạm đóng)</span>
                             </button>
                         </form>
 
-                        <button type="button" class="btn btn-sm btn-primary rounded-xl px-3.5 py-2 text-xs font-semibold shadow-xs d-inline-flex align-items-center gap-1.5" id="modalEditBtn">
+                        <button type="button"
+                            class="btn btn-sm btn-primary rounded-xl px-3.5 py-2 text-xs font-semibold shadow-xs d-inline-flex align-items-center gap-1.5"
+                            id="modalEditBtn">
                             <i class="fa-solid fa-pen-to-square"></i> <span>Chỉnh sửa đợt</span>
                         </button>
                     </div>
@@ -740,30 +805,44 @@
                         <h6 class="modal-title font-bold text-slate-900 text-sm"><i
                                 class="fa-solid fa-calendar-plus text-blue-600 me-1.5"></i> Tạo Đợt Đăng Ký Đề Tài Mới
                         </h6>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"
+                            title="Đóng"></button>
                     </div>
                     <div class="modal-body p-4 space-y-3">
 
                         <!-- Dynamic Roadmap Indicator -->
                         <div class="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl mb-2">
-                            <div class="d-flex align-items-center justify-content-between text-[11px] font-semibold flex-wrap gap-1" id="roadmapCreate">
-                                <span class="d-inline-flex align-items-center gap-1.5 text-emerald-700 font-bold" id="step1Item">
-                                    <span class="badge bg-emerald-600 text-white rounded-full px-2 py-0.5 text-xs shadow-xs" id="step1Badge">1</span>
+                            <div class="d-flex align-items-center justify-content-between text-[11px] font-semibold flex-wrap gap-1"
+                                id="roadmapCreate">
+                                <span class="d-inline-flex align-items-center gap-1.5 text-emerald-700 font-bold"
+                                    id="step1Item">
+                                    <span
+                                        class="badge bg-emerald-600 text-white rounded-full px-2 py-0.5 text-xs shadow-xs"
+                                        id="step1Badge">1</span>
                                     <span>GV Đề xuất</span>
                                 </span>
                                 <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]" id="stepArrow1"></i>
-                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal" id="step2Item">
-                                    <span class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs" id="step2Badge">2</span>
+                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal"
+                                    id="step2Item">
+                                    <span
+                                        class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs"
+                                        id="step2Badge">2</span>
                                     <span>SV Đăng ký</span>
                                 </span>
                                 <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]" id="stepArrow2"></i>
-                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal" id="stepIndicatorReviewer">
-                                    <span class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs" id="step3Badge">3</span>
+                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal"
+                                    id="stepIndicatorReviewer">
+                                    <span
+                                        class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs"
+                                        id="step3Badge">3</span>
                                     <span>Chấm GVPB</span>
                                 </span>
                                 <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]" id="stepArrowDefense"></i>
-                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal" id="stepIndicatorDefense">
-                                    <span class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs" id="step4Badge">4</span>
+                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal"
+                                    id="stepIndicatorDefense">
+                                    <span
+                                        class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs"
+                                        id="step4Badge">4</span>
                                     <span>Bảo vệ Hội đồng</span>
                                 </span>
                             </div>
@@ -781,16 +860,21 @@
 
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-periods-4">Tên đợt đăng ký *</label>
+                                <label class="form-label text-xs font-semibold text-slate-700"
+                                    for="field-department-head-periods-4">Tên đợt đăng ký *</label>
                                 <input type="text" name="name" class="form-control text-xs rounded-xl"
-                                    placeholder="Ví dụ: Đợt Khóa Luận Tốt Nghiệp HK1 (2026-2027)" required title="Tên đợt đăng ký" aria-label="Tên đợt đăng ký" id="field-department-head-periods-4">
+                                    placeholder="Ví dụ: Đợt Khóa Luận Tốt Nghiệp HK1 (2026-2027)" required
+                                    title="Tên đợt đăng ký" aria-label="Tên đợt đăng ký"
+                                    id="field-department-head-periods-4">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="createPeriodTypeSelect">Loại đợt đào tạo
+                                <label class="form-label text-xs font-semibold text-slate-700"
+                                    for="createPeriodTypeSelect">Loại đợt đào tạo
                                     *</label>
                                 <select id="createPeriodTypeSelect" name="periodType"
                                     class="form-select text-xs rounded-xl" required
-                                    onchange="handlePeriodTypeChange(this.value, '')" title="Loại đợt đào tạo" aria-label="Loại đợt đào tạo">
+                                    onchange="handlePeriodTypeChange(this.value, '')" title="Loại đợt đào tạo"
+                                    aria-label="Loại đợt đào tạo">
                                     <option value="KLTN">Khóa luận tốt nghiệp</option>
                                     <option value="TLCN">Tiểu luận chuyên ngành</option>
                                     <option value="NCKH">Nghiên cứu khoa học sinh viên</option>
@@ -798,24 +882,32 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-periods-6">Năm học *</label>
+                                <label class="form-label text-xs font-semibold text-slate-700"
+                                    for="field-department-head-periods-6">Năm học *</label>
                                 <input type="text" name="academicYear" class="form-control text-xs rounded-xl"
-                                    value="2026-2027" required title="Năm học" aria-label="Năm học" id="field-department-head-periods-6">
+                                    value="2026-2027" required title="Năm học" aria-label="Năm học"
+                                    id="field-department-head-periods-6">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-periods-7">Học kỳ *</label>
-                                <select name="semester" class="form-select text-xs rounded-xl" title="Học kỳ" aria-label="Học kỳ" id="field-department-head-periods-7">
+                                <label class="form-label text-xs font-semibold text-slate-700"
+                                    for="field-department-head-periods-7">Học kỳ *</label>
+                                <select name="semester" class="form-select text-xs rounded-xl" title="Học kỳ"
+                                    aria-label="Học kỳ" id="field-department-head-periods-7">
                                     <option value="1">Học kỳ 1</option>
                                     <option value="2">Học kỳ 2</option>
                                     <option value="3">Học kỳ hè</option>
                                 </select>
                             </div>
                             <div class="col-md-12">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-periods-8">Chỉ tiêu đề tài tối thiểu
+                                <label class="form-label text-xs font-semibold text-slate-700"
+                                    for="field-department-head-periods-8">Chỉ tiêu đề tài tối thiểu
                                     mỗi GV phải đề xuất *</label>
                                 <div class="input-group">
                                     <input type="number" name="minTopicsPerLecturer"
-                                        class="form-control text-xs rounded-xl" value="3" min="1" max="20" required title="Chỉ tiêu đề tài tối thiểu mỗi GV phải đề xuất" aria-label="Chỉ tiêu đề tài tối thiểu mỗi GV phải đề xuất" id="field-department-head-periods-8">
+                                        class="form-control text-xs rounded-xl" value="3" min="1" max="20" required
+                                        title="Chỉ tiêu đề tài tối thiểu mỗi GV phải đề xuất"
+                                        aria-label="Chỉ tiêu đề tài tối thiểu mỗi GV phải đề xuất"
+                                        id="field-department-head-periods-8">
                                     <span class="input-group-text text-xs bg-slate-50 text-slate-500 rounded-xl">đề tài
                                         / giảng viên</span>
                                 </div>
@@ -828,29 +920,37 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="inputPropStart">1. GV đề xuất: Bắt
+                                <label class="form-label text-xs font-semibold text-slate-700" for="inputPropStart">1.
+                                    GV đề xuất: Bắt
                                     đầu</label>
                                 <input type="date" name="propStart" id="inputPropStart"
-                                    class="form-control text-xs rounded-xl" title="1. GV đề xuất: Bắt đầu" aria-label="1. GV đề xuất: Bắt đầu">
+                                    class="form-control text-xs rounded-xl" title="1. GV đề xuất: Bắt đầu"
+                                    aria-label="1. GV đề xuất: Bắt đầu">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="inputPropEnd">1. GV đề xuất: Hạn
+                                <label class="form-label text-xs font-semibold text-slate-700" for="inputPropEnd">1. GV
+                                    đề xuất: Hạn
                                     chót</label>
                                 <input type="date" name="propEnd" id="inputPropEnd"
-                                    class="form-control text-xs rounded-xl" title="1. GV đề xuất: Hạn chót" aria-label="1. GV đề xuất: Hạn chót">
+                                    class="form-control text-xs rounded-xl" title="1. GV đề xuất: Hạn chót"
+                                    aria-label="1. GV đề xuất: Hạn chót">
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="inputRegStart">2. SV đăng ký: Bắt
+                                <label class="form-label text-xs font-semibold text-slate-700" for="inputRegStart">2. SV
+                                    đăng ký: Bắt
                                     đầu</label>
                                 <input type="date" name="regStart" id="inputRegStart"
-                                    class="form-control text-xs rounded-xl" title="2. SV đăng ký: Bắt đầu" aria-label="2. SV đăng ký: Bắt đầu">
+                                    class="form-control text-xs rounded-xl" title="2. SV đăng ký: Bắt đầu"
+                                    aria-label="2. SV đăng ký: Bắt đầu">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="inputRegEnd">2. SV đăng ký: Hạn
+                                <label class="form-label text-xs font-semibold text-slate-700" for="inputRegEnd">2. SV
+                                    đăng ký: Hạn
                                     chót</label>
                                 <input type="date" name="regEnd" id="inputRegEnd"
-                                    class="form-control text-xs rounded-xl" title="2. SV đăng ký: Hạn chót" aria-label="2. SV đăng ký: Hạn chót">
+                                    class="form-control text-xs rounded-xl" title="2. SV đăng ký: Hạn chót"
+                                    aria-label="2. SV đăng ký: Hạn chót">
                             </div>
 
                             <!-- Conditional Fields -->
@@ -861,7 +961,8 @@
                                         / TLCN</span>
                                 </label>
                                 <input type="date" name="revDead" id="inputRevDead"
-                                    class="form-control text-xs rounded-xl" title="3. Hạn nộp điểm GVPB KLTN / TLCN" aria-label="3. Hạn nộp điểm GVPB KLTN / TLCN">
+                                    class="form-control text-xs rounded-xl" title="3. Hạn nộp điểm GVPB KLTN / TLCN"
+                                    aria-label="3. Hạn nộp điểm GVPB KLTN / TLCN">
                             </div>
                             <div class="col-md-6" id="fieldCouncilDefenseDate">
                                 <label class="form-label text-xs font-semibold text-slate-700" for="inputDefenseDate">
@@ -870,7 +971,8 @@
                                         KLTN</span>
                                 </label>
                                 <input type="date" name="defenseDate" id="inputDefenseDate"
-                                    class="form-control text-xs rounded-xl" title="4. Ngày báo cáo Hội đồng Chỉ KLTN" aria-label="4. Ngày báo cáo Hội đồng Chỉ KLTN">
+                                    class="form-control text-xs rounded-xl" title="4. Ngày báo cáo Hội đồng Chỉ KLTN"
+                                    aria-label="4. Ngày báo cáo Hội đồng Chỉ KLTN">
                             </div>
                         </div>
                     </div>
@@ -900,6 +1002,8 @@
                             var revDead = v(ids.revDead);
                             var defenseDate = v(ids.defenseDate);
 
+                            // [TẠM THỜI NOTE LẠI ĐỂ TEST]: Ràng buộc không cho phép các ngày tạo đợt trùng nhau
+                            /*
                             var allVals = [propStart, propEnd, regStart, regEnd, revDead, defenseDate].filter(function (x) { return x !== ''; });
                             var uniq = allVals.filter(function (x, i) { return allVals.indexOf(x) === i; });
                             if (allVals.length !== uniq.length) {
@@ -932,6 +1036,7 @@
                                 errorText.textContent = 'Ngày báo cáo Hội đồng phải sau hạn nộp điểm GVPB.';
                                 return false;
                             }
+                            */
                             return true;
                         } catch (err) {
                             console.error('Date validation error:', err);
@@ -974,30 +1079,45 @@
                     <div class="modal-header border-b border-slate-100 p-3.5">
                         <h6 class="modal-title font-bold text-slate-900 text-sm"><i
                                 class="fa-solid fa-pen-to-square text-blue-600 me-1.5"></i> Chỉnh Sửa Đợt Đăng Ký</h6>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"
+                            title="Đóng"></button>
                     </div>
                     <div class="modal-body p-4 space-y-3">
 
                         <!-- Dynamic Roadmap Indicator -->
                         <div class="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl mb-2">
-                            <div class="d-flex align-items-center justify-content-between text-[11px] font-semibold flex-wrap gap-1" id="roadmapEdit">
-                                <span class="d-inline-flex align-items-center gap-1.5 text-emerald-700 font-bold" id="step1ItemEdit">
-                                    <span class="badge bg-emerald-600 text-white rounded-full px-2 py-0.5 text-xs shadow-xs" id="step1BadgeEdit">1</span>
+                            <div class="d-flex align-items-center justify-content-between text-[11px] font-semibold flex-wrap gap-1"
+                                id="roadmapEdit">
+                                <span class="d-inline-flex align-items-center gap-1.5 text-emerald-700 font-bold"
+                                    id="step1ItemEdit">
+                                    <span
+                                        class="badge bg-emerald-600 text-white rounded-full px-2 py-0.5 text-xs shadow-xs"
+                                        id="step1BadgeEdit">1</span>
                                     <span>GV Đề xuất</span>
                                 </span>
                                 <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]" id="stepArrow1Edit"></i>
-                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal" id="step2ItemEdit">
-                                    <span class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs" id="step2BadgeEdit">2</span>
+                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal"
+                                    id="step2ItemEdit">
+                                    <span
+                                        class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs"
+                                        id="step2BadgeEdit">2</span>
                                     <span>SV Đăng ký</span>
                                 </span>
                                 <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]" id="stepArrow2Edit"></i>
-                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal" id="stepIndicatorReviewerEdit">
-                                    <span class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs" id="step3BadgeEdit">3</span>
+                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal"
+                                    id="stepIndicatorReviewerEdit">
+                                    <span
+                                        class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs"
+                                        id="step3BadgeEdit">3</span>
                                     <span>Chấm GVPB</span>
                                 </span>
-                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]" id="stepArrowDefenseEdit"></i>
-                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal" id="stepIndicatorDefenseEdit">
-                                    <span class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs" id="step4BadgeEdit">4</span>
+                                <i class="fa-solid fa-arrow-right text-slate-300 text-[10px]"
+                                    id="stepArrowDefenseEdit"></i>
+                                <span class="d-inline-flex align-items-center gap-1.5 text-slate-400 font-normal"
+                                    id="stepIndicatorDefenseEdit">
+                                    <span
+                                        class="badge bg-slate-100 text-slate-400 border border-slate-200 rounded-full px-2 py-0.5 text-xs"
+                                        id="step4BadgeEdit">4</span>
                                     <span>Bảo vệ Hội đồng</span>
                                 </span>
                             </div>
@@ -1015,16 +1135,19 @@
 
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="editName">Tên đợt đăng ký *</label>
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editName">Tên đợt
+                                    đăng ký *</label>
                                 <input type="text" id="editName" name="name" class="form-control text-xs rounded-xl"
                                     required title="Tên đợt đăng ký" aria-label="Tên đợt đăng ký">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="editPeriodTypeSelect">Loại đợt đào tạo
+                                <label class="form-label text-xs font-semibold text-slate-700"
+                                    for="editPeriodTypeSelect">Loại đợt đào tạo
                                     *</label>
                                 <select id="editPeriodTypeSelect" name="periodType"
                                     class="form-select text-xs rounded-xl" required
-                                    onchange="handlePeriodTypeChange(this.value, 'Edit')" title="Loại đợt đào tạo" aria-label="Loại đợt đào tạo">
+                                    onchange="handlePeriodTypeChange(this.value, 'Edit')" title="Loại đợt đào tạo"
+                                    aria-label="Loại đợt đào tạo">
                                     <option value="KLTN">Khóa luận tốt nghiệp</option>
                                     <option value="TLCN">Tiểu luận chuyên ngành</option>
                                     <option value="NCKH">Nghiên cứu khoa học sinh viên</option>
@@ -1032,32 +1155,41 @@
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="editAcademicYear">Năm học *</label>
+                                <label class="form-label text-xs font-semibold text-slate-700"
+                                    for="editAcademicYear">Năm học *</label>
                                 <input type="text" id="editAcademicYear" name="academicYear"
-                                    class="form-control text-xs rounded-xl" required title="Năm học" aria-label="Năm học">
+                                    class="form-control text-xs rounded-xl" required title="Năm học"
+                                    aria-label="Năm học">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="editSemester">Học kỳ *</label>
-                                <select id="editSemester" name="semester" class="form-select text-xs rounded-xl" title="Học kỳ" aria-label="Học kỳ">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editSemester">Học kỳ
+                                    *</label>
+                                <select id="editSemester" name="semester" class="form-select text-xs rounded-xl"
+                                    title="Học kỳ" aria-label="Học kỳ">
                                     <option value="1">Học kỳ 1</option>
                                     <option value="2">Học kỳ 2</option>
                                     <option value="3">Học kỳ hè</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="editStatus">Trạng thái đợt *</label>
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editStatus">Trạng
+                                    thái đợt *</label>
                                 <select id="editStatus" name="status"
-                                    class="form-select text-xs rounded-xl font-semibold" title="Trạng thái đợt" aria-label="Trạng thái đợt">
+                                    class="form-select text-xs rounded-xl font-semibold" title="Trạng thái đợt"
+                                    aria-label="Trạng thái đợt">
                                     <option value="OPEN" class="text-emerald-700">🟢 Đang mở (Hoạt động)</option>
                                     <option value="CLOSED" class="text-rose-700">🔒 Đã đóng (Tạm khóa)</option>
                                 </select>
                             </div>
                             <div class="col-md-12">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="editMinTopicsPerLecturer">Chỉ tiêu đề tài tối thiểu
+                                <label class="form-label text-xs font-semibold text-slate-700"
+                                    for="editMinTopicsPerLecturer">Chỉ tiêu đề tài tối thiểu
                                     mỗi GV phải đề xuất *</label>
                                 <div class="input-group">
                                     <input type="number" id="editMinTopicsPerLecturer" name="minTopicsPerLecturer"
-                                        class="form-control text-xs rounded-xl" value="3" min="1" max="20" required title="Chỉ tiêu đề tài tối thiểu mỗi GV phải đề xuất" aria-label="Chỉ tiêu đề tài tối thiểu mỗi GV phải đề xuất">
+                                        class="form-control text-xs rounded-xl" value="3" min="1" max="20" required
+                                        title="Chỉ tiêu đề tài tối thiểu mỗi GV phải đề xuất"
+                                        aria-label="Chỉ tiêu đề tài tối thiểu mỗi GV phải đề xuất">
                                     <span class="input-group-text text-xs bg-slate-50 text-slate-500 rounded-xl">đề tài
                                         / giảng viên</span>
                                 </div>
@@ -1068,29 +1200,36 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="editPropStart">1. GV đề xuất: Bắt
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editPropStart">1. GV
+                                    đề xuất: Bắt
                                     đầu</label>
                                 <input type="date" name="propStart" id="editPropStart"
-                                    class="form-control text-xs rounded-xl" title="1. GV đề xuất: Bắt đầu" aria-label="1. GV đề xuất: Bắt đầu">
+                                    class="form-control text-xs rounded-xl" title="1. GV đề xuất: Bắt đầu"
+                                    aria-label="1. GV đề xuất: Bắt đầu">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="editPropEnd">1. GV đề xuất: Hạn
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editPropEnd">1. GV
+                                    đề xuất: Hạn
                                     chót</label>
                                 <input type="date" name="propEnd" id="editPropEnd"
-                                    class="form-control text-xs rounded-xl" title="1. GV đề xuất: Hạn chót" aria-label="1. GV đề xuất: Hạn chót">
+                                    class="form-control text-xs rounded-xl" title="1. GV đề xuất: Hạn chót"
+                                    aria-label="1. GV đề xuất: Hạn chót">
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="editRegStart">2. SV đăng ký: Bắt
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editRegStart">2. SV
+                                    đăng ký: Bắt
                                     đầu</label>
                                 <input type="date" name="regStart" id="editRegStart"
-                                    class="form-control text-xs rounded-xl" title="2. SV đăng ký: Bắt đầu" aria-label="2. SV đăng ký: Bắt đầu">
+                                    class="form-control text-xs rounded-xl" title="2. SV đăng ký: Bắt đầu"
+                                    aria-label="2. SV đăng ký: Bắt đầu">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-xs font-semibold text-slate-700" for="editRegEnd">2. SV đăng ký: Hạn
+                                <label class="form-label text-xs font-semibold text-slate-700" for="editRegEnd">2. SV
+                                    đăng ký: Hạn
                                     chót</label>
-                                <input type="date" name="regEnd" id="editRegEnd"
-                                    class="form-control text-xs rounded-xl" title="2. SV đăng ký: Hạn chót" aria-label="2. SV đăng ký: Hạn chót">
+                                <input type="date" name="regEnd" id="editRegEnd" class="form-control text-xs rounded-xl"
+                                    title="2. SV đăng ký: Hạn chót" aria-label="2. SV đăng ký: Hạn chót">
                             </div>
 
                             <!-- Conditional Fields -->
@@ -1101,7 +1240,8 @@
                                         / TLCN</span>
                                 </label>
                                 <input type="date" name="revDead" id="editRevDead"
-                                    class="form-control text-xs rounded-xl" title="3. Hạn nộp điểm GVPB KLTN / TLCN" aria-label="3. Hạn nộp điểm GVPB KLTN / TLCN">
+                                    class="form-control text-xs rounded-xl" title="3. Hạn nộp điểm GVPB KLTN / TLCN"
+                                    aria-label="3. Hạn nộp điểm GVPB KLTN / TLCN">
                             </div>
                             <div class="col-md-6" id="fieldCouncilDefenseDateEdit">
                                 <label class="form-label text-xs font-semibold text-slate-700" for="editDefenseDate">
@@ -1110,7 +1250,8 @@
                                         KLTN</span>
                                 </label>
                                 <input type="date" name="defenseDate" id="editDefenseDate"
-                                    class="form-control text-xs rounded-xl" title="4. Ngày báo cáo Hội đồng Chỉ KLTN" aria-label="4. Ngày báo cáo Hội đồng Chỉ KLTN">
+                                    class="form-control text-xs rounded-xl" title="4. Ngày báo cáo Hội đồng Chỉ KLTN"
+                                    aria-label="4. Ngày báo cáo Hội đồng Chỉ KLTN">
                             </div>
                         </div>
                     </div>
@@ -1737,7 +1878,7 @@
                 statusBtn.className = 'btn btn-sm btn-outline-warning text-amber-700 hover:bg-amber-50 rounded-xl px-3.5 py-2 text-xs font-semibold shadow-2xs d-inline-flex align-items-center gap-1.5';
                 statusIcon.className = 'fa-solid fa-lock text-amber-600';
                 statusText.textContent = 'Khóa đợt (Tạm đóng)';
-                statusForm.onsubmit = function() {
+                statusForm.onsubmit = function () {
                     return confirm('Bạn có chắc muốn KHÓA đợt đăng ký này? Sinh viên sẽ không thể đăng ký mới khi đợt bị khóa.');
                 };
             } else {
@@ -1745,14 +1886,14 @@
                 statusBtn.className = 'btn btn-sm btn-outline-success text-emerald-700 hover:bg-emerald-50 rounded-xl px-3.5 py-2 text-xs font-semibold shadow-2xs d-inline-flex align-items-center gap-1.5';
                 statusIcon.className = 'fa-solid fa-lock-open text-emerald-600';
                 statusText.textContent = 'Mở lại đợt này';
-                statusForm.onsubmit = function() {
+                statusForm.onsubmit = function () {
                     return confirm('Bạn có chắc muốn MỞ LẠI đợt đăng ký này?');
                 };
             }
 
             // Action Button: Edit (Seamless Bootstrap transition)
             const editBtn = document.getElementById('modalEditBtn');
-            editBtn.onclick = function() {
+            editBtn.onclick = function () {
                 const actionModalEl = document.getElementById('periodActionModal');
                 const actionModal = bootstrap.Modal.getInstance(actionModalEl);
                 if (actionModal && actionModalEl.classList.contains('show')) {
@@ -1910,8 +2051,8 @@
             ['inputPropStart', 'inputPropEnd', 'inputRegStart', 'inputRegEnd', 'inputRevDead', 'inputDefenseDate'].forEach(function (id) {
                 const el = document.getElementById(id);
                 if (el) {
-                    el.addEventListener('change', function () { 
-                        clearModalError('createPeriodModal'); 
+                    el.addEventListener('change', function () {
+                        clearModalError('createPeriodModal');
                         updateModalRoadmap('');
                     });
                     el.addEventListener('input', function () {
@@ -1924,8 +2065,8 @@
             ['editPropStart', 'editPropEnd', 'editRegStart', 'editRegEnd', 'editRevDead', 'editDefenseDate'].forEach(function (id) {
                 const el = document.getElementById(id);
                 if (el) {
-                    el.addEventListener('change', function () { 
-                        clearModalError('editPeriodModal'); 
+                    el.addEventListener('change', function () {
+                        clearModalError('editPeriodModal');
                         updateModalRoadmap('Edit');
                     });
                     el.addEventListener('input', function () {

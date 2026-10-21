@@ -4,14 +4,14 @@ Ngày kiểm tra: 20/10/2026.
 
 ## Thay đổi
 
-| Lỗi | Cách sửa ở backend |
-|---|---|
-| Nhóm mới nhận điểm của nhóm cũ khi dùng lại đề tài | Phiếu điểm được lấy theo nhóm hiện tại, đúng đề tài, đúng đợt và trạng thái hợp lệ; trang sinh viên, quản lý, xuất kết quả dùng chung bộ lọc. Lịch sử nhóm cũ được giữ. |
-| Điểm của người đã hết phân công vẫn được tính | Chỉ nhận phiếu đã nộp của GVHD chính/phụ, phản biện và thành viên hội đồng đang được phân công. Phải đủ người chấm; hội đồng đủ 3–5 người. Đổi phân công tính lại điểm; đề tài đã công bố phải thu hồi trước khi đổi. |
-| Hai nhóm cùng lấy đề tài hoặc vượt chỉ tiêu GVHD | Khóa hàng nhóm, đề tài và GVHD trong giao dịch trước khi kiểm tra và lưu. Các GVHD được khóa theo thứ tự ID. Neon có khóa duy nhất trên đề tài của nhóm. |
-| Vượt 5 thành viên hoặc sinh viên vào hai nhóm khi thao tác đồng thời | Khóa hàng sinh viên rồi nhóm, đọc lại dữ liệu trước khi kiểm tra. Áp dụng cho tạo nhóm, nhập mã, thêm thành viên trực tiếp, nhận lời mời và gộp nhóm. |
-| Nộp điểm lần đầu đồng thời tạo phiếu trùng | Khóa đề tài; tìm/cập nhật phiếu theo đề tài–nhóm–giảng viên–loại điểm. Neon có khóa duy nhất cùng bốn cột và yêu cầu các khóa này không rỗng. |
-| Trưởng khoa ghim/xóa thông báo khoa khác | Service kiểm tra tài khoản hoạt động, vai trò và khoa sở hữu thông báo. Thông báo toàn trường do admin quản lý. Controller truyền người thao tác; trang hiển thị lỗi bị từ chối. |
+| Lỗi                                                                             | Cách sửa ở backend                                                                                                                                                                                                                                                           |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Nhóm mới nhận điểm của nhóm cũ khi dùng lại đề tài                  | Phiếu điểm được lấy theo nhóm hiện tại, đúng đề tài, đúng đợt và trạng thái hợp lệ; trang sinh viên, quản lý, xuất kết quả dùng chung bộ lọc. Lịch sử nhóm cũ được giữ.                                                                |
+| Điểm của người đã hết phân công vẫn được tính                     | Chỉ nhận phiếu đã nộp của GVHD chính/phụ, phản biện và thành viên hội đồng đang được phân công. Phải đủ người chấm; hội đồng đủ 3–5 người. Đổi phân công tính lại điểm; đề tài đã công bố phải thu hồi trước khi đổi. |
+| Hai nhóm cùng lấy đề tài hoặc vượt chỉ tiêu GVHD                      | Khóa hàng nhóm, đề tài và GVHD trong giao dịch trước khi kiểm tra và lưu. Các GVHD được khóa theo thứ tự ID. Neon có khóa duy nhất trên đề tài của nhóm.                                                                                           |
+| Vượt 5 thành viên hoặc sinh viên vào hai nhóm khi thao tác đồng thời | Khóa hàng sinh viên rồi nhóm, đọc lại dữ liệu trước khi kiểm tra. Áp dụng cho tạo nhóm, nhập mã, thêm thành viên trực tiếp, nhận lời mời và gộp nhóm.                                                                                             |
+| Nộp điểm lần đầu đồng thời tạo phiếu trùng                           | Khóa đề tài; tìm/cập nhật phiếu theo đề tài–nhóm–giảng viên–loại điểm. Neon có khóa duy nhất cùng bốn cột và yêu cầu các khóa này không rỗng.                                                                                                 |
+| Trưởng khoa ghim/xóa thông báo khoa khác                                   | Service kiểm tra tài khoản hoạt động, vai trò và khoa sở hữu thông báo. Thông báo toàn trường do admin quản lý. Controller truyền người thao tác; trang hiển thị lỗi bị từ chối.                                                                   |
 
 ## Bằng chứng đã kiểm tra
 
