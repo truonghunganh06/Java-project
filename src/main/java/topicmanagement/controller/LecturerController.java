@@ -354,7 +354,11 @@ public class LecturerController {
         Lecturer lecturer = lecturerService.getLecturerByUser(user);
         try {
             Topic updated = lecturerService.updateTopic(lecturer, id, periodId, coSupervisorId, topic);
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật đề tài '" + updated.getTitle() + "' thành công!");
+            if ("PENDING".equalsIgnoreCase(updated.getStatus())) {
+                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật đề tài '" + updated.getTitle() + "' thành công! Đề tài hiện ở trạng thái Chờ duyệt (PENDING) để Trưởng khoa thẩm định.");
+            } else {
+                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật đề tài '" + updated.getTitle() + "' thành công!");
+            }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi cập nhật đề tài: " + e.getMessage());
         }
