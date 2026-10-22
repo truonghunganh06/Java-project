@@ -48,7 +48,7 @@
                             <option value="all">-- Tất cả các đợt --</option>
                             <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}"></option>
                         </select>
-                        <span id="filteredRowCount" class="badge-pill-neutral font-medium text-xs ms-1" th:text="'Tổng số: ' + (${reviewerTopics != null ? reviewerTopics.size() : 0}) + ' đề tài'"></span>
+                        <span id="filteredRowCount" class="badge-pill-neutral font-medium text-xs ms-1" th:text="'Tổng số: ' + (${reviewTopics != null ? reviewTopics.size() : 0}) + ' đề tài'"></span>
                     </div>
                 </div>
             </div>
@@ -67,13 +67,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:if="${reviewerTopics == null || #lists.isEmpty(reviewerTopics)}">
+                            <tr th:if="${reviewTopics == null || #lists.isEmpty(reviewTopics)}">
                                 <td colspan="5" class="text-center py-5 text-muted text-xs">
                                     <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
                                     Bạn chưa được phân công phản biện đề tài nào trong đợt này.
                                 </td>
                             </tr>
-                            <tr th:each="t : ${reviewerTopics}" class="filterable-row">
+                            <tr th:each="t : ${reviewTopics}" class="filterable-row">
                                 <td>
                                     <div class="d-flex align-items-center gap-2 mb-1">
                                         <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold" th:text="${t.code}">DT-01</span>
