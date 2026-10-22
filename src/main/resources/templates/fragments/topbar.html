@@ -126,6 +126,22 @@
                                 <i th:if="${user != null && user.username == 'gv_cntt04'}" class="fa-solid fa-check text-xs text-violet-600"></i>
                             </a>
                         </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-2 d-flex align-items-center justify-content-between transition"
+                               th:classappend="${user != null && user.username == 'gv_cntt06'} ? 'bg-sky-50 font-bold text-sky-900' : 'text-slate-700 hover:bg-slate-50'"
+                               th:href="@{/switch-account(username='gv_cntt06')}">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 d-flex align-items-center justify-content-center flex-shrink-0">
+                                        <i class="fa-solid fa-plus text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-xs text-slate-800">TS. Phạm Quốc Bảo (GV Mới)</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">gv_cntt06 · Trống 100% (Test đề xuất ĐT mới)</div>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == 'gv_cntt06'}" class="fa-solid fa-check text-xs text-sky-600"></i>
+                            </a>
+                        </li>
 
                         <!-- Sinh viên CNTT -->
                         <li class="px-2.5 pt-1.5 text-[10px] font-bold text-slate-400 uppercase">Sinh Viên Khoa CNTT</li>
@@ -138,8 +154,8 @@
                                         <i class="fa-solid fa-user-graduate text-xs"></i>
                                     </div>
                                     <div>
-                                        <div class="font-semibold text-xs text-slate-800">Nguyễn Văn An</div>
-                                        <div class="text-[11px] text-slate-400 font-mono">sv_cntt01 · MSSV: 20110001 (Đăng ký ĐT Đợt 2)</div>
+                                        <div class="font-semibold text-xs text-slate-800">Nguyễn Văn An (SV Mới)</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">sv_cntt01 · Trống 100% (Test ĐK & tạo nhóm)</div>
                                     </div>
                                 </div>
                                 <i th:if="${user != null && user.username == 'sv_cntt01'}" class="fa-solid fa-check text-xs text-emerald-600"></i>
@@ -154,11 +170,27 @@
                                         <i class="fa-solid fa-user-graduate text-xs"></i>
                                     </div>
                                     <div>
-                                        <div class="font-semibold text-xs text-slate-800">Trần Thị Bình</div>
-                                        <div class="text-[11px] text-slate-400 font-mono">sv_cntt02 · MSSV: 20110002 (Nhận lời mời nhóm)</div>
+                                        <div class="font-semibold text-xs text-slate-800">Trần Thị Bình (SV Mới)</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">sv_cntt02 · Trống 100% (Test nhận lời mời nhóm)</div>
                                     </div>
                                 </div>
                                 <i th:if="${user != null && user.username == 'sv_cntt02'}" class="fa-solid fa-check text-xs text-teal-600"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-2 d-flex align-items-center justify-content-between transition"
+                               th:classappend="${user != null && user.username == '23110001'} ? 'bg-green-50 font-bold text-green-900' : 'text-slate-700 hover:bg-slate-50'"
+                               th:href="@{/switch-account(username='23110001')}">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-lg bg-green-100 text-green-700 d-flex align-items-center justify-content-center flex-shrink-0">
+                                        <i class="fa-solid fa-users text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-xs text-slate-800">Nguyễn Minh Khang (Đã có nhóm)</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">23110001 · Xem nhóm & ĐT đang thực hiện</div>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == '23110001'}" class="fa-solid fa-check text-xs text-green-600"></i>
                             </a>
                         </li>
 
