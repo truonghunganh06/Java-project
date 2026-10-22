@@ -126,7 +126,9 @@ public class StudentService {
 
         // Case 1: period cu the duoc chi dinh
         if (periodId != null) {
-            List<StudentGroup> list = groupRepository.findByStudentIdAndPeriodId(student.getId(), periodId);
+            List<StudentGroup> list = groupRepository.findByStudentIdAndPeriodId(student.getId(), periodId).stream()
+                    .filter(g -> !"DISSOLVED".equalsIgnoreCase(g.getStatus()))
+                    .toList();
             return list.isEmpty() ? null : list.get(0);
         }
 
@@ -155,7 +157,7 @@ public class StudentService {
         // Tang 2: Neu khong nhom nao co de tai, giu nguyen luat hien tai
         // (nhom thuoc dot isActive va OPEN/IN_PROGRESS co period id lon nhat)
         return allMyGroups.stream()
-            .filter(g -> !"DISSOLVED".equalsIgnoreCase(g.getStatus()))        
+                .filter(g -> !"DISSOLVED".equalsIgnoreCase(g.getStatus()))
             .filter(g -> g.getPeriod() != null
                         && Boolean.TRUE.equals(g.getPeriod().getIsActive())
                         && ("OPEN".equalsIgnoreCase(g.getPeriod().getStatus())
@@ -185,7 +187,9 @@ public class StudentService {
 
         // Check if student already in a group in this period
         if (period != null) {
-            List<StudentGroup> existing = groupRepository.findByStudentIdAndPeriodId(leader.getId(), period.getId());
+            List<StudentGroup> existing = groupRepository.findByStudentIdAndPeriodId(leader.getId(), period.getId()).stream()
+                    .filter(g -> !"DISSOLVED".equalsIgnoreCase(g.getStatus()))
+                    .toList();
             if (!existing.isEmpty()) {
                 throw new IllegalStateException("Bạn đã tham gia một nhóm trong đợt này rồi (" + existing.get(0).getGroupName() + ").");
             }
@@ -251,7 +255,9 @@ public class StudentService {
         }
 
         Long periodId = period != null ? period.getId() : null;
-        List<StudentGroup> existing = groupRepository.findByStudentIdAndPeriodId(invitee.getId(), periodId);
+        List<StudentGroup> existing = groupRepository.findByStudentIdAndPeriodId(invitee.getId(), periodId).stream()
+                .filter(g -> !"DISSOLVED".equalsIgnoreCase(g.getStatus()))
+                .toList();
         if (!existing.isEmpty()) {
             return "Sinh viên " + invitee.getUser().getFullName() + " (" + studentCode + ") đã tham gia một nhóm khác trong đợt này!";
         }
@@ -299,7 +305,9 @@ public class StudentService {
         }
 
         Long periodId = period != null ? period.getId() : null;
-        List<StudentGroup> existing = groupRepository.findByStudentIdAndPeriodId(student.getId(), periodId);
+        List<StudentGroup> existing = groupRepository.findByStudentIdAndPeriodId(student.getId(), periodId).stream()
+                .filter(g -> !"DISSOLVED".equalsIgnoreCase(g.getStatus()))
+                .toList();
         if (!existing.isEmpty()) {
             return "Bạn đã thuộc một nhóm khác trong đợt này rồi!";
         }
