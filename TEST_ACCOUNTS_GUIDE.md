@@ -11,11 +11,12 @@ Tập dữ liệu mẫu (Seed Data) đã được thiết lập sẵn trong Data
 | **QUẢN TRỊ VIÊN** | `admin` | `admin123` | Quản Trị Viên Hệ Thống | Toàn trường | `ADMIN_01` | Quản trị tài khoản, khoa, đợt, phân quyền toàn hệ thống |
 | **TRƯỞNG KHOA CNTT** | `head_cntt` | `123456` | TS. Nguyễn Văn Thắng | Khoa Công nghệ Thông tin | `GV_HEAD_CNTT` | Duyệt đề tài CNTT, tạo đợt CNTT, phân công hội đồng CNTT |
 | **TRƯỞNG KHOA QTKD** | `head_qtkd` | `123456` | PGS.TS. Trần Thị Mai | Khoa Quản trị Kinh doanh | `GV_HEAD_QTKD` | Duyệt đề tài QTKD, quản lý đợt QTKD (kiểm tra phân tách dữ liệu khoa) |
-| **GIẢNG VIÊN CNTT (1)** | `gv_cntt01` | `123456` | ThS. Lê Hoàng Long | Khoa Công nghệ Thông tin | `GV_IT_01` | Đề xuất đề tài CNTT, hướng dẫn SV CNTT (có sẵn đề tài mẫu IoT, Mobile) |
-| **GIẢNG VIÊN CNTT (2)** | `gv_cntt02` | `123456` | TS. Phạm Minh Tuấn | Khoa Công nghệ Thông tin | `GV_IT_02` | Đề xuất đề tài CNTT, phản biện, chấm điểm hội đồng (có sẵn đề tài AI/Deep Learning) |
+| **GIẢNG VIÊN CNTT (1)** | `gv_cntt01` | `123456` | ThS. Lê Hoàng Long | Khoa Công nghệ Thông tin | `GV_IT_01` | GVHD chính: Đề xuất đề tài Đợt 1 (có đề tài mẫu PENDING, REJECTED) |
+| **GIẢNG VIÊN CNTT (2)** | `gv_cntt02` | `123456` | TS. Phạm Minh Tuấn | Khoa Công nghệ Thông tin | `GV_IT_02` | GVPB: Chấm điểm phản biện đề tài |
+| **ỦY VIÊN HỘI ĐỒNG CNTT** | `gv_cntt04` | `123456` | ThS. Trần Anh Dũng | Khoa Công nghệ Thông tin | `GV_IT_04` | Hội đồng bảo vệ: Chấm điểm thành viên hội đồng cho Đợt 4 |
 | **GIẢNG VIÊN QTKD** | `gv_qtkd01` | `123456` | ThS. Hoàng Thu Thảo | Khoa Quản trị Kinh doanh | `GV_BA_01` | Đề xuất đề tài QTKD, kiểm tra giảng viên chỉ quản lý đề tài khoa mình |
-| **SINH VIÊN CNTT (1)** | `sv_cntt01` | `123456` | Nguyễn Văn An | CNTT (Khoa CNTT) | `20110001` | Sinh viên đúng khoa CNTT: đăng ký đề tài CNTT, tạo nhóm, nộp báo cáo |
-| **SINH VIÊN CNTT (2)** | `sv_cntt02` | `123456` | Trần Thị Bình | CNTT (Khoa CNTT) | `20110002` | Sinh viên đúng khoa CNTT: nhận lời mời vào nhóm của `sv_cntt01`, làm thành viên nhóm |
+| **SINH VIÊN CNTT (1)** | `sv_cntt01` | `123456` | Nguyễn Văn An | CNTT (Khoa CNTT) | `20110001` | Sinh viên đăng ký đề tài mới ở Đợt 2, tạo nhóm, mời thành viên |
+| **SINH VIÊN CNTT (2)** | `sv_cntt02` | `123456` | Trần Thị Bình | CNTT (Khoa CNTT) | `20110002` | Sinh viên nhận lời mời vào nhóm của `sv_cntt01`, làm thành viên nhóm |
 | **SINH VIÊN QTKD** | `sv_qtkd01` | `123456` | Phạm Quốc Cường | QTKD (Khoa QTKD) | `20120001` | Sinh viên khác khoa: test tính năng **CHẶN ĐĂNG KÝ** đợt/đề tài của Khoa CNTT |
 
 ---

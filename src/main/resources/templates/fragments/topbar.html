@@ -58,7 +58,7 @@
                         </li>
 
                         <!-- Trưởng Khoa -->
-                        <li class="px-2.5 pt-1 text-[10px] font-bold text-slate-400 uppercase">Trưởng Khoa</li>
+                        <li class="px-2.5 pt-1 text-[10px] font-bold text-slate-400 uppercase">Trưởng Khoa (Duyệt ĐT & Hội đồng)</li>
                         <li>
                             <a class="dropdown-item rounded-xl px-2.5 py-2 d-flex align-items-center justify-content-between transition"
                                th:classappend="${user != null && user.username == 'head_cntt'} ? 'bg-amber-50 font-bold text-amber-900' : 'text-slate-700 hover:bg-slate-50'"
@@ -69,15 +69,15 @@
                                     </div>
                                     <div>
                                         <div class="font-semibold text-xs text-slate-800">TS. Nguyễn Văn Thắng</div>
-                                        <div class="text-[11px] text-slate-400 font-mono">head_cntt · Trưởng Khoa CNTT</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">head_cntt · Trưởng Khoa (Duyệt ĐT Đợt 1, Chủ tịch HĐ)</div>
                                     </div>
                                 </div>
                                 <i th:if="${user != null && user.username == 'head_cntt'}" class="fa-solid fa-check text-xs text-amber-600"></i>
                             </a>
                         </li>
 
-                        <!-- Giảng viên CNTT -->
-                        <li class="px-2.5 pt-1.5 text-[10px] font-bold text-slate-400 uppercase">Giảng Viên Hướng Dẫn</li>
+                        <!-- Giảng viên Hướng dẫn & Phản biện & Hội đồng -->
+                        <li class="px-2.5 pt-1.5 text-[10px] font-bold text-slate-400 uppercase">Giảng Viên Hướng Dẫn & Chấm Điểm</li>
                         <li>
                             <a class="dropdown-item rounded-xl px-2.5 py-2 d-flex align-items-center justify-content-between transition"
                                th:classappend="${user != null && user.username == 'gv_cntt01'} ? 'bg-blue-50 font-bold text-blue-900' : 'text-slate-700 hover:bg-slate-50'"
@@ -88,7 +88,7 @@
                                     </div>
                                     <div>
                                         <div class="font-semibold text-xs text-slate-800">ThS. Lê Hoàng Long</div>
-                                        <div class="text-[11px] text-slate-400 font-mono">gv_cntt01 · GVHD (IoT, Mobile)</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">gv_cntt01 · GVHD chính (Đề xuất ĐT Đợt 1)</div>
                                     </div>
                                 </div>
                                 <i th:if="${user != null && user.username == 'gv_cntt01'}" class="fa-solid fa-check text-xs text-blue-600"></i>
@@ -104,10 +104,26 @@
                                     </div>
                                     <div>
                                         <div class="font-semibold text-xs text-slate-800">TS. Phạm Minh Tuấn</div>
-                                        <div class="text-[11px] text-slate-400 font-mono">gv_cntt02 · GVHD / HĐ (AI, An toàn)</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">gv_cntt02 · GVPB (Chấm điểm phản biện Đợt 3)</div>
                                     </div>
                                 </div>
                                 <i th:if="${user != null && user.username == 'gv_cntt02'}" class="fa-solid fa-check text-xs text-indigo-600"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-2 d-flex align-items-center justify-content-between transition"
+                               th:classappend="${user != null && user.username == 'gv_cntt04'} ? 'bg-violet-50 font-bold text-violet-900' : 'text-slate-700 hover:bg-slate-50'"
+                               th:href="@{/switch-account(username='gv_cntt04')}">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-lg bg-violet-100 text-violet-700 d-flex align-items-center justify-content-center flex-shrink-0">
+                                        <i class="fa-solid fa-award text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-xs text-slate-800">ThS. Trần Anh Dũng</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">gv_cntt04 · Ủy viên Hội đồng (Chấm bảo vệ Đợt 4)</div>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == 'gv_cntt04'}" class="fa-solid fa-check text-xs text-violet-600"></i>
                             </a>
                         </li>
 
@@ -123,7 +139,7 @@
                                     </div>
                                     <div>
                                         <div class="font-semibold text-xs text-slate-800">Nguyễn Văn An</div>
-                                        <div class="text-[11px] text-slate-400 font-mono">sv_cntt01 · MSSV: 20110001 (Nhóm trưởng)</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">sv_cntt01 · MSSV: 20110001 (Đăng ký ĐT Đợt 2)</div>
                                     </div>
                                 </div>
                                 <i th:if="${user != null && user.username == 'sv_cntt01'}" class="fa-solid fa-check text-xs text-emerald-600"></i>
@@ -139,7 +155,7 @@
                                     </div>
                                     <div>
                                         <div class="font-semibold text-xs text-slate-800">Trần Thị Bình</div>
-                                        <div class="text-[11px] text-slate-400 font-mono">sv_cntt02 · MSSV: 20110002 (Thành viên)</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">sv_cntt02 · MSSV: 20110002 (Nhận lời mời nhóm)</div>
                                     </div>
                                 </div>
                                 <i th:if="${user != null && user.username == 'sv_cntt02'}" class="fa-solid fa-check text-xs text-teal-600"></i>
