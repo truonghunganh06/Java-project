@@ -47,11 +47,11 @@ public interface StudentGroupRepository extends JpaRepository<StudentGroup, Long
     List<StudentGroup> findByTopicIdIn(List<Long> topicIds);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
-    @Query("SELECT g FROM StudentGroup g JOIN g.members m WHERE m.student.id = :studentId AND (:periodId IS NULL OR g.period.id = :periodId)")
+    @Query("SELECT DISTINCT g FROM StudentGroup g LEFT JOIN g.members m WHERE (g.leader.id = :studentId OR m.student.id = :studentId) AND (:periodId IS NULL OR g.period.id = :periodId)")
     List<StudentGroup> findByStudentIdAndPeriodId(@Param("studentId") Long studentId, @Param("periodId") Long periodId);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
-    @Query("SELECT g FROM StudentGroup g JOIN g.members m WHERE m.student.id = :studentId")
+    @Query("SELECT DISTINCT g FROM StudentGroup g LEFT JOIN g.members m WHERE (g.leader.id = :studentId OR m.student.id = :studentId)")
     List<StudentGroup> findByStudentId(@Param("studentId") Long studentId);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})

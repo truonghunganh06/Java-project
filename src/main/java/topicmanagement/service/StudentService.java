@@ -155,13 +155,15 @@ public class StudentService {
         // Tang 2: Neu khong nhom nao co de tai, giu nguyen luat hien tai
         // (nhom thuoc dot isActive va OPEN/IN_PROGRESS co period id lon nhat)
         return allMyGroups.stream()
-                .filter(g -> g.getPeriod() != null
+            .filter(g -> !"DISSOLVED".equalsIgnoreCase(g.getStatus()))        
+            .filter(g -> g.getPeriod() != null
                         && Boolean.TRUE.equals(g.getPeriod().getIsActive())
                         && ("OPEN".equalsIgnoreCase(g.getPeriod().getStatus())
                             || "IN_PROGRESS".equalsIgnoreCase(g.getPeriod().getStatus())))
                 .max(Comparator.comparing(g -> g.getPeriod().getId()))
                 // Tang 3 (Fallback): giu nguyen nhu cu (nhom co createdAt moi nhat)
                 .orElseGet(() -> allMyGroups.stream()
+                        .filter(g -> !"DISSOLVED".equalsIgnoreCase(g.getStatus()))
                         .max(Comparator.comparing(StudentGroup::getCreatedAt,
                                 Comparator.nullsLast(Comparator.naturalOrder())))
                         .orElse(null));
