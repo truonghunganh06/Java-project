@@ -92,7 +92,7 @@
                                 th:data-user-role="${u.role != null ? u.role.name : ''}"
                                 th:data-user-active="${u.isActive}"
                                 onclick="openUserActionModal(this)"
-                                title="Nhấp để xem chi tiết và thao tác" tabindex="0" onkeydown="if (event.target === this &amp;&amp; (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
+                                title="Nhấp để xem chi tiết và thao tác" tabindex="0" onkeydown="if (event.target === this && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
                                 <td>
                                     <div class="d-flex align-items-center gap-2.5">
                                         <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-xs flex-shrink-0" th:text="${u.fullName != null and !u.fullName.isEmpty() ? u.fullName.substring(0, 1) : 'U'}">U</div>
