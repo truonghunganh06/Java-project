@@ -327,8 +327,10 @@ public class AdminService {
     // ==================== ROLE MANAGEMENT ====================
 
     public List<Role> getAllRoles() {
-        List<Role> list = roleRepository.findAll();
-        System.out.println("[DB-ADMIN] getAllRoles: Lấy " + list.size() + " vai trò từ DB");
+        List<Role> list = roleRepository.findAll().stream()
+                .filter(r -> r.getCode() != null && !"DIVISION_HEAD".equalsIgnoreCase(r.getCode()))
+                .toList();
+        System.out.println("[DB-ADMIN] getAllRoles: Lấy " + list.size() + " vai trò từ DB (đã loại bỏ DIVISION_HEAD)");
         return list;
     }
 

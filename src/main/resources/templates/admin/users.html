@@ -156,7 +156,7 @@
                                         <div class="col-md-6">
                                             <label class="form-label text-xs font-semibold text-slate-700">Vai trò hệ thống</label>
                                             <select name="roleId" class="form-select text-xs rounded-xl" required title="Vai trò hệ thống" aria-label="Vai trò hệ thống">
-                                                <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}" th:selected="${u.role != null and u.role.id == r.id}"></option>
+                                                <option th:each="r : ${roles}" th:if="${r.code != 'DIVISION_HEAD'}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}" th:selected="${u.role != null and u.role.id == r.id}"></option>
                                             </select>
                                         </div>
                                     </div>
@@ -309,7 +309,7 @@
                             <label class="form-label text-xs font-semibold text-slate-700" for="field-admin-users-24">Vai trò <span class="text-rose-600">*</span></label>
                             <select name="roleId" class="form-select text-xs rounded-xl" required title="Vai trò" aria-label="Vai trò" id="field-admin-users-24">
                                 <option value="">-- Chọn vai trò --</option>
-                                <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}"></option>
+                                <option th:each="r : ${roles}" th:if="${r.code != 'DIVISION_HEAD'}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}"></option>
                             </select>
                         </div>
                         <div>
