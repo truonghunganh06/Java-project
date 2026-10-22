@@ -484,7 +484,7 @@ public class LecturerController {
 
         model.addAttribute("user", user);
         model.addAttribute("lecturer", lecturer);
-        model.addAttribute("reviewTopics", reviewerTopics);
+        model.addAttribute("reviewerTopics", reviewerTopics);
         model.addAttribute("existingEvaluationsMap", existingEvaluationsMap);
         model.addAttribute("periods", periods);
 
