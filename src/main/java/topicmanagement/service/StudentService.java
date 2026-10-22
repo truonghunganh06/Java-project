@@ -530,16 +530,13 @@ public class StudentService {
         // Thay đổi 3: Ràng buộc số lượng thành viên nhóm tối thiểu 2 SV, tối đa theo quy định đề tài
         List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(group.getId());
         int memberCount = (currentMembers != null && !currentMembers.isEmpty()) ? currentMembers.size() : 1;
-        if (memberCount < 2) {
-            return "Nhóm cần tối thiểu 2 thành viên mới được đăng ký đề tài (hiện có " + memberCount + "). Vui lòng thêm thành viên vào nhóm bằng MSSV trước khi đăng ký!";
+        int minStudentsAllowed = 2;
+        if (memberCount < minStudentsAllowed) {
+            return "Nhóm cần tối thiểu " + minStudentsAllowed + " thành viên mới được đăng ký đề tài (hiện có " + memberCount + "). Vui lòng vào mục 'Quản lý nhóm' để mời thêm thành viên trước khi đăng ký!";
         }
         int maxStudentsAllowed = (topic.getMaxStudents() != null && topic.getMaxStudents() > 0)
                 ? Math.min(5, Math.max(minStudentsAllowed, topic.getMaxStudents()))
                 : 5;
-
-        if (memberCount < minStudentsAllowed) {
-            return "Nhóm hiện tại mới chỉ có " + memberCount + " thành viên (chỉ có nhóm trưởng). Nhóm phải có ít nhất " + minStudentsAllowed + " thành viên để đăng ký đề tài. Vui lòng vào mục 'Quản lý nhóm' để mời thêm thành viên!";
-        }
 
         if (memberCount > maxStudentsAllowed) {
             return "Số lượng thành viên của nhóm (" + memberCount + " SV) vượt quá số lượng tối đa cho phép của đề tài này (" + maxStudentsAllowed + " SV)!";
