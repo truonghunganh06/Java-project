@@ -86,11 +86,22 @@ public class AdminService {
     @Transactional
     public String createUser(AppUser user, Long roleId) {
         String pass = user != null ? user.getPasswordHash() : null;
-        return createUser(user, roleId, pass);
+        return createUser(user, roleId, null, pass);
+    }
+
+    @Transactional
+    public String createUser(AppUser user, Long roleId, Long departmentId) {
+        String pass = user != null ? user.getPasswordHash() : null;
+        return createUser(user, roleId, departmentId, pass);
     }
 
     @Transactional
     public String createUser(AppUser user, Long roleId, String rawPassword) {
+        return createUser(user, roleId, null, rawPassword);
+    }
+
+    @Transactional
+    public String createUser(AppUser user, Long roleId, Long departmentId, String rawPassword) {
         if (user == null || user.getUsername() == null || user.getUsername().trim().isEmpty()) {
             return "Tên đăng nhập không được để trống!";
         }
@@ -119,6 +130,17 @@ public class AdminService {
             role = roleRepository.findByCode("STUDENT").orElse(null);
         }
 
+        // RÀNG BUỘC: nếu role là DEPARTMENT_HEAD và departmentId != null, kiểm tra khoa đó đã có trưởng khoa chưa
+        if (role != null && "DEPARTMENT_HEAD".equalsIgnoreCase(role.getCode()) && departmentId != null) {
+            List<Lecturer> deptLecturers = lecturerRepository.findByDepartmentId(departmentId);
+            for (Lecturer l : deptLecturers) {
+                if (l.getUser() != null && l.getUser().getRole() != null
+                        && "DEPARTMENT_HEAD".equalsIgnoreCase(l.getUser().getRole().getCode())) {
+                    return "Khoa này đã có trưởng khoa là " + l.getUser().getUsername();
+                }
+            }
+        }
+
         user.setUsername(cleanUsername);
         user.setEmail(cleanEmail);
         user.setFullName(user.getFullName() != null ? user.getFullName().trim() : cleanUsername);
@@ -135,11 +157,16 @@ public class AdminService {
 
         // Khởi tạo hồ sơ chuyên biệt theo Role
         if (role != null) {
+            Department department = (departmentId != null) ? departmentRepository.findById(departmentId).orElse(null) : null;
+
             if ("STUDENT".equalsIgnoreCase(role.getCode())) {
                 if (studentRepository.findByUserId(saved.getId()).isEmpty()) {
                     Student student = new Student();
                     student.setUser(saved);
                     student.setStudentCode(saved.getUsername());
+                    if (department != null) {
+                        student.setDepartment(department);
+                    }
                     studentRepository.save(student);
                 }
             } else if ("LECTURER".equalsIgnoreCase(role.getCode()) || "DEPARTMENT_HEAD".equalsIgnoreCase(role.getCode())) {
@@ -148,6 +175,9 @@ public class AdminService {
                     lecturer.setUser(saved);
                     lecturer.setLecturerCode(saved.getUsername());
                     lecturer.setMaxTopicsQuota(5);
+                    if (department != null) {
+                        lecturer.setDepartment(department);
+                    }
                     lecturerRepository.save(lecturer);
                 }
             }

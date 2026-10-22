@@ -33,9 +33,14 @@
                 <div class="d-flex align-items-center gap-2">
                     <h1 class="text-lg font-bold text-slate-900 mb-0">Hội Đồng Bảo Vệ Đề Tài</h1>
                 </div>
-                <button class="btn btn-sm btn-dark rounded-xl px-3 py-1.5 text-xs font-semibold shadow-sm d-inline-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#createCouncilModal">
-                    <i class="fa-solid fa-plus text-xs"></i> Thành lập Hội đồng
-                </button>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <a th:href="@{/lecturer/councils}" class="btn btn-sm btn-outline-primary rounded-xl px-3 py-1.5 text-xs font-semibold shadow-sm d-inline-flex align-items-center gap-1.5" title="Chuyển tới khu vực chấm điểm hội đồng cho Giảng viên/Trưởng khoa">
+                        <i class="fa-solid fa-clipboard-check text-xs"></i> Đi chấm điểm hội đồng
+                    </a>
+                    <button class="btn btn-sm btn-dark rounded-xl px-3 py-1.5 text-xs font-semibold shadow-sm d-inline-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#createCouncilModal">
+                        <i class="fa-solid fa-plus text-xs"></i> Thành lập Hội đồng
+                    </button>
+                </div>
             </div>
 
             <!-- Universal 1-Row Toolbar (Rộng rãi, thoáng mắt, khoảng cách chuẩn SaaS) -->
@@ -86,6 +91,7 @@
                                 <div th:each="m : ${c.members}" class="d-flex justify-content-between align-items-center py-2 px-3 bg-white">
                                     <div>
                                         <span class="font-semibold text-slate-900 text-xs" th:text="${m.lecturer != null && m.lecturer.user != null ? m.lecturer.user.fullName : 'GV'}">TS. Nguyễn Văn A</span>
+                                        <span th:if="${m.lecturer != null && m.lecturer.user != null && user != null && m.lecturer.user.id == user.id}" class="badge bg-blue-100 text-blue-700 text-2xs px-1.5 py-0.5 rounded-md font-semibold ms-1">Bạn</span>
                                         <span class="text-slate-400 text-xs d-block" th:text="${m.lecturer != null ? (m.lecturer.degree != null ? m.lecturer.degree : (m.lecturer.academicTitle != null ? m.lecturer.academicTitle : 'GV')) + ' - ' + (m.lecturer.lecturerCode != null ? m.lecturer.lecturerCode : '') : ''}"></span>
                                     </div>
                                     <div>
@@ -134,10 +140,15 @@
 
                         <div class="d-flex justify-content-between align-items-center pt-3 border-t border-slate-100">
                             <span class="text-xs text-slate-400" th:text="'Đợt: ' + (${c.period != null ? c.period.name : 'Tất cả'})"></span>
-                            <button type="button" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-3 text-xs font-semibold shadow-sm transition"
-                                    data-bs-toggle="modal" th:data-bs-target="'#assignTopicsModal-' + ${c.id}">
-                                <i class="fa-solid fa-list-check me-1"></i> Phân công đề tài
-                            </button>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <a th:if="${c.hasMember(user)}" th:href="@{/lecturer/councils}" class="btn btn-sm btn-outline-primary rounded-xl px-2.5 py-1 text-xs font-semibold shadow-2xs d-inline-flex align-items-center gap-1" title="Bạn là thành viên của Hội đồng này - Đi tới trang chấm điểm">
+                                    <i class="fa-solid fa-clipboard-check text-xs"></i> Đi chấm điểm
+                                </a>
+                                <button type="button" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-3 text-xs font-semibold shadow-sm transition"
+                                        data-bs-toggle="modal" th:data-bs-target="'#assignTopicsModal-' + ${c.id}">
+                                    <i class="fa-solid fa-list-check me-1"></i> Phân công đề tài
+                                </button>
+                            </div>
                         </div>
                     </div>
 

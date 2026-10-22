@@ -352,6 +352,13 @@ public class DepartmentHeadService {
         long approvedTopics = topics.stream().filter(t -> "APPROVED".equalsIgnoreCase(t.getStatus())).count();
         long rejectedTopics = topics.stream().filter(t -> "REJECTED".equalsIgnoreCase(t.getStatus())).count();
 
+        long totalGroups = 0;
+        for (RegistrationPeriod p : periods) {
+            if (p.getId() != null) {
+                totalGroups += studentGroupRepository.findByPeriodId(p.getId()).size();
+            }
+        }
+
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalTopics", topics.size());
         stats.put("pendingTopics", pendingTopics);
@@ -360,6 +367,7 @@ public class DepartmentHeadService {
         stats.put("totalLecturers", lecturers.size());
         stats.put("totalStudents", students.size());
         stats.put("totalPeriods", periods.size());
+        stats.put("totalGroups", totalGroups);
 
         return stats;
     }

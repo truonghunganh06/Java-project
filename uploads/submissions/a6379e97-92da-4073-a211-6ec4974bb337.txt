@@ -1,0 +1,616 @@
+#include "stm32f10x.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "sensor.h"
+#include "actuator.h"
+#include "keypad_lcd.h"
+
+// Tần số xung clock hệ thống (8MHz)
+#define SYSTEM_CLOCK_MHZ   8U
+
+/* ============================================================================
+ * KHỞI TẠO CÁC BIẾN TOÀN CỤC HỆ THỐNG
+ * ============================================================================ */
+volatile uint32_t sys_tick_ms = 0;      // Biến đếm thời gian hệ thống (tăng mỗi 1ms)
+volatile uint16_t student_count = 0;    // Sĩ số sinh viên đã điểm danh thành công
+volatile uint16_t total_people = 0;     // Số người thực tế trong phòng (tăng/giảm theo cảm biến IR)
+volatile uint8_t  force_update = 1;     // Cờ yêu cầu cập nhật lại màn hình LCD/LED ngay lập tức
+
+uint8_t  system_mode = 0;               // Chế độ hoạt động: 0 - AUTO (Tự động), 1 - MANU (Thủ công)
+uint8_t  light_state = 0;               // Trạng thái đèn (0: Tắt, 1: Bật)
+uint8_t  fan_cool_state = 0;            // Trạng thái quạt làm mát (0: Tắt, 1: Bật)
+uint8_t  fan_exhaust_state = 0;         // Trạng thái quạt hút gas khẩn cấp
+uint8_t  door_state = 0;                // Trạng thái cửa chính (0: Đóng, 1: Mở)
+uint8_t  curtain_state = 0;             // Trạng thái rèm cửa (0: Mở, 1: Đóng)
+uint8_t  flame_state = 0;               // Trạng thái phát hiện ngọn lửa
+
+uint32_t door_auto_close_time = 0;      // Thời điểm tự động đóng cửa (ms)
+uint32_t screen_timer = 0;              // Bộ đếm thời gian chuyển trang màn hình LCD
+uint8_t  display_state = 0;             // Trạng thái màn hình:
+                                        // 0: Màn hình khóa / Nhập mã  
+                                        // 1: Mở khóa Admin
+                                        // 2: Dashboard điều khiển trung tâm
+                                        // 3: Thông báo mở cửa SV
+                                        // 4: Báo sai mã/mật khẩu
+                                        // 5: Màn hình điểm danh tiếp
+                                        // 6: Màn hình điểm danh thành công
+
+char     input_buf[1] = "";             // Bộ đệm lưu mã số/mật khẩu người dùng nhập (4 ký tự)
+uint8_t  input_idx = 0;                 // Chỉ số ký tự đang nhập
+uint8_t  wrong_count = 0;               // Đếm số lần nhập sai mật khẩu liên tiếp
+uint32_t lock_timeout = 0;              // Thời gian khóa bàn phím khi nhập sai quá 3 lần
+char     last_key = 0;                  // Lưu phím vừa bấm trước đó để chống dội phím (Debounce)
+
+uint8_t  previous_display_state = 0;    // Lưu trạng thái màn hình trước khi chuyển trang
+uint8_t  student_checked[2] = {0, 0, 0};// Mảng đánh dấu trạng thái điểm danh của 3 sinh viên
+uint8_t  current_sv_idx = 0;            // Chỉ số sinh viên vừa thao tác
+
+static uint32_t total_seconds = 28800;  // Tổng số giây tính từ 00:00:00 (Mặc định khởi tạo 08:00:00)
+volatile uint32_t bell_timer = 0;        // Bộ đếm thời gian reo chuông báo giờ PB5 (ms)
+
+// Biến hỗ trợ tính năng phím '4': Nhảy giờ 06:59 -> Reo chuông 3s -> Khôi phục giờ cũ
+static uint32_t saved_time = 0;         // Lưu lại giờ thực trước khi nhảy
+static uint32_t restore_clock_time = 0; // Hẹn giờ khôi phục đồng hồ
+
+volatile uint8_t  buzzer_active = 0;     // Cờ kích hoạt còi báo bíp PB2
+volatile uint32_t buzzer_timer = 0;     // Bộ đếm thời gian kêu còi bíp (ms)
+volatile uint8_t  pump_active = 0;       // Cờ kích hoạt máy bơm nước PCCC PC13
+volatile uint8_t  exhaust_active = 0;    // Cờ kích hoạt quạt hút gas PA8
+
+volatile uint8_t light_pwm = 0;         // Mức công suất Soft-PWM Đèn (0 - 10)
+volatile uint8_t fan_pwm = 0;           // Mức công suất Soft-PWM Quạt (0 - 10)
+
+void SystemInit(void) {}
+
+/* ============================================================================
+ * KHỐI NGẮT ĐỊNH THỜI SYSTICK (1ms) & ĐỒNG HỒ RTC / SOFT-PWM
+ * ============================================================================ */
+
+/**
+ * @brief Khởi tạo ngắt SysTick chu kỳ 1ms.
+ */
+void SysTick_Init_Config(void) {
+    SysTick->LOAD = (SYSTEM_CLOCK_MHZ * 1000) - 1; // 8MHz * 1000us - 1 = 7999
+    SysTick->VAL  = 0;
+    SysTick->CTRL = (1 << 2) | (1 << 1) | (1 << 0); // System Clock, Enable Interrupt, Enable Counter
+}
+
+/**
+ * @brief Trình xử lý ngắt SysTick (Tần số 1000Hz - Thực thi mỗi 1ms).
+ */
+void SysTick_Handler(void) {
+    static uint16_t sec_div = 0;
+    static uint8_t  last_s = 60;
+    static uint8_t  pwm_cnt = 0;
+    static uint16_t led_timer = 0;
+    static uint16_t effect_timer = 0;
+    static uint8_t  led_step = 0;
+    static uint8_t  current_effect = 0;
+    uint8_t h, m, s;
+
+    sys_tick_ms++; // Tăng bộ đếm thời gian hệ thống
+    
+    // 1. Đếm lùi thời gian reo chuông báo giờ học (PB5)
+    if (bell_timer > 0) bell_timer--; 
+
+    // 2. Đếm lùi thời gian kêu còi bíp phi tập trung (PB2)
+    if (buzzer_timer > 0) {
+        buzzer_timer--;
+        if (buzzer_timer == 0) buzzer_active = 0;
+    }
+
+    // 3. Bộ đếm thời gian thực RTC (Mỗi 1000ms tăng 1 giây)
+    if (++sec_div >= 1000) { 
+        sec_div = 0;
+        if (++total_seconds >= 86400) total_seconds = 0; // Tràn 24h thì quay về 0
+        h = (total_seconds / 3600) % 24; 
+        m = (total_seconds / 60) % 60; 
+        s = total_seconds % 60;
+        
+        if (s != last_s) {
+            last_s = s;
+            // TỰ ĐỘNG REO CHUÔNG 3 GIÂY VÀO LÚC 07:00:00 VÀ 07:45:00
+            if ((h == 7 && m == 0 && s == 0) || (h == 7 && m == 45 && s == 0)) {
+                bell_timer = 3000; 
+            }
+        }
+    }
+
+    // 4. Xuất tín hiệu trực tiếp ra các thiết bị chấp hành
+    if (bell_timer > 0) GPIOB->ODR |= (1 << 5); else GPIOB->ODR &= ~(1 << 5);  // PB5: Chuông báo giờ
+    if (buzzer_active)  GPIOB->ODR |= (1 << 2); else GPIOB->ODR &= ~(1 << 2);  // PB2: Buzzer bíp
+    if (pump_active)    GPIOC->ODR |= (1 << 13); else GPIOC->ODR &= ~(1 << 13); // PC13: Bơm PCCC
+    if (exhaust_active) GPIOA->ODR |= (1 << 8);  else GPIOA->ODR &= ~(1 << 8);  // PA8: Quạt hút gas
+
+    // 5. Soft-PWM điều chỉnh độ sáng Đèn (PB0) & Tốc độ Quạt (PB1)
+    pwm_cnt++;
+    if(pwm_cnt >= 10) pwm_cnt = 0;
+
+    if (!exhaust_active) { 
+        if (pwm_cnt < light_pwm) GPIOB->ODR |= (1 << 0); else GPIOB->ODR &= ~(1 << 0);
+        if (pwm_cnt < fan_pwm)   GPIOB->ODR |= (1 << 1); else GPIOB->ODR &= ~(1 << 1);
+    } else {
+        GPIOB->ODR &= ~(1 << 0); 
+        GPIOB->ODR &= ~(1 << 1);
+    }
+
+    // 6. Tạo hiệu ứng nháy LED trang trí (PA9, PA10)
+    effect_timer++;
+    if (effect_timer > 5000) { 
+        effect_timer = 0; current_effect++; if (current_effect > 3) current_effect = 0;
+        led_step = 0; led_timer = 0;
+    }
+
+    led_timer++;
+    switch (current_effect) {
+        case 0: // Nháy luân phiên chậm (500ms)
+            if (led_timer >= 500) {
+                led_timer = 0; led_step = !led_step;
+                if (led_step) { GPIOA->ODR |= (1 << 9); GPIOA->ODR &= ~(1 << 10); }
+                else          { GPIOA->ODR &= ~(1 << 9); GPIOA->ODR |= (1 << 10); }
+            } break;
+        case 1: // Nháy đồng thời (500ms)
+            if (led_timer >= 500) {
+                led_timer = 0; led_step = !led_step;
+                if (led_step) { GPIOA->ODR |= (1 << 9) | (1 << 10); }
+                else          { GPIOA->ODR &= ~((1 << 9) | (1 << 10)); }
+            } break;
+        case 2: // Nháy luân phiên nhanh (100ms)
+            if (led_timer >= 100) {
+                led_timer = 0; led_step = !led_step;
+                if (led_step) { GPIOA->ODR |= (1 << 9); GPIOA->ODR &= ~(1 << 10); }
+                else          { GPIOA->ODR &= ~(1 << 9); GPIOA->ODR |= (1 << 10); }
+            } break;
+        case 3: // Nháy chớp strobe nhịp đôi
+            if (led_timer >= 100) {
+                led_timer = 0; led_step++; if (led_step > 9) led_step = 0; 
+                if (led_step == 1 || led_step == 3) { GPIOA->ODR |= (1 << 9) | (1 << 10); } 
+                else { GPIOA->ODR &= ~((1 << 9) | (1 << 10)); }
+            } break;
+    }
+}
+
+/**
+ * @brief Hàm tạo độ trễ miligiây (sử dụng SysTick).
+ */
+void Delay_ms(uint32_t ms) { 
+    uint32_t start = sys_tick_ms; 
+    while ((sys_tick_ms - start) < ms); 
+} 
+
+/**
+ * @brief Hàm tạo độ trễ microgiây.
+ */
+void Delay_us(uint32_t us) { 
+    volatile uint32_t count = us * (SYSTEM_CLOCK_MHZ / 4); 
+    while(count--) { __NOP(); } 
+}
+
+/**
+ * @brief Phát còi bíp không gây trễ CPU (Non-blocking).
+ */
+void Buzzer_Beep_NonBlocking(uint32_t ms) { 
+    buzzer_active = 1; 
+    buzzer_timer = ms; 
+}
+
+/* ============================================================================
+ * KHỞI TẠO CẤU HÌNH NGOẠI VI GPIO & NGẮT NGOÀI EXTI
+ * ============================================================================ */
+
+/**
+ * @brief Khởi tạo chế độ cho tất cả các chân GPIO trong hệ thống.
+ */
+void GPIO_Init_All(void) { 
+    // Cấp xung clock cho AFIO, GPIOA, GPIOB, GPIOC, GPIOD
+    RCC->APB2ENR |= (1 << 0) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5); 
+    
+    // TẮT HOÀN TOÀN JTAG ĐỂ GIẢI PHÓNG CHÂN PA13, PA14, PA15, PB3, PB4 LÀM GPIO
+    AFIO->MAPR |= 0x04000000; 
+
+    // Cấu hình Cổng GPIOA:
+    // PA0 (LDR), PA1 (Flame A0), PA4 (MQ-2) -> Analog Input
+    // PA5 (IR_IN), PA7 (IR_OUT), PA11, PA12, PA15 (Keypad Rows) -> Input Pull-up
+    // PA8 (Quạt Gas), PA9, PA10 (LED trang trí), PA13, PA14 (Keypad Cols) -> Output Push-Pull 50MHz
+    GPIOA->CRL = 0x8B80B000; 
+    GPIOA->CRH = 0x83388111; 
+    GPIOA->ODR = (1 << 5) | (1 << 7) | (1 << 10) | (1 << 11) | (1 << 12) | (1 << 13) | (1 << 14) | (1 << 15);
+
+    // Cấu hình Cổng GPIOB:
+    // PB0 (Đèn), PB1 (Quạt), PB2 (Buzzer), PB4 (Keypad Col0), PB5 (Chuông) -> Output Push-Pull 50MHz
+    // PB3 (Keypad Row3) -> Input Pull-up
+    // PB8, PB9 (LCD RS, E), PB10, PB11 (TM1637 CLK, DIO), PB12..PB15 (LCD D4..D7) -> Output Push-Pull
+    GPIOB->CRL = 0x77338333; 
+    GPIOB->CRH = 0x33333333; 
+    GPIOB->ODR = (1 << 3) | (1 << 4) | (1 << 6) | (1 << 7);
+
+    // Cấu hình Cổng GPIOC: PC13 (Máy bơm PCCC) -> Output Push-Pull 50MHz
+    GPIOC->CRH = (GPIOC->CRH & ~(0xFU << 20)) | (0x3U << 20); 
+    GPIOC->ODR &= ~(1 << 13);
+}
+
+/**
+ * @brief Cấu hình ngắt ngoài EXTI cho cảm biến đếm người PA5 (IR_IN) và PA7 (IR_OUT).
+ */
+void EXTI_Interrupts_Init(void) { 
+    AFIO->EXTICR[3] &= ~0xF0F0; // Gán PA5, PA7 vào đường ngắt EXTI5, EXTI7
+    EXTI->IMR |= (1 << 5) | (1 << 7); // Mở mặt nạ ngắt
+    EXTI->FTSR |= (1 << 5) | (1 << 7); // Kích hoạt ngắt theo cạnh xuống (Falling Edge)
+    EXTI->RTSR &= ~((1 << 5) | (1 << 7)); 
+    NVIC_SetPriority(EXTI9_5_IRQn, 2); 
+    NVIC_EnableIRQ(EXTI9_5_IRQn); 
+}
+
+static uint32_t last_ir_in_time = 0; 
+static uint32_t last_ir_out_time = 0;
+
+/**
+ * @brief Trình xử lý Ngắt ngoài EXTI cho đường line 5 -> 9 (Cảm biến đếm người).
+ */
+void EXTI9_5_IRQHandler(void) { 
+    uint32_t now = sys_tick_ms; 
+    
+    // Ngắt PA5 (IR_IN) -> Phát hiện người đi vào phòng
+    if (EXTI->PR & (1 << 5)) { 
+        if (now - last_ir_in_time > 300) { // Lọc nhiễu (Debounce 300ms)
+            if (total_people < 9999) total_people++; 
+            Servo_Door_Control_NonBlocking(1); // Tự động mở cửa
+            door_auto_close_time = sys_tick_ms + 2500; // Hẹn 2.5s sau tự đóng cửa
+            force_update = 1; 
+            last_ir_in_time = now; 
+        } 
+        EXTI->PR = (1 << 5); // Xóa cờ ngắt
+    } 
+    
+    // Ngắt PA7 (IR_OUT) -> Phát hiện người đi ra khỏi phòng
+    if (EXTI->PR & (1 << 7)) { 
+        if (now - last_ir_out_time > 300) { // Lọc nhiễu (Debounce 300ms)
+            if (total_people > 0) total_people--; 
+            Servo_Door_Control_NonBlocking(1); // Tự động mở cửa
+            door_auto_close_time = sys_tick_ms + 2500; // Hẹn 2.5s sau tự đóng cửa
+            force_update = 1; 
+            last_ir_out_time = now; 
+        } 
+        EXTI->PR = (1 << 7); // Xóa cờ ngắt
+    } 
+}
+
+/* ============================================================================
+ * VÒNG LẶP CHÍNH CỦA HỆ THỐNG (MAIN FUNCTION)
+ * ============================================================================ */
+int main(void) { 
+    uint16_t ldr_val = 0; 
+    uint16_t gas_val = 0; 
+    uint16_t current_gas = 0; 
+    uint16_t flame_adc = 4095; 
+    uint8_t  temp = 0, humi = 0; 
+    uint8_t  last_emergency_state = 0, i = 0; 
+    char     line_buf[4]; 
+    char     pw_star[5]; 
+    char     key; 
+    uint32_t last_loop_time = 0; 
+    uint32_t last_sensor_read_time = 0;
+
+    uint8_t  last_h = 0xFF, last_m = 0xFF, last_blink = 0xFF;
+    uint8_t  current_sec = 0, sec_blink = 0, h = 0, m = 0;
+    uint8_t  current_flame = 0, emergency_active = 0, em_temp = 0, em_humi = 0, em_sht_ok = 0;
+
+    // 1. Khởi tạo toàn bộ các khối phần cứng
+    SysTick_Init_Config();
+    GPIO_Init_All();
+    Keypad_Init(); 
+    TIM2_PWM_Init_Servo();    
+    TIM3_PWM_Init_Curtain_Single(); 
+    ADC1_Init();
+    EXTI_Interrupts_Init();
+    LCD_Init();
+
+    // 2. Đặt trạng thái ban đầu cho thiết bị
+    Servo_Door_Control_NonBlocking(0);
+    Servo_Curtain_Control(0);
+
+    buzzer_active = 0; pump_active = 0; exhaust_active = 0; bell_timer = 0;
+    light_pwm = 0; fan_pwm = 0; display_state = 0; student_count = 0; total_people = 0;
+
+    GPIOB->ODR &= ~((1 << 0) | (1 << 1) | (1 << 2) | (1 << 5)); 
+    GPIOA->ODR &= ~((1 << 8) | (1 << 9) | (1 << 10)); 
+    GPIOC->ODR &= ~(1 << 13);
+
+    Delay_ms(1000); 
+
+    // VÒNG LẶP VÔ HẠN
+    while(1) {
+        // TỰ ĐỘNG KHÔI PHỤC GIỜ BAN ĐẦU SAU 3 GIÂY THỬ CHUÔNG BẰNG PHÍM '4'
+        if (restore_clock_time > 0 && sys_tick_ms >= restore_clock_time) {
+            total_seconds = saved_time + 3; // Trả lại thời gian cũ (+3 giây đã trôi qua)
+            restore_clock_time = 0;
+            force_update = 1;
+        }
+
+        // --------------------------------------------------------------------
+        // BƯỚC 1: QUÉT BÀN PHÍM MA TRẬN KEYPAD 4x3
+        // --------------------------------------------------------------------
+        if (lock_timeout > 0) {
+            if (sys_tick_ms >= lock_timeout) lock_timeout = 0;
+        } else {
+            key = Keypad_Scan();
+            if (key != 0) {
+                if (key != last_key) { 
+                    last_key = key;
+
+                    // ⭐ PHÍM '4' ƯU TIÊN TOÀN CỤC: BẤM LÀ NHẢY 06:59 & REO CHUÔNG 3S
+                    if (key == '4') {
+                        if (restore_clock_time == 0) {
+                            saved_time = total_seconds;               
+                            total_seconds = 25197;                   // Nhảy đồng hồ về 06:59:57 (TM1637 hiện 06:59)
+                            bell_timer = 3000;                        // Kích hoạt chuông PB5 reo 3000ms
+                            restore_clock_time = sys_tick_ms + 3000;  // Hẹn giờ khôi phục sau 3s
+                            force_update = 1;
+                        }
+                    }
+                    // MÀN HÌNH KHÓA (STATE 0) & MÀN HÌNH ĐIỂM DANH TIẾP (STATE 5)
+                    else if (display_state == 0 || display_state == 5) { 
+                        if (key == '#') { // Bấm phím '#' để xác nhận nhập mã
+                            if (input_idx > 0) {
+                                int entered_code;
+                                input_buf[input_idx] = '\0';
+                                entered_code = atoi(input_buf);
+                                
+                                // Mã Admin (1234) -> Mở khóa quản trị
+                                if (entered_code == 1234) {
+                                    if (display_state == 5) goto invalid_code;
+                                    Servo_Door_Control_NonBlocking(1); 
+                                    door_auto_close_time = sys_tick_ms + 2500; wrong_count = 0;
+                                    display_state = 1; total_people++; 
+                                    screen_timer = sys_tick_ms + 1500; 
+                                    LCD_PrintLine(0, "                    "); 
+                                    LCD_PrintLine(1, " MO KHOA THANH CONG ");
+                                    LCD_PrintLine(2, "                    "); 
+                                    LCD_PrintLine(3, "                    ");
+                                } 
+                                // Mã Sinh viên (1, 2, 3) -> Điểm danh & Mở cửa
+                                else if (entered_code >= 1 && entered_code <= 3) {
+                                    uint8_t sv_idx = entered_code - 1;
+                                    current_sv_idx = sv_idx;
+                                    
+                                    if (display_state == 5) {
+                                        if (student_checked[sv_idx] == 1) { // Đã điểm danh rồi
+                                            previous_display_state = display_state;
+                                            Buzzer_Beep_NonBlocking(200); 
+                                            display_state = 4; screen_timer = sys_tick_ms + 1500;
+                                            LCD_PrintLine(0, "                    "); 
+                                            LCD_PrintLine(1, "  MA SV DA DIEM DANH ");
+                                            LCD_PrintLine(2, "  VUI LONG THU LAI  "); 
+                                            LCD_PrintLine(3, "                    ");
+                                        } else { // Điểm danh thành công
+                                            student_checked[sv_idx] = 1; student_count++; total_people++;  
+                                            Servo_Door_Control_NonBlocking(1); 
+                                            door_auto_close_time = sys_tick_ms + 2500; wrong_count = 0;
+                                            display_state = 6; screen_timer = sys_tick_ms + 2000; 
+                                            LCD_PrintLine(0, "     XIN CHAO !     ");
+                                            if (entered_code == 1) LCD_PrintLine(1, "TRAN THI MY NUONG   ");
+                                            else if (entered_code == 2) LCD_PrintLine(1, "TRUONG HUNG ANH     ");
+                                            else if (entered_code == 3) LCD_PrintLine(1, "NGO TI GO           ");
+                                            LCD_PrintLine(2, "DIEM DANH THANH CONG"); 
+                                            LCD_PrintLine(3, "                    ");
+                                        }
+                                    } 
+                                    else {
+                                        if (student_checked[sv_idx] == 0) {
+                                            student_checked[sv_idx] = 1; student_count++; 
+                                        }
+                                        total_people++;  
+                                        Servo_Door_Control_NonBlocking(1); 
+                                        door_auto_close_time = sys_tick_ms + 2500; wrong_count = 0;
+                                        display_state = 3; screen_timer = sys_tick_ms + 2000; 
+                                        LCD_PrintLine(0, "     XIN CHAO !     ");
+                                        if (entered_code == 1) LCD_PrintLine(1, "TRAN THI MY NUONG   ");
+                                        else if (entered_code == 2) LCD_PrintLine(1, "TRUONG HUNG ANH     ");
+                                        else if (entered_code == 3) LCD_PrintLine(1, "NGO TI GO           ");
+                                        LCD_PrintLine(2, "  CUA DA DUOC MO    "); 
+                                        LCD_PrintLine(3, "                    ");
+                                    }
+                                }
+                                else { // Nhập sai mã
+                                    invalid_code:
+                                    previous_display_state = display_state;
+                                    wrong_count++; Buzzer_Beep_NonBlocking(200); 
+                                    display_state = 4; screen_timer = sys_tick_ms + 1500;
+                                    LCD_PrintLine(0, "                    "); 
+                                    LCD_PrintLine(1, " SAI MA / MAT KHAU! ");
+                                    LCD_PrintLine(2, "  VUI LONG THU LAI  "); 
+                                    LCD_PrintLine(3, "                    ");
+                                    if (wrong_count >= 3) { lock_timeout = sys_tick_ms + 30000; wrong_count = 0; }
+                                }
+                                memset(input_buf, 0, 5); input_idx = 0; force_update = 1;
+                            }
+                        } 
+                        else if (key == '*') { // Bấm phím '*' để xóa 1 ký tự
+                            if (input_idx > 0) { input_idx--; input_buf[input_idx] = '\0'; force_update = 1; }
+                        } 
+                        else { // Nhập các phím số 0..9
+                            if (input_idx < 4 && key >= '0' && key <= '9') { 
+                                input_buf[input_idx++] = key; input_buf[input_idx] = '\0'; force_update = 1; 
+                            } 
+                        }
+                    }
+                    // MÀN HÌNH DASHBOARD ĐIỀU KHIỂN TRUNG TÂM (STATE 2)
+                    else if (display_state == 2 && !emergency_active) { 
+                        if (key == '5') { // Phím '5': Điểm danh tiếp
+                            display_state = 5; force_update = 1; memset(input_buf, 0, 5); input_idx = 0;
+                        }
+                        else if (key == '*') { // Phím '*': Khóa màn hình
+                            display_state = 0; force_update = 1; memset(input_buf, 0, 5); input_idx = 0;
+                        }
+                        else if (key == '1') { // Phím '1': Chuyển chế độ AUTO / MANU
+                            system_mode = !system_mode; force_update = 1; 
+                        }
+                        else if (key == '2') { // Phím '2': Bật/Tắt Đèn (Chế độ MANU)
+                            if (system_mode == 1) { 
+                                if (light_pwm == 0) light_pwm = 10; else light_pwm = 0;
+                                force_update = 1; 
+                            } 
+                        }
+                        else if (key == '3') { // Phím '3': Bật/Tắt Quạt mát (Chế độ MANU)
+                            if (system_mode == 1) { 
+                                if (fan_pwm == 0) fan_pwm = 10; else fan_pwm = 0;
+                                force_update = 1; 
+                            } 
+                        }
+                        else if (key == '0') { // Phím '0': Đóng/Mở Rèm (Chế độ MANU)
+                            if (system_mode == 1) { 
+                                curtain_state = !curtain_state; Servo_Curtain_Control(curtain_state); force_update = 1; 
+                            } 
+                        }
+                    }
+                }
+            } else last_key = 0; 
+        }
+
+        // --------------------------------------------------------------------
+        // BƯỚC 2: ĐỌC CẢM BIẾN & XỬ LÝ KHẨN CẤP (PCCC & KHÍ GAS)
+        // --------------------------------------------------------------------
+        if (sys_tick_ms - last_sensor_read_time >= 1000) {
+            last_sensor_read_time = sys_tick_ms;
+            flame_adc = ADC1_Read_Channel(1);   // Đọc ADC Cảm biến ngọn lửa PA1
+            current_gas = ADC1_Read_Channel(4); // Đọc ADC Cảm biến khói/gas MQ-2 PA4
+            if (sys_tick_ms > 2000) {
+                em_sht_ok = SHT25_Read_Data(&em_temp, &em_humi); // Đọc SHT25 qua I2C
+            }
+        }
+        
+        current_flame = (flame_adc > 1500) ? 1 : 0; // Ngưỡng ngọn lửa trong Proteus
+        emergency_active = 0;
+        
+        // SỰ CỐ 1: HỎA HOẠN (Có ngọn lửa HOẶC Nhiệt độ >= 45°C)
+        if (current_flame == 1 || (em_sht_ok && em_temp >= 45)) {
+            emergency_active = 1; buzzer_active = 1; pump_active = 1; exhaust_active = 0;    
+            if (door_state == 0) Servo_Door_Control_NonBlocking(1); // Tự động mở cửa thoát hiểm
+            Servo_Curtain_Control(1); // Tự động mở rèm
+            last_emergency_state = 1;
+        }
+        // SỰ CỐ 2: RÒ RỈ KHÍ GAS (Nồng độ MQ-2 > 1800)
+        else if (current_gas > 1800) {
+            emergency_active = 1; buzzer_active = 1; exhaust_active = 1; pump_active = 0;       
+            if (door_state == 0) Servo_Door_Control_NonBlocking(1); // Tự động mở cửa thoát hiểm
+            last_emergency_state = 1;
+        } 
+        else {
+            if (last_emergency_state == 1) { // Hết sự cố -> Tắt thiết bị cảnh báo
+                buzzer_active = 0; pump_active = 0; exhaust_active = 0;
+                Servo_Door_Control_NonBlocking(0); door_auto_close_time = 0; 
+                last_emergency_state = 0; force_update = 1;
+            }
+        }
+
+        // --------------------------------------------------------------------
+        // BƯỚC 3: QUẢN LÝ CHUYỂN MÀN HÌNH & TỰ ĐỘNG KHÓA CỬA
+        // --------------------------------------------------------------------
+        if (sys_tick_ms >= screen_timer) { 
+            if (display_state == 1 || display_state == 3 || display_state == 6) { 
+                display_state = 2; force_update = 1; 
+            }      
+            else if (display_state == 4) { 
+                display_state = (previous_display_state == 5) ? 5 : 0; force_update = 1; 
+            } 
+        }
+        
+        // Khi phòng không còn ai -> Tự động đóng cửa & khóa màn hình
+        if (total_people == 0 && !emergency_active) {
+            if (door_state == 1) { Servo_Door_Control_NonBlocking(0); door_auto_close_time = 0; }
+            if (display_state != 0) { display_state = 0; memset(input_buf, 0, 5); input_idx = 0; force_update = 1; }
+        } else if (door_state == 1 && door_auto_close_time > 0 && !emergency_active) {
+            if (sys_tick_ms >= door_auto_close_time) { Servo_Door_Control_NonBlocking(0); door_auto_close_time = 0; force_update = 1; }
+        }
+        
+        // --------------------------------------------------------------------
+        // BƯỚC 4: CẬP NHẬT HIỂN THỊ LCD 20x4 & LED 7 ĐOẠN TM1637
+        // --------------------------------------------------------------------
+        if ((sys_tick_ms - last_loop_time >= 300) || (force_update != 0)) {
+            last_loop_time = sys_tick_ms;
+            
+            ldr_val = ADC1_Read_Channel(0);
+            gas_val = current_gas;
+            temp = em_temp; humi = em_humi; 
+
+            // Cập nhật thời gian lên LED 7 đoạn TM1637
+            h = (total_seconds / 3600) % 24; m = (total_seconds / 60) % 60; current_sec = total_seconds % 60;
+            sec_blink = (current_sec % 2 == 0); 
+            if (h != last_h || m != last_m || sec_blink != last_blink || force_update) {
+                TM1637_DisplayTime(h, m, sec_blink); last_h = h; last_m = m; last_blink = sec_blink;
+            }
+
+            // GIAO DIỆN KHẨN CẤP (PCCC / GAS)
+            if (emergency_active) {
+                if (current_flame == 1 || (em_sht_ok && temp >= 45)) {
+                    LCD_PrintLine(0, "** CANH BAO CHAY! **");
+                    LCD_PrintLine(1, " PHAT HIEN NGON LUA ");
+                    LCD_PrintLine(2, " BOM NUOC: DANG BAT ");
+                    LCD_PrintLine(3, " CUA & REM: DA MO   ");
+                } 
+                else if (gas_val > 1800) {
+                    LCD_PrintLine(0, "** CANH BAO RO GAS *");
+                    LCD_PrintLine(1, " NONG DO GAS CAO!   ");
+                    LCD_PrintLine(2, " QUAT HUT: DANG BAT ");
+                    LCD_PrintLine(3, " CUA MO THOAT HIEM  ");
+                }
+            } 
+            // GIAO DIỆN BÌNH THƯỜNG
+            else {
+                if (display_state == 2) { // Màn hình Dashboard
+                    if (system_mode == 0) { // Chế độ Tự động AUTO
+                        if (ldr_val > 2000) { curtain_state = 1; Servo_Curtain_Control(1); } 
+                        else if (ldr_val < 1500) { curtain_state = 0; Servo_Curtain_Control(0); } 
+                        
+                        if (total_people > 0) {
+                            if (ldr_val < 1000) light_pwm = 10;      
+                            else if (ldr_val < 2000) light_pwm = 10;  
+                            else light_pwm = 0;                     
+                        } else light_pwm = 0; 
+                        
+                        if (em_sht_ok && (total_people > 0)) {
+                            if (temp >= 30) fan_pwm = 10; else fan_pwm = 0;                   
+                        } else fan_pwm = 0;
+                        
+                        light_state = (light_pwm > 0); fan_cool_state = (fan_pwm > 0);
+                    } 
+                    else { 
+                        light_state = (light_pwm > 0); fan_cool_state = (fan_pwm > 0);
+                    }
+
+                    sprintf(line_buf, "SYSTEM MODE: %s  ", (system_mode == 0) ? "AUTO" : "MANU"); LCD_PrintLine(0, line_buf);
+                    sprintf(line_buf, "PEOPLE:%-2d    SS:%-2d", total_people, student_count); LCD_PrintLine(1, line_buf);
+                    sprintf(line_buf, "T:%2dC H:%2d%% FAN:%s", temp, humi, (fan_cool_state) ? "ON " : "OFF"); LCD_PrintLine(2, line_buf);
+                    sprintf(line_buf, "D:%s C:%s L:%s", (door_state) ? "OPN" : "CLS", (curtain_state) ? "CLS" : "OPN", (light_state) ? "ON " : "OFF");
+                    LCD_PrintLine(3, line_buf);
+                }
+                else if (display_state == 0) { // Màn hình khóa
+                    light_pwm = 0; fan_pwm = 0; light_state = 0; fan_cool_state = 0;
+                    sprintf(line_buf, " NHAP MA SV HOAC MK "); LCD_PrintLine(0, line_buf);
+                    if (lock_timeout > 0) sprintf(line_buf, " LOCK: WAIT %02ds   ", (int)((lock_timeout - sys_tick_ms)/1000));
+                    else {
+                        memset(pw_star, 0, 6); for(i=0; i<input_idx; i++) pw_star[i] = '*';
+                        sprintf(line_buf, " INPUT: %-5s      ", pw_star);
+                    }
+                    LCD_PrintLine(1, line_buf); LCD_PrintLine(2, "                    "); LCD_PrintLine(3, "                    ");
+                }
+                else if (display_state == 5) { // Màn hình điểm danh tiếp
+                    sprintf(line_buf, "  DIEM DANH TIEP    "); LCD_PrintLine(0, line_buf);
+                    memset(pw_star, 0, 6); for(i=0; i<input_idx; i++) pw_star[i] = '*';
+                    sprintf(line_buf, " MA SV: %-5s      ", pw_star);
+                    LCD_PrintLine(1, line_buf); LCD_PrintLine(2, "                    "); LCD_PrintLine(3, "                    ");
+                }
+                else if (display_state == 3 || display_state == 6) { // Màn hình chào mừng SV
+                    LCD_PrintLine(0, "     XIN CHAO !     ");
+                    if (current_sv_idx == 0) LCD_PrintLine(1, "TRAN THI MY NUONG   ");
+                    else if (current_sv_idx == 1) LCD_PrintLine(1, "TRUONG HUNG ANH     ");
+                    else if (current_sv_idx == 2) LCD_PrintLine(1, "NGO TI GO           ");
+                    LCD_PrintLine(2, (display_state == 3) ? "  CUA DA DUOC MO    " : "DIEM DANH THANH CONG");
+                    LCD_PrintLine(3, "                    ");
+                }
+            }
+            force_update = 0; 
+        }
+    }
+}

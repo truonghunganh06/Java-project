@@ -19,6 +19,7 @@ public class LecturerService {
     private final RegistrationPeriodRepository periodRepository;
     private final StudentGroupRepository studentGroupRepository;
     private final CouncilRepository councilRepository;
+    private final TopicRegistrationRepository topicRegistrationRepository;
 
     public LecturerService(
             LecturerRepository lecturerRepository,
@@ -27,7 +28,8 @@ public class LecturerService {
             DepartmentRepository departmentRepository,
             RegistrationPeriodRepository periodRepository,
             StudentGroupRepository studentGroupRepository,
-            CouncilRepository councilRepository) {
+            CouncilRepository councilRepository,
+            TopicRegistrationRepository topicRegistrationRepository) {
         this.lecturerRepository = lecturerRepository;
         this.topicRepository = topicRepository;
         this.submissionRepository = submissionRepository;
@@ -35,6 +37,7 @@ public class LecturerService {
         this.periodRepository = periodRepository;
         this.studentGroupRepository = studentGroupRepository;
         this.councilRepository = councilRepository;
+        this.topicRegistrationRepository = topicRegistrationRepository;
     }
 
     @Transactional(readOnly = true)
@@ -271,7 +274,13 @@ public class LecturerService {
             }
         }
 
-        group.setStatus(status);
+        if ("REJECTED".equalsIgnoreCase(status)) {
+            topicRegistrationRepository.deleteByGroupId(group.getId());
+            group.setTopic(null);
+            group.setStatus("DRAFT");
+        } else {
+            group.setStatus(status);
+        }
         studentGroupRepository.save(group);
         System.out.println("[DB-LECTURER] Cập nhật trạng thái nhóm ID=" + groupId + " -> " + status);
         return true;

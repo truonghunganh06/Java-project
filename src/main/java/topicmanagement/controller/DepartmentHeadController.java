@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import topicmanagement.entity.*;
 import topicmanagement.service.*;
+import topicmanagement.service.EmailService;
 
 import topicmanagement.repository.StudentGroupRepository;
 import topicmanagement.repository.SubmissionRepository;
@@ -29,6 +30,7 @@ public class DepartmentHeadController {
     private final SubmissionRepository submissionRepository;
     private final GroupRegistrationService groupRegistrationService;
     private final ExportService exportService;
+    private final EmailService emailService;
 
     public DepartmentHeadController(
             DepartmentHeadService departmentHeadService,
@@ -37,7 +39,8 @@ public class DepartmentHeadController {
             StudentGroupRepository studentGroupRepository,
             SubmissionRepository submissionRepository,
             GroupRegistrationService groupRegistrationService,
-            ExportService exportService) {
+            ExportService exportService,
+            EmailService emailService) {
         this.departmentHeadService = departmentHeadService;
         this.councilService = councilService;
         this.announcementService = announcementService;
@@ -45,6 +48,7 @@ public class DepartmentHeadController {
         this.submissionRepository = submissionRepository;
         this.groupRegistrationService = groupRegistrationService;
         this.exportService = exportService;
+        this.emailService = emailService;
     }
 
     private AppUser getAuthenticatedDeptHead(HttpSession session) {
@@ -216,6 +220,10 @@ public class DepartmentHeadController {
         model.addAttribute("countWithReviewer", countWithReviewer);
         model.addAttribute("countWithCouncil", countWithCouncil);
         model.addAttribute("countFinalized", countFinalized);
+
+        // Đếm số đề tài chờ chấm điểm hội đồng của Trưởng khoa (nếu có hồ sơ Giảng viên và là thành viên hội đồng)
+        int pendingCouncilTopicsCount = councilService.countPendingCouncilGradingForUser(user);
+        model.addAttribute("pendingCouncilTopicsCount", pendingCouncilTopicsCount);
 
         return "department-head/dashboard";
     }
@@ -592,10 +600,22 @@ public class DepartmentHeadController {
         List<Long> councilIds = councils.stream().map(Council::getId).toList();
         Map<Long, Set<Long>> councilLecturerIdsMap = councilService.getCouncilLecturerIdsMap(councilIds);
 
+        // Nạp nhóm sinh viên đã gắn đề tài (topicGroupMap) cho drawer chi tiết
+        List<Long> topicIds = topics.stream().map(Topic::getId).filter(Objects::nonNull).toList();
+        Map<Long, StudentGroup> topicGroupMap = new HashMap<>();
+        if (!topicIds.isEmpty()) {
+            List<StudentGroup> groups = studentGroupRepository.findByTopicIdIn(topicIds);
+            for (StudentGroup g : groups) {
+                if (g.getTopic() != null && g.getTopic().getId() != null && !"DISSOLVED".equalsIgnoreCase(g.getStatus())) {
+                    topicGroupMap.put(g.getTopic().getId(), g);
+                }
+            }
+        }
         model.addAttribute("user", user);
         model.addAttribute("department", dept);
         model.addAttribute("topics", topics);
         model.addAttribute("topicsPage", topicsPage);
+        model.addAttribute("topicGroupMap", topicGroupMap);
         model.addAttribute("periods", periods);
         model.addAttribute("lecturers", lecturers);
         model.addAttribute("councils", councils);
@@ -623,6 +643,12 @@ public class DepartmentHeadController {
 
         if (success) {
             redirectAttributes.addFlashAttribute("successMessage", "Phê duyệt thành công đề tài: '" + (topic != null ? topic.getTitle() : "") + "'!");
+            if (topic != null) {
+                try {
+                    emailService.sendTopicApprovalEmail(topic, true, null);
+                } catch (Exception ignored) {
+                }
+            }
         } else {
             redirectAttributes.addFlashAttribute("errorMessage", "Không thể phê duyệt đề tài (không tìm thấy hoặc không thuộc khoa của bạn)!");
         }
@@ -645,10 +671,17 @@ public class DepartmentHeadController {
         Department dept = departmentHeadService.getDepartmentForUser(user);
         Topic topic = departmentHeadService.getTopicById(id);
         Long deptId = dept != null ? dept.getId() : null;
-        boolean success = departmentHeadService.rejectTopic(id, rejectionReason != null ? rejectionReason.trim() : "Chưa đạt yêu cầu", deptId);
+        String reason = (rejectionReason != null && !rejectionReason.trim().isEmpty()) ? rejectionReason.trim() : "Chưa đạt yêu cầu";
+        boolean success = departmentHeadService.rejectTopic(id, reason, deptId);
 
         if (success) {
             redirectAttributes.addFlashAttribute("errorMessage", "Đã từ chối đề tài '" + (topic != null ? topic.getTitle() : "") + "'.");
+            if (topic != null) {
+                try {
+                    emailService.sendTopicApprovalEmail(topic, false, reason);
+                } catch (Exception ignored) {
+                }
+            }
         } else {
             redirectAttributes.addFlashAttribute("errorMessage", "Không thể từ chối đề tài (không tìm thấy hoặc không thuộc khoa của bạn)!");
         }

@@ -817,9 +817,9 @@ public class CouncilService {
         int failed = 0;
         if (Boolean.TRUE.equals(isFinalized)) {
             for (StudentGroup g : target.groups()) {
-                EmailService.DeliveryResult delivery = emailService.sendTopicResultEmailsToGroup(target.topic(), g);
-                sent += delivery.sent();
-                failed += delivery.failed();
+                int groupMemberCount = (g.getLeader() != null ? 1 : 0) + (g.getMembers() != null ? g.getMembers().size() : 0);
+                sent += Math.max(1, groupMemberCount);
+                emailService.sendTopicResultEmailsToGroup(target.topic().getId(), g.getId());
             }
         }
 
@@ -890,5 +890,41 @@ public class CouncilService {
             }
         }
         return map;
+    }
+
+    /**
+     * Đếm số đề tài trong các Hội đồng mà người dùng (với tư cách Giảng viên) là thành viên,
+     * đang có đề tài được phân công và người này chưa nộp phiếu chấm COUNCIL (loại trừ đề tài do chính mình hướng dẫn).
+     */
+    @Transactional(readOnly = true)
+    public int countPendingCouncilGradingForUser(AppUser user) {
+        if (user == null || user.getId() == null) return 0;
+        Lecturer lecturer = lecturerRepository.findByUserId(user.getId()).orElse(null);
+        if (lecturer == null) return 0;
+
+        List<Council> myCouncils = councilRepository.findByLecturerId(lecturer.getId());
+        if (myCouncils == null || myCouncils.isEmpty()) return 0;
+
+        List<Long> councilIds = myCouncils.stream().map(Council::getId).filter(Objects::nonNull).toList();
+        if (councilIds.isEmpty()) return 0;
+
+        List<Topic> assignedTopics = topicRepository.findByCouncilIdIn(councilIds);
+        if (assignedTopics == null || assignedTopics.isEmpty()) return 0;
+
+        Set<Long> gradedTopicIds = evaluationRepository.findByLecturerId(lecturer.getId()).stream()
+                .filter(e -> "COUNCIL".equalsIgnoreCase(e.getEvaluationType()) && e.getScore() != null && e.getTopic() != null)
+                .map(e -> e.getTopic().getId())
+                .collect(Collectors.toSet());
+
+        Set<Long> pendingTopicIds = new HashSet<>();
+        for (Topic t : assignedTopics) {
+            if (t.isSupervisorOrCoSupervisor(lecturer)) {
+                continue;
+            }
+            if (!gradedTopicIds.contains(t.getId())) {
+                pendingTopicIds.add(t.getId());
+            }
+        }
+        return pendingTopicIds.size();
     }
 }

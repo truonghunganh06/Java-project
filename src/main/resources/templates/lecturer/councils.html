@@ -202,7 +202,8 @@
     </div>
 
     <!-- Modals for Topic Evaluations (outside saas-main-wrapper to prevent backdrop stacking bugs) -->
-    <th:block th:each="t : ${topics}">
+    <th:block th:each="c : ${councils}">
+    <th:block th:each="t : ${councilTopicsMap != null ? councilTopicsMap.get(c.id) : null}">
         <div class="modal fade text-start" th:id="'gradeCouncilModal-' + ${t.id}" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content rounded-2xl border-0 shadow-xl">
@@ -239,6 +240,7 @@
                 </div>
             </div>
         </div>
+    </th:block>
     </th:block>
 
     <!-- Scripts Fragment -->
