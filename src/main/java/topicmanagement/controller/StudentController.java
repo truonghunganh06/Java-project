@@ -46,7 +46,9 @@ public class StudentController {
      */
     private AppUser getAuthenticatedUser(HttpSession session) {
         AppUser user = (session != null) ? (AppUser) session.getAttribute("currentUser") : null;
-        if (user == null || user.getId() == null) return null;
+        if (user == null || user.getId() == null) {
+            return null;
+        }
 
         var dbUserOpt = userRepository.findById(user.getId());
         if (dbUserOpt.isEmpty() || !Boolean.TRUE.equals(dbUserOpt.get().getIsActive())) {
@@ -68,23 +70,28 @@ public class StudentController {
     }
 
     /**
-     * Đồng bộ hóa danh sách thông báo trên toàn bộ các trang của Sinh viên (Topbar badge luôn nhất quán)
+     * Đồng bộ hóa danh sách thông báo trên toàn bộ các trang của Sinh viên
+     * (Topbar badge luôn nhất quán)
      */
     @ModelAttribute("announcements")
     public List<Announcement> populateAnnouncements(HttpSession session) {
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return Collections.emptyList();
+        if (user == null) {
+            return Collections.emptyList();
+        }
         Student student = studentService.getStudentByUser(user);
         Long deptId = (student != null && student.getDepartment() != null) ? student.getDepartment().getId() : null;
-        return deptId != null 
-                ? announcementService.getAnnouncementsForDepartment(deptId) 
+        return deptId != null
+                ? announcementService.getAnnouncementsForDepartment(deptId)
                 : announcementService.getAllAnnouncements();
     }
 
     @GetMapping("/dashboard")
     public String showDashboard(HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
@@ -103,11 +110,12 @@ public class StudentController {
     }
 
     // ==================== FULL SCHEDULE / CALENDAR ====================
-
     @GetMapping("/schedule")
     public String showSchedule(HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
@@ -124,7 +132,6 @@ public class StudentController {
     }
 
     // ==================== GROUP MANAGEMENT ====================
-
     @GetMapping("/group")
     public String showGroupPage(
             @RequestParam(value = "periodId", required = false) Long periodId,
@@ -132,7 +139,9 @@ public class StudentController {
             Model model) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, periodId);
@@ -159,7 +168,9 @@ public class StudentController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Student student = studentService.getStudentByUser(user);
         try {
@@ -181,7 +192,9 @@ public class StudentController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
@@ -212,7 +225,9 @@ public class StudentController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Student student = studentService.getStudentByUser(user);
         if (student == null) {
@@ -241,7 +256,9 @@ public class StudentController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
@@ -272,7 +289,9 @@ public class StudentController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         try {
             groupRegistrationService.acceptInvitation(user, invitationId);
@@ -292,7 +311,9 @@ public class StudentController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         try {
             groupRegistrationService.rejectInvitation(user, invitationId, reason);
@@ -311,7 +332,9 @@ public class StudentController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         try {
             groupRegistrationService.cancelInvitation(user, invitationId);
@@ -330,7 +353,9 @@ public class StudentController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         try {
             groupRegistrationService.leaveGroupDraft(user, groupId, null);
@@ -349,7 +374,9 @@ public class StudentController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         try {
             groupRegistrationService.dissolveGroupDraft(user, groupId);
@@ -369,7 +396,9 @@ public class StudentController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         try {
             groupRegistrationService.transferLeadership(user, groupId, newLeaderStudentId);
@@ -389,7 +418,9 @@ public class StudentController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         try {
             groupRegistrationService.requestLeaveApprovedGroup(user, groupId, reason);
@@ -409,7 +440,9 @@ public class StudentController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         try {
             groupRegistrationService.requestDissolveApprovedGroup(user, groupId, reason);
@@ -421,9 +454,7 @@ public class StudentController {
         return "redirect:/student/group";
     }
 
-
     // ==================== TOPICS & REGISTRATION ====================
-
     @GetMapping("/topics")
     public String listTopics(
             @RequestParam(value = "periodId", required = false) Long periodId,
@@ -432,7 +463,9 @@ public class StudentController {
             Model model) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Student student = studentService.getStudentByUser(user);
         // Xác định Khoa của sinh viên để lọc đề tài theo đúng phân quyền đào tạo
@@ -467,12 +500,17 @@ public class StudentController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Student student = studentService.getStudentByUser(user);
         Topic topic = studentService.getTopicById(topicId);
         Long topicPeriodId = (topic != null && topic.getPeriod() != null) ? topic.getPeriod().getId() : null;
         StudentGroup group = studentService.getMyActiveGroup(student, topicPeriodId);
+        if (group == null) {
+            group = studentService.getMyActiveGroup(student, null);
+        }
 
         String err = studentService.registerTopicForGroup(student, group, topicId);
         if (err != null) {
@@ -485,11 +523,12 @@ public class StudentController {
     }
 
     // ==================== MY TOPIC ====================
-
     @GetMapping("/my-topic")
     public String showMyTopic(HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
@@ -504,11 +543,12 @@ public class StudentController {
     }
 
     // ==================== SUBMISSIONS (LEADER ONLY) ====================
-
     @GetMapping("/submissions")
     public String listSubmissions(HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
@@ -531,7 +571,9 @@ public class StudentController {
             RedirectAttributes redirectAttributes) {
 
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Student student = studentService.getStudentByUser(user);
         StudentGroup group = studentService.getMyActiveGroup(student, null);
@@ -604,13 +646,14 @@ public class StudentController {
     }
 
     // ==================== RESULTS ====================
-
     @GetMapping("/results")
     public String showResults(
             @RequestParam(value = "periodId", required = false) Long periodId,
             HttpSession session, Model model) {
         AppUser user = getAuthenticatedUser(session);
-        if (user == null) return "redirect:/login";
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         Student student = studentService.getStudentByUser(user);
         if (student == null) {

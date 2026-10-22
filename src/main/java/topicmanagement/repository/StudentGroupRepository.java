@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface StudentGroupRepository extends JpaRepository<StudentGroup, Long> {
+
     @Query(value = "SELECT * FROM student_groups WHERE id = :id FOR UPDATE", nativeQuery = true)
     Optional<StudentGroup> findForMembership(@Param("id") Long id);
 
@@ -47,11 +48,11 @@ public interface StudentGroupRepository extends JpaRepository<StudentGroup, Long
     List<StudentGroup> findByTopicIdIn(List<Long> topicIds);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
-    @Query("SELECT g FROM StudentGroup g JOIN g.members m WHERE m.student.id = :studentId AND (:periodId IS NULL OR g.period.id = :periodId)")
+    @Query("SELECT DISTINCT g FROM StudentGroup g LEFT JOIN g.members m WHERE (g.leader.id = :studentId OR m.student.id = :studentId) AND (:periodId IS NULL OR g.period.id = :periodId)")
     List<StudentGroup> findByStudentIdAndPeriodId(@Param("studentId") Long studentId, @Param("periodId") Long periodId);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
-    @Query("SELECT g FROM StudentGroup g JOIN g.members m WHERE m.student.id = :studentId")
+    @Query("SELECT DISTINCT g FROM StudentGroup g LEFT JOIN g.members m WHERE (g.leader.id = :studentId OR m.student.id = :studentId)")
     List<StudentGroup> findByStudentId(@Param("studentId") Long studentId);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
@@ -74,33 +75,34 @@ public interface StudentGroupRepository extends JpaRepository<StudentGroup, Long
     Page<StudentGroup> findByPeriodId(Long periodId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"period", "leader", "topic"})
-    @Query("SELECT g FROM StudentGroup g WHERE (:departmentId IS NULL OR g.period.department.id = :departmentId) " +
-           "AND (:periodId IS NULL OR g.period.id = :periodId)")
+    @Query("SELECT g FROM StudentGroup g WHERE (:departmentId IS NULL OR g.period.department.id = :departmentId) "
+            + "AND (:periodId IS NULL OR g.period.id = :periodId)")
     Page<StudentGroup> findDepartmentGroupsPaged(
             @Param("departmentId") Long departmentId,
             @Param("periodId") Long periodId,
             Pageable pageable);
 
     /**
-     * BUG-K FIX: Đếm số nhóm (không bị REJECTED/DRAFT) đang hướng dẫn bởi GV chính
-     * trong một đợt cụ thể — dùng để kiểm tra maxTopicsQuota.
+     * BUG-K FIX: Đếm số nhóm (không bị REJECTED/DRAFT) đang hướng dẫn bởi GV
+     * chính trong một đợt cụ thể — dùng để kiểm tra maxTopicsQuota.
      */
-    @Query("SELECT COUNT(g) FROM StudentGroup g WHERE g.topic.supervisor.id = :supervisorId " +
-           "AND g.status NOT IN :excludedStatuses " +
-           "AND (:periodId IS NULL OR g.period.id = :periodId)")
+    @Query("SELECT COUNT(g) FROM StudentGroup g WHERE g.topic.supervisor.id = :supervisorId "
+            + "AND g.status NOT IN :excludedStatuses "
+            + "AND (:periodId IS NULL OR g.period.id = :periodId)")
     long countActiveGroupsBySupervisorInPeriod(
             @Param("supervisorId") Long supervisorId,
             @Param("periodId") Long periodId,
             @Param("excludedStatuses") List<String> excludedStatuses);
 
     /**
-     * BUG-K FIX: Đếm số nhóm (không bị REJECTED/DRAFT) đang hướng dẫn bởi GV phụ
-     * trong một đợt cụ thể — dùng để kiểm tra maxTopicsQuota của coSupervisor.
+     * BUG-K FIX: Đếm số nhóm (không bị REJECTED/DRAFT) đang hướng dẫn bởi GV
+     * phụ trong một đợt cụ thể — dùng để kiểm tra maxTopicsQuota của
+     * coSupervisor.
      */
-    @Query("SELECT COUNT(g) FROM StudentGroup g WHERE g.topic.coSupervisor IS NOT NULL " +
-           "AND g.topic.coSupervisor.id = :coSupervisorId " +
-           "AND g.status NOT IN :excludedStatuses " +
-           "AND (:periodId IS NULL OR g.period.id = :periodId)")
+    @Query("SELECT COUNT(g) FROM StudentGroup g WHERE g.topic.coSupervisor IS NOT NULL "
+            + "AND g.topic.coSupervisor.id = :coSupervisorId "
+            + "AND g.status NOT IN :excludedStatuses "
+            + "AND (:periodId IS NULL OR g.period.id = :periodId)")
     long countActiveGroupsByCoSupervisorInPeriod(
             @Param("coSupervisorId") Long coSupervisorId,
             @Param("periodId") Long periodId,
